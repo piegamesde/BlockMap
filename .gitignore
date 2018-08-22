@@ -1,0 +1,17 @@
+out
+*.iml
+bin
+.src.lst
+TMCMR.jar
+.idea
+.settings
+data
+/target/
+
+output/
+
+src/test/resources/minecraft\.jar
+
+src/test/resources/TestWorld1
+
+src/test/resources/TestWorld2

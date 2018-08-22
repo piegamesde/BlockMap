@@ -2,7 +2,9 @@ package togos.minecraft.maprend.gui;
 
 import java.util.LinkedList;
 import java.util.Objects;
+
 import com.sun.javafx.collections.ObservableListWrapper;
+
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.EventType;
@@ -15,13 +17,13 @@ import javafx.scene.layout.StackPane;
 public class MapPane extends StackPane {
 
 	/***/
-	public final ObservableList<Node>	settingsLayers		= new ObservableListWrapper<Node>(new LinkedList<>());
+	public final ObservableList<Node> settingsLayers = new ObservableListWrapper<Node>(new LinkedList<>());
 	/***/
-	public final ObservableList<Node>	decorationLayers	= new ObservableListWrapper<Node>(new LinkedList<>());
+	public final ObservableList<Node> decorationLayers = new ObservableListWrapper<Node>(new LinkedList<>());
 
-	protected Region					catchEvents;
+	protected Region catchEvents;
 
-	public final WorldRendererCanvas	renderer;
+	public final WorldRendererCanvas renderer;
 
 	public MapPane(WorldRendererCanvas renderer) {
 		this.renderer = Objects.requireNonNull(renderer);

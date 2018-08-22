@@ -3,6 +3,7 @@ package togos.minecraft.maprend.color;
 public class Color {
 
 	public static final Color MISSING = new Color(1f, 1f, 0f, 1f);
+	public static final Color TRANSPARENT = new Color(0, 0, 0, 0);
 
 	public final float r, g, b, a;
 
@@ -24,7 +25,7 @@ public class Color {
 	/** Take in a sRGB color with linear alpha component */
 	public static Color fromRGB(int color) {
 		return new Color(
-				component(color, 24),
+				component(color, 24) / 255f,
 				sRGBToLinear(component(color, 16)),
 				sRGBToLinear(component(color, 8)),
 				sRGBToLinear(component(color, 0)));
@@ -122,22 +123,20 @@ public class Color {
 	// (component(overlayColor, 8) * overlayOpacity + component(color, 8) * overlayTransparency) / 255,
 	// (component(overlayColor, 0) * overlayOpacity + component(color, 0) * overlayTransparency) / 255);
 	// }
-	//
-	// public static final int alpha_over(int dst, int src) {
-	// final int srcA = component(src, 24);
-	// final int src1A = 255 - srcA;
-	// final int dstA = component(dst, 24);
-	// int outA = srcA + dstA * src1A;
-	//
-	// if (outA == 0)
-	// return 0;
-	// return color(
-	// outA / 255,
-	// (component(src, 16) * srcA + component(dst, 16) * dstA * src1A) / outA,
-	// (component(src, 8) * srcA + component(dst, 8) * dstA * src1A) / outA,
-	// (component(src, 0) * srcA + component(dst, 0) * dstA * src1A) / outA);
-	// }
-	//
+
+	public static final Color alphaOver(Color dst, Color src) {
+		float src1A = 1 - src.a;
+		float outA = src.a + dst.a * src1A;
+
+		if (outA == 0)
+			return Color.TRANSPARENT;
+		return new Color(
+				outA,
+				(src.r * src.a + dst.r * dst.a * src1A) / outA,
+				(src.g * src.a + dst.g * dst.a * src1A) / outA,
+				(src.b * src.a + dst.b * dst.a * src1A) / outA);
+	}
+
 	// public static final int demultiplyAlpha(int color) {
 	// final int alpha = component(color, 24);
 	//

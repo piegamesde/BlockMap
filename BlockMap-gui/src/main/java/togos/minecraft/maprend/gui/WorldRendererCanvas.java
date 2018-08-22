@@ -145,6 +145,7 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 				BufferedImage texture2 = null;
 				do {
 					texture2 = renderer.render(rf);
+					// Re-render the texture if it has been invalidated ('REDRAW')
 				} while (region.valid.compareAndSet(RenderingState.REDRAW, RenderingState.DRAWING) && !Thread.interrupted());
 
 				WritableImage texture = SwingFXUtils.toFXImage(texture2, null);
@@ -170,7 +171,7 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 			if (r.valid.get() == RenderingState.INVALID && (min == null || comp.compare(min, r) > 0))
 				min = r;
 		if (min != null)
-			// min got handled by another Thread already (while we were still searching), so get a new one
+			// min got handled by another thread already (while we were still searching), so get a new one
 			if (!min.valid.compareAndSet(RenderingState.INVALID, RenderingState.DRAWING))
 				return nextRegion();
 		return min;

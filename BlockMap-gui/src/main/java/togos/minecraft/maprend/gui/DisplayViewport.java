@@ -4,12 +4,18 @@ import org.joml.AABBd;
 import org.joml.Vector2d;
 import org.joml.Vector2dc;
 import org.joml.Vector3d;
+
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.*;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.util.Duration;
 
 
@@ -100,6 +106,7 @@ public class DisplayViewport {
 	 * @see #zoomProperty
 	 */
 	public void mouseScroll(double deltaZoom) {
+		System.out.println("Scroll " + deltaZoom);
 		double currentValue = zoomProperty.get();
 		double missingTime = 0;
 		if (zoomTimeline != null) {

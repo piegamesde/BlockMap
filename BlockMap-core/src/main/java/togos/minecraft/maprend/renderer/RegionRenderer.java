@@ -32,12 +32,6 @@ public class RegionRenderer {
 
 	private static Log log = LogFactory.getLog(RegionRenderer.class);
 
-	/**
-	 * Alpha below which blocks are considered transparent for purposes of shading (i.e. blocks with alpha < this will not be shaded, but blocks
-	 * below them will be)
-	 */
-	private int shadeOpacityCutoff = 0x20; // TODO use it
-
 	public final RenderSettings settings;
 
 	protected BlockColorMap blockColors;
@@ -98,7 +92,7 @@ public class RegionRenderer {
 				{// Check chunk status
 					String status = ((String) level.get("Status").getValue());
 					if (!status.equals("postprocessed") && !status.equals("fullchunk") && !status.equals("mobs_spawned")) {
-						log.warn("Skipping chunk because status is " + status);
+						// log.warn("Skipping chunk because status is " + status);
 						continue;
 					}
 				}
@@ -122,7 +116,7 @@ public class RegionRenderer {
 				// Traverse the chunk in YXZ order
 				for (byte z = 0; z < 16; z++)
 					for (byte x = 0; x < 16; x++) {
-						Color color = null;
+						Color color = Color.TRANSPARENT;
 						height: for (byte s = 15; s >= 0; s--) {
 							if (s < lowestLoadedSection) {
 								// log.debug("Loading section " + s);
@@ -135,18 +129,16 @@ public class RegionRenderer {
 								continue;
 							}
 							for (int y = 15; y >= 0; y--) {
-								color = loadedSections[s][x | z << 4 | y << 8];
-								// color = Color.alpha_over(loadedSections[s][x | z << 4 | y << 8], color);
-								height[chunk.x << 4 | x | chunk.z << 13 | z << 9] = y | s << 4;
-								if (color.a > 0) {// TODO use threshold
+								color = Color.alphaOver(loadedSections[s][x | z << 4 | y << 8], color);
+								/* As long as the blocks are transparent enough, we keep track of the height */
+								// TODO use the actual height maps
+								if (color.a < 0.2)
+									height[chunk.x << 4 | x | chunk.z << 13 | z << 9] = y | s << 4;
+								if (color.a == 1) {
 									break height;
 								}
 							}
 						}
-						// Alpha over black to get rid of remaining opacity
-						// TODO remove?
-						// color = Color.overlay(0xFF000000, color);
-						color = new Color(1, color.r, color.g, color.b); // TODO remove!
 						map[chunk.x << 4 | x | chunk.z << 13 | z << 9] = color;
 					}
 			} catch (Exception e) {
@@ -154,58 +146,11 @@ public class RegionRenderer {
 				throw e;
 			}
 		}
-		shade(map, height);
 		return map;
 	}
 
-	private void shade(Color[] color, int[] height) {
-		int width = 512, depth = 512;
-
-		int idx = 0;
-		for (int z = 0; z < depth; ++z) {
-			for (int x = 0; x < width; ++x, ++idx) {
-				float dyx, dyz;
-
-				if (color[idx] != null && color[idx].a < 0.01f)
-					continue;
-
-				if (x == 0)
-					dyx = height[idx + 1] - height[idx];
-				else if (x == width - 1)
-					dyx = height[idx] - height[idx - 1];
-				else
-					dyx = (height[idx + 1] - height[idx - 1]) * 2;
-
-				if (z == 0)
-					dyz = height[idx + width] - height[idx];
-				else if (z == depth - 1)
-					dyz = height[idx] - height[idx - width];
-				else
-					dyz = (height[idx + width] - height[idx - width]) * 2;
-
-				float shade = dyx + dyz;
-				if (shade > 10)
-					shade = 10;
-				if (shade < -10)
-					shade = -10;
-
-				int altShade = settings.altitudeShadingFactor * (height[idx] - settings.shadingReferenceAltitude) / 255;
-				if (altShade < settings.minAltitudeShading)
-					altShade = settings.minAltitudeShading;
-				if (altShade > settings.maxAltitudeShading)
-					altShade = settings.maxAltitudeShading;
-
-				shade += altShade;
-
-				// color[idx] = java.awt.Color.HSBtoRGB(((height[idx] / 255f) - 64) * 2 + 64, 1, 1);
-				// color[idx] = height[idx] | height[idx] << 8 | height[idx] << 16 | 0xFF000000;
-				// color[idx] = Color.shade(color[idx], (int) (shade * 8));
-			}
-		}
-	}
-
 	/**
-	 * Takes in the nbt data for a section and returns an int[] containing the color of each block in that section. The returned array thus has
+	 * Takes in the NBT data for a section and returns an int[] containing the color of each block in that section. The returned array thus has
 	 * a length of 16³=4096 items and the blocks are mapped to them in XZY order.
 	 */
 	private Color[] renderSection(int[] biomes, CompoundMap section) {

@@ -1,6 +1,0 @@
-dependencies {
-    compile project(':core')
-
-	compile 'info.picocli:picocli:3.3.0'
-	compile 'net.sf.jopt-simple:jopt-simple:5.0.4'
-}

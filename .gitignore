@@ -15,3 +15,7 @@ src/test/resources/minecraft\.jar
 src/test/resources/TestWorld1
 
 src/test/resources/TestWorld2
+
+BlockMap-generator/build/
+
+BlockMap-core/build/

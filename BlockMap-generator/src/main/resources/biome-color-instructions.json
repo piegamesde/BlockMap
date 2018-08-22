@@ -1,0 +1,312 @@
+{
+	"0": {
+		"waterColor": "16777215",
+		"rainfall": "0.5",
+		"temperature": "0.5"
+	},
+	"1": {
+		"waterColor": "16777215",
+		"rainfall": "0.4",
+		"temperature": "0.8"
+	},
+	"2": {
+		"waterColor": "16777215",
+		"rainfall": "0.0",
+		"temperature": "2.0"
+	},
+	"3": {
+		"waterColor": "16777215",
+		"rainfall": "0.3",
+		"temperature": "0.2"
+	},
+	"4": {
+		"waterColor": "16777215",
+		"rainfall": "0.8",
+		"temperature": "0.7"
+	},
+	"5": {
+		"waterColor": "16777215",
+		"rainfall": "0.8",
+		"temperature": "0.25"
+	},
+	"6": {
+		"waterColor": "14745518",
+		"rainfall": "0.9",
+		"temperature": "0.8"
+	},
+	"7": {
+		"waterColor": "16777215",
+		"rainfall": "0.5",
+		"temperature": "0.5"
+	},
+	"8": {
+		"waterColor": "16777215",
+		"rainfall": "0.0",
+		"temperature": "2.0"
+	},
+	"9": {
+		"waterColor": "16777215",
+		"rainfall": "0.5",
+		"temperature": "0.5"
+	},
+	"10": {
+		"waterColor": "16777215",
+		"rainfall": "0.5",
+		"temperature": "0.0"
+	},
+	"11": {
+		"waterColor": "16777215",
+		"rainfall": "0.5",
+		"temperature": "0.0"
+	},
+	"12": {
+		"waterColor": "16777215",
+		"rainfall": "0.5",
+		"temperature": "0.0"
+	},
+	"13": {
+		"waterColor": "16777215",
+		"rainfall": "0.5",
+		"temperature": "0.0"
+	},
+	"14": {
+		"waterColor": "16777215",
+		"rainfall": "1.0",
+		"temperature": "0.9"
+	},
+	"15": {
+		"waterColor": "16777215",
+		"rainfall": "1.0",
+		"temperature": "0.9"
+	},
+	"16": {
+		"waterColor": "16777215",
+		"rainfall": "0.4",
+		"temperature": "0.8"
+	},
+	"17": {
+		"waterColor": "16777215",
+		"rainfall": "0.0",
+		"temperature": "2.0"
+	},
+	"18": {
+		"waterColor": "16777215",
+		"rainfall": "0.8",
+		"temperature": "0.7"
+	},
+	"19": {
+		"waterColor": "16777215",
+		"rainfall": "0.8",
+		"temperature": "0.25"
+	},
+	"20": {
+		"waterColor": "16777215",
+		"rainfall": "0.3",
+		"temperature": "0.2"
+	},
+	"21": {
+		"waterColor": "16777215",
+		"rainfall": "0.9",
+		"temperature": "0.95"
+	},
+	"22": {
+		"waterColor": "16777215",
+		"rainfall": "0.9",
+		"temperature": "0.95"
+	},
+	"23": {
+		"waterColor": "16777215",
+		"rainfall": "0.8",
+		"temperature": "0.95"
+	},
+	"24": {
+		"waterColor": "16777215",
+		"rainfall": "0.5",
+		"temperature": "0.5"
+	},
+	"25": {
+		"waterColor": "16777215",
+		"rainfall": "0.3",
+		"temperature": "0.2"
+	},
+	"26": {
+		"waterColor": "16777215",
+		"rainfall": "0.3",
+		"temperature": "0.05"
+	},
+	"27": {
+		"waterColor": "16777215",
+		"rainfall": "0.6",
+		"temperature": "0.6"
+	},
+	"28": {
+		"waterColor": "16777215",
+		"rainfall": "0.6",
+		"temperature": "0.6"
+	},
+	"29": {
+		"waterColor": "16777215",
+		"rainfall": "0.8",
+		"temperature": "0.7"
+	},
+	"30": {
+		"waterColor": "16777215",
+		"rainfall": "0.4",
+		"temperature": "-0.5"
+	},
+	"31": {
+		"waterColor": "16777215",
+		"rainfall": "0.4",
+		"temperature": "-0.5"
+	},
+	"32": {
+		"waterColor": "16777215",
+		"rainfall": "0.8",
+		"temperature": "0.3"
+	},
+	"33": {
+		"waterColor": "16777215",
+		"rainfall": "0.8",
+		"temperature": "0.3"
+	},
+	"34": {
+		"waterColor": "16777215",
+		"rainfall": "0.3",
+		"temperature": "0.2"
+	},
+	"35": {
+		"waterColor": "16777215",
+		"rainfall": "0.0",
+		"temperature": "1.2"
+	},
+	"36": {
+		"waterColor": "16777215",
+		"rainfall": "0.0",
+		"temperature": "1.0"
+	},
+	"37": {
+		"waterColor": "16777215",
+		"rainfall": "0.0",
+		"temperature": "2.0"
+	},
+	"38": {
+		"waterColor": "16777215",
+		"rainfall": "0.0",
+		"temperature": "2.0"
+	},
+	"39": {
+		"waterColor": "16777215",
+		"rainfall": "0.0",
+		"temperature": "2.0"
+	},
+	"127": {
+		"waterColor": "16777215",
+		"rainfall": "0.5",
+		"temperature": "0.5"
+	},
+	"129": {
+		"waterColor": "16777215",
+		"rainfall": "0.4",
+		"temperature": "0.8"
+	},
+	"130": {
+		"waterColor": "16777215",
+		"rainfall": "0.0",
+		"temperature": "2.0"
+	},
+	"131": {
+		"waterColor": "16777215",
+		"rainfall": "0.3",
+		"temperature": "0.2"
+	},
+	"132": {
+		"waterColor": "16777215",
+		"rainfall": "0.8",
+		"temperature": "0.7"
+	},
+	"133": {
+		"waterColor": "16777215",
+		"rainfall": "0.8",
+		"temperature": "0.25"
+	},
+	"134": {
+		"waterColor": "14745518",
+		"rainfall": "0.9",
+		"temperature": "0.8"
+	},
+	"140": {
+		"waterColor": "16777215",
+		"rainfall": "0.5",
+		"temperature": "0.0"
+	},
+	"149": {
+		"waterColor": "16777215",
+		"rainfall": "0.9",
+		"temperature": "0.95"
+	},
+	"151": {
+		"waterColor": "16777215",
+		"rainfall": "0.8",
+		"temperature": "0.95"
+	},
+	"155": {
+		"waterColor": "16777215",
+		"rainfall": "0.6",
+		"temperature": "0.6"
+	},
+	"156": {
+		"waterColor": "16777215",
+		"rainfall": "0.6",
+		"temperature": "0.6"
+	},
+	"157": {
+		"waterColor": "16777215",
+		"rainfall": "0.8",
+		"temperature": "0.7"
+	},
+	"158": {
+		"waterColor": "16777215",
+		"rainfall": "0.4",
+		"temperature": "-0.5"
+	},
+	"160": {
+		"waterColor": "16777215",
+		"rainfall": "0.8",
+		"temperature": "0.25"
+	},
+	"161": {
+		"waterColor": "16777215",
+		"rainfall": "0.8",
+		"temperature": "0.25"
+	},
+	"162": {
+		"waterColor": "16777215",
+		"rainfall": "0.3",
+		"temperature": "0.2"
+	},
+	"163": {
+		"waterColor": "16777215",
+		"rainfall": "0.0",
+		"temperature": "1.1"
+	},
+	"164": {
+		"waterColor": "16777215",
+		"rainfall": "0.0",
+		"temperature": "1.0"
+	},
+	"165": {
+		"waterColor": "16777215",
+		"rainfall": "0.0",
+		"temperature": "2.0"
+	},
+	"166": {
+		"waterColor": "16777215",
+		"rainfall": "0.0",
+		"temperature": "2.0"
+	},
+	"167": {
+		"waterColor": "16777215",
+		"rainfall": "0.0",
+		"temperature": "2.0"
+	}
+}

@@ -9,6 +9,6 @@
  */
 
 
-include 'core', 'gui', 'standalone', 'generator'
+include 'BlockMap-core', 'BlockMap-gui', 'BlockMap-standalone', 'BlockMap-generator'
 
 rootProject.name = 'BlockMap'

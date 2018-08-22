@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane
+	maxHeight="-Infinity"
+	maxWidth="-Infinity"
+	minHeight="-Infinity"
+	minWidth="-Infinity"
+	xmlns="http://javafx.com/javafx/8"
+	xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="togos.minecraft.maprend.guistandalone.GuiController"
+	fx:id="root">
+	<top>
+		<BorderPane BorderPane.alignment="CENTER">
+			<left>
+				<Label
+					text="Region folder path:"
+					BorderPane.alignment="CENTER">
+					<BorderPane.margin>
+						<Insets
+							bottom="0.0"
+							left="0.0"
+							right="2.0"
+							top="0.0" />
+					</BorderPane.margin>
+				</Label>
+			</left>
+			<center>
+				<TextField
+					fx:id="pathField"
+					onAction="#reloadWorld"
+					BorderPane.alignment="CENTER">
+					<BorderPane.margin>
+						<Insets
+							bottom="0.0"
+							left="2.0"
+							right="2.0"
+							top="0.0" />
+					</BorderPane.margin>
+				</TextField>
+			</center>
+			<right>
+				<Button
+					fx:id="browseButton"
+					onAction="#browse"
+					mnemonicParsing="false"
+					text="Browse"
+					BorderPane.alignment="CENTER">
+					<BorderPane.margin>
+						<Insets
+							bottom="0.0"
+							left="2.0"
+							right="0.0"
+							top="0.0" />
+					</BorderPane.margin>
+				</Button>
+			</right>
+		</BorderPane>
+	</top>
+	<center>
+	</center>
+</BorderPane>

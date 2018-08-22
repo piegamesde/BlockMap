@@ -1,0 +1,9 @@
+dependencies {
+	// Core dependencies
+	compile  'com.github.piegamesde:nbt:f08094d6f2'
+	compile 'com.google.code.gson:gson:2.8.2'
+	compile 'io.gsonfire:gson-fire:1.8.1' // TODO remove?
+	compile 'commons-logging:commons-logging:1.2'
+	compile 'org.apache.logging.log4j:log4j-core:2.8.2'
+	compile 'org.apache.logging.log4j:log4j-jcl:2.8.2'
+}

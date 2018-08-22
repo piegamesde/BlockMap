@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import org.controlsfx.control.RangeSlider?>
+<?import togos.minecraft.maprend.gui.decoration.SettingsOverlay?>
+
+<fx:root
+	type="togos.minecraft.maprend.gui.decoration.SettingsOverlay"
+	xmlns:fx="http://javafx.com/fxml/1"
+	xmlns="http://javafx.com/javafx/8"
+	pickOnBounds="false">
+	<children>
+		<VBox
+			spacing="6"
+			AnchorPane.rightAnchor="0.0"
+			AnchorPane.topAnchor="0.0">
+			<children>
+				<ToggleButton
+					fx:id="showButton"
+					selected="true"
+					mnemonicParsing="false"
+					text="Show settings" />
+				<VBox
+					fx:id="rightMenu"
+					alignment="TOP_CENTER"
+					style="-fx-background-color: rgba(255, 255, 255, 0.6);-fx-background-radius: 7 0 0 7;">
+					<children>
+						<Label
+							text="Settings:"
+							textAlignment="CENTER">
+							<font>
+								<Font
+									name="System Bold"
+									size="14.0" />
+							</font>
+						</Label>
+						<Label fx:id="maxHeight" />
+						<RangeSlider
+							fx:id="heightSlider"
+							orientation="VERTICAL"
+							prefHeight="200"
+							min="0"
+							lowValue="0"
+							max="255"
+							highValue="255"
+							blockIncrement="1"
+							majorTickUnit="16"
+							minorTickCount="16"
+							snapToTicks="true"
+							showTickLabels="true"
+							showTickMarks="true" />
+						<Label fx:id="minHeight" />
+					</children>
+					<padding>
+						<Insets
+							bottom="5.0"
+							left="5.0"
+							right="17.0"
+							top="5.0" />
+					</padding>
+				</VBox>
+			</children>
+		</VBox>
+	</children>
+	<padding>
+		<Insets
+			bottom="5.0"
+			left="8.0"
+			right="0.0"
+			top="5.0" />
+	</padding>
+</fx:root>

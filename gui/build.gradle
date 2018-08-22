@@ -1,0 +1,8 @@
+
+dependencies {
+    compile project(':core')
+	// GUI dependencies
+	compile 'org.mapdb:mapdb:3.0.5'
+	compile 'org.controlsfx:controlsfx:8.40.12'
+	compile 'org.joml:joml:1.9.10'
+}

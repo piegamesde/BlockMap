@@ -1,0 +1,38 @@
+body {
+	background: black;
+	box-sizing: border-box;
+}
+
+a.tile {
+	display: block;
+	border: 0;
+	text-decoration: none;
+	-moz-background-origin: border;
+	background-origin: border-box;
+	overflow: hidden;
+	outline: none;
+	margin: 0;
+	padding: 0;
+}
+a.tile:hover {
+	border: 1px solid rgba(255,255,255,0.5);
+}
+
+.notes, .scales-nav {
+	color: cornflowerblue;
+	font-size: smaller;
+	font-family: monospace;
+}
+.scales-nav ul {
+	margin: 0;
+	padding: 0;
+}
+.scales-nav a {
+	color: lime;
+}
+p.notes, .scales-nav p, .scales-nav li {
+	margin: 3px 6px;
+}
+.scales-nav p, .scales-nav ul, .scales-nav ul li {
+	display: inline-block;
+}

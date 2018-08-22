@@ -1,0 +1,82 @@
+0x0001	1,0	# Stone
+0x0002	0,0	# Grass
+0x0003	2,0	# Dirt
+0x0004	0,1	# Cobblestone
+0x0005	5,1	# Wooden Planks
+0x0006	15,0	# Saplings
+0x000C	2,1	# Sand
+0x000D	3,1	# Gravel
+0x000E	0,2	# Gold Ore
+0x000F	1,2	# Iron Ore
+0x0011	4,1	# Wood
+0x0012	4,3	# Leaves
+0x0014	1,3	# Glass
+0x0016	0,9	# Lapis Lazuli Block
+0x0017	14,3	# Dispenser
+0x0018	0,11	# Sandstone
+0x001B	3,11	# Powered Rail
+0x001C	3,12	# Detector Rail
+0x001F	0,0	# Grass
+0x0021	12,6	# Piston
+0x0023	0,4	# Wool
+0x0025	13,0	# Dandelion
+0x0026	12,0	# Rose
+0x0027	13,1	# Brown Mushroom
+0x0028	12,1	# Red Mushroom
+0x0029	7,1	# Block of Gold
+0x002A	6,1	# Block of Iron
+0x002C	6,0	# Slabs
+0x002D	7,0	# Bricks
+0x002E	9,0	# TNT
+0x002F	4,0	# Bookshelf
+0x0030	4,2	# Moss Stone
+0x0031	5,2	# Obsidian
+0x0032	0,5	# Torch
+0x0035	4,0	# Oak Wood Stairs
+0x0036	6,12	# Chest
+0x0039	2,3	# Block of Diamond
+0x003A	11,2	# Crafting Table
+0x003D	14,3	# Furnace
+0x0041	3,5	# Ladders
+0x0042	0,8	# Rails
+0x0043	0,1	# Cobblestone Stairs
+0x0045	0,6	# Lever
+0x0046	1,0	# Stone Pressure Plate
+0x0048	4,0	# Wooden Pressure Plate
+0x004C	3,6	# Redstone Torch (active)
+0x004E	2,4	# Snow
+0x0050	2,4	# Snow Block
+0x0051	5,4	# Cactus
+0x0052	8,4	# Clay Block
+0x0054	11,4	# Jukebox
+0x0055	3,5	# Fence
+0x0056	6,6	# Pumpkin
+0x0057	7,6	# Netherrack
+0x0058	8,6	# Soul Sand
+0x0059	9,6	# Glowstone Block
+0x005B	8,7	# Jack 'o' Lantern
+0x0060	4,5	# Trapdoor
+0x0062	6,3	# Stone Bricks
+0x0065	5,5	# Iron Bars
+0x0066	1,3	# Glass Pane
+0x006A	15,8	# Vines
+0x006B	3,5	# Fence Gate
+0x006C	7,0	# Brick Stairs
+0x006D	6,3	# Stone Brick Stairs
+0x006F	12,4	# Lily Pad
+0x0070	7,6	# Nether Brick
+0x0071	7,6	# Nether Brick Fence
+0x0072	7,6	# Nether Brick Stairs
+0x0074	6,10	# Enchantment Table
+0x0079	15,10	# End Stone
+0x007A	7,10	# Dragon Egg
+0x007B	3,13	# Redstone Lamp (inactive)
+0x007E	4,0	# Wooden Slab
+0x0080	0,11	# Sandstone Stairs
+0x0085	9,1	# Block of Emerald
+0x0086	6,12	# Spruce Wood Stairs
+0x0087	6,13	# Birch Wood Stairs
+0x0088	7,12	# Jungle Wood Stairs
+0x008B	0,1	# Cobblestone Wall
+0x0091	7,14	# Anvil
+0x009D	3,12	# Activator Rail

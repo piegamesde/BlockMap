@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Objects;
 import java.util.ResourceBundle;
+
 import org.controlsfx.control.RangeSlider;
+
 import javafx.animation.TranslateTransition;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
@@ -51,9 +53,9 @@ public class SettingsOverlay extends AnchorPane implements Initializable {
 		ChangeListener<? super Boolean> heightListener = (e, oldVal, newVal) -> {
 			if (oldVal && !newVal) {
 				if (e == heightSlider.lowValueChangingProperty())
-					panel.getRegionRenderer().settings.minHeight = (int) Math.round(heightSlider.lowValueProperty().getValue().doubleValue());
+					panel.getRegionRenderer().settings.minY = (int) Math.round(heightSlider.lowValueProperty().getValue().doubleValue());
 				else if (e == heightSlider.highValueChangingProperty())
-					panel.getRegionRenderer().settings.maxHeight = (int) Math.round(heightSlider.highValueProperty().getValue().doubleValue());
+					panel.getRegionRenderer().settings.maxY = (int) Math.round(heightSlider.highValueProperty().getValue().doubleValue());
 				panel.invalidateTextures();
 				panel.repaint();
 			}

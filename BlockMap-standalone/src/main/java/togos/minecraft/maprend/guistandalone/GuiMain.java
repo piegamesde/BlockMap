@@ -1,6 +1,7 @@
-package togos.minecraft.maprend.standalone;
+package togos.minecraft.maprend.guistandalone;
 
 import java.io.IOException;
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -18,7 +19,7 @@ public class GuiMain extends Application {
 	public void start(Stage stage) throws IOException {
 		stage.setTitle("TMCMR world renderer");
 
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("scene.fxml"));
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("/scene.fxml"));
 		Parent root = (Parent) loader.load();
 		controller = (GuiController) loader.getController();
 

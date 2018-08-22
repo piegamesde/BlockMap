@@ -7,7 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Date;
-import togos.minecraft.maprend.RegionMap;
+import togos.minecraft.maprend.World;
 import togos.minecraft.maprend.io.ContentStore;
 import togos.minecraft.maprend.renderer.RenderSettings;
 
@@ -102,14 +102,14 @@ public class PostProcessing {
 		}
 	}
 
-	public static void createImageTree(RegionMap rm, RenderSettings settings) {
+	public static void createImageTree(World rm, RenderSettings settings) {
 		// if (settings.debug)
 			System.err.println("Composing image tree...");
 		ImageTreeComposer itc = new ImageTreeComposer(new ContentStore());
 		System.out.println(itc.compose(rm));
 	}
 
-	public static void createBigImage(RegionMap rm, File outputDir, RenderSettings settings) {
+	public static void createBigImage(World rm, File outputDir, RenderSettings settings) {
 		// if (settings.debug)
 			System.err.println("Creating big image...");
 		BigImageMerger bic = new BigImageMerger();

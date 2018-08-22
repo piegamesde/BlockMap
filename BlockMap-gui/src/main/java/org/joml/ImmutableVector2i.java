@@ -16,6 +16,10 @@ import java.nio.IntBuffer;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
+import org.joml.internal.MemUtil;
+import org.joml.internal.Options;
+import org.joml.internal.Runtime;
+
 /**
  * Represents a 2D vector with single-precision. The values of this class are set in the constructor and cannot be changed. Operations that modify this vector
  * either take in a destination vector that will be changed or return a changed immutable copy of this vector with the computation's result.
@@ -422,6 +426,37 @@ public class ImmutableVector2i implements Vector2ic {
 	 */
 	public String toString(NumberFormat formatter) {
 		return "(" + formatter.format(x) + " " + formatter.format(y) + ")";
+	}
+
+	@Override
+	public Vector2ic getToAddress(long address) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Vector2i min(Vector2ic v, Vector2i dest) {
+		dest.x = x < v.x() ? x : v.x();
+		dest.y = y < v.y() ? y : v.y();
+		return dest;
+	}
+
+	@Override
+	public Vector2i max(Vector2ic v, Vector2i dest) {
+		dest.x = x > v.x() ? x : v.x();
+		dest.y = y > v.y() ? y : v.y();
+		return dest;
+	}
+
+	@Override
+	public int get(int component) throws IllegalArgumentException {
+		switch (component) {
+		case 0:
+			return x;
+		case 1:
+			return y;
+		default:
+			throw new IllegalArgumentException();
+		}
 	}
 
 }

@@ -1,8 +1,8 @@
 package togos.minecraft.maprend.standalone;
 
 import java.io.IOException;
-import togos.minecraft.maprend.RegionMap;
-import togos.minecraft.maprend.RegionMap.Region;
+import togos.minecraft.maprend.World;
+import togos.minecraft.maprend.World.Region;
 import togos.minecraft.maprend.io.ContentStore;
 
 public class ImageTreeComposer
@@ -13,7 +13,7 @@ public class ImageTreeComposer
 		this.store = store;
 	}
 	
-	protected static boolean fitsInRadius( RegionMap rmap, int radius ) {
+	protected static boolean fitsInRadius( World rmap, int radius ) {
 		if( rmap.minX < -radius ) return false;
 		if( rmap.maxX >  radius ) return false;
 		if( rmap.minZ < -radius ) return false;
@@ -50,7 +50,7 @@ public class ImageTreeComposer
 		}
 	}
 	
-	protected String compose( final RegionMap rmap, final int rx, final int rz, final int size ) {
+	protected String compose( final World rmap, final int rx, final int rz, final int size ) {
 		if( size == 0 ) {
 			throw new RuntimeException( "Bad region range size: "+size+" (should be a power of 2, >= 1)");
 		}
@@ -72,7 +72,7 @@ public class ImageTreeComposer
 		}
 	}
 	
-	public String compose( RegionMap rmap ) {
+	public String compose( World rmap ) {
 		int radius = 1; // In region widths (512 meters)
 		while( !fitsInRadius(rmap,radius) ) radius *= 2;
 		return compose( rmap, -radius, -radius, radius*2 );

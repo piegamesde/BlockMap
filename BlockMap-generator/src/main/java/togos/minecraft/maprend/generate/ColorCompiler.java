@@ -171,7 +171,7 @@ public class ColorCompiler {
 			}
 		}
 		int pixels = image.getWidth() * image.getHeight();
-		return new Color(r / a, g / a, b / a, a / pixels);
+		return new Color(a / pixels, r / a, g / a, b / a);
 	}
 
 	public static BiomeColorMap compileBiomeColors(Path minecraftJar, Path colorInstructions) throws IOException {
@@ -239,7 +239,6 @@ public class ColorCompiler {
 		int j = (int) ((1.0D - humidity) * 255.0D);
 		int k = j << 8 | i;
 		return k > grassColors.length ? -65281 : grassColors[k];
-
 	}
 
 	private static int foliageColor(double temperature, double humidity, int[] foliageColors) {

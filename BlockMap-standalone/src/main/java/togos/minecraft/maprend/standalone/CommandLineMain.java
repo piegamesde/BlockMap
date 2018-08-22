@@ -13,7 +13,7 @@ import picocli.CommandLine.Parameters;
 import picocli.CommandLine.RunLast;
 import togos.minecraft.maprend.BoundingRect;
 import togos.minecraft.maprend.IDUtil;
-import togos.minecraft.maprend.RegionMap;
+import togos.minecraft.maprend.World;
 import togos.minecraft.maprend.renderer.RegionRendererOld;
 import togos.minecraft.maprend.renderer.RenderSettings;
 
@@ -203,7 +203,7 @@ public class CommandLineMain implements Runnable {
 				return 0;
 			}
 
-			RegionMap rm = RegionMap.load(regionFiles, regionLimitRect);
+			World rm = World.load(regionFiles, regionLimitRect);
 			RegionRendererOld rr = new RegionRendererOld(new RenderSettings(
 					colorMapFile, biomeMapFile, debug, minHeight, maxHeight,
 					shadingReferenceAltitude, minAltitudeShading, maxAltitudeShading, altitudeShadingFactor,

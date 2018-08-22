@@ -10,7 +10,7 @@ import org.joml.Vector2ic;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
-import togos.minecraft.maprend.RegionMap.Region;
+import togos.minecraft.maprend.World.Region;
 
 public class RenderedRegion {
 

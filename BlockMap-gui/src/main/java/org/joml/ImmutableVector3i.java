@@ -16,6 +16,10 @@ import java.nio.IntBuffer;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
+import org.joml.internal.MemUtil;
+import org.joml.internal.Options;
+import org.joml.internal.Runtime;
+
 /**
  * Contains the definition of a Vector comprising 3 ints and associated transformations. The values of this class are set in the constructor and cannot be
  * changed. Operations that modify this vector either take in a destination vector that will be changed or return a changed immutable copy of this vector with
@@ -471,5 +475,40 @@ public class ImmutableVector3i implements Vector3ic {
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	public Vector3ic getToAddress(long address) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Vector3i min(Vector3ic v, Vector3i dest) {
+		dest.x = x < v.x() ? x : v.x();
+		dest.y = y < v.y() ? y : v.y();
+		dest.z = z < v.z() ? z : v.z();
+		return dest;
+	}
+
+	@Override
+	public Vector3i max(Vector3ic v, Vector3i dest) {
+		dest.x = x > v.x() ? x : v.x();
+		dest.y = y > v.y() ? y : v.y();
+		dest.z = z > v.z() ? z : v.z();
+		return dest;
+	}
+
+	@Override
+	public int get(int component) throws IllegalArgumentException {
+		switch (component) {
+		case 0:
+			return x;
+		case 1:
+			return y;
+		case 2:
+			return z;
+		default:
+			throw new IllegalArgumentException();
+		}
 	}
 }

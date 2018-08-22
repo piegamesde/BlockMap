@@ -1,4 +1,4 @@
-package togos.minecraft.maprend.standalone;
+package togos.minecraft.maprend.guistandalone;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,8 +12,12 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.controlsfx.dialog.CommandLinksDialog;
 import org.controlsfx.dialog.CommandLinksDialog.CommandLinksButtonType;
+
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -30,10 +34,12 @@ import togos.minecraft.maprend.gui.MapPane;
 import togos.minecraft.maprend.gui.WorldRendererCanvas;
 import togos.minecraft.maprend.gui.decoration.DragScrollDecoration;
 import togos.minecraft.maprend.gui.decoration.SettingsOverlay;
-import togos.minecraft.maprend.renderer.RegionRendererOld;
+import togos.minecraft.maprend.renderer.RegionRenderer;
 import togos.minecraft.maprend.renderer.RenderSettings;
 
 public class GuiController implements Initializable {
+
+	private static Log log = LogFactory.getLog(RegionRenderer.class);
 
 	public WorldRendererCanvas	renderer;
 
@@ -51,18 +57,16 @@ public class GuiController implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		try {
-			renderer = new WorldRendererCanvas(new RegionRendererOld(new RenderSettings()));
-			root.setCenter(pane = new MapPane(renderer));
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
+		log.debug("Initializing GUI");
+		renderer = new WorldRendererCanvas(new RegionRenderer(new RenderSettings()));
+		root.setCenter(pane = new MapPane(renderer));
 		pane.decorationLayers.add(new DragScrollDecoration(renderer.viewport));
 		pane.settingsLayers.add(new SettingsOverlay(renderer));
 	}
 
 	public void reloadWorld() {
 		String world = pathField.getText();
+		log.info("(Re)loading world: " + world);
 		if (world.isEmpty())
 			return;
 		try {
@@ -105,7 +109,7 @@ public class GuiController implements Initializable {
 				if (!hasFilesWithEnding(path, "mca"))
 					new Alert(AlertType.WARNING, "Your selected folder seems to not contain any useful files." + (hasFilesWithEnding(path, "mcr")
 							? " It does contain some region files in the old format though, please open this world in a newer version of Minecraft to automatically convert them." : "")).showAndWait();
-				renderer.loadWorld(path.toFile());
+				renderer.loadWorld(path);
 			} else
 				new Alert(AlertType.ERROR, "Folder does not exist", ButtonType.OK).showAndWait();
 		} catch (InvalidPathException e) {

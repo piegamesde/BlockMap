@@ -18,7 +18,7 @@ public final class DotMinecraft {
 		} else if (OS.contains("MAC")) {
 			mc = Paths.get(System.getProperty("user.home") + "/Library/Application Support").resolve("minecraft");
 		} else if (OS.contains("NUX")) {
-			mc = Paths.get("~/.minecraft");
+			mc = Paths.get(System.getProperty("user.home"), ".minecraft");
 		} else {
 			mc = Paths.get(System.getProperty("user.dir"));
 		}

@@ -73,6 +73,7 @@ public class BlockColorMap {
 				Color color = new Color((float) in.nextDouble(), (float) in.nextDouble(), (float) in.nextDouble(), (float) in.nextDouble());
 				Block block = Block.byCompactForm(key).get(0);
 				blockColors.put(block, color);
+				in.endArray();
 			}
 			in.endObject();
 			// gassBlocks
@@ -98,7 +99,7 @@ public class BlockColorMap {
 			return new BlockColorMap(blockColors, grassBlocks, foliageBlocks, waterBlocks);
 		}
 	};
-	public static final Gson GSON = new GsonBuilder().registerTypeAdapter(BlockColorMap.class, ADAPTER).create();
+	public static final Gson GSON = new GsonBuilder().registerTypeAdapter(BlockColorMap.class, ADAPTER).setPrettyPrinting().create();
 
 	protected Map<Block, Color> blockColors;
 	protected Set<Block> grassBlocks;

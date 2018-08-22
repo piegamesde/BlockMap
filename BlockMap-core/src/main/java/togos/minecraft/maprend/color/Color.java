@@ -2,11 +2,11 @@ package togos.minecraft.maprend.color;
 
 public class Color {
 
-	public static final Color MISSING = new Color(1f, 0f, 1f, 1f);
+	public static final Color MISSING = new Color(1f, 1f, 0f, 1f);
 
 	public final float r, g, b, a;
 
-	public Color(float r, float g, float b, float a) {
+	public Color(float a, float r, float g, float b) {
 		this.r = r;
 		this.g = g;
 		this.b = b;

@@ -1,14 +1,22 @@
 package togos.minecraft.maprend.gui;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.util.*;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
 import org.joml.Vector2dc;
 import org.joml.Vector3d;
+
+import com.flowpowered.nbt.regionfile.RegionFile;
+
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.canvas.Canvas;
@@ -16,17 +24,15 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
-import togos.minecraft.maprend.BoundingRect;
-import togos.minecraft.maprend.RegionMap;
+import togos.minecraft.maprend.World;
 import togos.minecraft.maprend.gui.RenderedRegion.RenderingState;
-import togos.minecraft.maprend.io.RegionFile;
-import togos.minecraft.maprend.renderer.RegionRendererOld;
+import togos.minecraft.maprend.renderer.RegionRenderer;
 
 public class WorldRendererCanvas extends Canvas implements Runnable {
 
 	public static final int					THREAD_COUNT	= 4;
 
-	protected RegionRendererOld				renderer;
+	protected RegionRenderer renderer;
 	protected RenderedMap					map;
 
 	protected ScheduledThreadPoolExecutor	executor;
@@ -36,8 +42,8 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 
 	public final DisplayViewport			viewport		= new DisplayViewport();
 
-	public WorldRendererCanvas(RegionRendererOld renderer) {
-		this.renderer = Objects.requireNonNull(renderer);
+	public WorldRendererCanvas(RegionRenderer regionRenderer) {
+		this.renderer = Objects.requireNonNull(regionRenderer);
 
 		{// Executor
 			executor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(THREAD_COUNT);
@@ -66,8 +72,8 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 		repaint();
 	}
 
-	public void loadWorld(File file) {
-		map.clearReload(RegionMap.load(file, BoundingRect.INFINITE).regions);
+	public void loadWorld(Path file) {
+		map.clearReload(World.load(file).regions.values());
 		invalidateTextures();
 	}
 
@@ -123,7 +129,7 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 		// gc.strokeRect(0, 0, getWidth() - 0, getHeight() - 0);
 	}
 
-	public RegionRendererOld getRegionRenderer() {
+	public RegionRenderer getRegionRenderer() {
 		return renderer;
 	}
 

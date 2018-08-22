@@ -1,20 +1,38 @@
 package togos.minecraft.maprend.gui;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.ConcurrentModificationException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import org.joml.*;
-import org.mapdb.*;
+
+import org.joml.AABBd;
+import org.joml.ImmutableVector2i;
+import org.joml.Vector2i;
+import org.joml.Vector2ic;
+import org.joml.Vector3i;
+import org.joml.Vector3ic;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
+import org.mapdb.DataInput2;
+import org.mapdb.DataOutput2;
+import org.mapdb.HTreeMap;
+import org.mapdb.Serializer;
+
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
-import togos.minecraft.maprend.RegionMap.Region;
+import togos.minecraft.maprend.World.Region;
 
 public class RenderedMap {
 
@@ -244,7 +262,7 @@ public class RenderedMap {
 	}
 
 	public RenderedImage createImage(RenderedRegion r) {
-		return new RenderedImage(this, r.level <= 0 ? cacheMapDiskMem : cacheMapMem, new Vector3i(r.position.x(), r.position.y(), r.level).toImmutable());
+		return new RenderedImage(this, r.level <= 0 ? cacheMapDiskMem : cacheMapMem, new Vector3i(r.position.x(), r.position.y(), r.level));
 	}
 
 	protected boolean isImageLoaded(Vector3ic key) {

@@ -5,18 +5,19 @@ import java.io.File;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
-import togos.minecraft.maprend.RegionMap;
-import togos.minecraft.maprend.RegionMap.Region;
+
+import togos.minecraft.maprend.World;
+import togos.minecraft.maprend.World.Region;
 
 public class BigImageMerger
 {
-	public void createBigImage( RegionMap rm, File outputDir, boolean debug ) {
+	public void createBigImage( World rm, File outputDir, boolean debug ) {
 		int width = (rm.maxX-rm.minX)*512;
 		int height = (rm.maxZ-rm.minZ)*512;
 		BufferedImage bigImage = new BufferedImage( width, height, BufferedImage.TYPE_INT_ARGB );
 		if( debug ) System.err.println( "Dimension: "+width+", "+height );
-		
-		for( Region r : rm.regions ) {
+
+		for (Region r : rm.regions.values()) {
 			BufferedImage region = null;
 			try {
 				region = ImageIO.read( r.imageFile );

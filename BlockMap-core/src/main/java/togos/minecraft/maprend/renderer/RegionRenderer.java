@@ -1,5 +1,6 @@
 package togos.minecraft.maprend.renderer;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,9 +50,20 @@ public class RegionRenderer {
 		blockColors = BlockColorMap.loadDefault();
 	}
 
-	public int[] render(RegionFile file) throws IOException {
+	public BufferedImage render(RegionFile file) throws IOException {
+		BufferedImage image = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
+		Color[] colors = renderRaw(file);
+		// image.setRGB(0, 0, 512, 512, colors, 0, 512);
+		for (int x = 0; x < 512; x++)
+			for (int z = 0; z < 512; z++)
+				if (colors[x | (z << 9)] != null)
+					image.setRGB(x, z, colors[x | (z << 9)].toRGB());
+		return image;
+	}
+
+	public Color[] renderRaw(RegionFile file) throws IOException {
 		// The final map of the chunk, 512*512 pixels, XZ
-		int[] map = new int[512 * 512];
+		Color[] map = new Color[512 * 512];
 		int[] height = new int[512 * 512];
 		Arrays.fill(height, 256);
 
@@ -99,7 +111,7 @@ public class RegionRenderer {
 				 */
 				int lowestLoadedSection = 16;
 				/* Null entries indicate a section full of air */
-				int[][] loadedSections = new int[16][];
+				Color[][] loadedSections = new Color[16][];
 
 				// Get the list of all sections and map them to their y coordinate using streams
 				@SuppressWarnings("unchecked")
@@ -110,7 +122,7 @@ public class RegionRenderer {
 				// Traverse the chunk in YXZ order
 				for (byte z = 0; z < 16; z++)
 					for (byte x = 0; x < 16; x++) {
-						int color = 0;
+						Color color = null;
 						height: for (byte s = 15; s >= 0; s--) {
 							if (s < lowestLoadedSection) {
 								// log.debug("Loading section " + s);
@@ -126,7 +138,7 @@ public class RegionRenderer {
 								color = loadedSections[s][x | z << 4 | y << 8];
 								// color = Color.alpha_over(loadedSections[s][x | z << 4 | y << 8], color);
 								height[chunk.x << 4 | x | chunk.z << 13 | z << 9] = y | s << 4;
-								if (Color.alpha(color) > 0) {// TODO use threshold
+								if (color.a > 0) {// TODO use threshold
 									break height;
 								}
 							}
@@ -134,7 +146,7 @@ public class RegionRenderer {
 						// Alpha over black to get rid of remaining opacity
 						// TODO remove?
 						// color = Color.overlay(0xFF000000, color);
-						color = color | 0xFF000000; // TODO remove!
+						color = new Color(1, color.r, color.g, color.b); // TODO remove!
 						map[chunk.x << 4 | x | chunk.z << 13 | z << 9] = color;
 					}
 			} catch (Exception e) {
@@ -142,11 +154,11 @@ public class RegionRenderer {
 				throw e;
 			}
 		}
-		// shade(map, height);
+		shade(map, height);
 		return map;
 	}
 
-	private void shade(int[] color, int[] height) {
+	private void shade(Color[] color, int[] height) {
 		int width = 512, depth = 512;
 
 		int idx = 0;
@@ -154,7 +166,7 @@ public class RegionRenderer {
 			for (int x = 0; x < width; ++x, ++idx) {
 				float dyx, dyz;
 
-				if (color[idx] == 0)
+				if (color[idx] != null && color[idx].a < 0.01f)
 					continue;
 
 				if (x == 0)
@@ -196,7 +208,7 @@ public class RegionRenderer {
 	 * Takes in the nbt data for a section and returns an int[] containing the color of each block in that section. The returned array thus has
 	 * a length of 16³=4096 items and the blocks are mapped to them in XZY order.
 	 */
-	private int[] renderSection(int[] biomes, CompoundMap section) {
+	private Color[] renderSection(int[] biomes, CompoundMap section) {
 		if (section == null)
 			return null;
 
@@ -213,30 +225,28 @@ public class RegionRenderer {
 		long[] blocks = ((LongArrayTag) section.get("BlockStates")).getValue();
 
 		int bitsPerIndex = blocks.length * 64 / 4096;
-		int[] ret = new int[16 * 16 * 16];
+		Color[] ret = new Color[16 * 16 * 16];
 
 		for (int i = 0; i < 4096; i++) {
 			long blockIndex = extractFromLong(blocks, i, bitsPerIndex);
 
 			if (blockIndex >= palette.size()) {
-				ret[i] = 0xFF00FFFF;
-				System.out.println("Block " + i + " " + blockIndex + " was out of bounds, size " + bitsPerIndex);
+				ret[i] = Color.MISSING;
+				log.warn("Block " + i + " " + blockIndex + " was out of bounds, is this world corrupt?");
 				continue;
 			}
 			Block block = palette.get((int) blockIndex);
 			Color color = blockColors.getBlockColor(block);
 			if (color == Color.MISSING) // == is correct here
 				log.warn("Missing color for " + block);
-			// TODO add back in
 
-			// Biome biome = biomeColors.getBiome(biomes[i & 0xFF]);
-			// if (blockColors.isGrassBlock(block))
-			// color = Color.multiplySolid(color, biome.grassColor);
-			// if (blockColors.isFoliageBlock(block))
-			// color = Color.multiplySolid(color, biome.foliageColor);
-			// if (blockColors.isWaterBlock(block))
-			// color = Color.multiplySolid(color, biome.waterColor);
-			ret[i] = color.toRGB();
+			if (blockColors.isGrassBlock(block))
+				color = Color.multiplyRGB(color, biomeColors.getGrassColor(biomes[i & 0xFF]));
+			if (blockColors.isFoliageBlock(block))
+				color = Color.multiplyRGB(color, biomeColors.getFoliageColor(biomes[i & 0xFF]));
+			if (blockColors.isWaterBlock(block))
+				color = Color.multiplyRGB(color, biomeColors.getWaterColor(biomes[i & 0xFF]));
+			ret[i] = color;
 		}
 
 		return ret;

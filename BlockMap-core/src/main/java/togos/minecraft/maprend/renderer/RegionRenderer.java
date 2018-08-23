@@ -176,7 +176,7 @@ public class RegionRenderer {
 		Color[] ret = new Color[16 * 16 * 16];
 
 		for (int i = 0; i < 4096; i++) {
-			long blockIndex = extractFromLong(blocks, i, bitsPerIndex);
+			long blockIndex = RegionFile.extractFromLong(blocks, i, bitsPerIndex);
 
 			if (blockIndex >= palette.size()) {
 				ret[i] = Color.MISSING;
@@ -200,12 +200,6 @@ public class RegionRenderer {
 		return ret;
 	}
 
-	public static void printLong(long l) {
-		String s = Long.toBinaryString(l);
-		s = "0000000000000000000000000000000000000000000000000000000000000000".substring(s.length()) + s;
-		System.out.println(s);
-	}
-
 	public static EnumSet<BlockState> parseBlockState(CompoundTag properties) {
 		EnumSet<BlockState> ret = EnumSet.noneOf(BlockState.class);
 		if (properties != null)
@@ -214,42 +208,14 @@ public class RegionRenderer {
 		return ret;
 	}
 
-	public static long extractFromLong2(long[] blocks, int i, int bitsPerIndex) {
-		StringBuffer number = new StringBuffer();
-		// Reverse all longs, convert them to a binary string, zero pad them and concatenate them
-		for (long l : blocks)
-			number.append(RegionRenderer.convertLong(Long.reverse(l)));
-		return Long.parseLong(new StringBuilder(number.substring(i * bitsPerIndex, i * bitsPerIndex + bitsPerIndex)).reverse().toString(), 2);
-	}
-
-	public static String convertLong(long l) {
-		String s = Long.toBinaryString(l);
-		// Fancy way of zero padding :)
-		s = "0000000000000000000000000000000000000000000000000000000000000000".substring(s.length()) + s;
-		return s;
-	}
-
-	public static long extractFromLong(long[] blocks, int i, int bitsPerIndex) {
-		int startByte = (bitsPerIndex * i) >> 6; // >> 6 equals / 64
-		int endByte = (bitsPerIndex * (i + 1)) >> 6;
-		// The bit within the long where our value starts. Counting from the right LSB (!).
-		int startByteBit = ((bitsPerIndex * i)) & 63; // % 64 equals & 63
-		int endByteBit = ((bitsPerIndex * (i + 1))) & 63;
-
-		// Use bit shifting and & bit masking to extract bit sequences out of longs as numbers
-		// -1L is the value with every bit set
-		long blockIndex;
-		if (startByte == endByte) {
-			// Normal case: the bit string we need is within a single long
-			blockIndex = (blocks[startByte] << (64 - endByteBit)) >>> (64 + startByteBit - endByteBit);
-		} else if (endByteBit == 0) {
-			// The bit string is exactly at the beginning of a long
-			blockIndex = blocks[startByte] >>> startByteBit;
-		} else {
-			// The bit string is overlapping two longs
-			blockIndex = ((blocks[startByte] >>> startByteBit))
-					| ((blocks[endByte] << (64 - endByteBit)) >>> (startByteBit - endByteBit));
-		}
-		return blockIndex;
-	}
+	// public static void printLong(long l) {
+	// System.out.println(convertLong(l));
+	// }
+	//
+	// public static String convertLong(long l) {
+	// String s = Long.toBinaryString(l);
+	// // Fancy way of zero padding :)
+	// s = "0000000000000000000000000000000000000000000000000000000000000000".substring(s.length()) + s;
+	// return s;
+	// }
 }

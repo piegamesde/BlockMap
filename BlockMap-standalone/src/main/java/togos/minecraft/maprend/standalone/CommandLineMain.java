@@ -1,9 +1,19 @@
 package togos.minecraft.maprend.standalone;
 
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
+import javax.imageio.ImageIO;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.joml.Vector2i;
+
+import com.flowpowered.nbt.regionfile.RegionFile;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -12,6 +22,8 @@ import picocli.CommandLine.HelpCommand;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.RunLast;
+import togos.minecraft.maprend.World;
+import togos.minecraft.maprend.World.Region;
 import togos.minecraft.maprend.guistandalone.GuiMain;
 import togos.minecraft.maprend.renderer.RegionRenderer;
 import togos.minecraft.maprend.renderer.RenderSettings;
@@ -19,10 +31,12 @@ import togos.minecraft.maprend.renderer.RenderSettings;
 @Command(name = "tmcmr", subcommands = { HelpCommand.class })
 public class CommandLineMain implements Runnable {
 
+	private static Log log = LogFactory.getLog(RegionRenderer.class);
+
 	@Option(names = { "--output",
 			"-o" }, description = "The location of the output images. Must not be a file. Non-existant folders will be created.", defaultValue = ".", showDefaultValue = Visibility.ALWAYS)
 	private Path output;
-	@Parameters(index = "0", paramLabel = "INPUT", description = "Path to the world data. Normally, this should point to a 'region/' of aworld.")
+	@Parameters(index = "0", paramLabel = "INPUT", description = "Path to the world data. Normally, this should point to a 'region/' of a world.")
 	private Path input;
 	@Option(names = { "--verbose", "-v" }, description = "Be chatty")
 	private boolean verbose;
@@ -31,10 +45,18 @@ public class CommandLineMain implements Runnable {
 	@Option(names = "--biome-map", description = "Load a custom biome color map from the specified file")
 	private Path biomeMap;
 
-	@Option(names = "--min-height", description = "Don't draw blocks lower than this height", defaultValue = "0")
-	private int minHeight;
-	@Option(names = "--max-height", description = "Don't draw blocks higher than this height", defaultValue = "255")
-	private int maxHeight;
+	@Option(names = { "--min-Y", "--min-height" }, description = "Don't draw blocks lower than this height", defaultValue = "0")
+	private int minY;
+	@Option(names = { "--max-Y", "--max-height" }, description = "Don't draw blocks higher than this height", defaultValue = "255")
+	private int maxY;
+	@Option(names = "--min-X", description = "Don't draw blocks to the east of this coordinate", defaultValue = "-2147483648")
+	private int minX;
+	@Option(names = "--max-X", description = "Don't draw blocks to the west of this coordinate", defaultValue = "2147483647")
+	private int maxX;
+	@Option(names = "--min-Z", description = "Don't draw blocks to the north of this coordinate", defaultValue = "-2147483648")
+	private int minZ;
+	@Option(names = "--max-Z", description = "Don't draw blocks to the south of this coordinate", defaultValue = "2147483647")
+	private int maxZ;
 
 	@Option(names = "--create-tile-html", description = "Generate a tiles.html in the output directory that will show all rendered images ona mapin your browsed")
 	private boolean createHtml;
@@ -267,16 +289,34 @@ public class CommandLineMain implements Runnable {
 
 	@Override
 	public void run() {
-		if (!verbose) {
+		if (verbose) {
 			Configurator.setRootLevel(Level.DEBUG);
 		}
 		RenderSettings settings = new RenderSettings();
 		RegionRenderer renderer = new RegionRenderer(settings);
 
-		// if (createBigPic)
-		// PostProcessing.createBigImage(rm, outputDir, settings);
-		// if (createHtml)
-		// PostProcessing.createTileHtml(minX, minZ, maxX, maxZ, outputDir, settings);
+		World world = World.load(input);
+		for (Region r : world.regions.values()) {
+			try {
+				RegionFile rf = new RegionFile(r.regionFile);
+				BufferedImage b = renderer.render(new Vector2i(r.rx, r.rz), rf);
+				Path out = input.resolve(output.relativize(r.regionFile));
+				r.imageFile = out.resolveSibling(out.getFileName().toString().replace(".mca", ".png"));
+				log.debug("Saving image to " + r.imageFile.toAbsolutePath());
+				ImageIO.write(b, "png", Files.newOutputStream(r.imageFile));
+			} catch (IOException e) {
+				log.error("Could not render region file", e);
+			}
+		}
+		if (createBigPic)
+			PostProcessing.createBigImage(world, output, settings);
+		if (createHtml)
+			try {
+				PostProcessing.createTileHtml(world, output, settings);
+			} catch (IOException e) {
+				// TODO catch exception in method
+				log.error("Could not create tile map", e);
+			}
 	}
 
 	// public static void main(String[] args) throws Exception {

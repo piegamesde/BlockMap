@@ -206,7 +206,8 @@ public class ColorCompiler {
 				int id = Integer.parseInt(reader.nextName());
 				reader.beginObject();
 				reader.skipValue();// waterColor
-				int waterColor = reader.nextInt();
+				// TODO use default int again
+				int waterColor = (int) (Long.decode(reader.nextString()) & 0xFFFFFFFF);
 				reader.skipValue(); // rainfall
 				double rainfall = reader.nextDouble();
 				reader.skipValue();// temperature

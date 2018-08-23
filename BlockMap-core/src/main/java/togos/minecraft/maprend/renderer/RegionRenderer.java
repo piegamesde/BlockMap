@@ -36,16 +36,16 @@ public class RegionRenderer {
 	public final RenderSettings settings;
 
 	protected BlockColorMap blockColors;
-	protected BiomeColorMap biomeColors = BiomeColorMap.loadDefault();
-
-	public final int air16Color = -1; // Color of 16 air blocks stacked TODO use it
+	protected BiomeColorMap biomeColors;
 
 	public RegionRenderer(RenderSettings settings) {
 		this.settings = Objects.requireNonNull(settings);
 		blockColors = BlockColorMap.loadDefault();
+		biomeColors = BiomeColorMap.loadDefault();
 	}
 
 	public BufferedImage render(Vector2i regionPos, RegionFile file) throws IOException {
+		log.info("Rendering region file " + regionPos.x + " " + regionPos.y);
 		BufferedImage image = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
 		Color[] colors = renderRaw(regionPos, file);
 		// image.setRGB(0, 0, 512, 512, colors, 0, 512);
@@ -64,10 +64,16 @@ public class RegionRenderer {
 
 		for (RegionChunk chunk : file.listExistingChunks()) {
 			try {
-				// log.debug("Rendering chunk " + chunk.x + " " + chunk.z);
+				int chunkX = ((regionPos.x << 5) | chunk.x);
+				int chunkZ = ((regionPos.y << 5) | chunk.z);
+				if ((chunkX + 16 < settings.minX || chunkX > settings.maxX)
+						&& (chunkZ + 16 < settings.minZ || chunkZ > settings.maxZ)) {
+					log.debug("Skipping chunk: out of bounds " + chunkX + " " + chunkZ);
+					continue;
+				}
+				log.debug("Rendering chunk " + chunkX + " " + chunkZ);
 				chunk.load();
 
-				// System.out.println(chunk.readTag());
 				CompoundMap root = chunk.readTag().getValue();
 				chunk.unload();
 
@@ -83,8 +89,10 @@ public class RegionRenderer {
 						// rendering. Maybe pre 1.13 worlds
 						// will be accepted again one day");
 					} else {
-						throw new IllegalArgumentException(
-								"Only chunks saved in 1.13+ are supported, this is pre 1.9!. Please optimize your world in Minecraft before rendering");
+						log.warn("Skipping chunk because it is way too old (pre 1.9)");
+						continue;
+						// throw new IllegalArgumentException(
+						// "Only chunks saved in 1.13+ are supported, this is pre 1.9!. Please optimize your world in Minecraft before rendering");
 					}
 				}
 
@@ -121,6 +129,8 @@ public class RegionRenderer {
 							continue;
 						Color color = Color.TRANSPARENT;
 						height: for (byte s = 15; s >= 0; s--) {
+							if ((s << 4) + 15 > settings.maxY)
+								continue;
 							if (s < lowestLoadedSection) {
 								// log.debug("Loading section " + s);
 								loadedSections[s] = renderSection(biomes, sections.get(s));
@@ -132,6 +142,10 @@ public class RegionRenderer {
 								continue;
 							}
 							for (int y = 15; y >= 0; y--) {
+								if ((y | s << 4) < settings.minY)
+									break height;
+								if ((y | s << 4) > settings.maxY)
+									continue;
 								color = Color.alphaOver(loadedSections[s][x | z << 4 | y << 8], color);
 								/* As long as the blocks are transparent enough, we keep track of the height */
 								// TODO use the actual height maps

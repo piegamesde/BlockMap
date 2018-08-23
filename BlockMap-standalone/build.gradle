@@ -1,15 +1,18 @@
 buildscript {
     dependencies {
         classpath group: 'de.dynamicfiles.projects.gradle.plugins', name: 'javafx-gradle-plugin', version: '8.8.2'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.1'
     }
 
     repositories {
+        jcenter()
         mavenLocal()
         mavenCentral()
     }
 }
 
 apply plugin: 'javafx-gradle-plugin'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 dependencies {
     compile project(':BlockMap-gui')
@@ -27,14 +30,9 @@ jfx {
 }
 
 //create a single Jar with all dependencies
-task fatJar(type: Jar) {
-	group 'Build'
+jar {
 	manifest {
         attributes 'Implementation-Title': 'BlockMap',
-        	'Implementation-Version': version,
         	'Main-Class': 'togos.minecraft.maprend.standalone.CommandLineMain'
     }
-    baseName = project.name + '-all'
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
-    with jar
 }

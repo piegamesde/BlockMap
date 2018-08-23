@@ -149,6 +149,22 @@ public class RegionRenderer {
 				throw e;
 			}
 		}
+
+		// {// Shading
+		// for (int z = 0; z < 512; z++)
+		// for (int x = 0; x < 512; x++) {
+		// int westHeight = height[z << 9 | Math.max(x - 1, 0)];
+		// int eastHeight = height[z << 9 | Math.min(x + 1, 511)];
+		// int northHeight = height[Math.max(z - 1, 0) << 9 | x];
+		// int southHeight = height[Math.min(z + 1, 0) << 9 | x];
+		// Vector3f gradientX = new Vector3f(2, westHeight - eastHeight, 0);
+		// Vector3f gradientZ = new Vector3f(0, northHeight - southHeight, 2);
+		// Vector3f gradient = gradientX.cross(gradientZ, new Vector3f());
+		// Vector3f sunlight = new Vector3f(-1, 2, -1);
+		// float factor = sunlight.dot(gradient);
+		// map[z << 9 | x] = Color.alphaOver(map[z << 9 | x], new Color(1 - factor, 1, 1, 1));
+		// }
+		// }
 		return map;
 	}
 
@@ -196,7 +212,6 @@ public class RegionRenderer {
 				color = Color.multiplyRGB(color, biomeColors.getWaterColor(biomes[i & 0xFF]));
 			ret[i] = color;
 		}
-
 		return ret;
 	}
 

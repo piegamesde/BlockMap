@@ -1,68 +1,77 @@
 package togos.minecraft.maprend.standalone;
 
+import java.nio.file.Path;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
+
+import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Help.Visibility;
 import picocli.CommandLine.HelpCommand;
+import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
+import picocli.CommandLine.RunLast;
+import togos.minecraft.maprend.guistandalone.GuiMain;
+import togos.minecraft.maprend.renderer.RegionRenderer;
+import togos.minecraft.maprend.renderer.RenderSettings;
 
 @Command(name = "tmcmr", subcommands = { HelpCommand.class })
-public class CommandLineMain {
+public class CommandLineMain implements Runnable {
 
-	// @Option(names = { "--output", "-o" }, description = "The location of the output images. Must not be a file. Non-existant folders will be
-	// created.", defaultValue = ".", showDefaultValue = Visibility.ALWAYS)
-	// private Path output;
-	// @Parameters(index = "0", paramLabel = "INPUT", description = "Path to the world data. Normally, this should point to a 'region/' of a
-	// world.")
-	// private Path input;
-	// @Option(names = { "--verbose", "-v" }, description = "Be chatty")
-	// private boolean verbose;
-	// @Option(names = "--color-map", description = "Load a custom color map from the specified file")
-	// private Path colorMap;
-	// @Option(names = "--biome-map", description = "Load a custom biome color map from the specified file")
-	// private Path biomeMap;
-	//
-	// @Option(names = "--min-height", description = "Don't draw blocks lower than this height", defaultValue = "0")
-	// private int minHeight;
-	// @Option(names = "--max-height", description = "Don't draw blocks higher than this height", defaultValue = "255")
-	// private int maxHeight;
-	//
-	// @Option(names = "--create-tile-html", description = "Generate a tiles.html in the output directory that will show all rendered images on
-	// a map in your browsed")
-	// private boolean createHtml;
-	// @Option(names = "--create-image-tree", description = "Generate a PicGrid-compatible image tree")
-	// private boolean createTree;
-	// @Option(names = "--create-big-image", description = "Merge all rendered images into a single file. May require a lot of RAM")
-	// private boolean createBigPic;
-	//
-	// private int threads = 8;
-	//
-	// public static final String USAGE = "Usage: TMCMR [options] -o <output-dir> <input-files>\n" +
-	// " -h, -? ; print usage instructions and exit\n" +
-	// " -f ; force re-render even when images are newer than regions\n" +
-	// " -debug ; be chatty\n" +
-	// " -color-map <file> ; load a custom color map from the specified file\n" +
-	// " -biome-map <file> ; load a custom biome color map from the specified file\n" +
-	// " -create-tile-html ; generate tiles.html in the output directory\n" +
-	// " -create-image-tree ; generate a PicGrid-compatible image tree\n" +
-	// " -create-big-image ; merges all rendered images into a single file\n" +
-	// " -min-height <y> ; only draw blocks above this height\n" +
-	// " -max-height <y> ; only draw blocks below this height\n" +
-	// " -region-limit-rect <x0> <y0> <x1> <y1> ; limit which regions are rendered\n" +
-	// " ; to those between the given region coordinates, e.g.\n" +
-	// " ; 0 0 2 2 to render the 4 regions southeast of the origin.\n" +
-	// " -altitude-shading-factor <f> ; how much altitude affects shading [36]\n" +
-	// " -shading-reference-altitude <y> ; reference altitude for shading [64]\n" +
-	// " -min-altitude-shading <x> ; lowest altitude shading modifier [-20]\n" +
-	// " -max-altitude-shading <x> ; highest altitude shading modifier [20]\n" +
-	// " -title <title> ; title to include with maps\n" +
-	// " -scales 1:<n>,... ; list scales at which to render\n" +
-	// " -threads <n> ; maximum number of CPU threads to use for rendering\n" +
-	// "\n" +
-	// "Input files may be 'region/' directories or individual '.mca' files.\n" +
-	// "\n" +
-	// "tiles.html will always be generated if a single directory is given as input.\n" +
-	// "\n" +
-	// "Compound image tree blobs will be written to ~/.ccouch/data/tmcmr/\n" +
-	// "Compound images can then be rendered with PicGrid.";
-	//
+	@Option(names = { "--output",
+			"-o" }, description = "The location of the output images. Must not be a file. Non-existant folders will be created.", defaultValue = ".", showDefaultValue = Visibility.ALWAYS)
+	private Path output;
+	@Parameters(index = "0", paramLabel = "INPUT", description = "Path to the world data. Normally, this should point to a 'region/' of aworld.")
+	private Path input;
+	@Option(names = { "--verbose", "-v" }, description = "Be chatty")
+	private boolean verbose;
+	@Option(names = "--color-map", description = "Load a custom color map from the specified file")
+	private Path colorMap;
+	@Option(names = "--biome-map", description = "Load a custom biome color map from the specified file")
+	private Path biomeMap;
+
+	@Option(names = "--min-height", description = "Don't draw blocks lower than this height", defaultValue = "0")
+	private int minHeight;
+	@Option(names = "--max-height", description = "Don't draw blocks higher than this height", defaultValue = "255")
+	private int maxHeight;
+
+	@Option(names = "--create-tile-html", description = "Generate a tiles.html in the output directory that will show all rendered images ona mapin your browsed")
+	private boolean createHtml;
+	@Option(names = "--create-big-image", description = "Merge all rendered images into a single file. May require a lot of RAM")
+	private boolean createBigPic;
+
+	private int threads = 8;
+
+	public static final String USAGE = "Usage: TMCMR [options] -o <output-dir> <input-files>\n" +
+			" -h, -? ; print usage instructions and exit\n" +
+			" -f ; force re-render even when images are newer than regions\n" +
+			" -debug ; be chatty\n" +
+			" -color-map <file> ; load a custom color map from the specified file\n" +
+			" -biome-map <file> ; load a custom biome color map from the specified file\n" +
+			" -create-tile-html ; generate tiles.html in the output directory\n" +
+			" -create-image-tree ; generate a PicGrid-compatible image tree\n" +
+			" -create-big-image ; merges all rendered images into a single file\n" +
+			" -min-height <y> ; only draw blocks above this height\n" +
+			" -max-height <y> ; only draw blocks below this height\n" +
+			" -region-limit-rect <x0> <y0> <x1> <y1> ; limit which regions are rendered\n" +
+			" ; to those between the given region coordinates, e.g.\n" +
+			" ; 0 0 2 2 to render the 4 regions southeast of the origin.\n" +
+			" -altitude-shading-factor <f> ; how much altitude affects shading [36]\n" +
+			" -shading-reference-altitude <y> ; reference altitude for shading [64]\n" +
+			" -min-altitude-shading <x> ; lowest altitude shading modifier [-20]\n" +
+			" -max-altitude-shading <x> ; highest altitude shading modifier [20]\n" +
+			" -title <title> ; title to include with maps\n" +
+			" -scales 1:<n>,... ; list scales at which to render\n" +
+			" -threads <n> ; maximum number of CPU threads to use for rendering\n" +
+			"\n" +
+			"Input files may be 'region/' directories or individual '.mca' files.\n" +
+			"\n" +
+			"tiles.html will always be generated if a single directory is given as input.\n" +
+			"\n" +
+			"Compound image tree blobs will be written to ~/.ccouch/data/tmcmr/\n" +
+			"Compound images can then be rendered with PicGrid.";
+
 	// static class RegionRendererCommand {
 	//
 	// public static RegionRendererCommand fromArguments(String... args) {
@@ -255,16 +264,30 @@ public class CommandLineMain {
 	// return 0;
 	// }
 	// }
-	//
-	// @Override
-	// public void run() {
+
+	@Override
+	public void run() {
+		if (!verbose) {
+			Configurator.setRootLevel(Level.DEBUG);
+		}
+		RenderSettings settings = new RenderSettings();
+		RegionRenderer renderer = new RegionRenderer(settings);
+
+		// if (createBigPic)
+		// PostProcessing.createBigImage(rm, outputDir, settings);
+		// if (createHtml)
+		// PostProcessing.createTileHtml(minX, minZ, maxX, maxZ, outputDir, settings);
+	}
+
+	// public static void main(String[] args) throws Exception {
+	// System.exit(RegionRendererCommand.fromArguments(args).run());
 	// }
-	//
-	// // public static void main(String[] args) throws Exception {
-	// // System.exit(RegionRendererCommand.fromArguments(args).run());
-	// // }
-	// public static void main(String[] args) {
-	// CommandLine cli = new CommandLine(new CommandLineMain());
-	// cli.parseWithHandler(new RunLast(), args);
-	// }
+	public static void main(String[] args) {
+		if (args == null || args.length == 0)
+			GuiMain.main(args);
+		else {
+			CommandLine cli = new CommandLine(new CommandLineMain());
+			cli.parseWithHandler(new RunLast(), args);
+		}
+	}
 }

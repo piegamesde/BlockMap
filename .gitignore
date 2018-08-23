@@ -1,0 +1,10 @@
+*.iml
+/bin/
+.src.lst
+
+/BlockMap-generator/src/test/resources/minecraft\.jar
+/BlockMap-core/src/test/resources/TestWorld1
+/BlockMap-core/src/test/resources/TestWorld2
+**/build/
+**/bin/
+\.gradle/

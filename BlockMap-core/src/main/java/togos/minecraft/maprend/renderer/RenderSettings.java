@@ -9,7 +9,7 @@ public class RenderSettings {
 	public int		minY						= Integer.MIN_VALUE;
 	public int		maxY						= Integer.MAX_VALUE;
 	public int		minZ						= Integer.MIN_VALUE;
-	public int		maxYZ						= Integer.MAX_VALUE;
+	public int		maxZ						= Integer.MAX_VALUE;
 
 	/**
 	 * Above = brighter, below = darker TODO affect grass color in a more native way

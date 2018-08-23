@@ -24,11 +24,11 @@ public class DragScrollDecoration extends Region {
 
 	/** Creates an instance of this class that will drag with the right mouse button and a scroll factor of 1/10. */
 	public DragScrollDecoration(DisplayViewport frustum) {
-		this(frustum, MouseButton.SECONDARY, 0.1d);
+		this(frustum, MouseButton.SECONDARY, 0.01d);
 	}
 
 	public DragScrollDecoration(DisplayViewport frustum, boolean allowDrag, boolean allowZoom) {
-		this(frustum, allowDrag ? MouseButton.SECONDARY : null, allowZoom ? 0.1d : 0);
+		this(frustum, allowDrag ? MouseButton.SECONDARY : null, allowZoom ? 0.01d : 0);
 	}
 
 	/**
@@ -69,6 +69,6 @@ public class DragScrollDecoration extends Region {
 		});
 
 		if (scrollFactor != 0)
-			setOnScroll(e -> frustum.mouseScroll(e.getTextDeltaY() * scrollFactor));
+			setOnScroll(e -> frustum.mouseScroll(e.getDeltaY() * scrollFactor));
 	}
 }

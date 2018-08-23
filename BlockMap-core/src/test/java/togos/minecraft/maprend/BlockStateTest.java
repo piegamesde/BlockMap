@@ -3,10 +3,8 @@ package togos.minecraft.maprend;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.net.URI;
+import java.io.InputStreamReader;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 import org.junit.Test;
 
@@ -35,7 +33,7 @@ public class BlockStateTest {
 	 */
 	@Test
 	public void testExisting() throws IOException, URISyntaxException {
-		try (JsonReader reader = new JsonReader(Files.newBufferedReader(Paths.get(URI.create(getClass().getResource("/blocks.json").toString()))))) {
+		try (JsonReader reader = new JsonReader(new InputStreamReader(getClass().getResourceAsStream("/blocks.json")))) {
 			reader.beginObject();
 			while (reader.hasNext()) {
 				reader.skipValue();

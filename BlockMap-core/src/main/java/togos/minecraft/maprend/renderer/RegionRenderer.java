@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.joml.Vector2i;
 
 import com.flowpowered.nbt.CompoundMap;
 import com.flowpowered.nbt.CompoundTag;
@@ -44,9 +45,9 @@ public class RegionRenderer {
 		blockColors = BlockColorMap.loadDefault();
 	}
 
-	public BufferedImage render(RegionFile file) throws IOException {
+	public BufferedImage render(Vector2i regionPos, RegionFile file) throws IOException {
 		BufferedImage image = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
-		Color[] colors = renderRaw(file);
+		Color[] colors = renderRaw(regionPos, file);
 		// image.setRGB(0, 0, 512, 512, colors, 0, 512);
 		for (int x = 0; x < 512; x++)
 			for (int z = 0; z < 512; z++)
@@ -55,7 +56,7 @@ public class RegionRenderer {
 		return image;
 	}
 
-	public Color[] renderRaw(RegionFile file) throws IOException {
+	public Color[] renderRaw(Vector2i regionPos, RegionFile file) throws IOException {
 		// The final map of the chunk, 512*512 pixels, XZ
 		Color[] map = new Color[512 * 512];
 		int[] height = new int[512 * 512];
@@ -116,6 +117,8 @@ public class RegionRenderer {
 				// Traverse the chunk in YXZ order
 				for (byte z = 0; z < 16; z++)
 					for (byte x = 0; x < 16; x++) {
+						if (x < settings.minX || x > settings.maxX || z < settings.minZ || z > settings.maxZ)
+							continue;
 						Color color = Color.TRANSPARENT;
 						height: for (byte s = 15; s >= 0; s--) {
 							if (s < lowestLoadedSection) {

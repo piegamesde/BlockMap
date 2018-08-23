@@ -13,6 +13,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.joml.Vector2dc;
+import org.joml.Vector2i;
 import org.joml.Vector3d;
 
 import com.flowpowered.nbt.regionfile.RegionFile;
@@ -144,7 +145,7 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 			try (RegionFile rf = new RegionFile(region.region.regionFile)) {
 				BufferedImage texture2 = null;
 				do {
-					texture2 = renderer.render(rf);
+					texture2 = renderer.render(new Vector2i(region.region.rx, region.region.rz), rf);
 					// Re-render the texture if it has been invalidated ('REDRAW')
 				} while (region.valid.compareAndSet(RenderingState.REDRAW, RenderingState.DRAWING) && !Thread.interrupted());
 

@@ -13,6 +13,7 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.joml.Vector2i;
 import org.junit.Test;
 
 import com.flowpowered.nbt.regionfile.RegionFile;
@@ -33,7 +34,7 @@ public class RegionRendererTest {
 			try (DirectoryStream<Path> dir = Files.newDirectoryStream(Paths.get(URI.create(getClass().getResource("/TestWorld2/region/").toString())))) {
 				for (Path p : dir) {
 					log.debug("Processing region file " + p);
-					BufferedImage image = renderer.render(new RegionFile(p));
+					BufferedImage image = renderer.render(new Vector2i(), new RegionFile(p));
 					String name = p.getFileName().toString();
 					ImageIO.write(image, "png", Files.newOutputStream(Paths.get("./output").resolve(name)));
 				}
@@ -41,7 +42,7 @@ public class RegionRendererTest {
 		}
 		if (true) {
 			RegionRenderer renderer = new RegionRenderer(new RenderSettings());
-			BufferedImage image = renderer.render(new RegionFile(Paths.get(URI.create(getClass().getResource("/r.0.0.mca").toString()))));
+			BufferedImage image = renderer.render(new Vector2i(0, 0), new RegionFile(Paths.get(URI.create(getClass().getResource("/r.0.0.mca").toString()))));
 			ImageIO.write(image, "png", Files.newOutputStream(Paths.get("./output").resolve("out.png")));
 		}
 		// PostProcessing.createTileHtml(-50, -50, 50, 50, new File("output"), new RenderSettings());

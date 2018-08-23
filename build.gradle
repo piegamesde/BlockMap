@@ -22,7 +22,22 @@ subprojects {
 	}
 
 	dependencies {
-		// Use JUnit test framework
 		testCompile 'junit:junit:4.12'
 	}
+
+
+	//test {
+    //	dependsOn cleanTest
+    //	testLogging.showStandardStreams = true
+	//}
+}
+
+
+task generate(type: Copy) {
+	group 'Application'
+	dependsOn ':BlockMap-generator:run'
+    description 'Compile the required color data from the minecraft.jar and copy it to the resources'
+
+	from "${projectDir}/BlockMap-generator/output/block-colors.json", "${projectDir}/BlockMap-generator/output/biome-colors.json"
+    into "${projectDir}/BlockMap-core/src/main/resources"
 }

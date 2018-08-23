@@ -29,6 +29,7 @@ public class RegionRendererTest {
 	public void simpleTest1() throws IOException, URISyntaxException, InterruptedException {
 		log.info("Test1");
 		log.debug("Test2");
+		Files.createDirectories(Paths.get("./output"));
 		if (false) {
 			RegionRenderer renderer = new RegionRenderer(new RenderSettings());
 			try (DirectoryStream<Path> dir = Files.newDirectoryStream(Paths.get(URI.create(getClass().getResource("/TestWorld2/region/").toString())))) {

@@ -7,4 +7,5 @@
 /BlockMap-core/src/test/resources/TestWorld2
 **/build/
 **/bin/
+**/output/
 \.gradle/

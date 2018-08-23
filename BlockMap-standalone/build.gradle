@@ -1,6 +1,26 @@
+buildscript {
+    dependencies {
+        classpath group: 'de.dynamicfiles.projects.gradle.plugins', name: 'javafx-gradle-plugin', version: '8.8.2'
+    }
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+}
+
+apply plugin: 'javafx-gradle-plugin'
+
 dependencies {
     compile project(':BlockMap-gui')
 
 	compile 'info.picocli:picocli:3.3.0'
 	compile 'net.sf.jopt-simple:jopt-simple:5.0.4'
+	implementation 'org.controlsfx:controlsfx:8.40.12'
+}
+
+
+jfx {
+    mainClass = 'togos.minecraft.maprend.guistandalone.GuiMain'
+    vendor = 'piegames'
 }

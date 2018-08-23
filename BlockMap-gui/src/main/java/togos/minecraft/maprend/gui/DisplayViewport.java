@@ -106,7 +106,6 @@ public class DisplayViewport {
 	 * @see #zoomProperty
 	 */
 	public void mouseScroll(double deltaZoom) {
-		System.out.println("Scroll " + deltaZoom);
 		double currentValue = zoomProperty.get();
 		double missingTime = 0;
 		if (zoomTimeline != null) {

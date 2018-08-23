@@ -3,35 +3,37 @@ package togos.minecraft.maprend.standalone;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 import javax.imageio.ImageIO;
 
 import togos.minecraft.maprend.World;
 import togos.minecraft.maprend.World.Region;
 
-public class BigImageMerger
-{
-	public void createBigImage( World rm, File outputDir, boolean debug ) {
-		int width = (rm.maxX-rm.minX)*512;
-		int height = (rm.maxZ-rm.minZ)*512;
-		BufferedImage bigImage = new BufferedImage( width, height, BufferedImage.TYPE_INT_ARGB );
-		if( debug ) System.err.println( "Dimension: "+width+", "+height );
+public class BigImageMerger {
+	public void createBigImage(World rm, File outputDir, boolean debug) {
+		int width = (rm.maxX - rm.minX) * 512;
+		int height = (rm.maxZ - rm.minZ) * 512;
+		BufferedImage bigImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		if (debug)
+			System.err.println("Dimension: " + width + ", " + height);
 
 		for (Region r : rm.regions.values()) {
 			BufferedImage region = null;
 			try {
-				region = ImageIO.read( r.imageFile );
-			} catch ( IOException e ) {
-				System.err.println( "Could not load image "+r.imageFile.getName() );
+				region = ImageIO.read(Files.newInputStream(r.imageFile));
+			} catch (IOException e) {
+				System.err.println("Could not load image " + r.imageFile.getFileName());
 				continue;
 			}
-			bigImage.createGraphics().drawImage( region, (r.rx-rm.minX)*512, (r.rz-rm.minZ)*512, null );
-			if( debug ) System.err.println( "Region "+r.rx+", "+r.rz+" drawn to "+(r.rx-rm.minX)*512+", "+(r.rz-rm.minZ)*512 );
+			bigImage.createGraphics().drawImage(region, (r.rx - rm.minX) * 512, (r.rz - rm.minZ) * 512, null);
+			if (debug)
+				System.err.println("Region " + r.rx + ", " + r.rz + " drawn to " + (r.rx - rm.minX) * 512 + ", " + (r.rz - rm.minZ) * 512);
 		}
 		try {
-			ImageIO.write( bigImage, "png", new File( outputDir+"/big.png" ) );
-		} catch ( IOException e ) {
-			System.err.println( "Could not write big image to "+outputDir+"/big.png" );
+			ImageIO.write(bigImage, "png", new File(outputDir + "/big.png"));
+		} catch (IOException e) {
+			System.err.println("Could not write big image to " + outputDir + "/big.png");
 		}
 	}
 }

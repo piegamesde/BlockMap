@@ -20,10 +20,11 @@ dependencies {
 	implementation 'org.apache.logging.log4j:log4j-core:2.8.2'
 }
 
-//create a single Jar with all dependencies
+shadowJar.archiveName = "BlockMap-cli-${version}.jar"
+
 jar {
 	manifest {
-        attributes 'Implementation-Title': 'BlockMap',
+        attributes 'Implementation-Title': 'BlockMap-CLI',
         	'Main-Class': 'togos.minecraft.maprend.standalone.CommandLineMain'
     }
 }

@@ -14,18 +14,16 @@ apply plugin: 'com.github.johnrengelman.shadow'
 
 dependencies {
     compile project(':BlockMap-gui')
-    compile project(':BlockMap-standalone')
+    //compile project(':BlockMap-standalone')
 
-	implementation 'info.picocli:picocli:3.3.0'
-	implementation 'net.sf.jopt-simple:jopt-simple:5.0.4'
 	implementation 'org.controlsfx:controlsfx:8.40.12'
-	implementation 'org.apache.logging.log4j:log4j-core:2.8.2'
 }
 
-//create a single Jar with all dependencies
+shadowJar.archiveName = "BlockMap-gui-${version}.jar"
+
 jar {
 	manifest {
-        attributes 'Implementation-Title': 'BlockMap',
+        attributes 'Implementation-Title': 'BlockMap-GUI',
         	'Main-Class': 'togos.minecraft.maprend.guistandalone.GuiMain'
     }
 }

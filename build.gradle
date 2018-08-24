@@ -50,3 +50,12 @@ task generate(type: Copy) {
 	from "${projectDir}/BlockMap-generator/output/block-colors.json", "${projectDir}/BlockMap-generator/output/biome-colors.json"
     into "${projectDir}/BlockMap-core/src/main/resources"
 }
+
+task github(type: Copy) {
+	group 'Application'
+	dependsOn ':BlockMap-standalone:shadowJar', ':BlockMap-guistandalone:shadowJar'
+    description 'Take the fat standalone jars to a single folder (./output) for GitHub release'
+
+	from "${projectDir}/BlockMap-standalone/build/libs/BlockMap-cli-${version}.jar", "${projectDir}/BlockMap-guistandalone/build/libs/BlockMap-gui-${version}.jar"
+    into "${projectDir}/output"
+}

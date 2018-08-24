@@ -51,7 +51,7 @@ public class World {
 			}
 		} else if ((m = rfpat.matcher(dir.getFileName().toString())).matches()) {
 			if (!Files.exists(dir)) {
-				System.err.println("Warning: region file '" + dir + "' doesn't exist!");
+				System.err.println("Warning: region file '" + dir.toAbsolutePath() + "' doesn't exist!");
 				return;
 			}
 			Region r = new Region();
@@ -60,7 +60,7 @@ public class World {
 			r.regionFile = dir;
 			addRegion(r);
 		} else {
-			throw new RuntimeException(dir + " does not seem to be a directory or a region file");
+			throw new RuntimeException(dir.toAbsolutePath() + " does not seem to be a directory or a region file");
 		}
 	}
 

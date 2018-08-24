@@ -33,7 +33,7 @@ public class CommandLineMain implements Runnable {
 	private static Log log = LogFactory.getLog(RegionRenderer.class);
 
 	@Option(names = { "--output",
-			"-o" }, description = "The location of the output images. Must not be a file. Non-existant folders will be created.", defaultValue = ".", showDefaultValue = Visibility.ALWAYS)
+			"-o" }, description = "The location of the output images. Must not be a file. Non-existant folders will be created.", defaultValue = "./", showDefaultValue = Visibility.ALWAYS)
 	private Path output;
 	@Parameters(index = "0", paramLabel = "INPUT", description = "Path to the world data. Normally, this should point to a 'region/' of a world.")
 	private Path input;
@@ -293,14 +293,16 @@ public class CommandLineMain implements Runnable {
 		}
 		RenderSettings settings = new RenderSettings();
 		RegionRenderer renderer = new RegionRenderer(settings);
-
+		log.debug("Input " + input.toAbsolutePath());
+		log.debug("Output: " + output.toAbsolutePath());
+		System.out.println(input.toAbsolutePath());
+		System.out.println(output.toAbsolutePath());
 		World world = World.load(input);
 		for (Region r : world.regions.values()) {
 			try {
 				RegionFile rf = new RegionFile(r.regionFile);
 				BufferedImage b = renderer.render(new Vector2i(r.rx, r.rz), rf);
-				Path out = input.resolve(output.relativize(r.regionFile));
-				r.imageFile = out.resolveSibling(out.getFileName().toString().replace(".mca", ".png"));
+				r.imageFile = output.resolve(r.regionFile.getFileName().toString().replace(".mca", ".png"));
 				log.debug("Saving image to " + r.imageFile.toAbsolutePath());
 				ImageIO.write(b, "png", Files.newOutputStream(r.imageFile));
 			} catch (IOException e) {
@@ -321,7 +323,7 @@ public class CommandLineMain implements Runnable {
 	// public static void main(String[] args) throws Exception {
 	// System.exit(RegionRendererCommand.fromArguments(args).run());
 	// }
-	public static void main(String[] args) {
+	public static void main(String... args) {
 			CommandLine cli = new CommandLine(new CommandLineMain());
 			cli.parseWithHandler(new RunLast(), args);
 	}

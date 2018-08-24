@@ -24,7 +24,6 @@ import picocli.CommandLine.Parameters;
 import picocli.CommandLine.RunLast;
 import togos.minecraft.maprend.World;
 import togos.minecraft.maprend.World.Region;
-import togos.minecraft.maprend.guistandalone.GuiMain;
 import togos.minecraft.maprend.renderer.RegionRenderer;
 import togos.minecraft.maprend.renderer.RenderSettings;
 
@@ -323,11 +322,7 @@ public class CommandLineMain implements Runnable {
 	// System.exit(RegionRendererCommand.fromArguments(args).run());
 	// }
 	public static void main(String[] args) {
-		if (args == null || args.length == 0)
-			GuiMain.main(args);
-		else {
 			CommandLine cli = new CommandLine(new CommandLineMain());
 			cli.parseWithHandler(new RunLast(), args);
-		}
 	}
 }

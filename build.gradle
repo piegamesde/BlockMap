@@ -29,11 +29,16 @@ subprojects {
 		testCompile 'junit:junit:4.12'
 	}
 
-
-	//test {
-    //	dependsOn cleanTest
-    //	testLogging.showStandardStreams = true
-	//}
+	sourceSets {
+		main {
+			java {
+				srcDirs = ['src/main/java']
+			}
+			resources {
+				srcDirs = ['src/main/resources']
+			}
+		}
+	}
 }
 
 

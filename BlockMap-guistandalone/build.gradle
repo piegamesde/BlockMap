@@ -13,10 +13,12 @@ buildscript {
 apply plugin: 'com.github.johnrengelman.shadow'
 
 dependencies {
-    compile project(':BlockMap-core')
+    compile project(':BlockMap-gui')
+    compile project(':BlockMap-standalone')
 
 	implementation 'info.picocli:picocli:3.3.0'
 	implementation 'net.sf.jopt-simple:jopt-simple:5.0.4'
+	implementation 'org.controlsfx:controlsfx:8.40.12'
 	implementation 'org.apache.logging.log4j:log4j-core:2.8.2'
 }
 
@@ -24,6 +26,6 @@ dependencies {
 jar {
 	manifest {
         attributes 'Implementation-Title': 'BlockMap',
-        	'Main-Class': 'togos.minecraft.maprend.standalone.CommandLineMain'
+        	'Main-Class': 'togos.minecraft.maprend.guistandalone.GuiMain'
     }
 }

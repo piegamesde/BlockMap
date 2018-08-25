@@ -17,9 +17,9 @@ public class Color {
 	/** Converts this color to sRGB8 with linear alpha component on bit 24-31 */
 	public int toRGB() {
 		return ((0xFF & (int) (a * 255)) << 24) |
-				((linearRGBTosRGB(r) & 0xFF) << 16) |
-				((linearRGBTosRGB(g) & 0xFF) << 8) |
-				((linearRGBTosRGB(b) & 0xFF));
+				((linearRGBTosRGBi(r) & 0xFF) << 16) |
+				((linearRGBTosRGBi(g) & 0xFF) << 8) |
+				((linearRGBTosRGBi(b) & 0xFF));
 	}
 
 	/** Take in a sRGB color with linear alpha component */
@@ -83,13 +83,31 @@ public class Color {
 		return (float) tempComponent;
 	}
 
-	static int linearRGBTosRGB(float component) {
+	public static double sRGBToLinear(double component) {
+		double tempComponent = component;
+		if (tempComponent <= 0.04045f)
+			tempComponent = tempComponent / 12.92;
+		else
+			tempComponent = Math.pow((tempComponent + 0.055) / (1.055), 2.4);
+		return tempComponent;
+	}
+
+	static int linearRGBTosRGBi(float component) {
 		double tempComponent = 0.0f;
 		if (component <= 0.00318308)
 			tempComponent = 12.92 * component;
 		else
 			tempComponent = 1.055 * Math.pow(component, 1.0 / 2.4) - 0.055;
 		return (int) (tempComponent * 255.0);
+	}
+
+	public static double linearRGBTosRGB(double component) {
+		double tempComponent = 0.0f;
+		if (component <= 0.00318308)
+			tempComponent = 12.92 * component;
+		else
+			tempComponent = 1.055 * Math.pow(component, 1.0 / 2.4) - 0.055;
+		return tempComponent;
 	}
 
 	public static final int component(int color, int shift) {
@@ -135,6 +153,20 @@ public class Color {
 				(src.r * src.a + dst.r * dst.a * src1A) / outA,
 				(src.g * src.a + dst.g * dst.a * src1A) / outA,
 				(src.b * src.a + dst.b * dst.a * src1A) / outA);
+	}
+
+	/** factor=-1 -> black, factor=0 -> color, factor=1 -> white */
+	public static final Color shade(Color color, float factor) {
+		if (factor < 0) {
+			factor = 1 + factor;
+			factor = sRGBToLinear((int) (factor * 255));
+			return new Color(color.a, color.r * factor, color.g * factor, color.b * factor);
+		} else if (factor > 0) {
+			factor = sRGBToLinear((int) (factor * 255));
+			factor = 1 - factor;
+			return new Color(color.a, (1 - (1 - color.r) * factor), (1 - (1 - color.g) * factor), (1 - (1 - color.b) * factor));
+		} else
+			return color;
 	}
 
 	// public static final int demultiplyAlpha(int color) {

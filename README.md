@@ -7,6 +7,7 @@
 - A gui library to include maps into your own JavaFX applications (mostly done, but not released yet)
 - A command line interface to render your worlds from scripts
 - The core rendering code as library to use in your own projects (not released yet)
+- Rendering scale: 1 pixel : 1 block
 - Faster than MCEdit!
 
 ## Requirements:
@@ -29,6 +30,12 @@ The GUI version should just run by (double)clicking it. Otherwise run one of:
     java -jar BlockMap-cli-1.0.0.jar
     java -jar BlockMap-gui-1.0.0.jar
 
-to start. The commandline version will then tell you how to use it. On Linux even with colors! (The command line isn't included in the gui standalone yet)
+to start. The commandline version will then tell you how to use it. On Linux even with colors! (The command line isn't included in the gui standalone yet).
 
 If your world has been created before the Minecraft 1.13 release, please optimize it. To do this, start Minecraft, select your world, go to "Edit" and then "Optimize World".
+
+GUI controls:
+
+- Mouse wheel to zoom in and out
+- Drag with the right mouse button to pan the view
+  - This will very likely change in the future

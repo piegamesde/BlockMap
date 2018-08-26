@@ -14,7 +14,7 @@
 	minWidth="-Infinity"
 	xmlns="http://javafx.com/javafx/8"
 	xmlns:fx="http://javafx.com/fxml/1"
-	fx:controller="togos.minecraft.maprend.guistandalone.GuiController"
+	fx:controller="de.piegames.blockmap.guistandalone.GuiController"
 	fx:id="root">
 	<top>
 		<BorderPane BorderPane.alignment="CENTER">

@@ -7,10 +7,10 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 <?import org.controlsfx.control.RangeSlider?>
-<?import togos.minecraft.maprend.gui.decoration.SettingsOverlay?>
+<?import de.piegames.blockmap.gui.decoration.SettingsOverlay?>
 
 <fx:root
-	type="togos.minecraft.maprend.gui.decoration.SettingsOverlay"
+	type="de.piegames.blockmap.gui.decoration.SettingsOverlay"
 	xmlns:fx="http://javafx.com/fxml/1"
 	xmlns="http://javafx.com/javafx/8"
 	pickOnBounds="false">

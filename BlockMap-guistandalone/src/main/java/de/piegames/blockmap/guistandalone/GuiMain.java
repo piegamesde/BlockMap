@@ -17,9 +17,9 @@ public class GuiMain extends Application {
 
 	@Override
 	public void start(Stage stage) throws IOException {
-		stage.setTitle("TMCMR world renderer");
+		stage.setTitle("BlockMap map viewer");
 
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("/scene.fxml"));
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("scene.fxml"));
 		Parent root = (Parent) loader.load();
 		controller = (GuiController) loader.getController();
 

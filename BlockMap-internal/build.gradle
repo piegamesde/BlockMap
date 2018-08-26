@@ -1,0 +1,40 @@
+apply plugin: 'application'
+mainClassName = "de.piegames.blockmap.generate.Generator"
+
+buildscript {
+  repositories {
+    jcenter()
+  }
+
+  dependencies {
+    classpath "com.jaredsburrows:gradle-license-plugin:0.8.41"
+  }
+}
+apply plugin: "com.jaredsburrows.license"
+
+dependencies {
+	implementation project(':BlockMap-core')
+	implementation project(':BlockMap-gui')
+	implementation project(':BlockMap-standalone')
+	implementation project(':BlockMap-guistandalone')
+	implementation 'com.google.code.gson:gson:2.8.2'
+}
+
+sourceSets {
+	main {
+		java {
+			srcDirs = ['src/main/java']
+		}
+		resources {
+			srcDirs = ['src/main/resources']
+		}
+	}
+	test {
+		java {
+			srcDirs = ['src/test/java']
+		}
+		resources {
+			srcDirs = ['src/test/resources']
+		}
+	}
+}

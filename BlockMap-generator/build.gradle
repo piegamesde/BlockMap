@@ -1,7 +1,0 @@
-apply plugin: 'application'
-mainClassName = "togos.minecraft.maprend.generate.Generator"
-
-dependencies {
-    compile project(':BlockMap-core')
-	implementation 'com.google.code.gson:gson:2.8.2'
-}

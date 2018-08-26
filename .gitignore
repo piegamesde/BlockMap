@@ -2,9 +2,9 @@
 /bin/
 .src.lst
 
-/BlockMap-generator/src/test/resources/minecraft\.jar
-/BlockMap-core/src/test/resources/TestWorld1
-/BlockMap-core/src/test/resources/TestWorld2
+/BlockMap-internal/src/test/resources/minecraft\.jar
+/BlockMap-internal/src/test/resources/TestWorld1
+/BlockMap-internal/src/test/resources/TestWorld2
 **/build/
 **/bin/
 **/output/

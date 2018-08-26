@@ -13,7 +13,7 @@ buildscript {
 apply plugin: 'com.github.johnrengelman.shadow'
 
 dependencies {
-    compile project(':BlockMap-core')
+    implementation project(':BlockMap-core')
 
 	implementation 'info.picocli:picocli:3.3.0'
 	implementation 'net.sf.jopt-simple:jopt-simple:5.0.4'
@@ -25,6 +25,6 @@ shadowJar.archiveName = "BlockMap-cli-${version}.jar"
 jar {
 	manifest {
         attributes 'Implementation-Title': 'BlockMap-CLI',
-        	'Main-Class': 'togos.minecraft.maprend.standalone.CommandLineMain'
+        	'Main-Class': 'de.piegames.blockmap.standalone.CommandLineMain'
     }
 }

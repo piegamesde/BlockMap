@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry kind="output" path="bin/default"/>
 	<classpathentry output="bin/main" kind="src" path="src/main/java">
 		<attributes>
 			<attribute name="gradle_scope" value="main"/>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="output" path="bin/default"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8/"/>
 	<classpathentry kind="src" path="/BlockMap-core"/>
 	<classpathentry sourcepath="/home/piegames/.gradle/caches/modules-2/files-2.1/info.picocli/picocli/3.3.0/3a79080bf8fbe09bcd79bc13b1feec04452acb53/picocli-3.3.0-sources.jar" kind="lib" path="/home/piegames/.gradle/caches/modules-2/files-2.1/info.picocli/picocli/3.3.0/af5421678aa1d2bb0e45ed74e1ab7d0798e50f8d/picocli-3.3.0.jar">

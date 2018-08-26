@@ -13,7 +13,7 @@ buildscript {
 apply plugin: 'com.github.johnrengelman.shadow'
 
 dependencies {
-    compile project(':BlockMap-gui')
+    implementation project(':BlockMap-gui')
     //compile project(':BlockMap-standalone')
 
 	implementation 'org.controlsfx:controlsfx:8.40.12'
@@ -24,6 +24,6 @@ shadowJar.archiveName = "BlockMap-gui-${version}.jar"
 jar {
 	manifest {
         attributes 'Implementation-Title': 'BlockMap-GUI',
-        	'Main-Class': 'togos.minecraft.maprend.guistandalone.GuiMain'
+        	'Main-Class': 'de.piegames.blockmap.guistandalone.GuiMain'
     }
 }

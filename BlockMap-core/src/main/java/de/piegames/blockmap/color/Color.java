@@ -62,6 +62,11 @@ public class Color {
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		return "0x" + Integer.toHexString(toRGB());
+	}
+
 	/** Multiplies the RGB colors component-wise. The alpha of the resulting color is taken from A. */
 	public static Color multiplyRGB(Color a, Color b) {
 		return new Color(a.a, a.r * b.r, a.g * b.g, a.b * b.b);

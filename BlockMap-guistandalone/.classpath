@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="output" path="bin/default"/>
 	<classpathentry output="bin/main" kind="src" path="src/main/java">
 		<attributes>
 			<attribute name="gradle_scope" value="main"/>
@@ -13,6 +12,7 @@
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="output" path="bin/default"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8/"/>
 	<classpathentry kind="src" path="/BlockMap-gui"/>
 	<classpathentry kind="src" path="/BlockMap-core"/>
@@ -22,6 +22,11 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry sourcepath="/home/piegames/.gradle/caches/modules-2/files-2.1/com.github.piegamesde/nbt/6314abbe46/60113ad304def3ff8b9ea609ae4f6edbf570da79/nbt-6314abbe46-sources.jar" kind="lib" path="/home/piegames/.gradle/caches/modules-2/files-2.1/com.github.piegamesde/nbt/6314abbe46/97204903d381f71fd56cb65bc640ea34fcf54cc9/nbt-6314abbe46.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry sourcepath="/home/piegames/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.8.2/b2da9f8444128651758719856de579eacff7f387/gson-2.8.2-sources.jar" kind="lib" path="/home/piegames/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.8.2/3edcfe49d2c6053a70a2a47e4e1c2f94998a49cf/gson-2.8.2.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
@@ -42,11 +47,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry sourcepath="/home/piegames/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-jcl/2.8.2/2d20548e90820eca0a459dcecbdedd38a42bea67/log4j-jcl-2.8.2-sources.jar" kind="lib" path="/home/piegames/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-jcl/2.8.2/3e3fb203422887b4a2f06d55c1344f96a0098694/log4j-jcl-2.8.2.jar">
-		<attributes>
-			<attribute name="gradle_used_by_scope" value="main,test"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry sourcepath="/home/piegames/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.8.2/b2da9f8444128651758719856de579eacff7f387/gson-2.8.2-sources.jar" kind="lib" path="/home/piegames/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.8.2/3edcfe49d2c6053a70a2a47e4e1c2f94998a49cf/gson-2.8.2.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>

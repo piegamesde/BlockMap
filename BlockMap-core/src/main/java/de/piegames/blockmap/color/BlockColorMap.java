@@ -30,10 +30,10 @@ public class BlockColorMap {
 			for (Entry<Block, Color> entry : value.blockColors.entrySet()) {
 				out.name(entry.getKey().toString());
 				out.beginArray();
-				out.value(entry.getValue().a);
-				out.value(entry.getValue().r);
-				out.value(entry.getValue().g);
-				out.value(entry.getValue().b);
+				out.value(Float.floatToIntBits(entry.getValue().a));
+				out.value(Float.floatToIntBits(entry.getValue().r));
+				out.value(Float.floatToIntBits(entry.getValue().g));
+				out.value(Float.floatToIntBits(entry.getValue().b));
 				out.endArray();
 			}
 			out.endObject();
@@ -70,7 +70,11 @@ public class BlockColorMap {
 			while (in.hasNext()) {
 				String key = in.nextName();
 				in.beginArray();
-				Color color = new Color((float) in.nextDouble(), (float) in.nextDouble(), (float) in.nextDouble(), (float) in.nextDouble());
+				Color color = new Color(
+						Float.intBitsToFloat(in.nextInt()),
+						Float.intBitsToFloat(in.nextInt()),
+						Float.intBitsToFloat(in.nextInt()),
+						Float.intBitsToFloat(in.nextInt()));
 				Block block = Block.byCompactForm(key).get(0);
 				blockColors.put(block, color);
 				in.endArray();
@@ -99,7 +103,7 @@ public class BlockColorMap {
 			return new BlockColorMap(blockColors, grassBlocks, foliageBlocks, waterBlocks);
 		}
 	};
-	public static final Gson GSON = new GsonBuilder().registerTypeAdapter(BlockColorMap.class, ADAPTER).setPrettyPrinting().create();
+	public static final Gson GSON = new GsonBuilder().registerTypeAdapter(BlockColorMap.class, ADAPTER).disableHtmlEscaping().create();
 
 	protected Map<Block, Color> blockColors;
 	protected Set<Block> grassBlocks;
@@ -146,7 +150,11 @@ public class BlockColorMap {
 	}
 
 	public static BlockColorMap loadDefault() {
-		return load(new InputStreamReader(BlockColorMap.class.getResourceAsStream("/block-colors.json")));
+		return loadInternal("default");
+	}
+
+	public static BlockColorMap loadInternal(String name) {
+		return load(new InputStreamReader(BlockColorMap.class.getResourceAsStream("/block-colors-" + name + ".json")));
 	}
 
 	@Override

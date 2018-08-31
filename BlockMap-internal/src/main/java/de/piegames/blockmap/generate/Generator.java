@@ -30,17 +30,29 @@ import de.piegames.blockmap.color.BlockColorMap;
 
 public class Generator {
 
-	private static Log log = LogFactory.getLog(ColorCompiler.class);
+	private static Log log = LogFactory.getLog(Generator.class);
 
 	public static void generateBlockColors() throws IOException {
 		log.info("Generating block colors");
 		Path minecraftJarfile = Paths.get(URI.create(Generator.class.getResource("/minecraft.jar").toString()));
 
-		BlockColorMap map = ColorCompiler.compileBlockColors(minecraftJarfile,
-				Paths.get(URI.create(Generator.class.getResource("/block-color-instructions.json").toString())));
-		try (BufferedWriter writer = Files.newBufferedWriter(Paths.get("./output", "block-colors.json"))) {
-			BlockColorMap.GSON.toJson(map, writer);
-			writer.flush();
+		for (Entry<String, BlockColorMap> map : ColorCompiler.compileBlockColors(minecraftJarfile,
+				Paths.get(URI.create(Generator.class.getResource("/block-color-instructions.json").toString()))).entrySet()) {
+			log.info("Writing block-colors-" + map.getKey() + ".json");
+			try (BufferedWriter writer = Files.newBufferedWriter(Paths.get("./output", "block-colors-" + map.getKey() + ".json"))) {
+				BlockColorMap.GSON.toJson(map.getValue(), writer);
+				writer.flush();
+			}
+			// try (Writer writer = new OutputStreamWriter(new DeflaterOutputStream(new BufferedOutputStream(
+			// Files.newOutputStream(Paths.get("./output", "block-colors-" + map.getKey() + ".json.zip")))))) {
+			// BlockColorMap.GSON.toJson(map.getValue(), writer);
+			// writer.flush();
+			// }
+			// try (Writer writer = new OutputStreamWriter(new GZIPOutputStream(new BufferedOutputStream(
+			// Files.newOutputStream(Paths.get("./output", "block-colors-" + map.getKey() + ".json.zip")))))) {
+			// BlockColorMap.GSON.toJson(map.getValue(), writer);
+			// writer.flush();
+			// }
 		}
 	}
 

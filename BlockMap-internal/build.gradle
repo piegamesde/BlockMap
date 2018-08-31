@@ -18,6 +18,8 @@ dependencies {
 	implementation project(':BlockMap-standalone')
 	implementation project(':BlockMap-guistandalone')
 	implementation 'com.google.code.gson:gson:2.8.2'
+    implementation 'io.gsonfire:gson-fire:1.8.3'
+	implementation 'org.apache.logging.log4j:log4j-core:2.8.2'
 }
 
 sourceSets {

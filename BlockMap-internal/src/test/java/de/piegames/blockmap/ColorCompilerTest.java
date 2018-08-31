@@ -12,6 +12,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.joml.Vector2i;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,6 +35,8 @@ public class ColorCompilerTest {
 
 	@Before
 	public void testMinecraftJar() throws URISyntaxException, IOException {
+		Configurator.setRootLevel(Level.DEBUG);
+
 		assertNotNull("Minecraft jar missing. Please copy or link the 1.13.jar from the versions folder to ./src/test/resources/minecraft.jar",
 				getClass().getResource("/minecraft.jar"));
 		minecraftJarfile = Paths.get(getClass().getResource("/minecraft.jar").toURI());
@@ -96,7 +100,11 @@ public class ColorCompilerTest {
 	@Test
 	public void testDebugWorld() throws IOException, URISyntaxException, InterruptedException {
 		// TODO make sure no pixel has the "missing" color
-		RegionRenderer renderer = new RegionRenderer(new RenderSettings());
+		RenderSettings settings = new RenderSettings();
+		settings.blockColors = ColorCompiler.compileBlockColors(minecraftJarfile, Paths.get(getClass().getResource("/block-color-instructions.json").toURI()))
+				.get("default");
+		settings.biomeColors = ColorCompiler.compileBiomeColors(minecraftJarfile, Paths.get(getClass().getResource("/biome-color-instructions.json").toURI()));
+		RegionRenderer renderer = new RegionRenderer(settings);
 		renderer.render(new Vector2i(-1, -1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.-1.-1.mca").toURI())));
 		renderer.render(new Vector2i(-1, 0), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.-1.0.mca").toURI())));
 		renderer.render(new Vector2i(-1, 1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.-1.1.mca").toURI())));
@@ -114,7 +122,8 @@ public class ColorCompilerTest {
 	 */
 	@Test
 	public void testExisting() throws IOException, URISyntaxException {
-		BlockColorMap map = ColorCompiler.compileBlockColors(minecraftJarfile, Paths.get(getClass().getResource("/block-color-instructions.json").toURI()));
+		BlockColorMap map = ColorCompiler.compileBlockColors(minecraftJarfile, Paths.get(getClass().getResource("/block-color-instructions.json").toURI()))
+				.get("default");
 
 		try (JsonReader reader = new JsonReader(Files.newBufferedReader(Paths.get(getClass().getResource("/blocks.json").toURI())))) {
 			reader.beginObject();

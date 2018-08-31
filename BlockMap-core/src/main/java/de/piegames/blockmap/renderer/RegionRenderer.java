@@ -40,8 +40,8 @@ public class RegionRenderer {
 
 	public RegionRenderer(RenderSettings settings) {
 		this.settings = Objects.requireNonNull(settings);
-		blockColors = BlockColorMap.loadDefault();
-		biomeColors = BiomeColorMap.loadDefault();
+		this.blockColors = Objects.requireNonNull(settings.blockColors);
+		this.biomeColors = Objects.requireNonNull(settings.biomeColors);
 	}
 
 	public BufferedImage render(Vector2i regionPos, RegionFile file) throws IOException {
@@ -169,6 +169,7 @@ public class RegionRenderer {
 				for (int x = 0; x < 512; x++) {
 					if (map[z << 9 | x] == null)
 						continue;
+					int centerHeight = height[z << 9 | x];
 					int westHeight = height[z << 9 | Math.max(x - 1, 0)];
 					int eastHeight = height[z << 9 | Math.min(x + 1, 511)];
 					int northHeight = height[Math.max(z - 1, 0) << 9 | x];
@@ -213,18 +214,27 @@ public class RegionRenderer {
 
 					// map[z << 9 | x] = Color.fromRGB(java.awt.Color.HSBtoRGB(0, 0, (float) factor));
 
+					// factor = (1.0 * (centerHeight - settings.minY) / (settings.maxY - settings.minY));
 					// map[z << 9 | x] = new Color(1, (float) factor, (float) factor, (float) factor);
 					// map[z << 9 | x] = new Color(1, (float) factor, (float) factor, (float) factor);
 					// map[z << 9 | x] = Color.shade(map[z << 9 | x], (float) (x / 512d - 0.5) * 2f);
 
-					// map[z << 9 | x] = Color.shade(map[z << 9 | x], (float) factor);
+
+					map[z << 9 | x] = Color.shade(map[z << 9 | x], (float) factor);
+
+					// Test 3
+					// int maxHeight = Math.max(Math.max(northHeight, southHeight), Math.max(westHeight, eastHeight));
+					// int minHeight = Math.min(Math.min(northHeight, southHeight), Math.min(westHeight, eastHeight));
+					// if (maxHeight >>> 3 != minHeight >>> 3)
+					// map[z << 9 | x] = Color.alphaOver(map[z << 9 | x],
+					// new Color((float) Color.sRGBToLinear(Math.min(((maxHeight - minHeight + 8) >>> 3) / 10.0, 1)), 0, 0, 0));
 
 					// Test 1
-					map[z << 9 | x] = Color.alphaOver(map[z << 9 | x], new Color((float) Math.tanh(g / 20) * 0.6f, 0, 0, 0));
+					// map[z << 9 | x] = Color.alphaOver(map[z << 9 | x], new Color((float) Math.tanh(g / 20) * 0.6f, 0, 0, 0));
 
 					// Test 2
 					// if ((height[z << 9 | x] & 7) == 0 && g > 0.05)
-					// map[z << 9 | x] = Color.alphaOver(map[z << 9 | x], new Color(0.2f, 0, 0, 0));
+					// map[z << 9 | x] = Color.alphaOver(map[z << 9 | x], new Color(0.1f, 0, 0, 0));
 				}
 		}
 		return map;

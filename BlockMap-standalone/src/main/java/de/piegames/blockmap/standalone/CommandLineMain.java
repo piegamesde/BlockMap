@@ -292,6 +292,7 @@ public class CommandLineMain implements Runnable {
 			Configurator.setRootLevel(Level.DEBUG);
 		}
 		RenderSettings settings = new RenderSettings();
+		settings.loadDefaultColors();
 		RegionRenderer renderer = new RegionRenderer(settings);
 		log.debug("Input " + input.toAbsolutePath());
 		log.debug("Output: " + output.toAbsolutePath());

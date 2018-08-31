@@ -58,7 +58,10 @@ public class GuiController implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		log.debug("Initializing GUI");
-		renderer = new WorldRendererCanvas(new RegionRenderer(new RenderSettings()));
+		RenderSettings settings = new RenderSettings();
+		settings.loadDefaultColors();
+		// settings.blockColors = BlockColorMap.loadInternal("caves");
+		renderer = new WorldRendererCanvas(new RegionRenderer(settings));
 		root.setCenter(pane = new MapPane(renderer));
 		pane.decorationLayers.add(new DragScrollDecoration(renderer.viewport));
 		pane.settingsLayers.add(new SettingsOverlay(renderer));

@@ -29,6 +29,8 @@ public class RegionRendererTest {
 	public void simpleTest1() throws IOException, URISyntaxException, InterruptedException {
 		log.info("Test1");
 		log.debug("Test2");
+		RenderSettings settings = new RenderSettings();
+		settings.loadDefaultColors();
 		Files.createDirectories(Paths.get("./output"));
 		if (false) {
 			RegionRenderer renderer = new RegionRenderer(new RenderSettings());
@@ -42,7 +44,7 @@ public class RegionRendererTest {
 			}
 		}
 		if (true) {
-			RegionRenderer renderer = new RegionRenderer(new RenderSettings());
+			RegionRenderer renderer = new RegionRenderer(settings);
 			BufferedImage image = renderer.render(new Vector2i(0, 0), new RegionFile(Paths.get(URI.create(getClass().getResource("/r.0.0.mca").toString()))));
 			ImageIO.write(image, "png", Files.newOutputStream(Paths.get("./output").resolve("out.png")));
 		}

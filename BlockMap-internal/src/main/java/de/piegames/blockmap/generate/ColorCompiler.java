@@ -6,156 +6,127 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
+import java.util.Queue;
 
 import javax.imageio.ImageIO;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
 
 import de.piegames.blockmap.color.BiomeColorMap;
 import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.color.Color;
-import de.piegames.blockmap.renderer.Block;
+import de.piegames.blockmap.generate.ColorMapHelper.ColorMapEntry;
 
 public class ColorCompiler {
 
 	private static Log log = LogFactory.getLog(ColorCompiler.class);
 
-	public static final int MISSING = 0xFFFF00FF;
-
-	public static BlockColorMap compileBlockColors(Path minecraftJar, Path colorInstructions) throws IOException {
-		log.info("Compiling " + colorInstructions.toAbsolutePath() + " to color map");
+	/**
+	 * Takes in a path to the Minecraft jar file and the path to the json file with the color instructions and compiles all color maps specified
+	 * in it.
+	 */
+	public static Map<String, BlockColorMap> compileBlockColors(Path minecraftJar, Path colorInstructions) throws IOException {
+		log.info("Compiling " + colorInstructions.toAbsolutePath() + " to color maps");
 		log.debug("Minecraft jar: " + minecraftJar.toAbsolutePath());
 
-		Map<Block, Color> blockColors = new HashMap<>();
-		Set<Block> grassBlocks = new HashSet<>();
-		Set<Block> foliageBlocks = new HashSet<>();
-		Set<Block> waterBlocks = new HashSet<>();
-
 		FileSystem jarFile = FileSystems.newFileSystem(minecraftJar, null);
+
+		Map<String, BlockColorMap> colorMaps = new HashMap<>();
+		Map<String, ColorMapHelper> colorMapHelpers = new HashMap<>();
+
+		/* Parse the whole json file and expand all wildcards and placeholders as well as color map inheritance. */
 		try (JsonReader reader = new JsonReader(Files.newBufferedReader(colorInstructions))) {
-			reader.beginObject();
-			reader.skipValue();
+			JsonObject root = new JsonParser().parse(reader).getAsJsonObject();
+			for (Entry<String, JsonElement> map : root.entrySet()) {
+				ColorMapHelper colorMap = new ColorMapHelper();
+				log.info("Compiling color map " + map.getKey());
 
-			// Replaceable categories
-			Map<String, List<String>> replace = new HashMap<>();
-			reader.beginObject();
-			while (reader.hasNext()) {
-				// Parse key/value pair
-				String key = reader.nextName();
-				if (key.contains("comment")) {
-					reader.skipValue();
-					continue;
+				JsonObject data = map.getValue().getAsJsonObject();
+				if (data.has("inherit"))
+					colorMap.inherit(colorMapHelpers.get(data.getAsJsonPrimitive("inherit").getAsString()));
+				if (data.has("override")) {
+					List<String> l = new ArrayList<>();
+					for (JsonElement e : data.getAsJsonArray("override"))
+						l.add(e.getAsString());
+					String toOverride = l.remove(0);
+					colorMap.override(colorMapHelpers.get(toOverride), l);
 				}
-				List<String> list = new LinkedList<>();
-				reader.beginArray();
-				while (reader.hasNext())
-					list.add(reader.nextString());
-				reader.endArray();
-				replace.put(key, list);
-			}
-			reader.endObject();
-
-			// Actual color map
-			reader.skipValue();
-			reader.beginObject();
-			while (reader.hasNext()) {
-				// Parse key/value pair
-				String key = reader.nextName();
-				if (key.contains("comment")) {
-					reader.skipValue();
-					continue;
-				}
-				List<String> value = new LinkedList<>();
-				value.add(key);
-				if (reader.peek() == JsonToken.BEGIN_ARRAY) {
-					reader.beginArray();
-					while (reader.hasNext())
-						value.add(reader.nextString());
-					reader.endArray();
-				} else {
-					value.add("texture");
-					value.add(reader.nextString());
-				}
-				int count = value.size();
-
-				// Find anything we need to replace
-				List<String> toReplace = new LinkedList<>();
-				for (String s : value) {
-					if (s.contains("$")) {
-						for (String r : replace.keySet())
-							if (s.contains("${" + r + "}"))
-								toReplace.add(r);
+				if (data.has("placeholders")) {
+					JsonObject placeholders = data.getAsJsonObject("placeholders");
+					placeholders.remove("__comment");// if present
+					for (Entry<String, JsonElement> placeholder : placeholders.entrySet()) {
+						List<String> replace = new ArrayList<>();
+						for (JsonElement s : placeholder.getValue().getAsJsonArray())
+							replace.add(s.getAsString());
+						colorMap.placeholders.put(placeholder.getKey(), Collections.unmodifiableList(replace));
 					}
 				}
-
-				// Replace all needed values
-				for (String search : toReplace) {
-					List<String> oldValue = value;
-					value = new LinkedList<>();
-					for (String r : replace.get(search))
-						for (String s : oldValue)
-							value.add(s.replace("${" + search + "}", r));
+				if (data.has("colormap")) {
+					JsonObject colormap = data.getAsJsonObject("colormap");
+					colormap.remove("__comment");// if present
+					for (Entry<String, JsonElement> e : colormap.entrySet()) {
+						List<String> colorInfo = new ArrayList<>();
+						if (e.getValue().isJsonPrimitive())
+							colorInfo.addAll(Arrays.asList("texture", e.getValue().getAsString()));
+						else {
+							for (JsonElement s : e.getValue().getAsJsonArray())
+								colorInfo.add(s.getAsString());
+						}
+						log.debug("Adding block " + e.getKey() + " " + colorInfo);
+						colorMap.addBlock(new ColorMapEntry(e.getKey(), colorInfo));
+					}
 				}
+				colorMapHelpers.put(map.getKey(), colorMap);
 
-				// Take together our list and compile the texture
-				for (int i = 0; i < value.size(); i += count) {
-					String actualKey = value.get(i);
-					List<String> actualValue = new LinkedList<>();
-					for (int j = 1; j < count; j++)
-						actualValue.add(value.get(i + j));
-					compileTexture(actualKey, actualValue, grassBlocks, jarFile, blockColors, foliageBlocks, waterBlocks);
-				}
+				/* Take in the parsed color maps and actually compile the colors to real color maps */
+				colorMaps.put(map.getKey(), colorMap.compileColorMap(jarFile));
 			}
-			reader.endObject();
 		}
-		log.debug("Grass blocks " + grassBlocks);
-		log.debug("Foliage blocks " + foliageBlocks);
-		log.debug("Water blocks " + waterBlocks);
-
-		return new BlockColorMap(blockColors, grassBlocks, foliageBlocks, waterBlocks);
+		return colorMaps;
 	}
 
-	private static void compileTexture(String key, List<String> value, Set<Block> grassBlocks, FileSystem jarFile, Map<Block, Color> blockColors,
-			Set<Block> foliageBlocks, Set<Block> waterBlocks) throws IOException {
-		log.debug("Compiling texture " + key);
-		for (Block block : Block.byCompactForm("minecraft:" + key)) {
-			Color color = new Color(0, 0, 0, 0);
-			if (value.get(0).equals("transparent"))
-				;
-			else if (value.get(0).equals("fixed")) {
-				if (value.get(1).equals("TODO")) {
-					color = Color.MISSING;
-					log.warn("Block " + key + " has the color 'TODO' assigned with it, please replace this");
-				} else
-					color = Color.fromRGB(Integer.decode(value.get(1)));
-			} else if (value.get(0).equals("texture")) {
-				color = getAverageColor(jarFile.getPath("assets/minecraft/textures/block", value.get(1)));
+	/** Compile a texture to a color, removing commands from {@code value} as they are consumed. */
+	static Color compileTexture(String key, Queue<String> value, FileSystem jarFile) throws IOException {
+		Color color = Color.TRANSPARENT;
+		String cmd = value.remove();
+
+		switch (cmd) {
+		case "transparent":
+			break;
+		case "fixed":
+			String colorText = value.remove();
+			if (colorText.equals("TODO")) {
+				color = Color.MISSING;
+				log.warn("Block " + key + " has the color 'TODO' assigned with it, please replace this");
 			} else
-				throw new IOException("Block " + key + ": " + value + " is malformed. The first entry must be one of 'transparent', 'fixed' or 'texture'");
-			if (value.size() > 2) {
-				if (value.get(2).equals("grass"))
-					grassBlocks.add(block);
-				else if (value.get(2).equals("foliage"))
-					foliageBlocks.add(block);
-				else if (value.get(2).equals("water"))
-					waterBlocks.add(block);
-				else
-					throw new IOException(
-							"Block " + key + ": " + value + " is malformed. The third entry, if present, must be one of 'grass', 'foliage' or 'water'");
-			}
-			// System.out.println("Adding " + block);
-			blockColors.put(block, color);
+				color = Color.fromRGB((int) (Long.decode(colorText) & 0xFFFFFFFF));
+			break;
+
+		case "texture":
+			color = getAverageColor(jarFile.getPath("assets/minecraft/textures/block", value.remove()));
+			break;
+
+		case "multiply":
+			color = Color.multiplyRGBA(compileTexture(key, value, jarFile), compileTexture(key, value, jarFile));
+			break;
+
+		default:
+			throw new IOException("Block " + key + ": " + value + " is malformed.");
 		}
+		return color;
 	}
 
 	private static Color getAverageColor(Path path) throws IOException {

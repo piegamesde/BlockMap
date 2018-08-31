@@ -30,7 +30,8 @@ public class PostProcessing {
 
 	public static void createTileHtml(World world, Path outputDir, RenderSettings settings) throws IOException {
 		log.info("Writing HTML tiles...");
-		for (int scale : settings.mapScales) {
+		// for (int scale : settings.mapScales) {
+		int scale = 1;
 			// TODO catch exception here
 			int regionSize = 512 / scale;
 
@@ -51,7 +52,7 @@ public class PostProcessing {
 			try (Writer w = Files.newBufferedWriter(
 					outputDir.resolve(scale == 1 ? "tiles.html" : "tiles.1-" + scale + ".html"));) {
 				w.write("<html><head>\n");
-				w.write("<title>" + settings.mapTitle + " - 1:" + scale + "</title>\n");
+			// w.write("<title>" + settings.mapTitle + " - 1:" + scale + "</title>\n");
 				w.write("<link rel=\"stylesheet\" type=\"text/css\" href=\"tiles.css\"/>\n");
 				w.write("</head><body>\n");
 				w.write("<div style=\"height: " + (world.maxZ - world.minZ + 1) * regionSize + "px\">");
@@ -80,27 +81,27 @@ public class PostProcessing {
 				}
 
 				w.write("</div>\n");
-				if (settings.mapScales.length > 1) {
-					w.write("<div class=\"scales-nav\">");
-					w.write("<p>Scales:</p>");
-					w.write("<ul>");
-					for (int otherScale : settings.mapScales) {
-						if (otherScale == scale) {
-							w.write("<li>1:" + scale + "</li>");
-						} else {
-							String otherFilename = otherScale == 1 ? "tiles.html" : "tiles.1-" + otherScale + ".html";
-							w.write("<li><a href=\"" + otherFilename + "\">1:" + otherScale + "</a></li>");
-						}
-					}
-					w.write("</ul>");
-					w.write("</div>");
-				}
+			// if (settings.mapScales.length > 1) {
+			// w.write("<div class=\"scales-nav\">");
+			// w.write("<p>Scales:</p>");
+			// w.write("<ul>");
+			// for (int otherScale : settings.mapScales) {
+			// if (otherScale == scale) {
+			// w.write("<li>1:" + scale + "</li>");
+			// } else {
+			// String otherFilename = otherScale == 1 ? "tiles.html" : "tiles.1-" + otherScale + ".html";
+			// w.write("<li><a href=\"" + otherFilename + "\">1:" + otherScale + "</a></li>");
+			// }
+			// }
+			// w.write("</ul>");
+			// w.write("</div>");
+			// }
 				w.write("<p class=\"notes\">");
 				w.write("Page rendered at " + new Date().toString());
 				w.write("</p>\n");
 				w.write("</body></html>");
 			}
-		}
+		// }
 	}
 
 	public static void createBigImage(World rm, Path outputDir, RenderSettings settings) {

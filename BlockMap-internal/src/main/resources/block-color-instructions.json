@@ -502,15 +502,18 @@
         "__comment": "A color map that makes water more transparent to better see the ground",
         "inherit": "default",
         "colormap": {
-            "water,level=*": ["multiply", "texture", "water_still.png", "fixed", "0x40FFFFFF", "water"]
+            "water,level=*": ["multiply", "texture", "water_still.png", "fixed", "0x10FFFFFF", "water"]
         }
     },
     "caves": {
         "__comment": "This color map makes all blocks transparent except ores and caves",
-        "override": ["default", "transparent"],
+        "override": ["default", "fixed", "0x0C000000"],
         "colormap": {
+            "air": ["fixed", "0x00000000"],
             "cave_air": ["fixed", "0x40FFFFFF"],
-            "${ore}_ore": "${ore}_block.png",
+            "water,level=*": ["texture", "water_still.png", "water"],
+            "lava,level=*": "lava_still.png",
+            "diamond_ore": "diamon_block.png",
             "bedrock": "bedrock.png"
         }
     }

@@ -38,8 +38,10 @@ task generate(type: Copy) {
 	dependsOn ':BlockMap-internal:run'
 	description 'Compile the required color data from the minecraft.jar and copy it to the resources'
 
-	from "${projectDir}/BlockMap-internal/output/block-colors.json", "${projectDir}/BlockMap-internal/output/biome-colors.json"
+	from "${projectDir}/BlockMap-internal/output/"
 	into "${projectDir}/BlockMap-core/src/main/resources"
+	include "block-colors-*.json"
+	include "biome-colors.json"
 }
 
 task github(type: Copy) {

@@ -2,16 +2,23 @@ package de.piegames.blockmap.color;
 
 public class Color {
 
-	public static final Color MISSING = new Color(1f, 1f, 0f, 1f);
-	public static final Color TRANSPARENT = new Color(0, 0, 0, 0);
+	public static final Color	MISSING		= new Color(1f, 1f, 0f, 1f);
+	public static final Color	TRANSPARENT	= new Color(0, 0, 0, 0);
 
-	public final float r, g, b, a;
+	public final float			r, g, b, a;
 
 	public Color(float a, float r, float g, float b) {
 		this.r = r;
 		this.g = g;
 		this.b = b;
 		this.a = a;
+	}
+
+	public Color(double a, double r, double g, double b) {
+		this.r = (float) r;
+		this.g = (float) g;
+		this.b = (float) b;
+		this.a = (float) a;
 	}
 
 	/** Converts this color to sRGB8 with linear alpha component on bit 24-31 */
@@ -64,7 +71,8 @@ public class Color {
 
 	@Override
 	public String toString() {
-		return "0x" + Integer.toHexString(toRGB());
+		// return "0x" + Integer.toHexString(toRGB());
+		return a + " " + r + " " + g + " " + b;
 	}
 
 	/** Multiplies the RGB colors component-wise. The alpha of the resulting color is taken from A. */
@@ -123,30 +131,6 @@ public class Color {
 		return component(color, 24);
 	}
 
-	// public static final int shade(int color, int amt) {
-	// return color(
-	// component(color, 24),
-	// component(color, 16) + amt,
-	// component(color, 8) + amt,
-	// component(color, 0) + amt);
-	// }
-	//
-	// /**
-	// * Return the color resulting from overlaying frontColor over backColor + Front color's RGB should *not* be pre-multiplied by alpha. -
-	// Back
-	// * color must have RGB components pre-multiplied by alpha. - Resulting color will be pre-multiplied by alpha.
-	// */
-	// public static final int overlay(int color, int overlayColor) {
-	// final int overlayOpacity = component(overlayColor, 24);
-	// final int overlayTransparency = 255 - overlayOpacity;
-	//
-	// return color(
-	// overlayOpacity + (component(color, 24) * overlayTransparency) / 255,
-	// (component(overlayColor, 16) * overlayOpacity + component(color, 16) * overlayTransparency) / 255,
-	// (component(overlayColor, 8) * overlayOpacity + component(color, 8) * overlayTransparency) / 255,
-	// (component(overlayColor, 0) * overlayOpacity + component(color, 0) * overlayTransparency) / 255);
-	// }
-
 	public static final Color alphaOver(Color dst, Color src) {
 		float src1A = 1 - src.a;
 		float outA = src.a + dst.a * src1A;
@@ -158,6 +142,64 @@ public class Color {
 				(src.r * src.a + dst.r * dst.a * src1A) / outA,
 				(src.g * src.a + dst.g * dst.a * src1A) / outA,
 				(src.b * src.a + dst.b * dst.a * src1A) / outA);
+	}
+
+	public static final Color alphaOver(Color dst, Color src, int times) {
+		if (false) {
+			Color ret = dst;
+			for (int i = 0; i < times; i++)
+				ret = alphaOver(ret, src);
+			return ret;
+		} else {
+			// double alphaSrc = 0;
+			// for (int exponent = 0; exponent < times; exponent++) {
+			// alphaSrc += Math.pow(1 - src.a, exponent);
+			// }
+			// alphaSrc *= src.a;
+
+			double pow = Math.pow(1 - src.a, times);
+			double alpha = 1 - (1 - dst.a) * pow;
+			double alphaDst = dst.a * pow;
+			double alphaSrc = alpha - alphaDst;
+			alphaSrc /= alpha;
+			alphaDst /= alpha;
+
+			if (alpha == 0)
+				return Color.TRANSPARENT;
+			return new Color(
+					alpha,
+					(src.r * alphaSrc + dst.r * alphaDst),
+					(src.g * alphaSrc + dst.g * alphaDst),
+					(src.b * alphaSrc + dst.b * alphaDst));
+		}
+	}
+
+	public static final Color alphaUnder(Color dst, Color src) {
+		return alphaOver(src, dst);
+	}
+
+	public static final Color alphaUnder(Color dst, Color src, int times) {
+		if (false) {
+			Color ret = dst;
+			for (int i = 0; i < times; i++)
+				ret = alphaUnder(ret, src);
+			return ret;
+		} else {
+			double pow = Math.pow(1 - src.a, times);
+			double alpha = 1 - (1 - dst.a) * pow;
+			double alphaDst = dst.a * pow;
+			double alphaSrc = (1 - dst.a) * (alpha - alphaDst);
+			alphaSrc /= alpha;
+			alphaDst = dst.a / alpha;
+
+			if (alpha == 0)
+				return Color.TRANSPARENT;
+			return new Color(
+					alpha,
+					(src.r * alphaSrc + dst.r * alphaDst),
+					(src.g * alphaSrc + dst.g * alphaDst),
+					(src.b * alphaSrc + dst.b * alphaDst));
+		}
 	}
 
 	/** factor=-1 -> black, factor=0 -> color, factor=1 -> white */

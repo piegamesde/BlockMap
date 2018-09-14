@@ -31,12 +31,12 @@ import de.piegames.blockmap.color.Color;
 
 public class RegionRenderer {
 
-	private static Log log = LogFactory.getLog(RegionRenderer.class);
+	private static Log			log	= LogFactory.getLog(RegionRenderer.class);
 
-	public final RenderSettings settings;
+	public final RenderSettings	settings;
 
-	protected BlockColorMap blockColors;
-	protected BiomeColorMap biomeColors;
+	protected BlockColorMap		blockColors;
+	protected BiomeColorMap		biomeColors;
 
 	public RegionRenderer(RenderSettings settings) {
 		this.settings = Objects.requireNonNull(settings);
@@ -122,12 +122,45 @@ public class RegionRenderer {
 						new ListTag<>("sections", CompoundTag.class, Collections.emptyList()))).getValue().stream()
 								.collect(Collectors.toMap(s -> (Byte) s.getValue().get("Y").getValue(), s -> s.getValue()));
 
+				/*
+				 * Save the final color of this pixel. It starts with transparent and will be modified over time through overlay operations. The last color
+				 * is saved with the amount of times it was present in a row. This way, overlaying the same color over and over again can be optimized into
+				 * one operation with specialized alpha calculation.
+				 */
+				class ColorColumn {
+					Color	color			= Color.TRANSPARENT, lastColor = Color.TRANSPARENT;
+					int		lastColorTimes	= 0;
+					boolean	needStop		= false;
+
+					void putColor(Color currentColor) {
+						if (currentColor.equals(lastColor))
+							lastColorTimes++;
+						else {
+							color = Color.alphaUnder(color, lastColor, lastColorTimes);
+							lastColorTimes = 1;
+							lastColor = currentColor;
+						}
+						if (currentColor.a > 0.9999)
+							needStop = true;
+					}
+
+					Color getFinal() {
+						/*
+						 * Due to the alpha optimizations, putColor will only update the color when that one changes. This means that color will never contain
+						 * the latest results. Putting a different color (transparent here) will trigger it to apply the last remaining color. If the last color
+						 * is already transparent, this will do nothing which doesn't matter since it wouldn't make any effect anyway.
+						 */
+						putColor(Color.TRANSPARENT);
+						return color;
+					}
+				}
+
 				// Traverse the chunk in YXZ order
 				for (byte z = 0; z < 16; z++)
 					for (byte x = 0; x < 16; x++) {
 						if (x < settings.minX || x > settings.maxX || z < settings.minZ || z > settings.maxZ)
 							continue;
-						Color color = Color.TRANSPARENT;
+						ColorColumn color = new ColorColumn();
 						height: for (byte s = 15; s >= 0; s--) {
 							if ((s << 4) + 15 > settings.maxY)
 								continue;
@@ -146,17 +179,20 @@ public class RegionRenderer {
 									break height;
 								if ((y | s << 4) > settings.maxY)
 									continue;
-								color = Color.alphaOver(loadedSections[s][x | z << 4 | y << 8], color);
+								// color = Color.alphaOver(loadedSections[s][x | z << 4 | y << 8], color);
+
+								Color currentColor = loadedSections[s][x | z << 4 | y << 8];
+								color.putColor(currentColor);
 								/* As long as the blocks are transparent enough, we keep track of the height */
 								// TODO use the actual height maps
-								if (color.a < 0.2)
-									height[chunk.x << 4 | x | chunk.z << 13 | z << 9] = y | s << 4;
-								if (color.a == 1) {
+								// if (color.a < 0.2)
+								// height[chunk.x << 4 | x | chunk.z << 13 | z << 9] = y | s << 4;
+								if (color.needStop) {
 									break height;
 								}
 							}
 						}
-						map[chunk.x << 4 | x | chunk.z << 13 | z << 9] = color;
+						map[chunk.x << 4 | x | chunk.z << 13 | z << 9] = color.getFinal();
 					}
 			} catch (Exception e) {
 				log.warn("Skipping chunk", e);
@@ -218,7 +254,6 @@ public class RegionRenderer {
 					// map[z << 9 | x] = new Color(1, (float) factor, (float) factor, (float) factor);
 					// map[z << 9 | x] = new Color(1, (float) factor, (float) factor, (float) factor);
 					// map[z << 9 | x] = Color.shade(map[z << 9 | x], (float) (x / 512d - 0.5) * 2f);
-
 
 					map[z << 9 | x] = Color.shade(map[z << 9 | x], (float) factor);
 

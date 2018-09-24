@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.joml.Vector2i;
+import org.joml.Vector2ic;
 
 import com.flowpowered.nbt.CompoundMap;
 import com.flowpowered.nbt.CompoundTag;
@@ -25,8 +25,6 @@ import com.flowpowered.nbt.Tag;
 import com.flowpowered.nbt.regionfile.RegionFile;
 import com.flowpowered.nbt.regionfile.RegionFile.RegionChunk;
 
-import de.piegames.blockmap.color.BiomeColorMap;
-import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.color.Color;
 
 public class RegionRenderer {
@@ -35,17 +33,12 @@ public class RegionRenderer {
 
 	public final RenderSettings	settings;
 
-	protected BlockColorMap		blockColors;
-	protected BiomeColorMap		biomeColors;
-
 	public RegionRenderer(RenderSettings settings) {
 		this.settings = Objects.requireNonNull(settings);
-		this.blockColors = Objects.requireNonNull(settings.blockColors);
-		this.biomeColors = Objects.requireNonNull(settings.biomeColors);
 	}
 
-	public BufferedImage render(Vector2i regionPos, RegionFile file) throws IOException {
-		log.info("Rendering region file " + regionPos.x + " " + regionPos.y);
+	public BufferedImage render(Vector2ic regionPos, RegionFile file) throws IOException {
+		log.info("Rendering region file " + regionPos.x() + " " + regionPos.y());
 		BufferedImage image = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
 		Color[] colors = renderRaw(regionPos, file);
 		// image.setRGB(0, 0, 512, 512, colors, 0, 512);
@@ -56,7 +49,7 @@ public class RegionRenderer {
 		return image;
 	}
 
-	public Color[] renderRaw(Vector2i regionPos, RegionFile file) throws IOException {
+	public Color[] renderRaw(Vector2ic regionPos, RegionFile file) throws IOException {
 		// The final map of the chunk, 512*512 pixels, XZ
 		Color[] map = new Color[512 * 512];
 		int[] height = new int[512 * 512];
@@ -64,8 +57,8 @@ public class RegionRenderer {
 
 		for (RegionChunk chunk : file.listExistingChunks()) {
 			try {
-				int chunkX = ((regionPos.x << 5) | chunk.x);
-				int chunkZ = ((regionPos.y << 5) | chunk.z);
+				int chunkX = ((regionPos.x() << 5) | chunk.x);
+				int chunkZ = ((regionPos.y() << 5) | chunk.z);
 				if ((chunkX + 16 < settings.minX || chunkX > settings.maxX)
 						&& (chunkZ + 16 < settings.minZ || chunkZ > settings.maxZ)) {
 					log.debug("Skipping chunk: out of bounds " + chunkX + " " + chunkZ);
@@ -166,7 +159,7 @@ public class RegionRenderer {
 								continue;
 							if (s < lowestLoadedSection) {
 								// log.debug("Loading section " + s);
-								loadedSections[s] = renderSection(biomes, sections.get(s));
+								loadedSections[s] = renderSection(biomes, null, sections.get(s));
 								lowestLoadedSection = s;
 							}
 							if (loadedSections[s] == null) {
@@ -200,78 +193,7 @@ public class RegionRenderer {
 			}
 		}
 
-		{// Shading
-			for (int z = 0; z < 512; z++)
-				for (int x = 0; x < 512; x++) {
-					if (map[z << 9 | x] == null)
-						continue;
-					int centerHeight = height[z << 9 | x];
-					int westHeight = height[z << 9 | Math.max(x - 1, 0)];
-					int eastHeight = height[z << 9 | Math.min(x + 1, 511)];
-					int northHeight = height[Math.max(z - 1, 0) << 9 | x];
-					int southHeight = height[Math.min(z + 1, 511) << 9 | x];
-					int northWestHeight = height[Math.max(z - 1, 0) << 9 | Math.max(x - 1, 0)];
-					int northEastHeight = height[Math.max(z - 1, 0) << 9 | Math.min(x + 1, 511)];
-					int southWestHeight = height[Math.min(z + 1, 511) << 9 | Math.max(x - 1, 0)];
-					int southEastHeight = height[Math.min(z + 1, 511) << 9 | Math.min(x + 1, 511)];
-					double gX = (northWestHeight * 0 + 2 * westHeight + southWestHeight * 0 - eastHeight * 0 - 2 * northEastHeight - southEastHeight * 0);
-					double gY = (northWestHeight * 0 + 2 * northHeight + northEastHeight * 0 - southWestHeight * 0 - 2 * southHeight - southEastHeight * 0);
-					double g = Math.sqrt(gX * gX + gY * gY);
-					// Vector3f gradientX = new Vector3f(2, (northWestHeight + westHeight + southWestHeight - eastHeight - northEastHeight - southEastHeight) /
-					// 3,
-					// 0);
-					// Vector3f gradientZ = new Vector3f(0,
-					// (northHeight + northWestHeight + northEastHeight - southHeight - southWestHeight - southEastHeight) / 3, 2);
-					// Vector3f gradient = gradientZ.cross(gradientX, new Vector3f());
-					// Vector3f sunlight = new Vector3f(0, 1, 0);
-					// double angle = (sunlight.angle(gradient) / (2 * Math.PI));
-
-					// Calculate the angle of the slope [0..2PI]
-					// double factor = ((Math.atan2(gY, gX) + Math.PI + 7 / 4d * Math.PI) % (2 * Math.PI)) - Math.PI;
-					// Offset it by 135° (3/4 PI)
-					// factor = ((factor + 3 / 4f * Math.PI) % (2 * Math.PI));
-					// Map to [-1..1]
-					// factor /= 2 * Math.PI;
-					// Map to [0..1]
-					// factor = (Math.abs(factor));
-					// factor = Color.linearRGBTosRGB(factor);
-					// factor = 2 * (factor - 0.5);
-
-					// factor *= Math.tanh(g / 5);
-					// Map to [-1..1]
-					// factor = (factor + 1) / 2;
-					double factor = -Math.tanh((gX + gY) / 10);
-					factor *= 0.3;
-
-					// if (g == 0)
-					// map[z << 9 | x] = Color.fromRGB(java.awt.Color.HSBtoRGB((float) factor, 1, 0));
-					// else
-					// map[z << 9 | x] = Color.fromRGB(java.awt.Color.HSBtoRGB((float) factor, 1, 1));
-
-					// map[z << 9 | x] = Color.fromRGB(java.awt.Color.HSBtoRGB(0, 0, (float) factor));
-
-					// factor = (1.0 * (centerHeight - settings.minY) / (settings.maxY - settings.minY));
-					// map[z << 9 | x] = new Color(1, (float) factor, (float) factor, (float) factor);
-					// map[z << 9 | x] = new Color(1, (float) factor, (float) factor, (float) factor);
-					// map[z << 9 | x] = Color.shade(map[z << 9 | x], (float) (x / 512d - 0.5) * 2f);
-
-					map[z << 9 | x] = Color.shade(map[z << 9 | x], (float) factor);
-
-					// Test 3
-					// int maxHeight = Math.max(Math.max(northHeight, southHeight), Math.max(westHeight, eastHeight));
-					// int minHeight = Math.min(Math.min(northHeight, southHeight), Math.min(westHeight, eastHeight));
-					// if (maxHeight >>> 3 != minHeight >>> 3)
-					// map[z << 9 | x] = Color.alphaOver(map[z << 9 | x],
-					// new Color((float) Color.sRGBToLinear(Math.min(((maxHeight - minHeight + 8) >>> 3) / 10.0, 1)), 0, 0, 0));
-
-					// Test 1
-					// map[z << 9 | x] = Color.alphaOver(map[z << 9 | x], new Color((float) Math.tanh(g / 20) * 0.6f, 0, 0, 0));
-
-					// Test 2
-					// if ((height[z << 9 | x] & 7) == 0 && g > 0.05)
-					// map[z << 9 | x] = Color.alphaOver(map[z << 9 | x], new Color(0.1f, 0, 0, 0));
-				}
-		}
+		settings.shader.shade(map, height, null, settings.biomeColors);
 		return map;
 	}
 
@@ -279,11 +201,10 @@ public class RegionRenderer {
 	 * Takes in the NBT data for a section and returns an int[] containing the color of each block in that section. The returned array thus has
 	 * a length of 16³=4096 items and the blocks are mapped to them in XZY order.
 	 */
-	private Color[] renderSection(int[] biomes, CompoundMap section) {
+	private Color[] renderSection(int[] biomes, byte[] blockLight, CompoundMap section) {
 		if (section == null)
 			return null;
 
-		// System.out.println(section.get("Palette"));
 		// Parse palette
 		@SuppressWarnings("unchecked")
 		List<Block> palette = ((ListTag<CompoundTag>) section.get("Palette"))
@@ -307,16 +228,17 @@ public class RegionRenderer {
 				continue;
 			}
 			Block block = palette.get((int) blockIndex);
-			Color color = blockColors.getBlockColor(block);
+			Color color = settings.blockColors.getBlockColor(block);
 			if (color == Color.MISSING) // == is correct here
 				log.warn("Missing color for " + block);
 
-			if (blockColors.isGrassBlock(block))
-				color = Color.multiplyRGB(color, biomeColors.getGrassColor(biomes[i & 0xFF]));
-			if (blockColors.isFoliageBlock(block))
-				color = Color.multiplyRGB(color, biomeColors.getFoliageColor(biomes[i & 0xFF]));
-			if (blockColors.isWaterBlock(block))
-				color = Color.multiplyRGB(color, biomeColors.getWaterColor(biomes[i & 0xFF]));
+			if (settings.blockColors.isGrassBlock(block))
+				color = Color.multiplyRGB(color, settings.biomeColors.getGrassColor(biomes[i & 0xFF]));
+			if (settings.blockColors.isFoliageBlock(block))
+				color = Color.multiplyRGB(color, settings.biomeColors.getFoliageColor(biomes[i & 0xFF]));
+			if (settings.blockColors.isWaterBlock(block))
+				color = Color.multiplyRGB(color, settings.biomeColors.getWaterColor(biomes[i & 0xFF]));
+
 			ret[i] = color;
 		}
 		return ret;

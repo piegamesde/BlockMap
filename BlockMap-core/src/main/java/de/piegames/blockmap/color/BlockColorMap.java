@@ -20,106 +20,124 @@ import de.piegames.blockmap.renderer.Block;
 
 public class BlockColorMap {
 
-	public static final TypeAdapter<BlockColorMap> ADAPTER = new TypeAdapter<BlockColorMap>() {
+	public static final TypeAdapter<BlockColorMap>	ADAPTER	= new TypeAdapter<BlockColorMap>() {
 
-		@Override
-		public void write(JsonWriter out, BlockColorMap value) throws IOException {
-			out.beginObject();
-			out.name("blockColors");
-			out.beginObject();
-			for (Entry<Block, Color> entry : value.blockColors.entrySet()) {
-				out.name(entry.getKey().toString());
-				out.beginArray();
-				out.value(Float.floatToIntBits(entry.getValue().a));
-				out.value(Float.floatToIntBits(entry.getValue().r));
-				out.value(Float.floatToIntBits(entry.getValue().g));
-				out.value(Float.floatToIntBits(entry.getValue().b));
-				out.endArray();
-			}
-			out.endObject();
-			out.name("grassBlocks");
-			out.beginArray();
-			for (Block block : value.grassBlocks)
-				out.value(block.toString());
-			out.endArray();
-			out.name("foliageBlocks");
-			out.beginArray();
-			for (Block block : value.foliageBlocks)
-				out.value(block.toString());
-			out.endArray();
-			out.name("waterBlocks");
-			out.beginArray();
-			for (Block block : value.waterBlocks)
-				out.value(block.toString());
-			out.endArray();
+																@Override
+																public void write(JsonWriter out, BlockColorMap value) throws IOException {
+																	out.beginObject();
+																	out.name("blockColors");
+																	out.beginObject();
+																	for (Entry<Block, Color> entry : value.blockColors.entrySet()) {
+																		out.name(entry.getKey().toString());
+																		out.beginArray();
+																		out.value(Float.floatToIntBits(entry.getValue().a));
+																		out.value(Float.floatToIntBits(entry.getValue().r));
+																		out.value(Float.floatToIntBits(entry.getValue().g));
+																		out.value(Float.floatToIntBits(entry.getValue().b));
+																		out.endArray();
+																	}
+																	out.endObject();
+																	out.name("grassBlocks");
+																	out.beginArray();
+																	for (Block block : value.grassBlocks)
+																		out.value(block.toString());
+																	out.endArray();
+																	out.name("foliageBlocks");
+																	out.beginArray();
+																	for (Block block : value.foliageBlocks)
+																		out.value(block.toString());
+																	out.endArray();
+																	out.name("waterBlocks");
+																	out.beginArray();
+																	for (Block block : value.waterBlocks)
+																		out.value(block.toString());
+																	out.endArray();
+																	out.name("translucentBlocks");
+																	out.beginArray();
+																	for (Block block : value.translucentBlocks)
+																		out.value(block.toString());
+																	out.endArray();
 
-			out.endObject();
-		}
+																	out.endObject();
+																}
 
-		@Override
-		public BlockColorMap read(JsonReader in) throws IOException {
-			Map<Block, Color> blockColors = new HashMap<>();
-			Set<Block> grassBlocks = new HashSet<>();
-			Set<Block> foliageBlocks = new HashSet<>();
-			Set<Block> waterBlocks = new HashSet<>();
+																@Override
+																public BlockColorMap read(JsonReader in) throws IOException {
+																	Map<Block, Color> blockColors = new HashMap<>();
+																	Set<Block> grassBlocks = new HashSet<>();
+																	Set<Block> foliageBlocks = new HashSet<>();
+																	Set<Block> waterBlocks = new HashSet<>();
+																	Set<Block> translucentBlocks = new HashSet<>();
 
-			in.beginObject();
-			// blockColors
-			in.skipValue();
-			in.beginObject();
-			while (in.hasNext()) {
-				String key = in.nextName();
-				in.beginArray();
-				Color color = new Color(
-						Float.intBitsToFloat(in.nextInt()),
-						Float.intBitsToFloat(in.nextInt()),
-						Float.intBitsToFloat(in.nextInt()),
-						Float.intBitsToFloat(in.nextInt()));
-				Block block = Block.byCompactForm(key).get(0);
-				blockColors.put(block, color);
-				in.endArray();
-			}
-			in.endObject();
-			// gassBlocks
-			in.skipValue();
-			in.beginArray();
-			while (in.hasNext())
-				grassBlocks.add(Block.byCompactForm(in.nextString()).get(0));
-			in.endArray();
-			// foliageBlocks
-			in.skipValue();
-			in.beginArray();
-			while (in.hasNext())
-				foliageBlocks.add(Block.byCompactForm(in.nextString()).get(0));
-			in.endArray();
-			// waterBlocks
-			in.skipValue();
-			in.beginArray();
-			while (in.hasNext())
-				waterBlocks.add(Block.byCompactForm(in.nextString()).get(0));
-			in.endArray();
+																	in.beginObject();
+																	// blockColors
+																	in.skipValue();
+																	in.beginObject();
+																	while (in.hasNext()) {
+																		String key = in.nextName();
+																		in.beginArray();
+																		Color color = new Color(
+																				Float.intBitsToFloat(in.nextInt()),
+																				Float.intBitsToFloat(in.nextInt()),
+																				Float.intBitsToFloat(in.nextInt()),
+																				Float.intBitsToFloat(in.nextInt()));
+																		Block block = Block.byCompactForm(key).get(0);
+																		blockColors.put(block, color);
+																		in.endArray();
+																	}
+																	in.endObject();
+																	// gassBlocks
+																	in.skipValue();
+																	in.beginArray();
+																	while (in.hasNext())
+																		grassBlocks.add(Block.byCompactForm(in.nextString()).get(0));
+																	in.endArray();
+																	// foliageBlocks
+																	in.skipValue();
+																	in.beginArray();
+																	while (in.hasNext())
+																		foliageBlocks.add(Block.byCompactForm(in.nextString()).get(0));
+																	in.endArray();
+																	// waterBlocks
+																	in.skipValue();
+																	in.beginArray();
+																	while (in.hasNext())
+																		waterBlocks.add(Block.byCompactForm(in.nextString()).get(0));
+																	in.endArray();
+																	// translucentBlocks
+																	in.skipValue();
+																	in.beginArray();
+																	while (in.hasNext())
+																		translucentBlocks.add(Block.byCompactForm(in.nextString()).get(0));
+																	in.endArray();
 
-			in.endObject();
-			return new BlockColorMap(blockColors, grassBlocks, foliageBlocks, waterBlocks);
-		}
-	};
-	public static final Gson GSON = new GsonBuilder().registerTypeAdapter(BlockColorMap.class, ADAPTER).disableHtmlEscaping().create();
+																	in.endObject();
+																	return new BlockColorMap(blockColors, grassBlocks, foliageBlocks, waterBlocks,
+																			translucentBlocks);
+																}
+															};
+	public static final Gson						GSON	= new GsonBuilder().registerTypeAdapter(BlockColorMap.class, ADAPTER).disableHtmlEscaping()
+			.create();
 
-	protected Map<Block, Color> blockColors;
-	protected Set<Block> grassBlocks;
-	protected Set<Block> foliageBlocks;
-	protected Set<Block> waterBlocks;
+	// TODO combine into new class
+	protected Map<Block, Color>						blockColors;
+	protected Set<Block>							grassBlocks;
+	protected Set<Block>							foliageBlocks;
+	protected Set<Block>							waterBlocks;
+	protected Set<Block>							translucentBlocks;
 
 	@SuppressWarnings("unused")
 	private BlockColorMap() {
 		// For deserialization purposes
 	}
 
-	public BlockColorMap(Map<Block, Color> blockColors, Set<Block> grassBlocks, Set<Block> foliageBlocks, Set<Block> waterBlocks) {
+	public BlockColorMap(Map<Block, Color> blockColors, Set<Block> grassBlocks, Set<Block> foliageBlocks, Set<Block> waterBlocks,
+			Set<Block> translucentBlocks) {
 		this.blockColors = Collections.unmodifiableMap(blockColors);
 		this.grassBlocks = Collections.unmodifiableSet(grassBlocks);
 		this.foliageBlocks = Collections.unmodifiableSet(foliageBlocks);
 		this.waterBlocks = Collections.unmodifiableSet(waterBlocks);
+		this.translucentBlocks = Collections.unmodifiableSet(translucentBlocks);
 	}
 
 	public Color getBlockColor(Block block) {
@@ -145,6 +163,11 @@ public class BlockColorMap {
 		return waterBlocks.contains(block);
 	}
 
+	/** Tell if a given block is letting light through and thus will not count to any height shading calculations */
+	public boolean isTranslucentBlock(Block block) {
+		return translucentBlocks.contains(block);
+	}
+
 	public static BlockColorMap load(Reader reader) {
 		return GSON.fromJson(reader, BlockColorMap.class);
 	}
@@ -154,7 +177,11 @@ public class BlockColorMap {
 	}
 
 	public static BlockColorMap loadInternal(String name) {
-		return load(new InputStreamReader(BlockColorMap.class.getResourceAsStream("/block-colors-" + name + ".json")));
+		try {
+			return load(new InputStreamReader(BlockColorMap.class.getResourceAsStream("/block-colors-" + name + ".json")));
+		} catch (NullPointerException e) {
+			throw new IllegalArgumentException("Did not find internal color map " + name, e);
+		}
 	}
 
 	@Override

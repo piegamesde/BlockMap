@@ -12,13 +12,13 @@
             "command": ["command_block", "chain_command_block", "repeating_command_block"]
         },
         "colormap": {    
-            "air": ["fixed", "0x00000000"],
+            "air": ["fixed", "0x00000000", "translucent=true"],
             
             "${log}_button,face=*,facing=*,powered=*": ["transparent"],
             "${log}_door,facing=*,half=*,hinge=*,open=*,powered=*": "${log}_door_top.png",
             "${log}_fence,north=*,south=*,east=*,west=*,waterlogged=*": "${log}_planks.png",
             "${log}_fence_gate,facing=*,in_wall=*,open=*,powered=*": "${log}_planks.png",
-            "${log}_leaves,persistent=*,distance=*": ["texture", "${log}_leaves.png", "foliage"],
+            "${log}_leaves,persistent=*,distance=*": ["texture", "${log}_leaves.png", "tint=foliage"],
             "${log}_log,axis=y": "${log}_log_top.png",
             "${log}_log,axis=z": "${log}_log.png",
             "${log}_log,axis=x": "${log}_log.png",
@@ -82,7 +82,7 @@
             "brown_mushroom": "brown_mushroom.png",
             "brown_mushroom_block,north=*,south=*,east=*,west=*,up=*,down=*": "brown_mushroom_block.png",
             
-            "bubble_column,drag=*": ["texture", "water_flow.png", "water"],
+            "bubble_column,drag=*": ["texture", "water_flow.png", "tint=water"],
             
             "cactus,age=*": "cactus_top.png",
             "cake,bites=*": "cake_top.png",
@@ -97,7 +97,7 @@
             "carved_pumpkin,facing=*": "pumpkin_top.png",
             "cauldron,level=*": "cauldron_inner.png",
             
-            "cave_air": ["fixed", "0x00000000"],
+            "cave_air": ["fixed", "0x00000000", "translucent=true"],
             
             "${command},conditional=false,facing=down": "${command}_back.png",
             "${command},conditional=false,facing=up": "${command}_front.png",
@@ -217,8 +217,8 @@
             "glass_pane,north=*,south=*,west=*,east=*,waterlogged=*": ["transparent"],
             "glowstone": "glowstone.png",
             "granite": "granite.png",
-            "grass": ["texture", "grass.png", "grass"],
-            "grass_block,snowy=false": ["texture", "grass_block_top.png", "grass"],
+            "grass": ["texture", "grass.png", "tint=grass"],
+            "grass_block,snowy=false": ["texture", "grass_block_top.png", "tint=grass"],
             "grass_block,snowy=true": "snow.png",
             "grass_path": "grass_path_top.png",
             "gravel": "gravel.png",
@@ -246,7 +246,7 @@
             "item_frame,map=*": ["transparent"],
             "jack_o_lantern,facing=*": "pumpkin_top.png",
             "jukebox,has_record=*": "jukebox_top.png",
-                    
+            
             "kelp,age=*": "kelp.png",
             "kelp_plant": "kelp_plant.png",
             "ladder,facing=*,waterlogged=*": ["transparent"],
@@ -458,10 +458,10 @@
             
             "turtle_egg,eggs=*,hatch=*": ["transparent"],
             "vine,east=*,north=*,south=*,up=*,west=*": ["transparent"],
-            "void_air": ["fixed", "0x00000000"],
+            "void_air": ["fixed", "0x00000000", "translucent=true"],
             "wall_sign,facing=*,waterlogged=*": ["transparent"],
             "wall_torch,facing=*": ["transparent"],
-            "water,level=*": ["texture", "water_still.png", "water"],
+            "water,level=*": ["texture", "water_still.png", "tint=water"],
             "wet_sponge": "wet_sponge.png",
             "wheat,age=0": "wheat_stage0.png",
             "wheat,age=1": "wheat_stage1.png",
@@ -483,37 +483,42 @@
         "__comment": "A color map that makes all foliage and most of the land vegetation transparent",
         "inherit": "default",
         "colormap": {
-            "${log}_leaves,persistent=*,distance=*": ["transparent"],
-            "${log}_log,axis=*": ["transparent"],
-            "${log}_wood,axis=*": ["transparent"],
-            "grass": ["transparent"],
-            "tall_grass,half=*": ["transparent"],
-            "${flower}": ["transparent"],
-            "${tallflower}": ["transparent"],
-            "brown_mushroom": ["transparent"],
-            "brown_mushroom_block,north=*,south=*,east=*,west=*,up=*,down=*": ["transparent"],
-            "red_mushroom": ["transparent"],
-            "red_mushroom_block,up=*,north=*,south=*,west=*,east=*,down=*": ["transparent"],
-            "mushroom_stem,north=*,south=*,west=*,east=*,up=*,down=*": ["transparent"],
-            "dead_bush": ["transparent"]
+            "${log}_leaves,persistent=*,distance=*": ["transparent", "translucent=true"],
+            "${log}_log,axis=*": ["transparent", "translucent=true"],
+            "${log}_wood,axis=*": ["transparent", "translucent=true"],
+            "grass": ["transparent", "translucent=true"],
+            "tall_grass,half=*": ["transparent", "translucent=true"],
+            "${flower}": ["transparent", "translucent=true"],
+            "${tallflower}": ["transparent", "translucent=true"],
+            "brown_mushroom": ["transparent", "translucent=true"],
+            "brown_mushroom_block,north=*,south=*,east=*,west=*,up=*,down=*": ["transparent", "translucent=true"],
+            "red_mushroom": ["transparent", "translucent=true"],
+            "red_mushroom_block,up=*,north=*,south=*,west=*,east=*,down=*": ["transparent", "translucent=true"],
+            "mushroom_stem,north=*,south=*,west=*,east=*,up=*,down=*": ["transparent", "translucent=true"],
+            "dead_bush": ["transparent", "translucent=true"]
         }
     },
     "water": {
         "__comment": "A color map that makes water more transparent to better see the ground",
         "inherit": "default",
         "colormap": {
-            "water,level=*": ["multiply", "texture", "water_still.png", "fixed", "0x10FFFFFF", "water"]
+            "water,level=*": ["multiply", "texture", "water_still.png", "fixed", "0x10FFFFFF", "tint=water", "translucent=true"],
+            "kelp,age=*": ["texture", "kelp.png", "translucent=true"],
+            "kelp_plant": ["texture", "kelp_plant.png", "translucent=true"],
+            "seagrass": ["texture", "seagrass.png", "translucent=true"],
+            "tall_seagrass,half=lower": ["texture", "tall_seagrass_bottom.png", "translucent=true"],
+            "tall_seagrass,half=upper": ["texture", "tall_seagrass_top.png", "translucent=true"]
         }
     },
     "caves": {
         "__comment": "This color map makes all blocks transparent except ores and caves",
-        "override": ["default", "fixed", "0x0C000000"],
+        "override": ["default", "fixed", "0x0C000000", "translucent=true"],
         "colormap": {
-            "air": ["fixed", "0x00000000"],
+            "air": ["fixed", "0x00000000", "translucent=true"],
             "cave_air": ["fixed", "0x40FFFFFF"],
-            "water,level=*": ["texture", "water_still.png", "water"],
+            "water,level=*": ["texture", "water_still.png", "tint=water"],
             "lava,level=*": "lava_still.png",
-            "diamond_ore": "diamon_block.png",
+            "diamond_ore": "diamond_block.png",
             "bedrock": "bedrock.png"
         }
     }

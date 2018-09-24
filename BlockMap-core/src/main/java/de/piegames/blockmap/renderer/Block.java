@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 /** Each object of this class represents an existing Minecraft block, with its ID and block state, but without its position or object data. */
 public class Block {
 
+	public static final Block			AIR	= new Block("minecraft:air");
+
 	/** The name/id of the block including the namespace, like in Minecraft. Example: minecraft:air */
 	public final String					name;
 	/** A set of all block states this block has. The usage of an EnumSet is supposed to increase performance */

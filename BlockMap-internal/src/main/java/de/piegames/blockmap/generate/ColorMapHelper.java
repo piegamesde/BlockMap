@@ -65,30 +65,35 @@ public class ColorMapHelper {
 		Set<Block> grassBlocks = new HashSet<>();
 		Set<Block> foliageBlocks = new HashSet<>();
 		Set<Block> waterBlocks = new HashSet<>();
+		Set<Block> translucentBlocks = new HashSet<>();
 
 		for (Entry<Block, List<String>> e : blocks.entrySet()) {
 			Block block = e.getKey();
 			Queue<String> colorInfo = new LinkedList<>(e.getValue());
 
 			Color color = ColorCompiler.compileTexture(block.toString(), colorInfo, jarFile);
-			String tint = "none";
-			if (!colorInfo.isEmpty())
-				tint = colorInfo.remove();
-			switch (tint) {
-			case "none":
-				break;
-			case "grass":
-				grassBlocks.add(block);
-				break;
-			case "foliage":
-				foliageBlocks.add(block);
-				break;
-			case "water":
-				waterBlocks.add(block);
-				break;
-			default:
-				throw new IOException("Block " + block + ": " + e.getValue() + " is malformed.");
+			for (String remainingProperty : colorInfo) {
+				if (remainingProperty.startsWith("tint="))
+					switch (remainingProperty.substring("tint=".length())) {
+					case "none":
+						break;
+					case "grass":
+						grassBlocks.add(block);
+						break;
+					case "foliage":
+						foliageBlocks.add(block);
+						break;
+					case "water":
+						waterBlocks.add(block);
+						break;
+					default:
+						throw new IOException("Block " + block + ": " + e.getValue() + " is malformed.");
+					}
+				if (remainingProperty.startsWith("translucent=")
+						&& Boolean.parseBoolean(remainingProperty.substring("translucent=".length())))
+					translucentBlocks.add(block);
 			}
+
 			log.debug("Compiled texture " + e.getKey() + " to " + color);
 			blockColors.put(block, color);
 		}
@@ -97,7 +102,7 @@ public class ColorMapHelper {
 		log.debug("Foliage blocks " + foliageBlocks);
 		log.debug("Water blocks " + waterBlocks);
 
-		return new BlockColorMap(blockColors, grassBlocks, foliageBlocks, waterBlocks);
+		return new BlockColorMap(blockColors, grassBlocks, foliageBlocks, waterBlocks, translucentBlocks);
 	}
 
 	static class ColorMapEntry {

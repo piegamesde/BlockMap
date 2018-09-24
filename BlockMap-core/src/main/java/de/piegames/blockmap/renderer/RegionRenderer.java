@@ -107,7 +107,7 @@ public class RegionRenderer {
 				 */
 				int lowestLoadedSection = 16;
 				/* Null entries indicate a section full of air */
-				Color[][] loadedSections = new Color[16][];
+				Block[][] loadedSections = new Block[16][];
 
 				// Get the list of all sections and map them to their y coordinate using streams
 				@SuppressWarnings("unchecked")
@@ -126,11 +126,15 @@ public class RegionRenderer {
 					boolean	needStop		= false;
 
 					void putColor(Color currentColor) {
+						putColor(currentColor, 1);
+					}
+
+					void putColor(Color currentColor, int times) {
 						if (currentColor.equals(lastColor))
-							lastColorTimes++;
+							lastColorTimes += times;
 						else {
 							color = Color.alphaUnder(color, lastColor, lastColorTimes);
-							lastColorTimes = 1;
+							lastColorTimes = times;
 							lastColor = currentColor;
 						}
 						if (currentColor.a > 0.9999)
@@ -153,18 +157,23 @@ public class RegionRenderer {
 					for (byte x = 0; x < 16; x++) {
 						if (x < settings.minX || x > settings.maxX || z < settings.minZ || z > settings.maxZ)
 							continue;
+
+						/* Once the height calculation is completed (we found a non-translucent block), set this flag to stop searching. */
+						boolean heightSet = false;
+						/* If nothing is set otherwise, the height map is set to the minimum height. */
+						height[chunk.x << 4 | x | chunk.z << 13 | z << 9] = settings.minY;
 						ColorColumn color = new ColorColumn();
 						height: for (byte s = 15; s >= 0; s--) {
 							if ((s << 4) + 15 > settings.maxY)
 								continue;
 							if (s < lowestLoadedSection) {
 								// log.debug("Loading section " + s);
-								loadedSections[s] = renderSection(biomes, null, sections.get(s));
+								loadedSections[s] = renderSection(sections.get(s));
 								lowestLoadedSection = s;
 							}
 							if (loadedSections[s] == null) {
 								// Sector is full of air
-								// TODO use air16color
+								color.putColor(settings.blockColors.getBlockColor(Block.AIR), 16);
 								continue;
 							}
 							for (int y = 15; y >= 0; y--) {
@@ -172,17 +181,27 @@ public class RegionRenderer {
 									break height;
 								if ((y | s << 4) > settings.maxY)
 									continue;
-								// color = Color.alphaOver(loadedSections[s][x | z << 4 | y << 8], color);
 
-								Color currentColor = loadedSections[s][x | z << 4 | y << 8];
-								color.putColor(currentColor);
-								/* As long as the blocks are transparent enough, we keep track of the height */
-								// TODO use the actual height maps
-								// if (color.a < 0.2)
-								// height[chunk.x << 4 | x | chunk.z << 13 | z << 9] = y | s << 4;
-								if (color.needStop) {
-									break height;
+								int i = x | z << 4 | y << 8;
+								Block block = loadedSections[s][i];
+
+								Color currentColor = settings.blockColors.getBlockColor(block);
+								if (currentColor == Color.MISSING) // == is correct here
+									log.warn("Missing color for " + block);
+								if (settings.blockColors.isGrassBlock(block))
+									currentColor = Color.multiplyRGB(currentColor, settings.biomeColors.getGrassColor(biomes[i & 0xFF]));
+								if (settings.blockColors.isFoliageBlock(block))
+									currentColor = Color.multiplyRGB(currentColor, settings.biomeColors.getFoliageColor(biomes[i & 0xFF]));
+								if (settings.blockColors.isWaterBlock(block))
+									currentColor = Color.multiplyRGB(currentColor, settings.biomeColors.getWaterColor(biomes[i & 0xFF]));
+								if (!settings.blockColors.isTranslucentBlock(block) && !heightSet) {
+									height[chunk.x << 4 | x | chunk.z << 13 | z << 9] = s << 4 | y;
+									heightSet = true;
 								}
+
+								color.putColor(currentColor);
+								if (color.needStop)
+									break height;
 							}
 						}
 						map[chunk.x << 4 | x | chunk.z << 13 | z << 9] = color.getFinal();
@@ -201,7 +220,7 @@ public class RegionRenderer {
 	 * Takes in the NBT data for a section and returns an int[] containing the color of each block in that section. The returned array thus has
 	 * a length of 16³=4096 items and the blocks are mapped to them in XZY order.
 	 */
-	private Color[] renderSection(int[] biomes, byte[] blockLight, CompoundMap section) {
+	private Block[] renderSection(CompoundMap section) {
 		if (section == null)
 			return null;
 
@@ -217,29 +236,18 @@ public class RegionRenderer {
 		long[] blocks = ((LongArrayTag) section.get("BlockStates")).getValue();
 
 		int bitsPerIndex = blocks.length * 64 / 4096;
-		Color[] ret = new Color[16 * 16 * 16];
+		Block[] ret = new Block[16 * 16 * 16];
 
 		for (int i = 0; i < 4096; i++) {
 			long blockIndex = RegionFile.extractFromLong(blocks, i, bitsPerIndex);
 
 			if (blockIndex >= palette.size()) {
-				ret[i] = Color.MISSING;
 				log.warn("Block " + i + " " + blockIndex + " was out of bounds, is this world corrupt?");
 				continue;
 			}
 			Block block = palette.get((int) blockIndex);
-			Color color = settings.blockColors.getBlockColor(block);
-			if (color == Color.MISSING) // == is correct here
-				log.warn("Missing color for " + block);
 
-			if (settings.blockColors.isGrassBlock(block))
-				color = Color.multiplyRGB(color, settings.biomeColors.getGrassColor(biomes[i & 0xFF]));
-			if (settings.blockColors.isFoliageBlock(block))
-				color = Color.multiplyRGB(color, settings.biomeColors.getFoliageColor(biomes[i & 0xFF]));
-			if (settings.blockColors.isWaterBlock(block))
-				color = Color.multiplyRGB(color, settings.biomeColors.getWaterColor(biomes[i & 0xFF]));
-
-			ret[i] = color;
+			ret[i] = block;
 		}
 		return ret;
 	}

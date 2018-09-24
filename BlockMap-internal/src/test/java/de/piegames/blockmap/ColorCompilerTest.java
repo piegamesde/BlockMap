@@ -1,8 +1,8 @@
 package de.piegames.blockmap;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.FileSystem;
@@ -15,7 +15,7 @@ import java.util.EnumSet;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.joml.Vector2i;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.flowpowered.nbt.regionfile.RegionFile;
@@ -30,90 +30,37 @@ import de.piegames.blockmap.renderer.RenderSettings;
 
 public class ColorCompilerTest {
 
-	Path minecraftJarfile;
-	FileSystem minecraftJar;
+	static Path			minecraftJarfile;
+	static FileSystem	minecraftJar;
 
-	@Before
-	public void testMinecraftJar() throws URISyntaxException, IOException {
+	@BeforeClass
+	public static void testMinecraftJar() throws URISyntaxException, IOException {
 		Configurator.setRootLevel(Level.DEBUG);
 
 		assertNotNull("Minecraft jar missing. Please copy or link the 1.13.jar from the versions folder to ./src/test/resources/minecraft.jar",
-				getClass().getResource("/minecraft.jar"));
-		minecraftJarfile = Paths.get(getClass().getResource("/minecraft.jar").toURI());
+				ColorCompilerTest.class.getResource("/minecraft.jar"));
+		minecraftJarfile = Paths.get(ColorCompilerTest.class.getResource("/minecraft.jar").toURI());
 		minecraftJar = FileSystems.newFileSystem(minecraftJarfile, null);
 	}
 
-	/*
-	 * This test is not accurate enough since the blockstate data is missing some important block states liked waterlogged and powered because
-	 * those are handled by the game and not by the resource pack
-	 */
-	// /**
-	// * Go through all files of {@code /assets/minecraft/blockstates} and test if they are present in the color file
-	// *
-	// * @throws IOException
-	// * @throws URISyntaxException
-	// */
-	// @Test
-	// public void testAllResources() throws IOException, URISyntaxException {
-	// BlockColorMap map = ColorCompiler.compileBlockColors(minecraftJarfile,
-	// Paths.get(getClass().getResource("/block-color-instructions.json").toURI()));
-	//
-	// try (DirectoryStream<Path> stream = Files.newDirectoryStream(minecraftJar.getPath("assets/minecraft/blockstates"))) {
-	// for (Path p : stream) {
-	// String blockName = p.getFileName().toString().split("\\.")[0];
-	// System.out.println("Testing block " + blockName);
-	// blockName = "minecraft:" + blockName;
-	// try (JsonReader reader = new JsonReader(Files.newBufferedReader(p))) {
-	// reader.beginObject();
-	// String type = reader.nextName();
-	// if (type.equals("variants")) {
-	// reader.beginObject();
-	// while (reader.hasNext()) {
-	// for (Block block : Block.byCompactForm(blockName + "," + reader.nextName())) {
-	// boolean b = map.hasBlockColor(block);
-	// if (!b)
-	// b = map.hasBlockColor(Block.block+",waterlogged=false");
-	// if (!b)
-	// b = map.hasBlockColor(block)
-	// assertTrue("Block " + block + " should exist in color map", map.hasBlockColor(block));
-	// }
-	// reader.skipValue();
-	// }
-	// reader.endObject();
-	// } else if (type.equals("multipart")) {
-	// reader.skipValue();
-	// // TODO
-	//
-	// // reader.beginArray();
-	// // reader.endArray();
-	// } else {
-	// throw new AssertionError("Type '" + type + "' is not valid");
-	// }
-	//
-	// reader.endObject();
-	// }
-	// }
-	// }
-	// }
-
-	/** The debug world contains every single block and block state that exists in the game, so lets test it */
+	/** The debug world contains every single block and block state that exists in the game, so let's test it */
 	@Test
 	public void testDebugWorld() throws IOException, URISyntaxException, InterruptedException {
-		// TODO make sure no pixel has the "missing" color
+		// TODO take off shading to ensure the colors are true
 		RenderSettings settings = new RenderSettings();
 		settings.blockColors = ColorCompiler.compileBlockColors(minecraftJarfile, Paths.get(getClass().getResource("/block-color-instructions.json").toURI()))
 				.get("default");
 		settings.biomeColors = ColorCompiler.compileBiomeColors(minecraftJarfile, Paths.get(getClass().getResource("/biome-color-instructions.json").toURI()));
 		RegionRenderer renderer = new RegionRenderer(settings);
-		renderer.render(new Vector2i(-1, -1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.-1.-1.mca").toURI())));
-		renderer.render(new Vector2i(-1, 0), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.-1.0.mca").toURI())));
-		renderer.render(new Vector2i(-1, 1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.-1.1.mca").toURI())));
-		renderer.render(new Vector2i(0, -1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.0.-1.mca").toURI())));
-		renderer.render(new Vector2i(0, 0), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.0.0.mca").toURI())));
-		renderer.render(new Vector2i(0, 1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.0.1.mca").toURI())));
-		renderer.render(new Vector2i(1, -1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.1.-1.mca").toURI())));
-		renderer.render(new Vector2i(1, 0), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.1.0.mca").toURI())));
-		renderer.render(new Vector2i(1, 1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.1.1.mca").toURI())));
+		assertNoMissing(renderer.render(new Vector2i(-1, -1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.-1.-1.mca").toURI()))));
+		assertNoMissing(renderer.render(new Vector2i(-1, 0), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.-1.0.mca").toURI()))));
+		assertNoMissing(renderer.render(new Vector2i(-1, 1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.-1.1.mca").toURI()))));
+		assertNoMissing(renderer.render(new Vector2i(0, -1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.0.-1.mca").toURI()))));
+		assertNoMissing(renderer.render(new Vector2i(0, 0), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.0.0.mca").toURI()))));
+		assertNoMissing(renderer.render(new Vector2i(0, 1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.0.1.mca").toURI()))));
+		assertNoMissing(renderer.render(new Vector2i(1, -1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.1.-1.mca").toURI()))));
+		assertNoMissing(renderer.render(new Vector2i(1, 0), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.1.0.mca").toURI()))));
+		assertNoMissing(renderer.render(new Vector2i(1, 1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.1.1.mca").toURI()))));
 	}
 
 	/**
@@ -161,5 +108,13 @@ public class ColorCompilerTest {
 			}
 			reader.endObject();
 		}
+	}
+
+	/** Assert there are no "missing color" pixels in that image */
+	private static void assertNoMissing(BufferedImage image) {
+		// TODO tolerance
+		for (int x = 0; x < image.getWidth(); x++)
+			for (int y = 0; y < image.getHeight(); y++)
+				assertNotEquals(0xFFFF00FF, image.getRGB(x, y));
 	}
 }

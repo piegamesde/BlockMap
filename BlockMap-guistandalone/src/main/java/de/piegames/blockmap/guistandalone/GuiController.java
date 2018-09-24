@@ -19,6 +19,8 @@ import org.controlsfx.dialog.CommandLinksDialog;
 import org.controlsfx.dialog.CommandLinksDialog.CommandLinksButtonType;
 
 import de.piegames.blockmap.DotMinecraft;
+import de.piegames.blockmap.RegionFolder;
+import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.gui.MapPane;
 import de.piegames.blockmap.gui.WorldRendererCanvas;
 import de.piegames.blockmap.gui.decoration.DragScrollDecoration;

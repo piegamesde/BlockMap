@@ -26,7 +26,7 @@ import org.mapdb.DataOutput2;
 import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
 
-import de.piegames.blockmap.World.Region;
+import de.piegames.blockmap.Region;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.PixelReader;

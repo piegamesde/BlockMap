@@ -3,12 +3,13 @@ package de.piegames.blockmap.gui;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
+
 import org.joml.AABBd;
 import org.joml.ImmutableVector2i;
 import org.joml.Vector2i;
 import org.joml.Vector2ic;
 
-import de.piegames.blockmap.World.Region;
+import de.piegames.blockmap.Region;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
@@ -28,16 +29,15 @@ public class RenderedRegion {
 	}
 
 	protected final RenderedMap						map;
-	// public final AtomicBoolean invalid = new AtomicBoolean(true);
 	protected final RenderedImage					image;
 	public final int								level;
 	public final ImmutableVector2i					position;
 	public final AtomicReference<RenderingState>	valid	= new AtomicReference<>(RenderingState.INVALID);
 
-	public Region									region;
+	public Region								region;
 
 	public RenderedRegion(RenderedMap map, Region region) {
-		this(map, 0, new ImmutableVector2i(region.rx, region.rz));
+		this(map, 0, new ImmutableVector2i(region.position));
 		this.region = region;
 	}
 

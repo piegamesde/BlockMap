@@ -15,10 +15,10 @@ import org.joml.Vector2i;
 
 import com.flowpowered.nbt.regionfile.RegionFile;
 
-import de.piegames.blockmap.World;
-import de.piegames.blockmap.World.Region;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RenderSettings;
+import de.piegames.blockmap.world.World;
+import de.piegames.blockmap.world.World.Region;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Help.Visibility;

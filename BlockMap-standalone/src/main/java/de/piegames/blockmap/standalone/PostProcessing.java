@@ -15,10 +15,10 @@ import javax.imageio.ImageIO;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import de.piegames.blockmap.World;
-import de.piegames.blockmap.World.Region;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RenderSettings;
+import de.piegames.blockmap.world.World;
+import de.piegames.blockmap.world.World.Region;
 
 /** This class contains a collection of methods that transform the rendered map into another, more accessible representation */
 public class PostProcessing {

@@ -18,7 +18,7 @@ import org.joml.Vector3d;
 
 import com.flowpowered.nbt.regionfile.RegionFile;
 
-import de.piegames.blockmap.World;
+import de.piegames.blockmap.RegionFolder;
 import de.piegames.blockmap.gui.RenderedRegion.RenderingState;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import javafx.application.Platform;
@@ -33,7 +33,7 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 
 	public static final int					THREAD_COUNT	= 4;
 
-	protected RegionRenderer renderer;
+	protected RegionRenderer				renderer;
 	protected RenderedMap					map;
 
 	protected ScheduledThreadPoolExecutor	executor;
@@ -73,8 +73,8 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 		repaint();
 	}
 
-	public void loadWorld(Path file) {
-		map.clearReload(World.load(file).regions.values());
+	public void loadWorld(RegionFolder world) {
+		map.clearReload(world.regions.values());
 		invalidateTextures();
 	}
 
@@ -166,7 +166,8 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 		// In region coordinates
 		Vector3d cursorPos = new Vector3d(viewport.getMouseInWorld(), 0).div(512).sub(.5, .5, 0);
 
-		Comparator<RenderedRegion> comp = (a, b) -> Double.compare(new Vector3d(a.position.x(), a.position.y(), 0).sub(cursorPos).length(), new Vector3d(b.position.x(), b.position.y(), 0).sub(cursorPos).length());
+		Comparator<RenderedRegion> comp = (a, b) -> Double.compare(new Vector3d(a.position.x(), a.position.y(), 0).sub(cursorPos).length(),
+				new Vector3d(b.position.x(), b.position.y(), 0).sub(cursorPos).length());
 		RenderedRegion min = null;
 		for (RenderedRegion r : map.get(0).values())
 			if (r.valid.get() == RenderingState.INVALID && (min == null || comp.compare(min, r) > 0))

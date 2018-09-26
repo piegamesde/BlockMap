@@ -26,6 +26,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 
 import de.piegames.blockmap.color.BiomeColorMap;
+import de.piegames.blockmap.color.BiomeColorMap.BiomeColor;
 import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.color.Color;
 import de.piegames.blockmap.generate.ColorMapHelper.ColorMapEntry;
@@ -150,9 +151,7 @@ public class ColorCompiler {
 		log.debug("Minecraft jar: " + minecraftJar.toAbsolutePath());
 		FileSystem jarFile = FileSystems.newFileSystem(minecraftJar, null);
 
-		Map<Integer, Color> waterColorMap = new HashMap<>();
-		Map<Integer, Color> grassColorMap = new HashMap<>();
-		Map<Integer, Color> foliageColorMap = new HashMap<>();
+		Map<Integer, BiomeColor> colorMap = new HashMap<>();
 
 		int[] grassColors;
 		int[] foliageColors;
@@ -183,15 +182,30 @@ public class ColorCompiler {
 				double rainfall = reader.nextDouble();
 				reader.skipValue();// temperature
 				double temperature = reader.nextDouble();
+				reader.skipValue();// biomeColor
+				int biomeColor = 0xFF000000;
+				{
+					reader.beginObject();
+					reader.skipValue(); // r;
+					biomeColor |= (reader.nextInt() & 0xFF) << 16;
+					reader.skipValue(); // g
+					biomeColor |= (reader.nextInt() & 0xFF) << 8;
+					reader.skipValue(); // b
+					biomeColor |= (reader.nextInt() & 0xFF);
+					reader.endObject();
+				}
 				reader.endObject();
 
-				waterColorMap.put(id, Color.fromRGB(waterColor));
-				grassColorMap.put(id, Color.fromRGB(grassColor(temperature, rainfall, grassColors)));
-				foliageColorMap.put(id, Color.fromRGB(foliageColor(temperature, rainfall, foliageColors)));
+				BiomeColor color = new BiomeColor(
+						Color.fromRGB(waterColor),
+						Color.fromRGB(grassColor(temperature, rainfall, grassColors)),
+						Color.fromRGB(foliageColor(temperature, rainfall, foliageColors)),
+						Color.fromRGB(biomeColor));
+				colorMap.put(id, color);
 			}
 			reader.endObject();
 		}
-		return new BiomeColorMap(waterColorMap, grassColorMap, foliageColorMap);
+		return new BiomeColorMap(colorMap);
 	}
 
 	private static int grassColor(double temperature, double humidity, int[] grassColors) {

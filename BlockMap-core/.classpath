@@ -19,6 +19,11 @@
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry sourcepath="/home/piegames/.gradle/caches/modules-2/files-2.1/io.gsonfire/gson-fire/1.8.3/922dfa83433edf6a188f101f7d852489b568548e/gson-fire-1.8.3-sources.jar" kind="lib" path="/home/piegames/.gradle/caches/modules-2/files-2.1/io.gsonfire/gson-fire/1.8.3/d67a0b22431bd39a4ee404c3eec151fd0d37f47/gson-fire-1.8.3.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry sourcepath="/home/piegames/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.8.2/b2da9f8444128651758719856de579eacff7f387/gson-2.8.2-sources.jar" kind="lib" path="/home/piegames/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.8.2/3edcfe49d2c6053a70a2a47e4e1c2f94998a49cf/gson-2.8.2.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>

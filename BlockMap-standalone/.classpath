@@ -6,13 +6,13 @@
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="output" path="bin/default"/>
 	<classpathentry output="bin/main" kind="src" path="src/main/resources">
 		<attributes>
 			<attribute name="gradle_scope" value="main"/>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="output" path="bin/default"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8/"/>
 	<classpathentry kind="src" path="/BlockMap-core"/>
 	<classpathentry sourcepath="/home/piegames/.gradle/caches/modules-2/files-2.1/info.picocli/picocli/3.3.0/3a79080bf8fbe09bcd79bc13b1feec04452acb53/picocli-3.3.0-sources.jar" kind="lib" path="/home/piegames/.gradle/caches/modules-2/files-2.1/info.picocli/picocli/3.3.0/af5421678aa1d2bb0e45ed74e1ab7d0798e50f8d/picocli-3.3.0.jar">
@@ -51,6 +51,11 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry sourcepath="/home/piegames/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-api/2.8.2/459702eacc545a5478627fe879cec6e004c00f3a/log4j-api-2.8.2-sources.jar" kind="lib" path="/home/piegames/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-api/2.8.2/e590eeb783348ce8ddef205b82127f9084d82bf3/log4j-api-2.8.2.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry sourcepath="/home/piegames/.gradle/caches/modules-2/files-2.1/io.gsonfire/gson-fire/1.8.3/922dfa83433edf6a188f101f7d852489b568548e/gson-fire-1.8.3-sources.jar" kind="lib" path="/home/piegames/.gradle/caches/modules-2/files-2.1/io.gsonfire/gson-fire/1.8.3/d67a0b22431bd39a4ee404c3eec151fd0d37f47/gson-fire-1.8.3.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>

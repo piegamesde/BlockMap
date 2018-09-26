@@ -9,3 +9,5 @@
 **/bin/
 **/output/
 \.gradle/
+
+\.gradletasknamecache

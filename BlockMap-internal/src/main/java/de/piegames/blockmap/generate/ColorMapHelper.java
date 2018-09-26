@@ -3,20 +3,18 @@ package de.piegames.blockmap.generate;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import de.piegames.blockmap.color.BlockColorMap;
-import de.piegames.blockmap.color.Color;
+import de.piegames.blockmap.color.BlockColorMap.BlockColor;
 import de.piegames.blockmap.renderer.Block;
 
 public class ColorMapHelper {
@@ -61,48 +59,41 @@ public class ColorMapHelper {
 	}
 
 	public BlockColorMap compileColorMap(FileSystem jarFile) throws IOException {
-		Map<Block, Color> blockColors = new HashMap<>();
-		Set<Block> grassBlocks = new HashSet<>();
-		Set<Block> foliageBlocks = new HashSet<>();
-		Set<Block> waterBlocks = new HashSet<>();
-		Set<Block> translucentBlocks = new HashSet<>();
+		Map<Block, BlockColor> blockColors = new HashMap<>();
 
 		for (Entry<Block, List<String>> e : blocks.entrySet()) {
 			Block block = e.getKey();
 			Queue<String> colorInfo = new LinkedList<>(e.getValue());
 
-			Color color = ColorCompiler.compileTexture(block.toString(), colorInfo, jarFile);
+			BlockColor color = new BlockColor();
+			color.color = ColorCompiler.compileTexture(block.toString(), colorInfo, jarFile);
 			for (String remainingProperty : colorInfo) {
 				if (remainingProperty.startsWith("tint="))
 					switch (remainingProperty.substring("tint=".length())) {
 					case "none":
 						break;
 					case "grass":
-						grassBlocks.add(block);
+						color.isGrass = true;
 						break;
 					case "foliage":
-						foliageBlocks.add(block);
+						color.isFoliage = true;
 						break;
 					case "water":
-						waterBlocks.add(block);
+						color.isWater = true;
 						break;
 					default:
 						throw new IOException("Block " + block + ": " + e.getValue() + " is malformed.");
 					}
 				if (remainingProperty.startsWith("translucent=")
 						&& Boolean.parseBoolean(remainingProperty.substring("translucent=".length())))
-					translucentBlocks.add(block);
+					color.isTranslucent = true;
 			}
 
 			log.debug("Compiled texture " + e.getKey() + " to " + color);
 			blockColors.put(block, color);
 		}
 
-		log.debug("Grass blocks " + grassBlocks);
-		log.debug("Foliage blocks " + foliageBlocks);
-		log.debug("Water blocks " + waterBlocks);
-
-		return new BlockColorMap(blockColors, grassBlocks, foliageBlocks, waterBlocks, translucentBlocks);
+		return new BlockColorMap(blockColors);
 	}
 
 	static class ColorMapEntry {

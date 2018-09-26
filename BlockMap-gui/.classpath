@@ -90,6 +90,11 @@
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry sourcepath="/home/piegames/.gradle/caches/modules-2/files-2.1/io.gsonfire/gson-fire/1.8.3/922dfa83433edf6a188f101f7d852489b568548e/gson-fire-1.8.3-sources.jar" kind="lib" path="/home/piegames/.gradle/caches/modules-2/files-2.1/io.gsonfire/gson-fire/1.8.3/d67a0b22431bd39a4ee404c3eec151fd0d37f47/gson-fire-1.8.3.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry sourcepath="/home/piegames/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-jcl/2.8.2/2d20548e90820eca0a459dcecbdedd38a42bea67/log4j-jcl-2.8.2-sources.jar" kind="lib" path="/home/piegames/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-jcl/2.8.2/3e3fb203422887b4a2f06d55c1344f96a0098694/log4j-jcl-2.8.2.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>

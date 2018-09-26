@@ -1,11 +1,41 @@
 package de.piegames.blockmap.color;
 
+import java.io.IOException;
+
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+
 public class Color {
+	public static final TypeAdapter<Color>	ADAPTER		= new TypeAdapter<Color>() {
+
+															@Override
+															public void write(JsonWriter out, Color color) throws IOException {
+																out.beginArray();
+																out.value(Float.floatToIntBits(color.a));
+																out.value(Float.floatToIntBits(color.r));
+																out.value(Float.floatToIntBits(color.g));
+																out.value(Float.floatToIntBits(color.b));
+																out.endArray();
+															}
+
+															@Override
+															public Color read(JsonReader in) throws IOException {
+																in.beginArray();
+																Color color = new Color(
+																		Float.intBitsToFloat(in.nextInt()),
+																		Float.intBitsToFloat(in.nextInt()),
+																		Float.intBitsToFloat(in.nextInt()),
+																		Float.intBitsToFloat(in.nextInt()));
+																in.endArray();
+																return color;
+															}
+														};
 
 	public static final Color	MISSING		= new Color(1f, 1f, 0f, 1f);
 	public static final Color	TRANSPARENT	= new Color(0, 0, 0, 0);
 
-	public final float			r, g, b, a;
+	public final float						r, g, b, a;
 
 	public Color(float a, float r, float g, float b) {
 		this.r = r;

@@ -2,9 +2,9 @@ apply plugin: 'java-library'
 
 dependencies {
 	// Core dependencies
-	api  'com.github.piegamesde:nbt:6314abbe46'
+	api 'com.github.piegamesde:nbt:6314abbe46'
 	api 'com.google.code.gson:gson:2.8.2'
-	//implementation 'io.gsonfire:gson-fire:1.8.1' // TODO remove?
+    implementation 'io.gsonfire:gson-fire:1.8.3'
 	api 'commons-logging:commons-logging:1.2'
 	implementation 'org.apache.logging.log4j:log4j-core:2.8.2'
 	implementation 'org.apache.logging.log4j:log4j-jcl:2.8.2'

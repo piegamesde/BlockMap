@@ -50,10 +50,13 @@ public class RegionRenderer {
 	}
 
 	public Color[] renderRaw(Vector2ic regionPos, RegionFile file) throws IOException {
-		// The final map of the chunk, 512*512 pixels, XZ
+		/* The final map of the chunk, 512*512 pixels, XZ */
 		Color[] map = new Color[512 * 512];
+		/* If nothing is set otherwise, the height map is set to the minimum height. */
 		int[] height = new int[512 * 512];
-		Arrays.fill(height, 256);
+		int[] regionBiomes = new int[512 * 512];
+		Arrays.fill(height, settings.minY);
+		Arrays.fill(regionBiomes, -1);
 
 		for (RegionChunk chunk : file.listExistingChunks()) {
 			try {
@@ -158,10 +161,10 @@ public class RegionRenderer {
 						if (x < settings.minX || x > settings.maxX || z < settings.minZ || z > settings.maxZ)
 							continue;
 
+						regionBiomes[chunk.x << 4 | x | chunk.z << 13 | z << 9] = biomes[x | z << 4];
+
 						/* Once the height calculation is completed (we found a non-translucent block), set this flag to stop searching. */
 						boolean heightSet = false;
-						/* If nothing is set otherwise, the height map is set to the minimum height. */
-						height[chunk.x << 4 | x | chunk.z << 13 | z << 9] = settings.minY;
 						ColorColumn color = new ColorColumn();
 						height: for (byte s = 15; s >= 0; s--) {
 							if ((s << 4) + 15 > settings.maxY)
@@ -212,7 +215,7 @@ public class RegionRenderer {
 			}
 		}
 
-		settings.shader.shade(map, height, null, settings.biomeColors);
+		settings.shader.shade(map, height, regionBiomes, settings.biomeColors);
 		return map;
 	}
 

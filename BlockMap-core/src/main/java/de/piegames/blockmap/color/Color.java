@@ -2,6 +2,8 @@ package de.piegames.blockmap.color;
 
 import java.io.IOException;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
@@ -31,9 +33,10 @@ public class Color {
 																return color;
 															}
 														};
+	public static final Gson				GSON		= new GsonBuilder().registerTypeAdapter(Color.class, ADAPTER).setPrettyPrinting().create();
 
-	public static final Color	MISSING		= new Color(1f, 1f, 0f, 1f);
-	public static final Color	TRANSPARENT	= new Color(0, 0, 0, 0);
+	public static final Color				MISSING		= new Color(1f, 1f, 0f, 1f);
+	public static final Color				TRANSPARENT	= new Color(0, 0, 0, 0);
 
 	public final float						r, g, b, a;
 

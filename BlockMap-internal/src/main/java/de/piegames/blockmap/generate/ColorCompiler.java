@@ -243,4 +243,12 @@ public class ColorCompiler {
 		int j = (int) ((1.0D - humidity) * 255.0D);
 		return foliageColors[j << 8 | i];
 	}
+
+	public static List<Color> compileHeightMap(Path heightMapFile) throws IOException {
+		BufferedImage image = ImageIO.read(Files.newInputStream(heightMapFile));
+		List<Color> ret = new ArrayList<>(256);
+		for (int x = 0; x < 256; x++)
+			ret.add(Color.fromRGB(image.getRGB(x, 0)));
+		return ret;
+	}
 }

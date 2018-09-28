@@ -11,6 +11,7 @@ import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -27,6 +28,7 @@ import de.piegames.blockmap.BlockStateHelper.BlockStateHelperBlock;
 import de.piegames.blockmap.BlockStateHelper.BlockStateHelperState;
 import de.piegames.blockmap.color.BiomeColorMap;
 import de.piegames.blockmap.color.BlockColorMap;
+import de.piegames.blockmap.color.Color;
 
 public class Generator {
 
@@ -64,6 +66,16 @@ public class Generator {
 				Paths.get(URI.create(Generator.class.getResource("/biome-color-instructions.json").toString())));
 		try (BufferedWriter writer = Files.newBufferedWriter(Paths.get("./output", "biome-colors.json"))) {
 			BlockColorMap.GSON.toJson(map, writer);
+			writer.flush();
+		}
+	}
+
+	public static void generateHeightmap () throws IOException {
+		log.info("Generating heightmap colors");
+		List<Color> colors = ColorCompiler.compileHeightMap(Paths.get(URI.create(Generator.class.getResource("/heightmap.png").toString())));
+
+		try (BufferedWriter writer = Files.newBufferedWriter(Paths.get("./output", "heightmap.json"))) {
+			Color.GSON.toJson(colors, writer);
 			writer.flush();
 		}
 	}
@@ -144,6 +156,7 @@ public class Generator {
 		Files.createDirectories(Paths.get("./output"));
 		generateBlockColors();
 		generateBiomeColors();
+		generateHeightmap();
 		generateBlockStates();
 		log.info("Done.");
 	}

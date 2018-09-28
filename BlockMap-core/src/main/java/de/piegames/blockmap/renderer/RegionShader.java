@@ -1,9 +1,17 @@
 package de.piegames.blockmap.renderer;
 
+import java.io.InputStreamReader;
+
+import com.google.gson.stream.JsonReader;
+
 import de.piegames.blockmap.color.BiomeColorMap;
 import de.piegames.blockmap.color.Color;
 
 public interface RegionShader {
+
+	public static final RegionShader[] DEFAULT_SHADERS = new RegionShader[] {
+			new FlatShader(), new ReliefShader(), new BiomeShader(), new HeightShader()
+	};
 
 	public void shade(Color[] map, int[] height, int[] biome, BiomeColorMap biomeColors);
 
@@ -100,6 +108,23 @@ public interface RegionShader {
 			for (int i = 0; i < 512 * 512; i++)
 				if (biome[i] != -1)
 					map[i] = biomeColors.getBiomeColor(biome[i] & 0xFF);
+		}
+	}
+
+	public static class HeightShader implements RegionShader {
+
+		private static final Color[] colors;
+
+		static {
+			colors = Color.GSON.fromJson(new JsonReader(new InputStreamReader(
+					HeightShader.class.getResourceAsStream("/heightmap.json"))), Color[].class);
+		}
+
+		@Override
+		public void shade(Color[] map, int[] height, int[] biome, BiomeColorMap biomeColors) {
+			for (int i = 0; i < 512 * 512; i++)
+				if (biome[i] != -1)
+					map[i] = colors[height[i]];
 		}
 	}
 }

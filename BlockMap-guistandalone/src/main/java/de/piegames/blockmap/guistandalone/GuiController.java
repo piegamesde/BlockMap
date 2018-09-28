@@ -1,22 +1,14 @@
 package de.piegames.blockmap.guistandalone;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.controlsfx.dialog.CommandLinksDialog;
-import org.controlsfx.dialog.CommandLinksDialog.CommandLinksButtonType;
+import org.controlsfx.control.RangeSlider;
+import org.controlsfx.control.StatusBar;
 
 import de.piegames.blockmap.DotMinecraft;
 import de.piegames.blockmap.RegionFolder;
@@ -24,35 +16,49 @@ import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.gui.MapPane;
 import de.piegames.blockmap.gui.WorldRendererCanvas;
 import de.piegames.blockmap.gui.decoration.DragScrollDecoration;
-import de.piegames.blockmap.gui.decoration.SettingsOverlay;
 import de.piegames.blockmap.renderer.RegionRenderer;
+import de.piegames.blockmap.renderer.RegionShader;
 import de.piegames.blockmap.renderer.RenderSettings;
-import javafx.event.ActionEvent;
+import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.TextField;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.Modality;
 
 public class GuiController implements Initializable {
 
-	private static Log log = LogFactory.getLog(RegionRenderer.class);
+	private static Log						log				= LogFactory.getLog(RegionRenderer.class);
 
-	public WorldRendererCanvas	renderer;
+	public WorldRendererCanvas				renderer;
 
 	@FXML
-	private BorderPane			root;
+	private BorderPane						root;
 	@FXML
-	private TextField			pathField;
+	private Button							browseButton;
 	@FXML
-	private Button				browseButton;
+	private StatusBar						statusBar;
+	@FXML
+	private Label							minHeight, maxHeight;
+	@FXML
+	private RangeSlider						heightSlider;
+	@FXML
+	private HBox							regionSettings;
+	@FXML
+	private ChoiceBox<String>				shadingBox;
+	@FXML
+	private ChoiceBox<String>				colorBox;
 
-	protected MapPane			pane;
+	protected MapPane						pane;
+	protected ObjectProperty<Path>			currentPath		= new SimpleObjectProperty<>();
+	protected ObjectProperty<RegionFolder>	regionFolder	= new SimpleObjectProperty<>();
 
 	public GuiController() {
 	}
@@ -62,91 +68,77 @@ public class GuiController implements Initializable {
 		log.debug("Initializing GUI");
 		RenderSettings settings = new RenderSettings();
 		settings.loadDefaultColors();
-		// settings.blockColors = BlockColorMap.loadInternal("caves");
 		renderer = new WorldRendererCanvas(new RegionRenderer(settings));
 		root.setCenter(pane = new MapPane(renderer));
 		pane.decorationLayers.add(new DragScrollDecoration(renderer.viewport));
-		pane.settingsLayers.add(new SettingsOverlay(renderer));
+
+		currentPath.addListener(e -> reloadWorld());
+
+		// statusBar.textProperty().bind(renderer.getStatus());
+		statusBar.setText(null);
+		statusBar.progressProperty().bind(renderer.getProgress());
+		Label pathLabel = new Label();
+		Label statusLabel = new Label();
+		statusLabel.textProperty().bind(renderer.getStatus());
+		pathLabel.textProperty().bind(Bindings.createStringBinding(() -> currentPath.get() == null ? "" : currentPath.get().toString(), currentPath));
+		statusBar.getLeftItems().add(statusLabel);
+		statusBar.getLeftItems().add(pathLabel);
+
+		minHeight.textProperty().bind(Bindings.format("Min: %3.0f", heightSlider.lowValueProperty()));
+		maxHeight.textProperty().bind(Bindings.format("Max: %3.0f", heightSlider.highValueProperty()));
+		ChangeListener<? super Boolean> heightListener = (e, oldVal, newVal) -> {
+			if (oldVal && !newVal) {
+				if (e == heightSlider.lowValueChangingProperty())
+					renderer.getRegionRenderer().settings.minY = (int) Math.round(heightSlider.lowValueProperty().getValue().doubleValue());
+				else if (e == heightSlider.highValueChangingProperty())
+					renderer.getRegionRenderer().settings.maxY = (int) Math.round(heightSlider.highValueProperty().getValue().doubleValue());
+				renderer.invalidateTextures();
+				renderer.repaint();
+			}
+		};
+		heightSlider.lowValueChangingProperty().addListener(heightListener);
+		heightSlider.highValueChangingProperty().addListener(heightListener);
+
+		colorBox.valueProperty().addListener((observer, old, value) -> {
+			settings.blockColors = BlockColorMap
+					.loadInternal(new String[] { "default", "caves", "foliage", "water" }[colorBox.getSelectionModel().getSelectedIndex()]);
+			renderer.invalidateTextures();
+			renderer.repaint();
+		});
+		shadingBox.valueProperty().addListener((observer, old, value) -> {
+			settings.shader = RegionShader.DEFAULT_SHADERS[shadingBox.getSelectionModel().getSelectedIndex()];
+			System.out.println(settings.shader);
+			renderer.invalidateTextures();
+			renderer.repaint();
+		});
+
+		regionFolder.addListener((observable, previous, val) -> renderer.loadWorld(val));
 	}
 
+	@FXML
 	public void reloadWorld() {
-		String world = pathField.getText();
-		log.info("(Re)loading world: " + world);
-		if (world.isEmpty())
-			return;
-		try {
-			Path path = Paths.get(world);
-			if (Files.exists(path) && Files.isDirectory(path)) {
-				if (Files.exists(path.resolve("level.dat"))) { // Selected world folder
-					String[] dimensions = new String[] { "region", "DIM-1\\region", "DIM1\\region" };
-					String[] dimensionNames = new String[] { "Overworld", "Nether", "End" };
-					final Path path2 = path;
-					List<CommandLinksButtonType> availableDimensions = IntStream.range(0, 3)
-							.filter(i -> Files.exists(path2.resolve(dimensions[i])))
-							.mapToObj(i -> new CommandLinksButtonType(dimensionNames[i], false))
-							.collect(Collectors.toList());
-					if (!availableDimensions.isEmpty()) {
-						// TODO change to conventional button dialog, this one is too big for our use case and doesn't look good
-						CommandLinksDialog dialog = new CommandLinksDialog(availableDimensions);
-						dialog.setTitle("Select dimension");
-						dialog.initModality(Modality.APPLICATION_MODAL);
-						Optional<ButtonType> result = availableDimensions.size() == 1 ? Optional.of(availableDimensions.get(0).getButtonType()) : dialog.showAndWait();
-						if (result.isPresent()) {
-							switch (result.get().getText()) {
-								case "Overworld":
-									path = path.resolve(dimensions[0]);
-									break;
-								case "Nether":
-									path = path.resolve(dimensions[1]);
-									break;
-								case "End":
-									path = path.resolve(dimensions[2]);
-									break;
-							}
-						} else {
-							throw new Error("TODO");
-						}
-					}
-					pathField.setText(path.toAbsolutePath().toString());
-				}
-
-				// Region folder selected from here
-				if (!hasFilesWithEnding(path, "mca"))
-					new Alert(AlertType.WARNING, "Your selected folder seems to not contain any useful files." + (hasFilesWithEnding(path, "mcr")
-							? " It does contain some region files in the old format though, please open this world in a newer version of Minecraft to automatically convert them." : "")).showAndWait();
-				renderer.loadWorld(path);
-			} else
-				new Alert(AlertType.ERROR, "Folder does not exist", ButtonType.OK).showAndWait();
-		} catch (InvalidPathException e) {
-			new Alert(AlertType.ERROR, "Invalid path", ButtonType.OK).showAndWait();
-		}
+		RegionFolderProvider folder = RegionFolderProvider.byPath(currentPath.get());
+		regionFolder.bind(folder.folderProperty());
+		regionSettings.getChildren().clear();
+		regionSettings.getChildren().addAll(folder.getGUI());
 	}
 
+	@FXML
 	public void browse() {
 		DirectoryChooser dialog = new DirectoryChooser();
-		File f = pathField.getText().isEmpty() ? DotMinecraft.DOTMINECRAFT.resolve("saves").toFile() : new File(pathField.getText());
-		// dialog.getExtensionFilters().add(new ExtensionFilter(description, extensions))
+		File f = (currentPath.get() == null) ? DotMinecraft.DOTMINECRAFT.resolve("saves").toFile() : currentPath.get().getParent().toFile();
+		if (!f.isDirectory())
+			f = DotMinecraft.DOTMINECRAFT.resolve("saves").toFile();
+		if (!f.isDirectory())
+			f = null;
 		dialog.setInitialDirectory(f);
-		try {
-			f = dialog.showDialog(null);
-		} catch (IllegalArgumentException e) {
-			// Invalid initial folder
-			dialog.setInitialDirectory(DotMinecraft.DOTMINECRAFT.resolve("saves").toFile());
-			f = dialog.showDialog(null);
-		}
-		pathField.setText(f == null ? "" : f.getAbsolutePath());
-		pathField.fireEvent(new ActionEvent());
+		f = dialog.showDialog(null);
+		if (f != null)
+			currentPath.set(f.toPath());
 	}
 
-	private boolean hasFilesWithEnding(Path path, String ending) {
-		try {
-			return Files.list(path).anyMatch(p -> p.getFileName().toString().endsWith("." + ending));
-		} catch (IOException e) {
-			System.err.println("Could not read content of the folder: " + path);
-			e.printStackTrace();
-			// No warning will be shown to the user. If there is a severe error, it will pop up again when trying to load it. If the folder does not
-			// contain any usable files, the world map will be empty without warning,
-			return true;
-		}
+	@FXML
+	public void exit() {
+		Platform.exit();
 	}
 }

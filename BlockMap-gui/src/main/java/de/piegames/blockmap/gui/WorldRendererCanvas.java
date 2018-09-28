@@ -1,7 +1,6 @@
 package de.piegames.blockmap.gui;
 
 import java.awt.image.BufferedImage;
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -13,7 +12,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.joml.Vector2dc;
-import org.joml.Vector2i;
 import org.joml.Vector3d;
 
 import com.flowpowered.nbt.regionfile.RegionFile;
@@ -22,12 +20,15 @@ import de.piegames.blockmap.RegionFolder;
 import de.piegames.blockmap.gui.RenderedRegion.RenderingState;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyFloatProperty;
+import javafx.beans.property.ReadOnlyFloatWrapper;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 
 public class WorldRendererCanvas extends Canvas implements Runnable {
 
@@ -42,6 +43,8 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 	protected GraphicsContext				gc				= getGraphicsContext2D();
 
 	public final DisplayViewport			viewport		= new DisplayViewport();
+	protected ReadOnlyObjectWrapper<String>	status			= new ReadOnlyObjectWrapper<String>();
+	protected ReadOnlyFloatWrapper			progress		= new ReadOnlyFloatWrapper();
 
 	public WorldRendererCanvas(RegionRenderer regionRenderer) {
 		this.renderer = Objects.requireNonNull(regionRenderer);
@@ -82,12 +85,17 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 		map.invalidateAll();
 		for (int i = 0; i < THREAD_COUNT; i++)
 			executor.submit(this);
+
+		progress.set(map.getProgress());
+		if (map.isNothingLoaded())
+			status.set("No regions loaded");
 	}
 
 	public void shutDown() {
+		status.set("Stopped");
 		executor.shutdownNow();
 		try {
-			executor.awaitTermination(1, TimeUnit.DAYS);
+			executor.awaitTermination(1, TimeUnit.MINUTES);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -120,12 +128,6 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 		map.draw(gc, viewport.getZoomLevel(), viewport.getFrustum(), scale);
 		gc.restore();
 
-		if (map.isNothingLoaded()) {
-			gc.setFill(Color.WHITE);
-			gc.setFont(Font.font(20));
-			gc.fillText("No regions loaded", 10, getHeight() - 10);
-		}
-
 		// gc.strokeRect(100, 100, getWidth() - 200, getHeight() - 200);
 		// gc.strokeRect(0, 0, getWidth() - 0, getHeight() - 0);
 	}
@@ -134,25 +136,37 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 		return renderer;
 	}
 
+	public ReadOnlyObjectProperty<String> getStatus() {
+		return status.getReadOnlyProperty();
+	}
+
+	public ReadOnlyFloatProperty getProgress() {
+		return progress.getReadOnlyProperty();
+	}
+
 	@Override
 	public void run() {
 		RenderedRegion region = null;
 		region = nextRegion();
-		if (region == null)
+		if (region == null) {
+			Platform.runLater(() -> status.set(map.isNothingLoaded() ? "No regions loaded" : "Done"));
 			return;
+		}
 		repaint();
-		try {
-			try (RegionFile rf = new RegionFile(region.region.regionFile)) {
-				BufferedImage texture2 = null;
-				do {
-					texture2 = renderer.render(new Vector2i(region.region.rx, region.region.rz), rf);
-					// Re-render the texture if it has been invalidated ('REDRAW')
-				} while (region.valid.compareAndSet(RenderingState.REDRAW, RenderingState.DRAWING) && !Thread.interrupted());
+		Platform.runLater(this::renderWorld);
+		Platform.runLater(() -> status.set("Rendering"));
+		try (RegionFile rf = new RegionFile(region.region.path)) {
+			BufferedImage texture2 = null;
+			do {
+				texture2 = renderer.render(region.region.position, rf);
+				// Re-render the texture if it has been invalidated ('REDRAW')
+			} while (region.valid.compareAndSet(RenderingState.REDRAW, RenderingState.DRAWING) && !Thread.interrupted());
+			map.updateCounter(region);
+			Platform.runLater(() -> progress.set(map.getProgress()));
 
-				WritableImage texture = SwingFXUtils.toFXImage(texture2, null);
-				region.setImage(texture);
-				repaint();
-			}
+			WritableImage texture = SwingFXUtils.toFXImage(texture2, null);
+			region.setImage(texture);
+			repaint();
 		} catch (Throwable e) {
 			e.printStackTrace();
 		} finally {

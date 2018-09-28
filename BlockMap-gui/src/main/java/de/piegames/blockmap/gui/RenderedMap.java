@@ -95,6 +95,7 @@ public class RenderedMap {
 
 	private Map<ImmutableVector2i, RenderedRegion>					plainRegions		= new HashMap<>();
 	private Map<Integer, Map<ImmutableVector2i, RenderedRegion>>	regions				= new HashMap<>();
+	private int														regionsCount, regionsRendered;
 
 	@SuppressWarnings("unchecked")
 	public RenderedMap(ScheduledExecutorService executor) {
@@ -162,10 +163,12 @@ public class RenderedMap {
 		plainRegions.clear();
 		regions.put(0, plainRegions);
 		positions.stream().map(r -> new RenderedRegion(this, r)).forEach(r -> plainRegions.put(r.position, r));
+		regionsRendered = 0;
+		regionsCount = positions.size();
 	}
 
 	public void invalidateAll() {
-		// System.out.println("Invalidate all");
+		regionsRendered = 0;
 		plainRegions.values().forEach(r -> r.invalidateTree(true));
 	}
 
@@ -218,9 +221,7 @@ public class RenderedMap {
 					.stream()
 					.map(e -> e.getValue())
 					.filter(r -> r != null)
-					// .filter(e -> e.getValue().needsUpdate())
 					.filter(r -> r.isVisible(frustum))
-					// .sorted(comp)
 					.filter(r -> current.isInterrupted() ? false : r.updateImage())
 					.limit(10)
 					.collect(Collectors.toList())
@@ -232,11 +233,6 @@ public class RenderedMap {
 	}
 
 	public Map<ImmutableVector2i, RenderedRegion> get(int level) {
-		// if (new Error().getStackTrace().length > 180)
-		// Sometimes, this throws a StackOverflowError, but Eclipse doesn't show when this method got called before the recursion in the stack trace. This
-		// is to catch the error prematurely in the hope of getting a full stack trace
-		// TODO this is really bad for performance, remove ASAP the bug is found and fixed
-		// throw new InternalError("Stack overflow.");
 		Map<ImmutableVector2i, RenderedRegion> ret = regions.get(level);
 		try {
 			// the bug might be when requesting values on level 0 that are null (not calculated)
@@ -259,6 +255,19 @@ public class RenderedMap {
 		if (!plainRegions.containsKey(pos))
 			throw new IllegalArgumentException("Position out of bounds");
 		plainRegions.get(pos).setImage(image);
+	}
+
+	public void updateCounter(RenderedRegion r) {
+		if (get(0).containsValue(r))
+			regionsRendered++;
+		else
+			System.out.println("NOT FOUND");
+	}
+
+	public float getProgress() {
+		if (isNothingLoaded())
+			return 1;
+		return (float) regionsRendered / regionsCount;
 	}
 
 	public RenderedImage createImage(RenderedRegion r) {

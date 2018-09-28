@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import java.lang.*?>
+<?import javafx.collections.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.text.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
+<?import org.controlsfx.control.*?>
+<?import javafx.scene.control.Label?>
 
 <BorderPane
 	maxHeight="-Infinity"
@@ -17,52 +20,101 @@
 	fx:controller="de.piegames.blockmap.guistandalone.GuiController"
 	fx:id="root">
 	<top>
-		<BorderPane BorderPane.alignment="CENTER">
-			<left>
-				<Label
-					text="Region folder path:"
-					BorderPane.alignment="CENTER">
-					<BorderPane.margin>
-						<Insets
-							bottom="0.0"
-							left="0.0"
-							right="2.0"
-							top="0.0" />
-					</BorderPane.margin>
-				</Label>
-			</left>
-			<center>
-				<TextField
-					fx:id="pathField"
-					onAction="#reloadWorld"
-					BorderPane.alignment="CENTER">
-					<BorderPane.margin>
-						<Insets
-							bottom="0.0"
-							left="2.0"
-							right="2.0"
-							top="0.0" />
-					</BorderPane.margin>
-				</TextField>
-			</center>
-			<right>
-				<Button
-					fx:id="browseButton"
-					onAction="#browse"
-					mnemonicParsing="false"
-					text="Browse"
-					BorderPane.alignment="CENTER">
-					<BorderPane.margin>
-						<Insets
-							bottom="0.0"
-							left="2.0"
-							right="0.0"
-							top="0.0" />
-					</BorderPane.margin>
-				</Button>
-			</right>
-		</BorderPane>
+		<VBox spacing="4">
+			<children>
+				<MenuBar>
+					<menus>
+						<Menu text="File">
+							<items>
+								<MenuItem
+									text="Load..."
+									onAction="#browse" />
+								<MenuItem
+									text="Exit"
+									onAction="#exit" />
+							</items>
+						</Menu>
+						<Menu text="Help">
+							<items>
+								<MenuItem text="About" />
+							</items>
+						</Menu>
+					</menus>
+				</MenuBar>
+				<HBox
+					spacing="10"
+					alignment="CENTER"
+					VBox.vgrow="NEVER">
+					<children>
+						<Label fx:id="minHeight" />
+						<RangeSlider
+							fx:id="heightSlider"
+							HBox.hgrow="ALWAYS"
+							orientation="HORIZONTAL"
+							min="0"
+							lowValue="0"
+							max="255"
+							highValue="255"
+							blockIncrement="1"
+							majorTickUnit="16"
+							minorTickCount="16"
+							snapToTicks="true"
+							showTickLabels="true"
+							showTickMarks="true" />
+						<Label fx:id="maxHeight" />
+					</children>
+				</HBox>
+				<HBox
+					spacing="2"
+					alignment="CENTER_LEFT"
+					VBox.vgrow="NEVER">
+					<children>
+						<HBox
+							fx:id="regionSettings"
+							spacing="2"
+							alignment="CENTER_LEFT"
+							VBox.vgrow="NEVER" />
+						<Label text="Color pack:" />
+						<ChoiceBox
+							value="Default"
+							fx:id="colorBox">
+							<items>
+								<FXCollections fx:factory="observableArrayList">
+									<String fx:value="Default" />
+									<String fx:value="Caves" />
+									<String fx:value="No foliage" />
+									<String fx:value="Ocean ground" />
+								</FXCollections>
+							</items>
+						</ChoiceBox>
+						<Label text="Shading:" />
+						<ChoiceBox
+							value="Relief"
+							fx:id="shadingBox">
+							<items>
+								<FXCollections fx:factory="observableArrayList">
+									<String fx:value="Flat" />
+									<String fx:value="Relief" />
+									<String fx:value="Biome color" />
+									<String fx:value="Height map" />
+								</FXCollections>
+							</items>
+						</ChoiceBox>
+					</children>
+				</HBox>
+			</children>
+			<BorderPane.margin>
+				<Insets
+					bottom="2.0"
+					left="3.0"
+					right="3.0"
+					top="0.0" />
+			</BorderPane.margin>
+		</VBox>
 	</top>
 	<center>
 	</center>
+	<bottom>
+		<StatusBar fx:id="statusBar" />
+	</bottom>
 </BorderPane>

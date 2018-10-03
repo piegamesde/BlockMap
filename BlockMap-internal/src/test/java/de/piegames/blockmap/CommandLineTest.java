@@ -8,6 +8,6 @@ public class CommandLineTest {
 
 	@Test
 	public void test() {
-		CommandLineMain.main("-o=\"./output/\"", "-v", "\"./src/test/resources/Debug/region/\"");
+		CommandLineMain.main("-v", "render", "-o=\"./output/\"", "\"./src/test/resources/Debug/region/\"");
 	}
 }

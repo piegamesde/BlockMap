@@ -15,11 +15,10 @@ apply plugin: "com.jaredsburrows.license"
 dependencies {
 	implementation project(':BlockMap-core')
 	implementation project(':BlockMap-gui')
-	//implementation project(':BlockMap-standalone')
-	implementation project(':BlockMap-guistandalone')
+	implementation project(':BlockMap-standalone')
 	implementation 'org.apache.logging.log4j:log4j-core:2.8.2'
 
-	// This is not an actual dependency, but some biome color data has been copied from there so it will show up in the credits list
+	/* This is not an actual dependency, but some biome color data has been copied from there so it will show up in the credits list */
 	// Currently broken because it does not compile on jitpack
 	//implementation 'com.github.toolbox4minecraft:amidst:129d3fb9e0'
 }

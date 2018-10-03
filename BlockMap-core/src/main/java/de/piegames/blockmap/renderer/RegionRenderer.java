@@ -64,10 +64,8 @@ public class RegionRenderer {
 				int chunkZ = ((regionPos.y() << 5) | chunk.z);
 				if ((chunkX + 16 < settings.minX || chunkX > settings.maxX)
 						&& (chunkZ + 16 < settings.minZ || chunkZ > settings.maxZ)) {
-					log.debug("Skipping chunk: out of bounds " + chunkX + " " + chunkZ);
 					continue;
 				}
-				log.debug("Rendering chunk " + chunkX + " " + chunkZ);
 				chunk.load();
 
 				CompoundMap root = chunk.readTag().getValue();

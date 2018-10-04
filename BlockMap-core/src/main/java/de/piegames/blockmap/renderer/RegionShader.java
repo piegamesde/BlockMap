@@ -9,6 +9,14 @@ import de.piegames.blockmap.color.Color;
 
 public interface RegionShader {
 
+	public static enum DefaultShader {
+		FLAT, RELIEF, BIOMES, HEIGHTMAP;
+
+		public RegionShader getShader() {
+			return DEFAULT_SHADERS[ordinal()];
+		}
+	}
+
 	public static final RegionShader[] DEFAULT_SHADERS = new RegionShader[] {
 			new FlatShader(), new ReliefShader(), new BiomeShader(), new HeightShader()
 	};

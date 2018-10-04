@@ -19,6 +19,20 @@ import io.gsonfire.annotations.PostDeserialize;
 import io.gsonfire.annotations.PreSerialize;
 
 public class BlockColorMap {
+
+	public static enum InternalColorMap {
+		DEFAULT("default"), NO_FOLIAGE("foliage"), OCEAN_GROUND("water"), CAVES("caves");
+		private String	fileName;
+
+		InternalColorMap(String fileName) {
+			this.fileName = Objects.requireNonNull(fileName);
+		}
+
+		public BlockColorMap getColorMap() {
+			return BlockColorMap.loadInternal(fileName);
+		}
+	}
+
 	public static final Gson		GSON	= new GsonFireBuilder()
 			.enableHooks(BlockColorMap.class)
 			.createGsonBuilder()

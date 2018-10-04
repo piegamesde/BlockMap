@@ -73,13 +73,13 @@ public class PostProcessing {
 						String name = "r." + x + "." + z;
 						String style = "width: " + 512 + "px; height: " + 512 + "px; " +
 								"position: absolute; top: " + top + "px; left: " + left + "px; " +
-								"background-image: url(" + region.renderedPath.toUri().toURL() + ")";
+								"background-image: url(" + outputDir.relativize(region.renderedPath) + ")";
 						w.write("<a\n" +
 								"\tclass=\"tile\"\n" +
 								"\tstyle=\"" + style + "\"\n" +
 								"\ttitle=\"" + title + "\"\n" +
 								"\tname=\"" + name + "\"\n" +
-								"\thref=\"" + region.renderedPath + "\"\n" +
+								"\thref=\"" + outputDir.relativize(region.renderedPath) + "\"\n" +
 								">&nbsp;</a>");
 					}
 				}

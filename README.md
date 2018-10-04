@@ -28,20 +28,21 @@ Download the latest version from the [Release page](https://github.com/piegamesd
 
 The GUI version should just run by (double)clicking it. Otherwise run it through:
 
-    java -jar BlockMap-1.1.0.jar
+    java -jar BlockMap-1.1.1.jar
 
 to start. The commandline version can be called through one of
 
-    java -jar BlockMap-1.1.0.jar render
-    java -jar BlockMap-1.1.0.jar help
+    java -jar BlockMap-1.1.1.jar render
+    java -jar BlockMap-1.1.1.jar help
 
 The latter one will tell you how to use it. On Linux even with colors!
 
 If your world has been created before the Minecraft 1.13 release, please optimize it. To do this, start Minecraft, select your world, go to "Edit" and then "Optimize World".
 
-GUI controls:
+**GUI controls:**
 
 - Mouse wheel to zoom in and out
 - Drag with the right mouse button to pan the view
   - This will very likely change in the future
+  - If you drag to the edge, the mouse will wrap around so you can drag indefinitely. Blender users will appreciate this
 - When loading a world, you can select either a world folder, a region folder or a single region file

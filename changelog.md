@@ -1,5 +1,14 @@
 # Changelog
 
+## Version 1.1.1
+### Changes
+- Support for changing the color map as well as the shader through CLI options
+- Added an option to render chunks only if needed, called `--lazy`. (Implements #1)
+- Fixed a few CLI bugs
+
+### Known issues
+- The about/help dialog still does nothing yet
+
 ## Version 1.1.0
 ### Changes
 - Support for multiple color maps

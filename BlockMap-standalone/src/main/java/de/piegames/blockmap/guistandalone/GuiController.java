@@ -77,11 +77,11 @@ public class GuiController implements Initializable {
 		// statusBar.textProperty().bind(renderer.getStatus());
 		statusBar.setText(null);
 		statusBar.progressProperty().bind(renderer.getProgress());
+		statusBar.setSkin(new StatusBarSkin2(statusBar));
 		Label pathLabel = new Label();
-		Label statusLabel = new Label();
-		statusLabel.textProperty().bind(renderer.getStatus());
+		pathLabel.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+		statusBar.textProperty().bind(renderer.getStatus());
 		pathLabel.textProperty().bind(Bindings.createStringBinding(() -> currentPath.get() == null ? "" : currentPath.get().toString(), currentPath));
-		statusBar.getLeftItems().add(statusLabel);
 		statusBar.getLeftItems().add(pathLabel);
 
 		minHeight.textProperty().bind(Bindings.format("Min: %3.0f", heightSlider.lowValueProperty()));

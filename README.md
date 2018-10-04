@@ -4,6 +4,7 @@
 
 ## Features:
 - A little interactive GUI based on JavaFX
+- Different color maps and shaders that highlight exactly what you are looking for (including an underground caves and an ocean ground view)
 - A gui library to include maps into your own JavaFX applications (mostly done, but not released yet)
 - A command line interface to render your worlds from scripts
 - The core rendering code as library to use in your own projects (not released yet)
@@ -25,12 +26,16 @@ Download the latest version from the [Release page](https://github.com/piegamesd
 
 ## Usage:
 
-The GUI version should just run by (double)clicking it. Otherwise run one of:
+The GUI version should just run by (double)clicking it. Otherwise run it through:
 
-    java -jar BlockMap-cli-1.0.0.jar
-    java -jar BlockMap-gui-1.0.0.jar
+    java -jar BlockMap-1.1.0.jar
 
-to start. The commandline version will then tell you how to use it. On Linux even with colors! (The command line isn't included in the gui standalone yet).
+to start. The commandline version can be called through one of
+
+    java -jar BlockMap-1.1.0.jar render
+    java -jar BlockMap-1.1.0.jar help
+
+The latter one will tell you how to use it. On Linux even with colors!
 
 If your world has been created before the Minecraft 1.13 release, please optimize it. To do this, start Minecraft, select your world, go to "Edit" and then "Optimize World".
 
@@ -39,3 +44,4 @@ GUI controls:
 - Mouse wheel to zoom in and out
 - Drag with the right mouse button to pan the view
   - This will very likely change in the future
+- When loading a world, you can select either a world folder, a region folder or a single region file

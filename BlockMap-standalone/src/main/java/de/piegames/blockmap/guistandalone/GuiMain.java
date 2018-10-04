@@ -23,7 +23,7 @@ public class GuiMain extends Application {
 		Parent root = (Parent) loader.load();
 		controller = (GuiController) loader.getController();
 
-		stage.setScene(new Scene(root, 500, 350));
+		stage.setScene(new Scene(root, 700, 450));
 		stage.show();
 	}
 

@@ -1,7 +1,7 @@
 apply plugin: 'eclipse'
 
 allprojects {
-	version = '1.0.1'
+	version = '1.1.0'
 }
 
 subprojects {
@@ -46,9 +46,9 @@ task generate(type: Copy) {
 
 task github(type: Copy) {
 	group 'Application'
-	dependsOn ':BlockMap-standalone:shadowJar', ':BlockMap-guistandalone:shadowJar'
+	dependsOn ':BlockMap-standalone:shadowJar'
 	description 'Take the fat standalone jars to a single folder (./output) for GitHub release'
 
-	from "${projectDir}/BlockMap-standalone/build/libs/BlockMap-cli-${version}.jar", "${projectDir}/BlockMap-guistandalone/build/libs/BlockMap-gui-${version}.jar"
+	from "${projectDir}/BlockMap-standalone/build/libs/BlockMap-${version}.jar"
 	into "${projectDir}/output"
 }

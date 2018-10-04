@@ -117,9 +117,13 @@ public class CommandLineMain implements Runnable {
 		 */
 		try {
 			Class.forName("de.piegames.blockmap.guistandalone.GuiMain").getMethod("main2").invoke(null);
+		} catch (NoClassDefFoundError e) {
+			log.fatal("Could not load GUI classes. Please make sure you have JavaFX loaded and on your class path. "
+					+ "Alternatively, use Java 8 which includes JavaFX. You can use the BlockMap CLI anyway with `BlockMap help` or `BlockMap render`.",
+					e);
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException
 				| ClassNotFoundException e) {
-			log.fatal("Could not find GUI main class", e);
+			log.fatal("Could not load GUI main class", e);
 		}
 	}
 

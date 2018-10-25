@@ -1,13 +1,7 @@
 *.iml
-/bin/
 .src.lst
 
-/BlockMap-internal/src/test/resources/minecraft\.jar
-/BlockMap-internal/src/test/resources/TestWorld1
-/BlockMap-internal/src/test/resources/TestWorld2
 **/build/
 **/bin/
-**/output/
 \.gradle/
-
 \.gradletasknamecache

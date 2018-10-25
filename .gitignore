@@ -1,7 +1,13 @@
 *.iml
 .src.lst
 
-**/build/
-**/bin/
+# Gradle
 \.gradle/
 \.gradletasknamecache
+**/build/
+
+# Eclipse
+**/bin/
+**/\.settings/org\.eclipse\.jdt\.core\.prefs
+**/\.classpath
+**/\.project

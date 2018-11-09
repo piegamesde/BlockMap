@@ -36,6 +36,7 @@ import picocli.CommandLine.RunLast;
 
 @Command(name = "blockmap",
 		version = { "1.1.1" },
+		footer = "To access the GUI, omit the [COMMAND].",
 		subcommands = { CommandRender.class, HelpCommand.class })
 public class CommandLineMain implements Runnable {
 
@@ -49,7 +50,11 @@ public class CommandLineMain implements Runnable {
 	@Option(names = { "--verbose", "-v" }, description = "Be chatty")
 	boolean				verbose;
 
-	@Command(name = "render", sortOptions = false)
+	@Command(name = "render",
+			sortOptions = false,
+			description = "Render a folder containing region files to another folder through the command line interface",
+			footer = "Please don't forget that you can use global options too, which can be accessed through `BlockMap help`."
+					+ " These have to be put before the render command.")
 	public static class CommandRender implements Runnable {
 
 		@ParentCommand
@@ -66,12 +71,12 @@ public class CommandLineMain implements Runnable {
 				description = "Path to the world data. Normally, this should point to a 'region/' of a world.")
 		private Path				input;
 		@Option(names = { "-c", "--color-map" },
-				paramLabel = "<DEFAULT|CAVES|NO_FOLIAGE|OCEAN_GROUND>",
+				paramLabel = "{DEFAULT|CAVES|NO_FOLIAGE|OCEAN_GROUND}",
 				description = "Load a built-in color map.",
 				defaultValue = "DEFAULT")
 		private InternalColorMap	colorMap;
 		@Option(names = { "-s", "--shader" },
-				paramLabel = "<FLAT|RELIEF|BIOMES|HEIGHTMAP>",
+				paramLabel = "{FLAT|RELIEF|BIOMES|HEIGHTMAP}",
 				description = "The height shading to use in post processing.",
 				showDefaultValue = Visibility.ALWAYS,
 				defaultValue = "RELIEF")
@@ -199,6 +204,7 @@ public class CommandLineMain implements Runnable {
 
 	public static void main(String... args) {
 		CommandLine cli = new CommandLine(new CommandLineMain());
+		// cli.setTrimQuotes(true);
 		cli.parseWithHandler(new RunLast(), args);
 	}
 }

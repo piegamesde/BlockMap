@@ -107,20 +107,11 @@ public class GuiController implements Initializable {
 		});
 		shadingBox.valueProperty().addListener((observer, old, value) -> {
 			settings.shader = RegionShader.DEFAULT_SHADERS[shadingBox.getSelectionModel().getSelectedIndex()];
-			System.out.println(settings.shader);
 			renderer.invalidateTextures();
 			renderer.repaint();
 		});
 
 		regionFolder.addListener((observable, previous, val) -> renderer.loadWorld(val));
-	}
-
-	@FXML
-	public void reloadWorld() {
-		RegionFolderProvider folder = RegionFolderProvider.byPath(currentPath.get());
-		regionFolder.bind(folder.folderProperty());
-		regionSettings.getChildren().clear();
-		regionSettings.getChildren().addAll(folder.getGUI());
 	}
 
 	@FXML
@@ -135,6 +126,18 @@ public class GuiController implements Initializable {
 		f = dialog.showDialog(null);
 		if (f != null)
 			currentPath.set(f.toPath());
+	}
+
+	@FXML
+	public void reloadWorld() {
+		RegionFolderProvider folder = RegionFolderProvider.byPath(currentPath.get());
+		load(folder);
+	}
+
+	public void load(RegionFolderProvider world) {
+		regionFolder.bind(world.folderProperty());
+		regionSettings.getChildren().clear();
+		regionSettings.getChildren().addAll(world.getGUI());
 	}
 
 	@FXML

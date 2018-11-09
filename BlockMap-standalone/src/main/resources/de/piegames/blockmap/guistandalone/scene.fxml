@@ -30,6 +30,9 @@
 									text="Load..."
 									onAction="#browse" />
 								<MenuItem
+									text="Reload world"
+									onAction="#reloadWorld" />
+								<MenuItem
 									text="Exit"
 									onAction="#exit" />
 							</items>

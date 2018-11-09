@@ -67,7 +67,7 @@ public class PostProcessing {
 			for (int z = minZ; z <= maxZ; z++) {
 				for (int x = minX; x <= maxX; x++) {
 					Region region = world.regions.get(new Vector2i(x, z));
-					if (region.renderedPath != null && Files.exists(region.renderedPath)) {
+					if (region != null && region.renderedPath != null && Files.exists(region.renderedPath)) {
 						int top = (z - minZ) * 512, left = (x - minX) * 512;
 						String title = "Region " + x + ", " + z;
 						String name = "r." + x + "." + z;

@@ -1,11 +1,32 @@
 package de.piegames.blockmap.guistandalone;
 
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.joml.Vector2d;
+import org.joml.Vector3i;
+import org.shanerx.mojang.Mojang;
+import org.shanerx.mojang.Mojang.ServiceStatus;
+import org.shanerx.mojang.Mojang.ServiceType;
+import org.shanerx.mojang.PlayerProfile;
+
+import com.flowpowered.nbt.CompoundMap;
+import com.flowpowered.nbt.CompoundTag;
+import com.flowpowered.nbt.DoubleTag;
+import com.flowpowered.nbt.IntTag;
+import com.flowpowered.nbt.ListTag;
+import com.flowpowered.nbt.stream.NBTInputStream;
+
 import de.piegames.blockmap.RegionFolder;
+import javafx.beans.property.ReadOnlyListProperty;
+import javafx.beans.property.ReadOnlyListWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
@@ -14,17 +35,20 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.util.StringConverter;
 
-public interface RegionFolderProvider {
+public abstract class RegionFolderProvider {
 
-	public ReadOnlyObjectProperty<RegionFolder> folderProperty();
+	protected ReadOnlyObjectWrapper<RegionFolder>	folder	= new ReadOnlyObjectWrapper<>();
 
-	public List<Node> getGUI();
+	public ReadOnlyObjectProperty<RegionFolder> folderProperty() {
+		return folder.getReadOnlyProperty();
+	}
 
-	public static class RegionFolderProviderImpl implements RegionFolderProvider {
+	public abstract List<Node> getGUI();
 
-		protected Path									regionFolderpath;
-		protected ReadOnlyObjectWrapper<RegionFolder>	folder	= new ReadOnlyObjectWrapper<>();
-		protected List<Node>							gui		= new ArrayList<>();
+	public static class RegionFolderProviderImpl extends RegionFolderProvider {
+
+		protected Path			regionFolderpath;
+		protected List<Node>	gui	= new ArrayList<>();
 
 		public RegionFolderProviderImpl(Path regionFolderpath) {
 			this.regionFolderpath = regionFolderpath;
@@ -35,14 +59,11 @@ public interface RegionFolderProvider {
 		public List<Node> getGUI() {
 			return gui;
 		}
-
-		@Override
-		public ReadOnlyObjectProperty<RegionFolder> folderProperty() {
-			return folder.getReadOnlyProperty();
-		}
 	}
 
-	public static class WorldRegionFolderProvider implements RegionFolderProvider {
+	public static class WorldRegionFolderProvider extends RegionFolderProvider {
+
+		private static Log log = LogFactory.getLog(WorldRegionFolderProvider.class);
 
 		public static enum Dimension {
 
@@ -67,10 +88,10 @@ public interface RegionFolderProvider {
 			}
 		}
 
-		protected Path									worldPath;
-		protected List<Dimension>						available;
-		protected ReadOnlyObjectWrapper<RegionFolder>	folder	= new ReadOnlyObjectWrapper<>();
-		protected List<Node>							gui		= new ArrayList<>();
+		protected Path				worldPath;
+		protected List<Dimension>	available;
+		protected List<Node>		gui		= new ArrayList<>();
+		protected Mojang			mojang	= new Mojang();
 
 		public WorldRegionFolderProvider(Path worldPath) {
 			this.worldPath = worldPath;
@@ -108,7 +129,7 @@ public interface RegionFolderProvider {
 			return gui;
 		}
 
-		@Override
+		@SuppressWarnings("unchecked")
 		public ReadOnlyObjectProperty<RegionFolder> folderProperty() {
 			return folder.getReadOnlyProperty();
 		}

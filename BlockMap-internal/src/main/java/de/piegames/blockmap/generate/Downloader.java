@@ -35,7 +35,7 @@ public class Downloader {
 		JsonElement e = parser.parse(new String(Files.readAllBytes(Paths.get(URI.create(Downloader.class.getResource("/1.13.2.json").toString())))));
 		JsonObject downloads = e.getAsJsonObject().getAsJsonObject("downloads");
 		{ // Client
-			Path path = Generator.OUTPUT.resolve("internal-main").resolve("client.jar");
+			Path path = Generator.OUTPUT_INTERNAL_MAIN.resolve("client.jar");
 			JsonObject client = downloads.getAsJsonObject("client");
 			String sha1 = client.get("sha1").getAsString();
 			int size = client.get("size").getAsInt();
@@ -47,7 +47,7 @@ public class Downloader {
 			}
 		}
 		{ // Server
-			Path path = Generator.OUTPUT.resolve("internal-main").resolve("server.jar");
+			Path path = Generator.OUTPUT_INTERNAL_MAIN.resolve("server.jar");
 			JsonObject client = downloads.getAsJsonObject("server");
 			String sha1 = client.get("sha1").getAsString();
 			int size = client.get("size").getAsInt();

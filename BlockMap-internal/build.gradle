@@ -1,12 +1,13 @@
 apply plugin: "com.jaredsburrows.license"
 
+processResources.outputs.upToDateWhen{ false }
+
 task downloadFiles(type: JavaExec) {
 	group 'Generation'
 	description 'Download required files that are not in the repository for technical or legal reasons (e.g. the minecraft server jar)'
 	classpath = sourceSets.main.runtimeClasspath
 	main = "de.piegames.blockmap.generate.Generator"
 	args = ['downloadFiles']
-    inputs.dir "${project(":BlockMap-internal").sourceSets.main.java.srcDirs[0]}/de/piegames/blockmap/generate/"
     inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[0]}/1.13.2.json"
     outputs.files "${buildDir}/generated-resources/internal-main/client.jar", "${buildDir}/generated-resources/internal-main/server.jar"
     outputs.upToDateWhen( { return true } );
@@ -19,7 +20,7 @@ task extractMinecraftData(type: JavaExec) {
 	classpath = sourceSets.main.runtimeClasspath
 	main = "de.piegames.blockmap.generate.Generator"
 	args = ['extractData']
-    inputs.dir "${project(":BlockMap-internal").sourceSets.main.java.srcDirs[0]}/de/piegames/blockmap/generate/"
+    inputs.dir "${project(":BlockMap-internal").sourceSets.main.java.srcDirs[1]}/server.jar"
     outputs.dir "${buildDir}/generated-resources/internal-main/data/"
 }
 

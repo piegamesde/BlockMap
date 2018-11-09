@@ -57,34 +57,43 @@ import picocli.CommandLine.Command;
 @Command
 public class Generator {
 
-	private static Log			log				= LogFactory.getLog(Generator.class);
+	private static Log	log						= LogFactory.getLog(Generator.class);
 
-	static final Path			OUTPUT			= Paths.get("./build/generated-resources");
-	private static final Path	OUTPUT_CORE		= OUTPUT.resolve("core-main");
-	private static final Path	OUTPUT_OTHER	= OUTPUT.resolve("other");
+	static final Path	OUTPUT					= Paths.get("./build/generated-resources");
+	static final Path	OUTPUT_CORE				= OUTPUT.resolve("core-main");
+	static final Path	OUTPUT_INTERNAL_MAIN	= OUTPUT.resolve("internal-main");
+	static final Path	OUTPUT_INTERNAL_TEST	= OUTPUT.resolve("internal-test");
+	static final Path	OUTPUT_OTHER			= OUTPUT.resolve("other");
 
 	@Command
 	public void downloadFiles() throws IOException {
 		Downloader.downloadMinecraft();
 		Downloader.downloadLandGenerator();
+
+		processResources();
 	}
 
 	@Command
 	public void extractData() throws Exception {
 		// Call the Minecraft data generator
-		FileUtils.deleteDirectory(OUTPUT.resolve("internal-main").resolve("data").toFile());
+		FileUtils.deleteDirectory(OUTPUT_INTERNAL_MAIN.resolve("data").toFile());
 		try (URLClassLoader loader = new URLClassLoader(
 				new URL[] { Generator.class.getResource("/server.jar") },
 				Generator.class.getClassLoader())) {
 			Class<?> MinecraftMain = Class.forName("net.minecraft.data.Main", true, loader);
 			Method main = MinecraftMain.getDeclaredMethod("main", String[].class);
-			main.invoke(null, new Object[] { new String[] { "--reports", "--output=" + OUTPUT.resolve("internal-main").resolve("data") } });
+			main.invoke(null, new Object[] { new String[] { "--reports", "--output=" + OUTPUT_INTERNAL_MAIN.resolve("data") } });
 		}
+
+		processResources();
 	}
 
 	@Command
-	public void generateTestWorld() {
-		// FileUtils.copyDirectory(new File(Generator.class), OUTPUT.resolve("internal-test").toFile());
+	public void generateTestWorld() throws IOException {
+		log.info("Generating test world");
+		// FileUtils.copyDirectory(new File(Generator.class), OUTPUT_INTERNAL_TEST.toFile());
+
+		processResources();
 	}
 
 	@Command
@@ -100,6 +109,8 @@ public class Generator {
 				writer.flush();
 			}
 		}
+
+		processResources();
 	}
 
 	@Command
@@ -113,6 +124,8 @@ public class Generator {
 			BlockColorMap.GSON.toJson(map, writer);
 			writer.flush();
 		}
+
+		processResources();
 	}
 
 	@Command
@@ -124,6 +137,8 @@ public class Generator {
 			Color.GSON.toJson(colors, writer);
 			writer.flush();
 		}
+
+		processResources();
 	}
 
 	@Command
@@ -196,6 +211,8 @@ public class Generator {
 		// original = original.replace("$REPLACE", builder.toString());
 		// Files.write(Paths.get("./src/main/java", "togos/minecraft/maprend/renderer", "BlockState.java"), original.getBytes());
 		Files.write(OUTPUT_OTHER.resolve("BlockState.java"), builder.toString().getBytes());
+
+		processResources();
 	}
 
 	@Command
@@ -286,6 +303,8 @@ public class Generator {
 				log.error(e);
 			}
 		}
+
+		processResources();
 	}
 
 	private static BufferedImage generateScreenshot(RegionRenderer renderer, RenderSettings settings, Vector2i toRender, BlockColorMap.InternalColorMap colors)
@@ -305,22 +324,28 @@ public class Generator {
 
 		Files.createDirectories(OUTPUT);
 		Files.createDirectories(OUTPUT_CORE);
+		Files.createDirectories(OUTPUT_INTERNAL_MAIN);
+		Files.createDirectories(OUTPUT_INTERNAL_TEST);
 		Files.createDirectories(OUTPUT.resolve("gui-main"));
 		Files.createDirectories(OUTPUT.resolve("standalone-main"));
-		Files.createDirectories(OUTPUT.resolve("internal-test"));
 		Files.createDirectories(OUTPUT_OTHER);
 
 		CommandLine cli = new CommandLine(new Generator());
 		for (String s : args)
 			cli.parseWithHandler(new CommandLine.RunLast(), new String[] { s });
 
-		// generateTestWorld();
-		// generateBlockColors();
-		// generateBiomeColors();
-		// generateHeightmap();
-		// generateBlockStates();
-		// generateScreenshots();
-
 		log.info("Done.");
+	}
+
+	/**
+	 * Gradle uses its {@code processResources} task to copy all resources from the src folders to the classes folder. Since we are generating
+	 * multiple resources at runtime, Gradle has no chance to copy them so we must do this manually every time some files changed that are
+	 * needed in the future.
+	 */
+	public static void processResources() throws IOException {
+		log.info("Updating resources");
+		FileUtils.copyDirectory(OUTPUT_CORE.toFile(), Paths.get("./build/resources/main").toFile());
+		FileUtils.copyDirectory(OUTPUT_INTERNAL_MAIN.toFile(), Paths.get("./build/resources/main").toFile());
+		FileUtils.copyDirectory(OUTPUT_INTERNAL_TEST.toFile(), Paths.get("./build/resources/test").toFile());
 	}
 }

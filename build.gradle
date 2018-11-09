@@ -48,15 +48,15 @@ subprojects {
 
 task regenerate(type: GradleBuild) {
 	group 'Generation'
-	description 'Regenerate all resources'
+	description 'Regenerate all resources except screenshots'
     // All other generators are called as transitive dependencies
-    tasks = ['BlockMap-internal:generateBlockStates', 'BlockMap-internal:generateScreenshots']
+    tasks = ['BlockMap-internal:generateBlockStates', 'BlockMap-internal:generateData']
 }
 
 task beforeCommit(type: GradleBuild) {
 	group 'Distribution'
 	description 'Call this before each commit to make sure it works'
-	tasks = ['clean', 'regenerate', 'test']
+	tasks = ['clean', 'regenerate', 'test', 'BlockMap-internal:generateScreenshots']
 }
 
 task initEclipse(type: GradleBuild) {

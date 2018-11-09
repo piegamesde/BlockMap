@@ -6,8 +6,11 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.net.URI;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -22,8 +25,11 @@ import java.util.TreeMap;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.joml.Vector2d;
 import org.joml.Vector2i;
 
@@ -45,25 +51,46 @@ import de.piegames.blockmap.renderer.RenderSettings;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.WritableImage;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
 
+@Command
 public class Generator {
 
-	private static Log			log			= LogFactory.getLog(Generator.class);
+	private static Log			log				= LogFactory.getLog(Generator.class);
 
-	private static final Path	OUTPUT		= Paths.get("./build/generated-resources");
-	private static final Path	OUTPUT_CORE	= OUTPUT.resolve("core-main");
+	static final Path			OUTPUT			= Paths.get("./build/generated-resources");
+	private static final Path	OUTPUT_CORE		= OUTPUT.resolve("core-main");
+	private static final Path	OUTPUT_OTHER	= OUTPUT.resolve("other");
 
-	private static void downloadServer() {
-
+	@Command
+	public void downloadFiles() throws IOException {
+		Downloader.downloadMinecraft();
+		Downloader.downloadLandGenerator();
 	}
 
-	private static void generateTestWorld() {
-
+	@Command
+	public void extractData() throws Exception {
+		// Call the Minecraft data generator
+		FileUtils.deleteDirectory(OUTPUT.resolve("internal-main").resolve("data").toFile());
+		try (URLClassLoader loader = new URLClassLoader(
+				new URL[] { Generator.class.getResource("/server.jar") },
+				Generator.class.getClassLoader())) {
+			Class<?> MinecraftMain = Class.forName("net.minecraft.data.Main", true, loader);
+			Method main = MinecraftMain.getDeclaredMethod("main", String[].class);
+			main.invoke(null, new Object[] { new String[] { "--reports", "--output=" + OUTPUT.resolve("internal-main").resolve("data") } });
+		}
 	}
 
-	public static void generateBlockColors() throws IOException {
+	@Command
+	public void generateTestWorld() {
+		// FileUtils.copyDirectory(new File(Generator.class), OUTPUT.resolve("internal-test").toFile());
+	}
+
+	@Command
+	public void generateBlockColors() throws IOException {
 		log.info("Generating block colors");
-		Path minecraftJarfile = Paths.get(URI.create(Generator.class.getResource("/minecraft.jar").toString()));
+		Path minecraftJarfile = Paths.get(URI.create(Generator.class.getResource("/client.jar").toString()));
 
 		for (Entry<String, BlockColorMap> map : ColorCompiler.compileBlockColors(minecraftJarfile,
 				Paths.get(URI.create(Generator.class.getResource("/block-color-instructions.json").toString()))).entrySet()) {
@@ -75,9 +102,10 @@ public class Generator {
 		}
 	}
 
-	public static void generateBiomeColors() throws IOException {
+	@Command
+	public void generateBiomeColors() throws IOException {
 		log.info("Generating biome colors");
-		Path minecraftJarfile = Paths.get(URI.create(Generator.class.getResource("/minecraft.jar").toString()));
+		Path minecraftJarfile = Paths.get(URI.create(Generator.class.getResource("/client.jar").toString()));
 
 		BiomeColorMap map = ColorCompiler.compileBiomeColors(minecraftJarfile,
 				Paths.get(URI.create(Generator.class.getResource("/biome-color-instructions.json").toString())));
@@ -87,7 +115,8 @@ public class Generator {
 		}
 	}
 
-	public static void generateHeightmap() throws IOException {
+	@Command
+	public void generateHeightmap() throws IOException {
 		log.info("Generating heightmap colors");
 		List<Color> colors = ColorCompiler.compileHeightMap(Paths.get(URI.create(Generator.class.getResource("/heightmap.png").toString())));
 
@@ -97,11 +126,13 @@ public class Generator {
 		}
 	}
 
-	public static void generateBlockStates() throws IOException {
+	@Command
+	public void generateBlockStates() throws IOException {
 		log.info("Generating BlockState enum class");
 		Type type = new TypeToken<Map<String, BlockStateHelperBlock>>() {
 		}.getType();
-		Map<String, BlockStateHelperBlock> blocks = new Gson().fromJson(new InputStreamReader(Generator.class.getResourceAsStream("/blocks.json")), type);
+		Map<String, BlockStateHelperBlock> blocks = new Gson().fromJson(new InputStreamReader(Generator.class.getResourceAsStream("/data/reports/blocks.json")),
+				type);
 
 		Comparator<BlockStateHelper> c = Comparator.comparing(s -> s.name);
 
@@ -157,18 +188,18 @@ public class Generator {
 			builder.append(System.getProperty("line.separator"));
 		}
 		// Hardcode the map property of item frames since it does not show up in this list
-		builder.append("MAP_TRUE(\"map\", \"true\"),");
+		builder.append("\tMAP_TRUE(\"map\", \"true\"),");
 		builder.append(System.getProperty("line.separator"));
-		builder.append("MAP_FALSE(\"map\", \"false\");");
-
+		builder.append("\tMAP_FALSE(\"map\", \"false\");");
 		// Load template file and replace original
 		// String original = new String(Files.readAllBytes(Paths.get(URI.create(Generator.class.getResource("/BlockState.java").toString()))));
 		// original = original.replace("$REPLACE", builder.toString());
 		// Files.write(Paths.get("./src/main/java", "togos/minecraft/maprend/renderer", "BlockState.java"), original.getBytes());
-		Files.write(Paths.get("./output", "BlockState.java"), builder.toString().getBytes());
+		Files.write(OUTPUT_OTHER.resolve("BlockState.java"), builder.toString().getBytes());
 	}
 
-	public static void generateScreenshots() throws IOException {
+	@Command
+	public void generateScreenshots() throws IOException {
 		log.info("Generating screenshots");
 		RenderSettings settings = new RenderSettings();
 		settings.loadDefaultColors();
@@ -192,7 +223,7 @@ public class Generator {
 			g.drawString("Ocean ground", 0 + 32, 1024 - 32);
 			g.drawString("Default", 1024 - 32 - g.getFontMetrics().stringWidth("Default"), 1024 - 32);
 			g.dispose();
-			try (OutputStream out = Files.newOutputStream(Paths.get("./output", "screenshot-1.png"))) {
+			try (OutputStream out = Files.newOutputStream(OUTPUT_OTHER.resolve("screenshot-1.png"))) {
 				ImageIO.write(img, "png", out);
 			}
 		}
@@ -217,7 +248,7 @@ public class Generator {
 			g.drawString("Heightmap", 0 + 32, 1024 - 32);
 			g.drawString("Biomes", 1024 - 32 - g.getFontMetrics().stringWidth("Biomes"), 1024 - 32);
 			g.dispose();
-			try (OutputStream out = Files.newOutputStream(Paths.get("./output", "screenshot-2.png"))) {
+			try (OutputStream out = Files.newOutputStream(OUTPUT_OTHER.resolve("screenshot-2.png"))) {
 				ImageIO.write(img, "png", out);
 			}
 		}
@@ -242,7 +273,7 @@ public class Generator {
 				Thread.yield();
 			Platform.runLater(() -> {
 				WritableImage img = GuiMain.instance.stage.getScene().snapshot(null);
-				try (OutputStream out = Files.newOutputStream(Paths.get("./output", "screenshot-3.png"))) {
+				try (OutputStream out = Files.newOutputStream(OUTPUT_OTHER.resolve("screenshot-3.png"))) {
 					ImageIO.write(SwingFXUtils.fromFXImage(img, null), "png", out);
 				} catch (IOException e) {
 					log.error(e);
@@ -267,22 +298,29 @@ public class Generator {
 		}
 	}
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
+		Configurator.setRootLevel(Level.DEBUG);
 		log.info("Output path " + OUTPUT.toAbsolutePath());
+		log.debug("Local resources path: " + Generator.class.getResource("/"));
+
 		Files.createDirectories(OUTPUT);
-		Files.createDirectory(OUTPUT_CORE);
-		Files.createDirectory(OUTPUT.resolve("gui-main"));
-		Files.createDirectory(OUTPUT.resolve("standalone-main"));
-		Files.createDirectory(OUTPUT.resolve("internal-test"));
+		Files.createDirectories(OUTPUT_CORE);
+		Files.createDirectories(OUTPUT.resolve("gui-main"));
+		Files.createDirectories(OUTPUT.resolve("standalone-main"));
+		Files.createDirectories(OUTPUT.resolve("internal-test"));
+		Files.createDirectories(OUTPUT_OTHER);
 
-		downloadServer();
-		generateTestWorld();
+		CommandLine cli = new CommandLine(new Generator());
+		for (String s : args)
+			cli.parseWithHandler(new CommandLine.RunLast(), new String[] { s });
 
-		generateBlockColors();
-		generateBiomeColors();
-		generateHeightmap();
+		// generateTestWorld();
+		// generateBlockColors();
+		// generateBiomeColors();
+		// generateHeightmap();
 		// generateBlockStates();
 		// generateScreenshots();
+
 		log.info("Done.");
 	}
 }

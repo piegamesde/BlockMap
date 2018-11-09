@@ -1,22 +1,71 @@
-apply plugin: 'application'
-mainClassName = "de.piegames.blockmap.generate.Generator"
-
-buildscript {
-  repositories {
-    jcenter()
-  }
-
-  dependencies {
-    classpath "com.jaredsburrows:gradle-license-plugin:0.8.41"
-  }
-}
 apply plugin: "com.jaredsburrows.license"
+
+task downloadFiles(type: JavaExec) {
+	group 'Generation'
+	description 'Download required files that are not in the repository for technical or legal reasons (e.g. the minecraft server jar)'
+	classpath = sourceSets.main.runtimeClasspath
+	main = "de.piegames.blockmap.generate.Generator"
+	args = ['downloadFiles']
+    inputs.dir "${project(":BlockMap-internal").sourceSets.main.java.srcDirs[0]}/de/piegames/blockmap/generate/"
+    inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[0]}/1.13.2.json"
+    outputs.files "${buildDir}/generated-resources/internal-main/client.jar", "${buildDir}/generated-resources/internal-main/server.jar"
+    outputs.upToDateWhen( { return true } );
+}
+
+task extractMinecraftData(type: JavaExec) {
+	dependsOn 'downloadFiles'
+	group 'Generation'
+	description 'Extract blocks.json (containing information about all blocks and block states) from the server jar using its data generator'
+	classpath = sourceSets.main.runtimeClasspath
+	main = "de.piegames.blockmap.generate.Generator"
+	args = ['extractData']
+    inputs.dir "${project(":BlockMap-internal").sourceSets.main.java.srcDirs[0]}/de/piegames/blockmap/generate/"
+    outputs.dir "${buildDir}/generated-resources/internal-main/data/"
+}
+
+task generateBlockStates(type: JavaExec) {
+	dependsOn 'extractMinecraftData'
+	group 'Generation'
+	description 'Generate all enum values from BlockState.java'
+	classpath = sourceSets.main.runtimeClasspath
+	main = "de.piegames.blockmap.generate.Generator"
+	args = ['generateBlockStates']
+    inputs.dir "${project(":BlockMap-internal").sourceSets.main.java.srcDirs[0]}/de/piegames/blockmap/generate/"
+    inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[1]}"
+    outputs.dir "${buildDir}/generated-resources/other/"
+}
+
+task generateData(type: JavaExec) {
+	dependsOn 'downloadFiles'
+	group 'Generation'
+	description 'Generate color maps and other files using the Minecraft resource pack (in client.jar) and compile it to a less abstract form'
+	classpath = sourceSets.main.runtimeClasspath
+	main = "de.piegames.blockmap.generate.Generator"
+	args = ['generateBlockColors', 'generateBiomeColors', 'generateHeightmap', 'generateTestWorld']
+    inputs.dir "${project(":BlockMap-internal").sourceSets.main.java.srcDirs[0]}/de/piegames/blockmap/generate/"
+    inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[0]}/block-color-instructions.json"
+    inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[0]}/biome-color-instructions.json"
+    inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[0]}/heightmap.png"
+    outputs.dir "${buildDir}/generated-resources/core-main/"
+}
+
+task generateScreenshots(type: JavaExec) {
+	dependsOn 'generateData'
+	group 'Generation'
+	description 'Automatically render certain files and create screenshots from the GUI to show off on Twitter'
+	classpath = sourceSets.main.runtimeClasspath
+	main = "de.piegames.blockmap.generate.Generator"
+	args = ['generateScreenshots']
+}
 
 dependencies {
 	implementation project(':BlockMap-core')
 	implementation project(':BlockMap-gui')
 	implementation project(':BlockMap-standalone')
-	implementation 'org.apache.logging.log4j:log4j-core:2.8.2'
+	implementation 'org.apache.logging.log4j:log4j-core:2.11.1'
+	implementation 'commons-io:commons-io:2.6'
+	implementation 'com.google.guava:guava:27.0-jre'
+	implementation 'info.picocli:picocli:3.7.0'
 
 	/* This is not an actual dependency, but some biome color data has been copied from there so it will show up in the credits list */
 	// Currently broken because it does not compile on jitpack
@@ -29,7 +78,7 @@ sourceSets {
 			srcDirs = ['src/main/java']
 		}
 		resources {
-			srcDirs = ['src/main/resources']
+			srcDirs = ['src/main/resources', 'src/main/generated-resources']
 		}
 	}
 	test {
@@ -40,4 +89,8 @@ sourceSets {
 			srcDirs = ['src/test/resources', 'src/test/generated-resources']
 		}
 	}
+}
+
+test {
+	exclude 'de/piegames/blockmap/AllTests.class'
 }

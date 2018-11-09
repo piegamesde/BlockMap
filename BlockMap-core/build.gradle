@@ -3,10 +3,10 @@ apply plugin: 'java-library'
 dependencies {
 	// Core dependencies
 	api 'com.github.piegamesde:nbt:6314abbe46'
-	api 'com.google.code.gson:gson:2.8.2'
+	api 'com.google.code.gson:gson:2.8.5'
     implementation 'io.gsonfire:gson-fire:1.8.3'
 	api 'commons-logging:commons-logging:1.2'
-	implementation 'org.apache.logging.log4j:log4j-core:2.8.2'
-	implementation 'org.apache.logging.log4j:log4j-jcl:2.8.2'
-	api 'org.joml:joml:1.9.10'
+	implementation 'org.apache.logging.log4j:log4j-core:2.11.1'
+	implementation 'org.apache.logging.log4j:log4j-jcl:2.11.1'
+	api 'org.joml:joml:1.9.11'
 }

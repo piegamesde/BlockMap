@@ -1,12 +1,26 @@
-apply plugin: 'eclipse'
+apply plugin:'base'
+
+buildscript {
+  repositories {
+    jcenter()
+  }
+
+  dependencies {
+    classpath "com.jaredsburrows:gradle-license-plugin:0.8.41"
+    classpath "com.github.ben-manes:gradle-versions-plugin:0.20.0"
+    classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.1'
+  }
+}
+apply plugin: "com.github.ben-manes.versions"
 
 allprojects {
 	version = '1.1.1'
+	apply plugin: 'eclipse'
+	apply plugin: 'idea'
 }
 
 subprojects {
 	apply plugin: 'java'
-	apply plugin: 'eclipse'
 	sourceCompatibility = 1.8
 	targetCompatibility = 1.8
 
@@ -32,23 +46,31 @@ subprojects {
 	}
 }
 
-
-task generate(type: Copy) {
-	group 'Application'
-	dependsOn ':BlockMap-internal:run'
-	description 'Compile the required color data from the minecraft.jar and copy it to the resources'
-
-	from "${projectDir}/BlockMap-internal/output/"
-	into "${projectDir}/BlockMap-core/src/main/resources"
-	include "block-colors-*.json"
-	include "biome-colors.json"
+task regenerate(type: GradleBuild) {
+	group 'Generation'
+	description 'Regenerate all resources'
+    // All other generators are called as transitive dependencies
+    tasks = ['BlockMap-internal:generateBlockStates', 'BlockMap-internal:generateScreenshots']
 }
 
-task github(type: Copy) {
-	group 'Application'
-	dependsOn ':BlockMap-standalone:shadowJar'
-	description 'Take the fat standalone jars to a single folder (./output) for GitHub release'
+task beforeCommit(type: GradleBuild) {
+	group 'Distribution'
+	description 'Call this before each commit to make sure it works'
+	tasks = ['clean', 'regenerate', 'test']
+}
 
-	from "${projectDir}/BlockMap-standalone/build/libs/BlockMap-${version}.jar"
-	into "${projectDir}/output"
+task initEclipse(type: GradleBuild) {
+	group 'IDE'
+	tasks = ['cleanRegenerate', 'cleanEclipse', 'eclipse']
+}
+
+task initIdea(type: GradleBuild) {
+	group 'IDE'
+	tasks = ['cleanRegenerate', 'cleanIdea', 'idea']
+}
+
+task github(type: GradleBuild) {
+	group 'Distribution'
+	description 'Generate a fat jar to publish on GitHub (or to execute) after having run all tests'
+	tasks = ['cleanRegenerate', 'build', ':BlockMap-standalone:shadowJar']
 }

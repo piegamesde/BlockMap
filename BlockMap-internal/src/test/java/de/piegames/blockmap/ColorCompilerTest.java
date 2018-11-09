@@ -1,6 +1,7 @@
 package de.piegames.blockmap;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -10,7 +11,9 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.EnumSet;
+import java.util.LinkedList;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
@@ -26,6 +29,7 @@ import de.piegames.blockmap.generate.ColorCompiler;
 import de.piegames.blockmap.renderer.Block;
 import de.piegames.blockmap.renderer.BlockState;
 import de.piegames.blockmap.renderer.RegionRenderer;
+import de.piegames.blockmap.renderer.RegionShader;
 import de.piegames.blockmap.renderer.RenderSettings;
 
 public class ColorCompilerTest {
@@ -38,16 +42,16 @@ public class ColorCompilerTest {
 		Configurator.setRootLevel(Level.DEBUG);
 
 		assertNotNull("Minecraft jar missing. Please copy or link the 1.13.jar from the versions folder to ./src/test/resources/minecraft.jar",
-				ColorCompilerTest.class.getResource("/minecraft.jar"));
-		minecraftJarfile = Paths.get(ColorCompilerTest.class.getResource("/minecraft.jar").toURI());
+				ColorCompilerTest.class.getResource("/client.jar"));
+		minecraftJarfile = Paths.get(ColorCompilerTest.class.getResource("/client.jar").toURI());
 		minecraftJar = FileSystems.newFileSystem(minecraftJarfile, null);
 	}
 
 	/** The debug world contains every single block and block state that exists in the game, so let's test it */
 	@Test
 	public void testDebugWorld() throws IOException, URISyntaxException, InterruptedException {
-		// TODO take off shading to ensure the colors are true
 		RenderSettings settings = new RenderSettings();
+		settings.shader = RegionShader.DefaultShader.FLAT.getShader();
 		settings.blockColors = ColorCompiler.compileBlockColors(minecraftJarfile, Paths.get(getClass().getResource("/block-color-instructions.json").toURI()))
 				.get("default");
 		settings.biomeColors = ColorCompiler.compileBiomeColors(minecraftJarfile, Paths.get(getClass().getResource("/biome-color-instructions.json").toURI()));
@@ -72,7 +76,12 @@ public class ColorCompilerTest {
 		BlockColorMap map = ColorCompiler.compileBlockColors(minecraftJarfile, Paths.get(getClass().getResource("/block-color-instructions.json").toURI()))
 				.get("default");
 
-		try (JsonReader reader = new JsonReader(Files.newBufferedReader(Paths.get(getClass().getResource("/blocks.json").toURI())))) {
+		/*
+		 * Collect all missing blocks and fail at the end so that if a lot things are missing it isn't required to re-run the test after each
+		 * change.
+		 */
+		Collection<Block> missing = new LinkedList<>();
+		try (JsonReader reader = new JsonReader(Files.newBufferedReader(Paths.get(getClass().getResource("/data/reports/blocks.json").toURI())))) {
 			reader.beginObject();
 			while (reader.hasNext()) {
 				String blockName = reader.nextName();
@@ -91,7 +100,8 @@ public class ColorCompilerTest {
 									while (reader.hasNext())
 										properties.add(BlockState.valueOf(reader.nextName(), reader.nextString()));
 									Block block = new Block(blockName, properties);
-									assertTrue("Block " + block + " should exist in color map", map.hasBlockColor(block));
+									if (!map.hasBlockColor(block))
+										missing.add(block);
 
 									reader.endObject();
 								} else
@@ -108,6 +118,7 @@ public class ColorCompilerTest {
 			}
 			reader.endObject();
 		}
+		assertTrue("Blocks " + missing.toString() + " should exist in color map", missing.isEmpty());
 	}
 
 	/** Assert there are no "missing color" pixels in that image */
@@ -115,6 +126,6 @@ public class ColorCompilerTest {
 		// TODO tolerance
 		for (int x = 0; x < image.getWidth(); x++)
 			for (int y = 0; y < image.getHeight(); y++)
-				assertNotEquals(0xFFFF00FF, image.getRGB(x, y));
+				assertTrue(0xFFFF00FF != image.getRGB(x, y));
 	}
 }

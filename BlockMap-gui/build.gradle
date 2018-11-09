@@ -3,6 +3,6 @@ apply plugin: 'java-library'
 dependencies {
     api project(':BlockMap-core')
 	// GUI dependencies
-	implementation 'org.mapdb:mapdb:3.0.5'
+	implementation 'org.mapdb:mapdb:3.0.7'
 	implementation 'org.controlsfx:controlsfx:8.40.12'
 }

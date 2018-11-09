@@ -13,6 +13,7 @@ import com.google.gson.stream.JsonReader;
 import de.piegames.blockmap.renderer.BlockState;
 
 public class BlockStateTest {
+
 	@Test
 	public void testName() {
 		for (BlockState state : BlockState.values())
@@ -33,7 +34,7 @@ public class BlockStateTest {
 	 */
 	@Test
 	public void testExisting() throws IOException, URISyntaxException {
-		try (JsonReader reader = new JsonReader(new InputStreamReader(getClass().getResourceAsStream("/blocks.json")))) {
+		try (JsonReader reader = new JsonReader(new InputStreamReader(getClass().getResourceAsStream("/data/reports/blocks.json")))) {
 			reader.beginObject();
 			while (reader.hasNext()) {
 				reader.skipValue();

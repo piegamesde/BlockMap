@@ -16,6 +16,7 @@ import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.gui.MapPane;
 import de.piegames.blockmap.gui.WorldRendererCanvas;
 import de.piegames.blockmap.gui.decoration.DragScrollDecoration;
+import de.piegames.blockmap.gui.decoration.GridDecoration;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RegionShader;
 import de.piegames.blockmap.renderer.RenderSettings;
@@ -27,6 +28,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
@@ -55,6 +57,8 @@ public class GuiController implements Initializable {
 	private ChoiceBox<String>				shadingBox;
 	@FXML
 	private ChoiceBox<String>				colorBox;
+	@FXML
+	private CheckBox						gridBox;
 
 	protected MapPane						pane;
 	protected ObjectProperty<Path>			currentPath		= new SimpleObjectProperty<>();
@@ -71,18 +75,30 @@ public class GuiController implements Initializable {
 		renderer = new WorldRendererCanvas(new RegionRenderer(settings));
 		root.setCenter(pane = new MapPane(renderer));
 		pane.decorationLayers.add(new DragScrollDecoration(renderer.viewport));
+		GridDecoration grid = new GridDecoration(renderer.viewport);
+		pane.decorationLayers.add(grid);
+		grid.visibleProperty().bind(gridBox.selectedProperty());
 
 		currentPath.addListener(e -> reloadWorld());
 
-		// statusBar.textProperty().bind(renderer.getStatus());
-		statusBar.setText(null);
-		statusBar.progressProperty().bind(renderer.getProgress());
-		statusBar.setSkin(new StatusBarSkin2(statusBar));
-		Label pathLabel = new Label();
-		pathLabel.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-		statusBar.textProperty().bind(renderer.getStatus());
-		pathLabel.textProperty().bind(Bindings.createStringBinding(() -> currentPath.get() == null ? "" : currentPath.get().toString(), currentPath));
-		statusBar.getLeftItems().add(pathLabel);
+		{
+			statusBar.setSkin(new StatusBarSkin2(statusBar));
+			statusBar.progressProperty().bind(renderer.getProgress());
+			statusBar.setText(null);
+			statusBar.textProperty().bind(renderer.getStatus());
+
+			Label pathLabel = new Label();
+			pathLabel.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+			pathLabel.textProperty().bind(Bindings.createStringBinding(() -> currentPath.get() == null ? "" : currentPath.get().toString(), currentPath));
+			statusBar.getLeftItems().add(pathLabel);
+
+			Label mouseLabel = new Label();
+			mouseLabel.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+			mouseLabel.textProperty().bind(Bindings.createStringBinding(
+					() -> "(" + (int) renderer.viewport.mouseWorldProperty.get().x() + ", " + (int) renderer.viewport.mouseWorldProperty.get().y() + ")",
+					renderer.viewport.mouseWorldProperty));
+			statusBar.getRightItems().add(mouseLabel);
+		}
 
 		minHeight.textProperty().bind(Bindings.format("Min: %3.0f", heightSlider.lowValueProperty()));
 		maxHeight.textProperty().bind(Bindings.format("Max: %3.0f", heightSlider.highValueProperty()));

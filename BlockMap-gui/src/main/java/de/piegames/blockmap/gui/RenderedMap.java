@@ -64,7 +64,7 @@ public class RenderedMap {
 
 																					@Override
 																					public boolean isTrusted() {
-																						return true;
+																								return true;
 																					}
 
 																					@Override
@@ -72,7 +72,7 @@ public class RenderedMap {
 																						byte[] data = new byte[512 * 512 * 4];
 																						value.getPixelReader().getPixels(0, 0, 512, 512,
 																								PixelFormat.getByteBgraInstance(), data, 0, 512 * 4);
-																						out.write(data);
+																								out.write(data);
 																					}
 
 																					@Override
@@ -80,10 +80,10 @@ public class RenderedMap {
 																						byte[] data = new byte[available];
 																						input.readFully(data);
 																						WritableImage ret = new WritableImage(512, 512);
-																						ret.getPixelWriter().setPixels(0, 0, 512, 512,
-																								PixelFormat.getByteBgraInstance(), data, 0, 512 * 4);
-																						return ret;
-																					}
+																								ret.getPixelWriter().setPixels(0, 0, 512, 512,
+																										PixelFormat.getByteBgraInstance(), data, 0, 512 * 4);
+																								return ret;
+																							}
 																				};
 
 	// Disk for overflow
@@ -179,33 +179,19 @@ public class RenderedMap {
 	public void draw(GraphicsContext gc, int level, AABBd frustum, double scale) {
 		Map<ImmutableVector2i, RenderedRegion> map = get(level > 0 ? 0 : level);
 		gc.setFill(new Color(0.3f, 0.3f, 0.9f, 1.0f)); // Background color
-		plainRegions.values()
-				.stream()
+		plainRegions.values().stream()
 				.filter(r -> r.isVisible(frustum))
 				.forEach(r -> r.drawBackground(gc, scale));
-		try {
-			map
-					.entrySet()
-					.stream()
-					.filter(e -> RenderedRegion.isVisible(e.getKey(), level > 0 ? 0 : level, frustum))
-					.map(e -> {
-						RenderedRegion r = e.getValue();
-						if (e.getValue() == null)
-							r = get(level, e.getKey(), true);
-						return r;
-					})
-					.forEach(r -> r.draw(gc, level, frustum, scale));
-		} catch (NullPointerException e) {
-			// This seems to be a pretty rare exception that might be linked to some race hazard when daw() is called during the reloading of the map.
-			// Nonetheless this should not happen because every time it happens on level 0 and at no point in time a level 0 region has a key associated with a
-			// non-null value.
-			System.out.println(level);
-			System.out.println(plainRegions.entrySet());
-			System.out.println(regions.entrySet());
-			throw e;
-		}
-		plainRegions.values()
-				.stream()
+		map.entrySet().stream()
+				.filter(e -> RenderedRegion.isVisible(e.getKey(), level > 0 ? 0 : level, frustum))
+				.map(e -> {
+					RenderedRegion r = e.getValue();
+					if (e.getValue() == null)
+						r = get(level, e.getKey(), true);
+					return r;
+				})
+				.forEach(r -> r.draw(gc, level, frustum, scale));
+		plainRegions.values().stream()
 				.filter(r -> r.isVisible(frustum))
 				.forEach(r -> r.drawForeground(gc, frustum, scale));
 	}

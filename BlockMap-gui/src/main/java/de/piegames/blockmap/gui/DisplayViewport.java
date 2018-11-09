@@ -78,7 +78,7 @@ public class DisplayViewport {
 		// Use bindings because they are executed lazily
 		frustum.bind(Bindings.createObjectBinding(() -> {
 			Vector2dc translation = this.translationProperty.get();
-			return new AABBd(// TODO optimise
+			return new AABBd(// TODO optimize
 					new Vector3d(-translation.x(), -translation.y(), 0),
 					new Vector3d(widthProperty.get(), heightProperty.get(), 0).div(scaleProperty.get()).sub(translation.x(), translation.y(), 0));
 		}, translationProperty, widthProperty, heightProperty));

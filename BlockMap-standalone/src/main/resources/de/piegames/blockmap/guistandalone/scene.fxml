@@ -9,6 +9,7 @@
 <?import javafx.geometry.Insets?>
 <?import org.controlsfx.control.*?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.CheckBox?>
 
 <BorderPane
 	maxHeight="-Infinity"
@@ -103,6 +104,9 @@
 								</FXCollections>
 							</items>
 						</ChoiceBox>
+						<CheckBox
+							text="Show grid"
+							fx:id="gridBox" />
 					</children>
 				</HBox>
 			</children>

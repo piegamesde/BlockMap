@@ -58,16 +58,16 @@ task beforeCommit(type: GradleBuild) {
 
 task initEclipse(type: GradleBuild) {
 	group 'IDE'
-	tasks = ['cleanRegenerate', 'cleanEclipse', 'eclipse']
+	tasks = ['regenerate', 'cleanEclipse', 'eclipse']
 }
 
 task initIdea(type: GradleBuild) {
 	group 'IDE'
-	tasks = ['cleanRegenerate', 'cleanIdea', 'idea']
+	tasks = ['regenerate', 'cleanIdea', 'idea']
 }
 
 task github(type: GradleBuild) {
 	group 'Distribution'
 	description 'Generate a fat jar to publish on GitHub (or to execute) after having run all tests'
-	tasks = ['cleanRegenerate', 'build', ':BlockMap-standalone:shadowJar']
+	tasks = ['regenerate', 'build', ':BlockMap-standalone:shadowJar']
 }

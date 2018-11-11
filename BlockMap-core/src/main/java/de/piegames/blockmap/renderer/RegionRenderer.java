@@ -27,6 +27,11 @@ import com.flowpowered.nbt.regionfile.RegionFile.RegionChunk;
 
 import de.piegames.blockmap.color.Color;
 
+/**
+ * Use this class to transform a Minecraft region file into a top-down image view of it.
+ * 
+ * @author piegames
+ */
 public class RegionRenderer {
 
 	private static Log			log	= LogFactory.getLog(RegionRenderer.class);
@@ -37,6 +42,15 @@ public class RegionRenderer {
 		this.settings = Objects.requireNonNull(settings);
 	}
 
+	/**
+	 * Render a given {@link RegionFile} to a {@link BufferedImage}. The image will always have a width and height of 512 pixels.
+	 * 
+	 * @param file
+	 *            The file to render. Should not be {@code null}
+	 * @param regionPos
+	 *            The position of the region file in region coordinates. Used to check if blocks are within the bounds of the area to render.
+	 * @return An array of colors representing the final image. The image is square and 512x512 wide. The array sorted in XZ order.
+	 */
 	public BufferedImage render(Vector2ic regionPos, RegionFile file) throws IOException {
 		log.info("Rendering region file " + regionPos.x() + " " + regionPos.y());
 		BufferedImage image = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
@@ -49,6 +63,18 @@ public class RegionRenderer {
 		return image;
 	}
 
+	/**
+	 * Render a given {@link RegionFile} to an image, represented as color array.
+	 * 
+	 * @param file
+	 *            The file to render. Should not be {@code null}
+	 * @param regionPos
+	 *            The position of the region file in region coordinates. Used to check if blocks are within the bounds of the area to render.
+	 * @return An array of colors representing the final image. The image is square and 512x512 wide. The array sorted in XZ order.
+	 * @see #render(Vector2ic, RegionFile)
+	 * @see Color
+	 * @see RegionFile
+	 */
 	public Color[] renderRaw(Vector2ic regionPos, RegionFile file) throws IOException {
 		/* The final map of the chunk, 512*512 pixels, XZ */
 		Color[] map = new Color[512 * 512];

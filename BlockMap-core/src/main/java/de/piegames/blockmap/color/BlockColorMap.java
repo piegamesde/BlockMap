@@ -18,11 +18,23 @@ import io.gsonfire.GsonFireBuilder;
 import io.gsonfire.annotations.PostDeserialize;
 import io.gsonfire.annotations.PreSerialize;
 
+/**
+ * Represents a mapping from block states to properties that are used to calculate this block's color. These properties are: base color, if
+ * the block is a grass/foliage/water block and if the block is translucent. The base color usually is the average color of its texture, but
+ * this is not a requirement. If the block is a grass/foliage/water block, its color will be multiplied with the respective colors of the
+ * biome the block is in. The grass/foliage/water properties are independent from each other, a block may as well be both (even if the
+ * result may not look that well).
+ * 
+ * The translucency property has no correlation with the transparency of that block (which is encoded in its base color) nor with any
+ * properties directly related to Minecraft internals. See {@link #isTranslucentBlock(Block)} for more details.
+ * 
+ * @author piegames
+ */
 public class BlockColorMap {
 
 	public static enum InternalColorMap {
 		DEFAULT("default"), NO_FOLIAGE("foliage"), OCEAN_GROUND("water"), CAVES("caves");
-		private String	fileName;
+		private String fileName;
 
 		InternalColorMap(String fileName) {
 			this.fileName = Objects.requireNonNull(fileName);
@@ -68,6 +80,12 @@ public class BlockColorMap {
 			this.isFoliage = isFoliage;
 			this.isWater = isWater;
 			this.isTranslucent = isTranslucent;
+		}
+
+		@Override
+		public String toString() {
+			return "BlockColor [color=" + color + ", isGrass=" + isGrass + ", isFoliage=" + isFoliage + ", isWater=" + isWater + ", isTranslucent="
+					+ isTranslucent + "]";
 		}
 	}
 

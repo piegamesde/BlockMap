@@ -7,8 +7,15 @@ import com.google.gson.stream.JsonReader;
 import de.piegames.blockmap.color.BiomeColorMap;
 import de.piegames.blockmap.color.Color;
 
+/**
+ * After having rendered a map, it will be shaded by an implementation of this interface. It has total access to the rendered image and to
+ * some useful additional information like block height and biome.
+ * 
+ * @author piegames
+ */
 public interface RegionShader {
 
+	/** All built-in shaders as enum for the CLI interface */
 	public static enum DefaultShader {
 		FLAT, RELIEF, BIOMES, HEIGHTMAP;
 
@@ -17,12 +24,28 @@ public interface RegionShader {
 		}
 	}
 
+	/** All built-in shaders */
 	public static final RegionShader[] DEFAULT_SHADERS = new RegionShader[] {
 			new FlatShader(), new ReliefShader(), new BiomeShader(), new HeightShader()
 	};
 
+	/**
+	 * Shade a rendered region file to its final form.
+	 * 
+	 * @param map
+	 *            The image to shade. Will always be contain 512*512 elements. Changes made in this array will affect the final image
+	 * @param height
+	 *            A height map, always containing 512*512 entries. Bedrock begins at height 0, the sea level is at height 64 and the build
+	 *            height is at 255. You may assume all values are in this range.
+	 * @param biome
+	 *            The biome IDs at each position as a 512*512 array. Currently, biome IDs are bytes where values, but this will likely change in
+	 *            the future.
+	 * @param biomeColors
+	 *            Use this to retrieve the color of a biome from its ID.
+	 */
 	public void shade(Color[] map, int[] height, int[] biome, BiomeColorMap biomeColors);
 
+	/** A simple shader that does nothing. */
 	public class FlatShader implements RegionShader {
 
 		@Override
@@ -30,6 +53,7 @@ public interface RegionShader {
 		}
 	}
 
+	/** This shader does some classic relief shading with a fictional light source coming from the north-west. */
 	public class ReliefShader implements RegionShader {
 
 		@Override
@@ -109,6 +133,7 @@ public interface RegionShader {
 		}
 	}
 
+	/** This shader will discard all color information and replace it by the color of the biome the block is in. */
 	public static class BiomeShader implements RegionShader {
 
 		@Override
@@ -119,6 +144,7 @@ public interface RegionShader {
 		}
 	}
 
+	/** This shader will discard all color information and replace it by a color gradient representing the height of each block. */
 	public static class HeightShader implements RegionShader {
 
 		private static final Color[] colors;

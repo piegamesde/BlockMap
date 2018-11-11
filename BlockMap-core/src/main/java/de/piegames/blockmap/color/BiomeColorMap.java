@@ -9,11 +9,17 @@ import java.util.Objects;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+/**
+ * Represents a mapping from biome IDs to their actual color.
+ * 
+ * @author piegames
+ */
 public class BiomeColorMap {
 
 	public static final Gson		GSON	= new GsonBuilder().registerTypeAdapter(Color.class, Color.ADAPTER).setPrettyPrinting().create();
 	public static final BiomeColor	MISSING	= new BiomeColor(Color.MISSING, Color.MISSING, Color.MISSING, Color.MISSING);
 
+	/** Holds all distinct colors a biome has: its water color, grass color, foliage color and universal color. */
 	public static class BiomeColor {
 		public Color waterColor, grassColor, foliageColor, biomeColor;
 
@@ -47,18 +53,22 @@ public class BiomeColorMap {
 			biomeColors.put(i, new BiomeColor(waterColor.get(i), grassColor.get(i), foliageColor.get(i), biomeColor.get(i)));
 	}
 
+	/** Returns the water color in that biome. */
 	public Color getWaterColor(int biome) {
 		return biomeColors.getOrDefault(biome, MISSING).waterColor;
 	}
 
+	/** Returns the grass color in that biome. */
 	public Color getGrassColor(int biome) {
 		return biomeColors.getOrDefault(biome, MISSING).grassColor;
 	}
 
+	/** Returns the foliage color in that biome. */
 	public Color getFoliageColor(int biome) {
 		return biomeColors.getOrDefault(biome, MISSING).foliageColor;
 	}
 
+	/** This color does not actually exist in Minecraft. It is used to represent a biome on a map and not to just tint a block's texture. */
 	public Color getBiomeColor(int biome) {
 		return biomeColors.getOrDefault(biome, MISSING).biomeColor;
 	}

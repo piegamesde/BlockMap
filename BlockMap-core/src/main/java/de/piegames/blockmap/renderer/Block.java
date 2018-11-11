@@ -6,14 +6,18 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-/** Each object of this class represents an existing Minecraft block, with its ID and block state, but without its position or object data. */
+/**
+ * Each object of this class represents an existing Minecraft block, with its ID and block state, but without its position or object data.
+ * 
+ * @author piegames
+ */
 public class Block {
 
 	public static final Block			AIR	= new Block("minecraft:air");
 
-	/** The name/id of the block including the namespace, like in Minecraft. Example: minecraft:air */
+	/** The name/id of the block including the namespace, like in Minecraft. Example: {@code minecraft:air} */
 	public final String					name;
-	/** A set of all block states this block has. The usage of an EnumSet is supposed to increase performance */
+	/** A set of all block states this block has. The usage of an EnumSet is supposed to increase performance. */
 	public final EnumSet<BlockState>	state;
 
 	public Block(String name) {
@@ -25,6 +29,24 @@ public class Block {
 		this.state = state;
 	}
 
+	/**
+	 * <p>
+	 * Turns a compact notation of a block like {@code door,half=bottom,open=false} into a {@code Block} object. Property wildcards like
+	 * {@code age=*} will be expanded to all possible allowed values, hence a list is returned. Multiple wildcards will result in the cross
+	 * product of all possible values. The format is {@code block_name[,property=value[,property=value[...]]]}, where "*" is a valid value.
+	 * </p>
+	 * <p>
+	 * When providing invalid data, this method may throw a {@link RuntimeException} or silently ignore it and create a Block object
+	 * representing an invalid block. Invalid blocks are those that couldn't exist in Minecraft. Specifying multiple values to one property,
+	 * using invalid properties or values for a block or inventing block names are all invalid, as well omitting properties a Block is allowed
+	 * to have.
+	 * </p>
+	 * 
+	 * @param The
+	 *            compact form of a block: {@code block_name[,property=value[,property=value[...]]]}
+	 * @return A list of blocks where each block matches the given compact form when expanding all wildcards correctly. Will contain exactly one
+	 *         element if no wildcards are used.
+	 */
 	public static List<Block> byCompactForm(String name) {
 		String[] subs = name.split(",");
 		List<EnumSet<BlockState>> blocks = new LinkedList<>();
@@ -48,6 +70,11 @@ public class Block {
 		return blocks.stream().map(state -> new Block(subs[0], state)).collect(Collectors.toList());
 	}
 
+	/**
+	 * Serialized this block to its compact form
+	 * 
+	 * @see #byCompactForm(String)
+	 */
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder(name);

@@ -8,7 +8,14 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+/**
+ * A class to represent an RGBA color using floats in a linear color space. Each object is immutable. Static helper methods do the
+ * calculations.
+ * 
+ * @author piegames
+ */
 public class Color {
+	/** JSON serialization adapter that minimizes the resulting string size without precision loss. */
 	public static final TypeAdapter<Color>	ADAPTER		= new TypeAdapter<Color>() {
 
 															@Override
@@ -35,7 +42,9 @@ public class Color {
 														};
 	public static final Gson				GSON		= new GsonBuilder().registerTypeAdapter(Color.class, ADAPTER).setPrettyPrinting().create();
 
+	/** The default fallback color for missing things. It is a pure and eye-hurting pink color */
 	public static final Color				MISSING		= new Color(1f, 1f, 0f, 1f);
+	/** Transparent black */
 	public static final Color				TRANSPARENT	= new Color(0, 0, 0, 0);
 
 	public final float						r, g, b, a;
@@ -54,7 +63,10 @@ public class Color {
 		this.a = (float) a;
 	}
 
-	/** Converts this color to sRGB8 with linear alpha component on bit 24-31 */
+	/**
+	 * Converts this color to sRGB8 with linear alpha component on bit 24-31. This is the same representation as
+	 * {@link java.awt.Color#getRGB()}.
+	 */
 	public int toRGB() {
 		return ((0xFF & (int) (a * 255)) << 24) |
 				((linearRGBTosRGBi(r) & 0xFF) << 16) |
@@ -62,7 +74,7 @@ public class Color {
 				((linearRGBTosRGBi(b) & 0xFF));
 	}
 
-	/** Take in a sRGB color with linear alpha component */
+	/** Take in an sRGB color with linear alpha component */
 	public static Color fromRGB(int color) {
 		return new Color(
 				component(color, 24) / 255f,
@@ -178,33 +190,20 @@ public class Color {
 	}
 
 	public static final Color alphaOver(Color dst, Color src, int times) {
-		if (false) {
-			Color ret = dst;
-			for (int i = 0; i < times; i++)
-				ret = alphaOver(ret, src);
-			return ret;
-		} else {
-			// double alphaSrc = 0;
-			// for (int exponent = 0; exponent < times; exponent++) {
-			// alphaSrc += Math.pow(1 - src.a, exponent);
-			// }
-			// alphaSrc *= src.a;
+		double pow = Math.pow(1 - src.a, times);
+		double alpha = 1 - (1 - dst.a) * pow;
+		double alphaDst = dst.a * pow;
+		double alphaSrc = alpha - alphaDst;
+		alphaSrc /= alpha;
+		alphaDst /= alpha;
 
-			double pow = Math.pow(1 - src.a, times);
-			double alpha = 1 - (1 - dst.a) * pow;
-			double alphaDst = dst.a * pow;
-			double alphaSrc = alpha - alphaDst;
-			alphaSrc /= alpha;
-			alphaDst /= alpha;
-
-			if (alpha == 0)
-				return Color.TRANSPARENT;
-			return new Color(
-					alpha,
-					(src.r * alphaSrc + dst.r * alphaDst),
-					(src.g * alphaSrc + dst.g * alphaDst),
-					(src.b * alphaSrc + dst.b * alphaDst));
-		}
+		if (alpha == 0)
+			return Color.TRANSPARENT;
+		return new Color(
+				alpha,
+				(src.r * alphaSrc + dst.r * alphaDst),
+				(src.g * alphaSrc + dst.g * alphaDst),
+				(src.b * alphaSrc + dst.b * alphaDst));
 	}
 
 	public static final Color alphaUnder(Color dst, Color src) {
@@ -212,34 +211,29 @@ public class Color {
 	}
 
 	public static final Color alphaUnder(Color dst, Color src, int times) {
-		if (false) {
-			Color ret = dst;
-			for (int i = 0; i < times; i++)
-				ret = alphaUnder(ret, src);
-			return ret;
-		} else {
-			double pow = Math.pow(1 - src.a, times);
-			double alpha = 1 - (1 - dst.a) * pow;
-			double alphaDst = dst.a * pow;
-			double alphaSrc = (1 - dst.a) * (alpha - alphaDst);
-			alphaSrc /= alpha;
-			alphaDst = dst.a / alpha;
+		if (times == 1)
+			return alphaUnder(dst, src);
+		double pow = Math.pow(1 - src.a, times);
+		double alpha = 1 - (1 - dst.a) * pow;
+		double alphaDst = dst.a * pow;
+		double alphaSrc = (1 - dst.a) * (alpha - alphaDst);
+		alphaSrc /= alpha;
+		alphaDst = dst.a / alpha;
 
-			if (alpha == 0)
-				return Color.TRANSPARENT;
-			return new Color(
-					alpha,
-					(src.r * alphaSrc + dst.r * alphaDst),
-					(src.g * alphaSrc + dst.g * alphaDst),
-					(src.b * alphaSrc + dst.b * alphaDst));
-		}
+		if (alpha == 0)
+			return Color.TRANSPARENT;
+		return new Color(
+				alpha,
+				(src.r * alphaSrc + dst.r * alphaDst),
+				(src.g * alphaSrc + dst.g * alphaDst),
+				(src.b * alphaSrc + dst.b * alphaDst));
 	}
 
 	/** factor=-1 -> black, factor=0 -> color, factor=1 -> white */
 	public static final Color shade(Color color, float factor) {
 		if (factor < 0) {
 			factor = 1 + factor;
-			factor = sRGBToLinear((int) (factor * 255));
+			factor = (float) sRGBToLinear(factor);
 			return new Color(color.a, color.r * factor, color.g * factor, color.b * factor);
 		} else if (factor > 0) {
 			factor = sRGBToLinear((int) (factor * 255));
@@ -248,15 +242,4 @@ public class Color {
 		} else
 			return color;
 	}
-
-	// public static final int demultiplyAlpha(int color) {
-	// final int alpha = component(color, 24);
-	//
-	// return alpha == 0 ? 0
-	// : color(
-	// alpha,
-	// component(color, 16) * 255 / alpha,
-	// component(color, 8) * 255 / alpha,
-	// component(color, 0) * 255 / alpha);
-	// }
 }

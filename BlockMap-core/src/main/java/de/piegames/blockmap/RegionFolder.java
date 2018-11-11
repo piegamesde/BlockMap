@@ -11,16 +11,23 @@ import java.util.regex.Pattern;
 
 import org.joml.Vector2i;
 
+/**
+ * A collection of region files with a position.
+ * 
+ * @author piegames
+ */
 public class RegionFolder {
 
 	public Map<Vector2i, Region> regions = new HashMap<>();
 
+	/** Add a region file to this folder. */
 	public void addRegion(Region r) {
 		regions.put(new Vector2i(r.position.x(), r.position.y()), r);
 	}
 
 	static final Pattern rfpat = Pattern.compile("^r\\.(-?\\d+)\\.(-?\\d+)\\.mca$");
 
+	/** Recursively add all region files that match the default naming pattern within Minecraft worlds */
 	protected void add(Path dir) {
 		Matcher m;
 		if (Files.isDirectory(dir)) {

@@ -57,13 +57,17 @@ import picocli.CommandLine.Command;
 @Command
 public class Generator {
 
-	private static Log	log						= LogFactory.getLog(Generator.class);
+	private static Log			log						= LogFactory.getLog(Generator.class);
 
-	static final Path	OUTPUT					= Paths.get("./build/generated-resources");
-	static final Path	OUTPUT_CORE				= OUTPUT.resolve("core-main");
-	static final Path	OUTPUT_INTERNAL_MAIN	= OUTPUT.resolve("internal-main");
-	static final Path	OUTPUT_INTERNAL_TEST	= OUTPUT.resolve("internal-test");
-	static final Path	OUTPUT_OTHER			= OUTPUT.resolve("other");
+	static final Path			OUTPUT					= Paths.get("./build/generated-resources");
+	static final Path			OUTPUT_CORE				= OUTPUT.resolve("BlockMap-core/generated-resources-main");
+	static final Path			OUTPUT_INTERNAL_MAIN	= OUTPUT.resolve("BlockMap-internal/generated-resources-main");
+	static final Path			OUTPUT_INTERNAL_TEST	= OUTPUT.resolve("BlockMap-internal/generated-resources-test");
+	static final Path			OUTPUT_STANDALONE		= OUTPUT.resolve("BlockMap-standalone/generated-resources-main");
+	static final Path			OUTPUT_GUI				= OUTPUT.resolve("BlockMap-gui/generated-resources-main");
+	static final Path			OUTPUT_OTHER			= OUTPUT.resolve("other");
+	private static final Path[]	OUTPUTS					= { OUTPUT_CORE, OUTPUT_INTERNAL_MAIN, OUTPUT_INTERNAL_TEST, OUTPUT_STANDALONE, OUTPUT_GUI,
+			OUTPUT_OTHER };
 
 	@Command
 	public void downloadFiles() throws IOException {
@@ -323,12 +327,8 @@ public class Generator {
 		log.debug("Local resources path: " + Generator.class.getResource("/"));
 
 		Files.createDirectories(OUTPUT);
-		Files.createDirectories(OUTPUT_CORE);
-		Files.createDirectories(OUTPUT_INTERNAL_MAIN);
-		Files.createDirectories(OUTPUT_INTERNAL_TEST);
-		Files.createDirectories(OUTPUT.resolve("gui-main"));
-		Files.createDirectories(OUTPUT.resolve("standalone-main"));
-		Files.createDirectories(OUTPUT_OTHER);
+		for (Path p : OUTPUTS)
+			Files.createDirectories(p);
 
 		CommandLine cli = new CommandLine(new Generator());
 		for (String s : args)
@@ -344,8 +344,9 @@ public class Generator {
 	 */
 	public static void processResources() throws IOException {
 		log.info("Updating resources");
-		FileUtils.copyDirectory(OUTPUT_CORE.toFile(), Paths.get("./build/resources/main").toFile());
-		FileUtils.copyDirectory(OUTPUT_INTERNAL_MAIN.toFile(), Paths.get("./build/resources/main").toFile());
+		for (Path p : OUTPUTS)
+			if (p != OUTPUT_INTERNAL_TEST)
+				FileUtils.copyDirectory(p.toFile(), Paths.get("./build/resources/main").toFile());
 		FileUtils.copyDirectory(OUTPUT_INTERNAL_TEST.toFile(), Paths.get("./build/resources/test").toFile());
 	}
 }

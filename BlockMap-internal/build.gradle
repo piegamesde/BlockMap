@@ -1,7 +1,5 @@
 apply plugin: "com.jaredsburrows.license"
 
-processResources.outputs.upToDateWhen{ false }
-
 task downloadFiles(type: JavaExec) {
 	group 'Generation'
 	description 'Download required files that are not in the repository for technical or legal reasons (e.g. the minecraft server jar)'
@@ -9,8 +7,8 @@ task downloadFiles(type: JavaExec) {
 	main = "de.piegames.blockmap.generate.Generator"
 	args = ['downloadFiles']
     inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[0]}/1.13.2.json"
-    outputs.files "${buildDir}/generated-resources/internal-main/client.jar", "${buildDir}/generated-resources/internal-main/server.jar"
-    outputs.upToDateWhen( { return true } );
+    outputs.files "${buildDir}/generated-resources/BlockMap-internal/generated-resources-main/client.jar", 
+    			"${buildDir}/generated-resources/BlockMap-internal/generated-resources-main/server.jar"
 }
 
 task extractMinecraftData(type: JavaExec) {
@@ -21,7 +19,7 @@ task extractMinecraftData(type: JavaExec) {
 	main = "de.piegames.blockmap.generate.Generator"
 	args = ['extractData']
     inputs.dir "${project(":BlockMap-internal").sourceSets.main.java.srcDirs[1]}/server.jar"
-    outputs.dir "${buildDir}/generated-resources/internal-main/data/"
+    outputs.dir "${buildDir}/generated-resources/BlockMap-internal/generated-resources-main/data/"
 }
 
 task generateBlockStates(type: JavaExec) {
@@ -47,7 +45,7 @@ task generateData(type: JavaExec) {
     inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[0]}/block-color-instructions.json"
     inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[0]}/biome-color-instructions.json"
     inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[0]}/heightmap.png"
-    outputs.dir "${buildDir}/generated-resources/core-main/"
+    outputs.dir "${buildDir}/generated-resources/BlockMap-core/generated-resources-main/"
 }
 
 task generateScreenshots(type: JavaExec) {
@@ -60,6 +58,8 @@ task generateScreenshots(type: JavaExec) {
 }
 
 dependencies {
+	testCompile 'junit:junit:4.12'
+
 	implementation project(':BlockMap-core')
 	implementation project(':BlockMap-gui')
 	implementation project(':BlockMap-standalone')
@@ -79,7 +79,7 @@ sourceSets {
 			srcDirs = ['src/main/java']
 		}
 		resources {
-			srcDirs = ['src/main/resources', 'src/main/generated-resources']
+			srcDirs = ['src/main/resources', "./build/generated-resources/${project.name}/generated-resources-main"]
 		}
 	}
 	test {
@@ -87,7 +87,7 @@ sourceSets {
 			srcDirs = ['src/test/java']
 		}
 		resources {
-			srcDirs = ['src/test/resources', 'src/test/generated-resources']
+			srcDirs = ['src/test/resources', "./build/generated-resources/${project.name}/generated-resources-test"]
 		}
 	}
 }

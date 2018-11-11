@@ -1,16 +1,17 @@
 apply plugin:'base'
 
 buildscript {
-  repositories {
-    jcenter()
-  }
+	repositories {
+		jcenter()
+	}
 
-  dependencies {
-    classpath "com.jaredsburrows:gradle-license-plugin:0.8.41"
-    classpath "com.github.ben-manes:gradle-versions-plugin:0.20.0"
-    classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.1'
-  }
+	dependencies {
+		classpath "com.jaredsburrows:gradle-license-plugin:0.8.41"
+		classpath "com.github.ben-manes:gradle-versions-plugin:0.20.0"
+		classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.1'
+	}
 }
+
 apply plugin: "com.github.ben-manes.versions"
 
 allprojects {
@@ -30,17 +31,13 @@ subprojects {
 		maven { url 'https://jitpack.io' }
 	}
 
-	dependencies {
-		testCompile 'junit:junit:4.12'
-	}
-
 	sourceSets {
 		main {
 			java {
 				srcDirs = ['src/main/java']
 			}
 			resources {
-				srcDirs = ['src/main/resources', 'src/main/generated-resources']
+				srcDirs = ['src/main/resources', "./../BlockMap-internal/build/generated-resources/${project.name}/generated-resources-main"]
 			}
 		}
 	}

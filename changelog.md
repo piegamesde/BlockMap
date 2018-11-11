@@ -1,5 +1,11 @@
 # Changelog
 
+## Version 1.1.2
+### Changes
+- Added a grid overlay
+- Updated to Minecraft 1.13.2
+- Fixed some bugs
+
 ## Version 1.1.1
 ### Changes
 - Support for changing the color map as well as the shader through CLI options

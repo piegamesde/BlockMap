@@ -191,7 +191,7 @@ public class RegionRenderer {
 						boolean heightSet = false;
 						ColorColumn color = new ColorColumn();
 						height: for (byte s = 15; s >= 0; s--) {
-							if ((s << 4) + 15 > settings.maxY)
+							if ((s << 4) > settings.maxY)
 								continue;
 							if (s < lowestLoadedSection) {
 								// log.debug("Loading section " + s);

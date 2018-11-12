@@ -59,9 +59,6 @@ The task `beforeCommit` will clean and regenerate all resources and run all the 
 
 ## Gallery
 
-![Four rendered region files, each with one with a different color map](screenshots/screenshots-1.png)
-All existing color maps
-![Four rendered region files, each one with a different shader](screenshots/screenshots-2.png)
-All existing shaders
-![Screenshot from the GUI](screenshots/screenshots-3.png)
-Screenshot from the GUI
+![Four rendered region files, each with one with a different color map](screenshots/screenshot-1.png "All existing color maps")
+![Four rendered region files, each one with a different shader](screenshots/screenshot-2.png "All existing shaders")
+![Screenshot from the GUI](screenshots/screenshot-3.png "Screenshot from the GUI")

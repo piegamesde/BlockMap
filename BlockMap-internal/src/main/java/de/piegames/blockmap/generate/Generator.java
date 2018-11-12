@@ -66,8 +66,9 @@ public class Generator {
 	static final Path			OUTPUT_STANDALONE		= OUTPUT.resolve("BlockMap-standalone/generated-resources-main");
 	static final Path			OUTPUT_GUI				= OUTPUT.resolve("BlockMap-gui/generated-resources-main");
 	static final Path			OUTPUT_OTHER			= OUTPUT.resolve("other");
+	static final Path			OUTPUT_SCREENSHOTS		= Paths.get("../screenshots");
 	private static final Path[]	OUTPUTS					= { OUTPUT_CORE, OUTPUT_INTERNAL_MAIN, OUTPUT_INTERNAL_TEST, OUTPUT_STANDALONE, OUTPUT_GUI,
-			OUTPUT_OTHER };
+			OUTPUT_OTHER, OUTPUT_SCREENSHOTS };
 
 	@Command
 	public void downloadFiles() throws IOException {
@@ -244,7 +245,7 @@ public class Generator {
 			g.drawString("Ocean ground", 0 + 32, 1024 - 32);
 			g.drawString("Default", 1024 - 32 - g.getFontMetrics().stringWidth("Default"), 1024 - 32);
 			g.dispose();
-			try (OutputStream out = Files.newOutputStream(OUTPUT_OTHER.resolve("screenshot-1.png"))) {
+			try (OutputStream out = Files.newOutputStream(OUTPUT_SCREENSHOTS.resolve("screenshot-1.png"))) {
 				ImageIO.write(img, "png", out);
 			}
 		}
@@ -269,7 +270,7 @@ public class Generator {
 			g.drawString("Heightmap", 0 + 32, 1024 - 32);
 			g.drawString("Biomes", 1024 - 32 - g.getFontMetrics().stringWidth("Biomes"), 1024 - 32);
 			g.dispose();
-			try (OutputStream out = Files.newOutputStream(OUTPUT_OTHER.resolve("screenshot-2.png"))) {
+			try (OutputStream out = Files.newOutputStream(OUTPUT_SCREENSHOTS.resolve("screenshot-2.png"))) {
 				ImageIO.write(img, "png", out);
 			}
 		}
@@ -294,7 +295,7 @@ public class Generator {
 				Thread.yield();
 			Platform.runLater(() -> {
 				WritableImage img = GuiMain.instance.stage.getScene().snapshot(null);
-				try (OutputStream out = Files.newOutputStream(OUTPUT_OTHER.resolve("screenshot-3.png"))) {
+				try (OutputStream out = Files.newOutputStream(OUTPUT_SCREENSHOTS.resolve("screenshot-3.png"))) {
 					ImageIO.write(SwingFXUtils.fromFXImage(img, null), "png", out);
 				} catch (IOException e) {
 					log.error(e);

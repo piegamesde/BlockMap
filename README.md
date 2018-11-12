@@ -10,6 +10,7 @@
 - The core rendering code as library to use in your own projects (not released yet)
 - Rendering scale: 1 pixel : 1 block
 - Faster than MCEdit!
+- Gamma corrected rendering
 
 ## Requirements:
 
@@ -30,12 +31,11 @@ The GUI version should just run by (double)clicking it. Otherwise run it through
 
     java -jar BlockMap-1.1.1.jar
 
-to start. The commandline version can be called through one of
+to start. If you want to use BlockMap through the command line without GUI (not only for scripts),
 
-    java -jar BlockMap-1.1.1.jar render
     java -jar BlockMap-1.1.1.jar help
 
-The latter one will tell you how to use it. On Linux even with colors!
+will get you started. On Linux even with colors!
 
 If your world has been created before the Minecraft 1.13 release, please optimize it. To do this, start Minecraft, select your world, go to "Edit" and then "Optimize World".
 
@@ -46,3 +46,22 @@ If your world has been created before the Minecraft 1.13 release, please optimiz
   - This will very likely change in the future
   - If you drag to the edge, the mouse will wrap around so you can drag indefinitely. Blender users will appreciate this
 - When loading a world, you can select either a world folder, a region folder or a single region file
+
+## Mod support:
+
+Currently, no Minecraft mods are supported, but the rendering engine is built in an extensible way. Mod support will only be implemented on request.
+
+## Compile it yourself:
+
+Due to technical, legal and performance reasons, some resources required to run and test BlockMap are not included in this repository, but generated locally. The Gradle task `regenerate` will download all required files (you only need an internet connection the first time and after a `clean`) and generate and compile a bunch of stuff. Without this, nothing will work. On a freshly cloned repository, use `initEclipse` or `initIdea` to transform the repository into a project you can simply open in your favorite IDE. (Warning: the `eclipse` and `idea` tasks you need to call when something on the dependencies changed link to some folders in the build directory. This means that they won't work as intended unless all resoruces have already been generated.)
+
+The task `beforeCommit` will clean and regenerate all resources and run all the tests to check if everything works (poor man's CI). The task `github` will take the code and the resources into a fat standalone jar.
+
+## Gallery
+
+![Four rendered region files, each with one with a different color map](screenshots/screenshots-1.png)
+All existing color maps
+![Four rendered region files, each one with a different shader](screenshots/screenshots-2.png)
+All existing shaders
+![Screenshot from the GUI](screenshots/screenshots-3.png)
+Screenshot from the GUI

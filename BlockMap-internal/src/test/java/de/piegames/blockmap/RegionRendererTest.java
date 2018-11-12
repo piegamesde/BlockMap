@@ -10,7 +10,9 @@ import java.nio.file.Paths;
 import javax.imageio.ImageIO;
 
 import org.joml.Vector2i;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import com.flowpowered.nbt.regionfile.RegionFile;
 
@@ -19,6 +21,9 @@ import de.piegames.blockmap.renderer.RenderSettings;
 
 public class RegionRendererTest {
 
+	@Rule
+	public TemporaryFolder folder = new TemporaryFolder();
+
 	@Test
 	public void simpleTest1() throws IOException, URISyntaxException, InterruptedException {
 		RenderSettings settings = new RenderSettings();
@@ -26,6 +31,6 @@ public class RegionRendererTest {
 		Files.createDirectories(Paths.get("./output"));
 		RegionRenderer renderer = new RegionRenderer(settings);
 		BufferedImage image = renderer.render(new Vector2i(0, 0), new RegionFile(Paths.get(URI.create(getClass().getResource("/r.0.0.mca").toString()))));
-		ImageIO.write(image, "png", Files.newOutputStream(Paths.get("./output").resolve("out.png")));
+		ImageIO.write(image, "png", Files.newOutputStream(folder.newFile().toPath()));
 	}
 }

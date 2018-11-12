@@ -71,3 +71,7 @@ task github(type: GradleBuild) {
 	description 'Generate a fat jar to publish on GitHub (or to execute) after having run all tests'
 	tasks = ['regenerate', 'build', ':BlockMap-standalone:shadowJar']
 }
+
+clean {
+	delete 'screenshots'
+}

@@ -171,10 +171,6 @@ public class CommandLineMain implements Runnable {
 				PostProcessing.createBigImage(world, output, settings);
 			if (createHtml)
 				PostProcessing.createTileHtml(world, output, settings);
-			// log.info("Done. Rendered " + (rendered == 0 ? "no" : rendered) + " region files"
-			// + (lazy ? (failed > 0 ? "," : " and") + " skipped " + (failed == 0 && rendered == 0 ? "all " : "") + (skipped == 0 ? "none" : skipped) :
-			// "")
-			// + (failed > 0 ? " and failed to render " + failed + " due to exceptions." : "."));
 			log.info("Done. Region files rendered/skipped/failed/total: " + rendered + "/" + skipped + "/" + failed + "/" + (rendered + skipped + failed));
 		}
 

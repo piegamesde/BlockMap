@@ -16,7 +16,7 @@ public class CommandLineTest {
 
 	@BeforeClass
 	public static void testWorldExists() {
-		assertNotNull("Please run generate to generate testing data", CommandLineTest.class.getResource("/BlockMapWorld"));
+		assertNotNull("Please run regenerate to generate testing data", CommandLineTest.class.getResource("/BlockMapWorld"));
 	}
 
 	@Rule

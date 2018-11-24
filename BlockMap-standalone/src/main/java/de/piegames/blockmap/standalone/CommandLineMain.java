@@ -157,6 +157,12 @@ public class CommandLineMain implements Runnable {
 						log.debug("Skipping file " + r.path.getFileName() + " because " + r.renderedPath + " is newer and we are lazy.");
 						continue;
 					}
+					if (!PostProcessing.inBounds(r.position.x(), settings.minX, settings.maxX)
+							|| !PostProcessing.inBounds(r.position.y(), settings.minZ, settings.maxZ)) {
+						skipped++;
+						log.debug("Skipping file " + r.path.getFileName() + " because it is out of bounds.");
+						continue;
+					}
 					RegionFile rf = new RegionFile(r.path);
 					BufferedImage b = renderer.render(r.position, rf);
 					log.debug("Saving image to " + r.renderedPath.toAbsolutePath());

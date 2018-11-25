@@ -314,12 +314,11 @@ public class Generator {
 
 	private static BufferedImage generateScreenshot(RegionRenderer renderer, RenderSettings settings, Vector2i toRender, BlockColorMap.InternalColorMap colors)
 			throws IOException {
-		try (RegionFile file = new RegionFile(Paths.get(URI.create(Generator.class.getResource("/BlockMapWorld/region/r." + toRender.x + "." + toRender.y
+		RegionFile file = new RegionFile(Paths.get(URI.create(Generator.class.getResource("/BlockMapWorld/region/r." + toRender.x + "." + toRender.y
 				+ ".mca")
-				.toString())))) {
-			settings.blockColors = colors.getColorMap();
-			return renderer.render(toRender, file);
-		}
+				.toString())));
+		settings.blockColors = colors.getColorMap();
+		return renderer.render(toRender, file);
 	}
 
 	public static void main(String[] args) throws Exception {

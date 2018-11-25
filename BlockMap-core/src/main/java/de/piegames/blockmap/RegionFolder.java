@@ -69,7 +69,7 @@ public abstract class RegionFolder {
 			return regions.get(pos);
 		}
 
-		public static WorldRegionFolder load(Path world, Dimension dimension, RegionRenderer renderer) throws IOException {
+		public static WorldRegionFolder load(Path world, MinecraftDimension dimension, RegionRenderer renderer) throws IOException {
 			return load(dimension.resolve(world), renderer);
 		}
 

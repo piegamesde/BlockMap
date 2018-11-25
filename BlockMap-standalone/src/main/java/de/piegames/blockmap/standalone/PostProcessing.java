@@ -16,9 +16,10 @@ import javax.imageio.ImageIO;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.joml.Vector2i;
+import org.joml.Vector2ic;
 
-import de.piegames.blockmap.Region;
 import de.piegames.blockmap.RegionFolder;
+import de.piegames.blockmap.RegionFolder.SavedRegionFolder;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RenderSettings;
 
@@ -30,9 +31,9 @@ public class PostProcessing {
 	private PostProcessing() {
 	}
 
-	public static void createTileHtml(RegionFolder world, Path outputDir, RenderSettings settings) {
+	public static void createTileHtml(SavedRegionFolder world, Path outputDir, RenderSettings settings) {
 		log.info("Writing HTML tiles...");
-		if (world.regions.isEmpty()) {
+		if (world.listRegions().isEmpty()) {
 			log.warn("The world is empty, there is nothing to do!");
 			return;
 		}
@@ -48,12 +49,12 @@ public class PostProcessing {
 			}
 		}
 
-		Set<Vector2i> allowedBlocks = world.regions.keySet().stream().filter(v -> inBounds(v.x, settings.minX, settings.maxX) && inBounds(v.y, settings.minZ,
+		Set<Vector2ic> allowedBlocks = world.listRegions().stream().filter(v -> inBounds(v.x(), settings.minX, settings.maxX) && inBounds(v.y(), settings.minZ,
 				settings.maxZ)).collect(Collectors.toSet());
-		int minX = allowedBlocks.stream().mapToInt(v -> v.x).min().getAsInt();
-		int maxX = allowedBlocks.stream().mapToInt(v -> v.x).max().getAsInt();
-		int minZ = allowedBlocks.stream().mapToInt(v -> v.y).min().getAsInt();
-		int maxZ = allowedBlocks.stream().mapToInt(v -> v.y).max().getAsInt();
+		int minX = allowedBlocks.stream().mapToInt(v -> v.x()).min().getAsInt();
+		int maxX = allowedBlocks.stream().mapToInt(v -> v.x()).max().getAsInt();
+		int minZ = allowedBlocks.stream().mapToInt(v -> v.y()).min().getAsInt();
+		int maxZ = allowedBlocks.stream().mapToInt(v -> v.y()).max().getAsInt();
 
 		try (Writer w = Files.newBufferedWriter(outputDir.resolve("tiles.html"));) {
 			w.write("<html><head>\n");
@@ -63,20 +64,21 @@ public class PostProcessing {
 
 			for (int z = minZ; z <= maxZ; z++) {
 				for (int x = minX; x <= maxX; x++) {
-					Region region = world.regions.get(new Vector2i(x, z));
-					if (region != null && region.renderedPath != null && Files.exists(region.renderedPath)) {
+					Vector2i pos = new Vector2i(x, z);
+					Path region = world.getPath(pos);
+					if (region != null) {
 						int top = (z - minZ) * 512, left = (x - minX) * 512;
 						String title = "Region " + x + ", " + z;
 						String name = "r." + x + "." + z;
 						String style = "width: " + 512 + "px; height: " + 512 + "px; " +
 								"position: absolute; top: " + top + "px; left: " + left + "px; " +
-								"background-image: url(" + outputDir.relativize(region.renderedPath) + ")";
+								"background-image: url(" + outputDir.relativize(region) + ")";
 						w.write("<a\n" +
 								"\tclass=\"tile\"\n" +
 								"\tstyle=\"" + style + "\"\n" +
 								"\ttitle=\"" + title + "\"\n" +
 								"\tname=\"" + name + "\"\n" +
-								"\thref=\"" + outputDir.relativize(region.renderedPath) + "\"\n" +
+								"\thref=\"" + outputDir.relativize(region) + "\"\n" +
 								">&nbsp;</a>");
 					}
 				}
@@ -94,18 +96,18 @@ public class PostProcessing {
 
 	public static void createBigImage(RegionFolder world, Path outputDir, RenderSettings settings) {
 		log.info("Creating big image...");
-		if (world.regions.isEmpty()) {
+		if (world.listRegions().isEmpty()) {
 			log.warn("The world is empty, there is nothing to do!");
 			return;
 		}
 
 		/** The bounds of the rendered files, in region coordinates */
-		Set<Vector2i> allowedBlocks = world.regions.keySet().stream().filter(v -> inBounds(v.x, settings.minX, settings.maxX) && inBounds(v.y, settings.minZ,
+		Set<Vector2ic> allowedBlocks = world.listRegions().stream().filter(v -> inBounds(v.x(), settings.minX, settings.maxX) && inBounds(v.y(), settings.minZ,
 				settings.maxZ)).collect(Collectors.toSet());
-		int minX = allowedBlocks.stream().mapToInt(v -> v.x).min().getAsInt();
-		int maxX = allowedBlocks.stream().mapToInt(v -> v.x).max().getAsInt();
-		int minZ = allowedBlocks.stream().mapToInt(v -> v.y).min().getAsInt();
-		int maxZ = allowedBlocks.stream().mapToInt(v -> v.y).max().getAsInt();
+		int minX = allowedBlocks.stream().mapToInt(v -> v.x()).min().getAsInt();
+		int maxX = allowedBlocks.stream().mapToInt(v -> v.x()).max().getAsInt();
+		int minZ = allowedBlocks.stream().mapToInt(v -> v.y()).min().getAsInt();
+		int maxZ = allowedBlocks.stream().mapToInt(v -> v.y()).max().getAsInt();
 
 		/** The bounds of the selected area intersected with the rendered area. */
 		int minPixelX = (minX << 9) < settings.minX ? settings.minX : (minX << 9);
@@ -124,20 +126,16 @@ public class PostProcessing {
 			return;
 		}
 
-		for (Region r : world.regions.values()) {
-			if (r.renderedPath == null)
-				continue;
-			int x = r.position.x();
-			int z = r.position.y();
+		for (Vector2ic pos : world.listRegions()) {
 			BufferedImage region = null;
 			try {
-				region = ImageIO.read(Files.newInputStream(r.renderedPath));
+				region = world.render(pos);
 			} catch (IOException e) {
-				log.warn("Could not load image " + r.renderedPath.toAbsolutePath(), e);
+				log.warn("Could not load image " + pos, e);
 				continue;
 			}
-			bigImage.createGraphics().drawImage(region, x * 512 - minPixelX, z * 512 - minPixelZ, null);
-			log.debug("Region " + x + ", " + z + " drawn to " + (x * 512 - minPixelX) + ", " + (z * 512 - minPixelZ));
+			bigImage.createGraphics().drawImage(region, pos.x() * 512 - minPixelX, pos.y() * 512 - minPixelZ, null);
+			log.debug("Region " + pos.x() + ", " + pos.y() + " drawn to " + (pos.x() * 512 - minPixelX) + ", " + (pos.y() * 512 - minPixelZ));
 		}
 		try {
 			ImageIO.write(bigImage, "png", new File(outputDir + "/big.png"));

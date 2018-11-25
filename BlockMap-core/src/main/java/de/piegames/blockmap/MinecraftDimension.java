@@ -2,7 +2,7 @@ package de.piegames.blockmap;
 
 import java.nio.file.Path;
 
-public enum Dimension {
+public enum MinecraftDimension {
 
 	OVERWORLD("Overworld", 0, "region"),
 	NETHER("Nether", -1, "DIM-1", "region"),
@@ -12,7 +12,7 @@ public enum Dimension {
 	String		name;
 	String[]	path;
 
-	Dimension(String name, int index, String... path) {
+	MinecraftDimension(String name, int index, String... path) {
 		this.name = name;
 		this.index = index;
 		this.path = path;

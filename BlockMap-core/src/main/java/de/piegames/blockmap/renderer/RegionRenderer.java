@@ -22,8 +22,8 @@ import com.flowpowered.nbt.ListTag;
 import com.flowpowered.nbt.LongArrayTag;
 import com.flowpowered.nbt.StringTag;
 import com.flowpowered.nbt.Tag;
+import com.flowpowered.nbt.regionfile.Chunk;
 import com.flowpowered.nbt.regionfile.RegionFile;
-import com.flowpowered.nbt.regionfile.RegionFile.RegionChunk;
 
 import de.piegames.blockmap.color.Color;
 
@@ -84,7 +84,9 @@ public class RegionRenderer {
 		Arrays.fill(height, settings.minY);
 		Arrays.fill(regionBiomes, -1);
 
-		for (RegionChunk chunk : file.listExistingChunks()) {
+		for (Chunk chunk : file) {
+			if (chunk == null)
+				continue;
 			try {
 				int chunkX = ((regionPos.x() << 5) | chunk.x);
 				int chunkZ = ((regionPos.y() << 5) | chunk.z);
@@ -92,10 +94,8 @@ public class RegionRenderer {
 						&& (chunkZ + 16 < settings.minZ || chunkZ > settings.maxZ)) {
 					continue;
 				}
-				chunk.load();
 
 				CompoundMap root = chunk.readTag().getValue();
-				chunk.unload();
 
 				{ // Check data version
 					if (root.containsKey("DataVersion")) {
@@ -266,7 +266,7 @@ public class RegionRenderer {
 		Block[] ret = new Block[16 * 16 * 16];
 
 		for (int i = 0; i < 4096; i++) {
-			long blockIndex = RegionFile.extractFromLong(blocks, i, bitsPerIndex);
+			long blockIndex = Chunk.extractFromLong(blocks, i, bitsPerIndex);
 
 			if (blockIndex >= palette.size()) {
 				log.warn("Block " + i + " " + blockIndex + " was out of bounds, is this world corrupt?");

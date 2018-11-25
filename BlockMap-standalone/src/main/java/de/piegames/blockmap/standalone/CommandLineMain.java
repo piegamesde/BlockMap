@@ -1,23 +1,19 @@
 package de.piegames.blockmap.standalone;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import javax.imageio.ImageIO;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.joml.Vector2ic;
 
-import com.flowpowered.nbt.regionfile.RegionFile;
-
-import de.piegames.blockmap.Region;
-import de.piegames.blockmap.RegionFolder;
+import de.piegames.blockmap.RegionFolder.CachedRegionFolder;
+import de.piegames.blockmap.RegionFolder.WorldRegionFolder;
 import de.piegames.blockmap.color.BiomeColorMap;
 import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.color.BlockColorMap.InternalColorMap;
@@ -144,40 +140,30 @@ public class CommandLineMain implements Runnable {
 			RegionRenderer renderer = new RegionRenderer(settings);
 			log.debug("Input " + input.toAbsolutePath());
 			log.debug("Output: " + output.toAbsolutePath());
-			RegionFolder world = RegionFolder.load(input);
-			/* Statistics */
-			int rendered = 0, skipped = 0, failed = 0;
-			for (Region r : world.regions.values()) {
+			WorldRegionFolder world;
+			try {
+				world = WorldRegionFolder.load(input, renderer);
+			} catch (IOException e) {
+				log.error("Could not load region folder", e);
+				return;
+			}
+			CachedRegionFolder cached = new CachedRegionFolder(world, lazy, output);
+
+			for (Vector2ic pos : world.listRegions()) {
+				if (!PostProcessing.inBounds(pos.x(), settings.minX, settings.maxX)
+						|| !PostProcessing.inBounds(pos.y(), settings.minZ, settings.maxZ))
+					continue;
 				try {
-					r.renderedPath = output.resolve(r.path.getFileName().toString().replace(".mca", ".png"));
-					if (lazy
-							&& Files.exists(r.renderedPath)
-							&& Files.getLastModifiedTime(r.renderedPath).compareTo(Files.getLastModifiedTime(r.path)) > 0) {
-						skipped++;
-						log.debug("Skipping file " + r.path.getFileName() + " because " + r.renderedPath + " is newer and we are lazy.");
-						continue;
-					}
-					if (!PostProcessing.inBounds(r.position.x(), settings.minX, settings.maxX)
-							|| !PostProcessing.inBounds(r.position.y(), settings.minZ, settings.maxZ)) {
-						skipped++;
-						log.debug("Skipping file " + r.path.getFileName() + " because it is out of bounds.");
-						continue;
-					}
-					RegionFile rf = new RegionFile(r.path);
-					BufferedImage b = renderer.render(r.position, rf);
-					log.debug("Saving image to " + r.renderedPath.toAbsolutePath());
-					ImageIO.write(b, "png", Files.newOutputStream(r.renderedPath));
-					rendered++;
+					cached.render(pos);
 				} catch (IOException e) {
 					log.error("Could not render region file", e);
-					failed++;
 				}
 			}
 			if (createBigPic)
 				PostProcessing.createBigImage(world, output, settings);
 			if (createHtml)
-				PostProcessing.createTileHtml(world, output, settings);
-			log.info("Done. Region files rendered/skipped/failed/total: " + rendered + "/" + skipped + "/" + failed + "/" + (rendered + skipped + failed));
+				PostProcessing.createTileHtml(cached.save(), output, settings);
+			log.info("Done.");
 		}
 
 	}

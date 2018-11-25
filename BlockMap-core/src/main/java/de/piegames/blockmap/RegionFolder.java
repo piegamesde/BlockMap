@@ -1,59 +1,193 @@
 package de.piegames.blockmap;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import javax.imageio.ImageIO;
 
 import org.joml.Vector2i;
+import org.joml.Vector2ic;
 
-/**
- * A collection of region files with a position.
- * 
- * @author piegames
- */
-public class RegionFolder {
+import com.flowpowered.nbt.regionfile.RegionFile;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonWriter;
 
-	public Map<Vector2i, Region> regions = new HashMap<>();
+import de.piegames.blockmap.renderer.RegionRenderer;
 
-	/** Add a region file to this folder. */
-	public void addRegion(Region r) {
-		regions.put(new Vector2i(r.position.x(), r.position.y()), r);
-	}
+public abstract class RegionFolder {
 
-	static final Pattern rfpat = Pattern.compile("^r\\.(-?\\d+)\\.(-?\\d+)\\.mca$");
+	public static Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-	/** Recursively add all region files that match the default naming pattern within Minecraft worlds */
-	protected void add(Path dir) {
-		Matcher m;
-		if (Files.isDirectory(dir)) {
-			try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
-				for (Path p : stream) {
-					m = rfpat.matcher(p.getFileName().toString());
-					if (m.matches())
-						add(p);
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
+	public abstract Set<Vector2ic> listRegions();
+
+	public abstract BufferedImage render(Vector2ic pos) throws IOException;
+
+	public static class WorldRegionFolder extends RegionFolder {
+
+		static final Pattern					rfpat	= Pattern.compile("^r\\.(-?\\d+)\\.(-?\\d+)\\.mca$");
+
+		protected final Map<Vector2ic, Path>	regions;
+		protected final RegionRenderer			renderer;
+
+		WorldRegionFolder(Map<Vector2ic, Path> files, RegionRenderer renderer) {
+			this.regions = Objects.requireNonNull(files);
+			this.renderer = Objects.requireNonNull(renderer);
+		}
+
+		@Override
+		public Set<Vector2ic> listRegions() {
+			return Collections.unmodifiableSet(regions.keySet());
+		}
+
+		@Override
+		public BufferedImage render(Vector2ic pos) throws IOException {
+			if (regions.containsKey(pos))
+				return renderer.render(pos, new RegionFile(regions.get(pos)));
+			else
+				return null;
+		}
+
+		public Path getPath(Vector2ic pos) {
+			return regions.get(pos);
+		}
+
+		public static WorldRegionFolder load(Path world, Dimension dimension, RegionRenderer renderer) throws IOException {
+			return load(dimension.resolve(world), renderer);
+		}
+
+		public static WorldRegionFolder load(Path regionFolder, RegionRenderer renderer) throws IOException {
+			Map<Vector2ic, Path> files = new HashMap<>();
+			for (Path p : Files.list(regionFolder).collect(Collectors.toList())) {
+				Matcher m = rfpat.matcher(p.getFileName().toString());
+				if (m.matches())
+					files.put(new Vector2i(Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2))), p);
 			}
-		} else if ((m = rfpat.matcher(dir.getFileName().toString())).matches()) {
-			if (!Files.exists(dir)) {
-				System.err.println("Warning: region file '" + dir.toAbsolutePath() + "' doesn't exist!");
-				return;
-			}
-			addRegion(new Region(Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2)), dir));
-		} else {
-			throw new RuntimeException(dir.toAbsolutePath() + " does not seem to be a directory or a region file");
+			return new WorldRegionFolder(files, renderer);
 		}
 	}
 
-	public static RegionFolder load(Path file) {
-		RegionFolder rm = new RegionFolder();
-		rm.add(file);
-		return rm;
+	public static class SavedRegionFolder extends RegionFolder {
+
+		protected final Map<Vector2ic, Path> regions;
+
+		public SavedRegionFolder(Map<Vector2ic, Path> regions) {
+			this.regions = Collections.unmodifiableMap(regions);
+		}
+
+		@SuppressWarnings("unchecked")
+		public SavedRegionFolder(Path path) throws IOException {
+			/* Parse the saved file and stream it to a map */
+			JsonObject rawFile = new JsonParser().parse(Files.newBufferedReader(path)).getAsJsonObject();
+			regions = ((List<RegionHelper>) GSON.fromJson(rawFile.getAsJsonArray("regions"), new TypeToken<List<RegionHelper>>() {
+			}.getType())).stream().collect(Collectors.toMap(r -> new Vector2i(r.x, r.z), r -> Paths.get(r.image)));
+		}
+
+		@Override
+		public BufferedImage render(Vector2ic pos) throws IOException {
+			if (regions.containsKey(pos))
+				return ImageIO.read(Files.newInputStream(regions.get(pos)));
+			else
+				return null;
+		}
+
+		@Override
+		public Set<Vector2ic> listRegions() {
+			return Collections.unmodifiableSet(regions.keySet());
+		}
+
+		public Path getPath(Vector2ic pos) {
+			return regions.get(pos);
+		}
+	}
+
+	public static class CachedRegionFolder extends RegionFolder {
+
+		protected WorldRegionFolder	world;
+		protected boolean			lazy;
+		protected Path				imageFolder;
+
+		public CachedRegionFolder(WorldRegionFolder world, boolean lazy, Path imageFolder) {
+			this.lazy = lazy;
+			this.world = Objects.requireNonNull(world);
+			this.imageFolder = Objects.requireNonNull(imageFolder);
+		}
+
+		@Override
+		public BufferedImage render(Vector2ic pos) throws IOException {
+			Path region = world.getPath(pos);
+			if (region == null)
+				return null;
+			Path image = imageFolder.resolve(region.getFileName().toString().replace(".mca", ".png"));
+			if (Files.exists(image)
+					&& (!lazy || Files.getLastModifiedTime(image).compareTo(Files.getLastModifiedTime(region)) > 0)) {
+				return ImageIO.read(Files.newInputStream(image));
+			} else {
+				BufferedImage rendered = world.render(pos);
+				ImageIO.write(rendered, "png", Files.newOutputStream(image));
+				return rendered;
+			}
+		}
+
+		@Override
+		public Set<Vector2ic> listRegions() {
+			return world.listRegions();
+		}
+
+		public SavedRegionFolder save() {
+			Map<Vector2ic, Path> regions = new HashMap<>();
+			for (Entry<Vector2ic, Path> e : world.regions.entrySet())
+				regions.put(new Vector2i(e.getKey().x(), e.getKey().y()), imageFolder.resolve(e.getValue().getFileName().toString().replace(".mca", ".png")));
+			return new SavedRegionFolder(regions);
+		}
+
+		public void save(Path file) throws IOException {
+			save(file, true);
+		}
+
+		public void save(Path file, boolean relativePaths) throws IOException {
+			try (JsonWriter writer = RegionFolder.GSON.newJsonWriter(Files.newBufferedWriter(file, StandardOpenOption.CREATE,
+					StandardOpenOption.TRUNCATE_EXISTING))) {
+				writer.beginObject();
+				writer.name("regions");
+				writer.beginArray();
+				for (Entry<Vector2ic, Path> e : world.regions.entrySet()) {
+					writer.name("x");
+					writer.value(e.getKey().x());
+					writer.name("z");
+					writer.value(e.getKey().y());
+					writer.name("image");
+					Path value = imageFolder.resolve(e.getValue().getFileName().toString().replace(".mca", ".png"));
+					if (relativePaths) {
+						value = file.relativize(value);
+					}
+					writer.value(value.toString());
+				}
+				writer.endArray();
+				writer.beginObject();
+			}
+		}
+	}
+
+	public static class RegionHelper {
+		int		x, z;
+		String	image;
 	}
 }

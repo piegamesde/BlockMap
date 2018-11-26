@@ -191,6 +191,9 @@ public class CommandLineMain implements Runnable {
 	}
 
 	public static void main(String... args) {
+		/* Without this, JOML will print vectors out in scientific notation which isn't the most human readable thing in the world */
+		System.setProperty("joml.format", "false");
+
 		CommandLine cli = new CommandLine(new CommandLineMain());
 		// cli.setTrimQuotes(true);
 		cli.parseWithHandler(new RunLast(), args);

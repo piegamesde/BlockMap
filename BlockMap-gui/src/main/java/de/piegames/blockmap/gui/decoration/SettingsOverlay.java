@@ -8,6 +8,7 @@ import java.util.ResourceBundle;
 import org.controlsfx.control.RangeSlider;
 
 import de.piegames.blockmap.gui.WorldRendererCanvas;
+import de.piegames.blockmap.renderer.RenderSettings;
 import javafx.animation.TranslateTransition;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
@@ -32,9 +33,11 @@ public class SettingsOverlay extends AnchorPane implements Initializable {
 	private VBox					rightMenu;
 
 	protected WorldRendererCanvas	panel;
+	protected RenderSettings		settings;
 
-	public SettingsOverlay(WorldRendererCanvas panel) {
+	public SettingsOverlay(WorldRendererCanvas panel, RenderSettings settings) {
 		this.panel = Objects.requireNonNull(panel);
+		this.settings = Objects.requireNonNull(settings);
 		try {
 			FXMLLoader loader = new FXMLLoader(getClass().getResource("SettingsOverlay.fxml"));
 			loader.setRoot(this);
@@ -53,9 +56,9 @@ public class SettingsOverlay extends AnchorPane implements Initializable {
 		ChangeListener<? super Boolean> heightListener = (e, oldVal, newVal) -> {
 			if (oldVal && !newVal) {
 				if (e == heightSlider.lowValueChangingProperty())
-					panel.getRegionRenderer().settings.minY = (int) Math.round(heightSlider.lowValueProperty().getValue().doubleValue());
+					settings.minY = (int) Math.round(heightSlider.lowValueProperty().getValue().doubleValue());
 				else if (e == heightSlider.highValueChangingProperty())
-					panel.getRegionRenderer().settings.maxY = (int) Math.round(heightSlider.highValueProperty().getValue().doubleValue());
+					settings.maxY = (int) Math.round(heightSlider.highValueProperty().getValue().doubleValue());
 				panel.invalidateTextures();
 				panel.repaint();
 			}

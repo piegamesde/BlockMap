@@ -28,10 +28,16 @@
 						<Menu text="File">
 							<items>
 								<MenuItem
-									text="Load..."
-									onAction="#browse" />
+									text="Load world..."
+									onAction="#browseFolder" />
 								<MenuItem
-									text="Reload world"
+									text="Load rendered world..."
+									onAction="#browseFile" />
+								<MenuItem
+									text="Load remove world..."
+									onAction="#loadRemote" />
+								<MenuItem
+									text="Reload"
 									onAction="#reloadWorld" />
 								<MenuItem
 									text="Exit"

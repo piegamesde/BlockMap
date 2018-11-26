@@ -14,7 +14,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.joml.AABBd;
-import org.joml.ImmutableVector2i;
 import org.joml.Vector2i;
 import org.joml.Vector2ic;
 import org.joml.Vector3i;
@@ -26,7 +25,6 @@ import org.mapdb.DataOutput2;
 import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
 
-import de.piegames.blockmap.Region;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.PixelReader;
@@ -93,8 +91,8 @@ public class RenderedMap {
 
 	private final HTreeMap<Vector3ic, WritableImage>		cacheMapDisk, cacheMapDiskMem, cacheMapMem;
 
-	private Map<ImmutableVector2i, RenderedRegion>					plainRegions		= new HashMap<>();
-	private Map<Integer, Map<ImmutableVector2i, RenderedRegion>>	regions				= new HashMap<>();
+	private Map<Vector2ic, RenderedRegion>					plainRegions		= new HashMap<>();
+	private Map<Integer, Map<Vector2ic, RenderedRegion>>	regions				= new HashMap<>();
 	private int														regionsCount, regionsRendered;
 
 	@SuppressWarnings("unchecked")
@@ -135,11 +133,6 @@ public class RenderedMap {
 		clearReload(Collections.emptyList());
 	}
 
-	public RenderedMap(ScheduledExecutorService executor, Collection<Region> positions) {
-		this(executor);
-		clearReload(positions);
-	}
-
 	public void close() {
 		clearReload(Collections.emptyList());
 		cacheMapDiskMem.close();
@@ -155,7 +148,7 @@ public class RenderedMap {
 		cacheMapDisk.expireEvict();
 	}
 
-	public void clearReload(Collection<Region> positions) {
+	public void clearReload(Collection<Vector2ic> positions) {
 		cacheMapDisk.clear();
 		cacheMapDiskMem.clear();
 		cacheMapMem.clear();
@@ -177,7 +170,7 @@ public class RenderedMap {
 	}
 
 	public void draw(GraphicsContext gc, int level, AABBd frustum, double scale) {
-		Map<ImmutableVector2i, RenderedRegion> map = get(level > 0 ? 0 : level);
+		Map<Vector2ic, RenderedRegion> map = get(level > 0 ? 0 : level);
 		gc.setFill(new Color(0.3f, 0.3f, 0.9f, 1.0f)); // Background color
 		plainRegions.values().stream()
 				.filter(r -> r.isVisible(frustum))
@@ -218,15 +211,16 @@ public class RenderedMap {
 		}
 	}
 
-	public Map<ImmutableVector2i, RenderedRegion> get(int level) {
-		Map<ImmutableVector2i, RenderedRegion> ret = regions.get(level);
+	public Map<Vector2ic, RenderedRegion> get(int level) {
+		Map<Vector2ic, RenderedRegion> ret = regions.get(level);
 		try {
 			// the bug might be when requesting values on level 0 that are null (not calculated)
 			if (ret == null && level != 0) {
-				Map<ImmutableVector2i, RenderedRegion> ret2 = new HashMap<>();
+				Map<Vector2ic, RenderedRegion> ret2 = new HashMap<>();
 				ret = ret2;
 				// the bug might be to using abovePos() regardless of the level being zoomed in or out
-				get(level < 0 ? level + 1 : level - 1).keySet().stream().map(RenderedMap::abovePos).map(v -> new ImmutableVector2i(v)).distinct().forEach(v -> ret2.put(v, null));
+				get(level < 0 ? level + 1 : level - 1).keySet().stream().map(RenderedMap::abovePos).map(v -> new Vector2i(v)).distinct().forEach(v -> ret2.put(
+						v, null));
 
 				regions.put(level, ret);
 			}
@@ -264,9 +258,9 @@ public class RenderedMap {
 		return !unloaded.contains(key);
 	}
 
-	public RenderedRegion get(int level, ImmutableVector2i position, boolean create) {
-		Map<ImmutableVector2i, RenderedRegion> map = get(level);
-		RenderedRegion r = map.get(new ImmutableVector2i(position));
+	public RenderedRegion get(int level, Vector2ic position, boolean create) {
+		Map<Vector2ic, RenderedRegion> map = get(level);
+		RenderedRegion r = map.get(new Vector2i(position));
 		if (create && r == null && level != 0 && ((level > 0 /* && plainRegions.containsKey(new Vector2i(position.x() >> level, position.y() >>
 																 * level).toImmutable()) */) || map.containsKey(position))) {
 			r = new RenderedRegion(this, level, position);
@@ -279,28 +273,28 @@ public class RenderedMap {
 		return r;
 	}
 
-	public RenderedRegion[] get(int level, ImmutableVector2i[] belowPos, boolean create) {
+	public RenderedRegion[] get(int level, Vector2ic[] belowPos, boolean create) {
 		RenderedRegion[] ret = new RenderedRegion[belowPos.length];
 		for (int i = 0; i < belowPos.length; i++)
 			ret[i] = get(level, belowPos[i], create);
 		return ret;
 	}
 
-	public static ImmutableVector2i abovePos(Vector2ic pos) {
+	public static Vector2ic abovePos(Vector2ic pos) {
 		return groundPos(pos, 1);
 	}
 
-	public static ImmutableVector2i groundPos(Vector2ic pos, int levelDiff) {
-		return new ImmutableVector2i(pos.x() >> levelDiff, pos.y() >> levelDiff);
+	public static Vector2ic groundPos(Vector2ic pos, int levelDiff) {
+		return new Vector2i(pos.x() >> levelDiff, pos.y() >> levelDiff);
 	}
 
-	public static ImmutableVector2i[] belowPos(Vector2ic pos) {
-		ImmutableVector2i belowPos = new ImmutableVector2i(pos.x() << 1, pos.y() << 1);
-		return new ImmutableVector2i[] {
-				new ImmutableVector2i(0, 0).add(belowPos),
-				new ImmutableVector2i(1, 0).add(belowPos),
-				new ImmutableVector2i(0, 1).add(belowPos),
-				new ImmutableVector2i(1, 1).add(belowPos)
+	public static Vector2ic[] belowPos(Vector2ic pos) {
+		Vector2ic belowPos = new Vector2i(pos.x() << 1, pos.y() << 1);
+		return new Vector2ic[] {
+				new Vector2i(0, 0).add(belowPos),
+				new Vector2i(1, 0).add(belowPos),
+				new Vector2i(0, 1).add(belowPos),
+				new Vector2i(1, 1).add(belowPos)
 		};
 	}
 

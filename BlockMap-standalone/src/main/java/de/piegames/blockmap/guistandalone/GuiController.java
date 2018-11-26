@@ -34,35 +34,42 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 
 public class GuiController implements Initializable {
 
-	private static Log						log				= LogFactory.getLog(RegionRenderer.class);
+	private static Log								log						= LogFactory.getLog(GuiController.class);
 
-	public WorldRendererCanvas				renderer;
+	protected RegionRenderer						regionRenderer;
+	public WorldRendererCanvas						renderer;
+	protected ObjectProperty<RegionFolder>			regionFolder			= new SimpleObjectProperty<>();
+	protected ObjectProperty<RegionFolderProvider>	regionFolderProvider	= new SimpleObjectProperty<>();
+
+	protected Path									lastBrowsedPath;
+	protected URL									lastBrowsedURL;
 
 	@FXML
-	private BorderPane						root;
+	private BorderPane								root;
 	@FXML
-	private Button							browseButton;
+	private Button									browseButton;
 	@FXML
-	private StatusBar						statusBar;
+	private StatusBar								statusBar;
 	@FXML
-	private Label							minHeight, maxHeight;
+	private Label									minHeight, maxHeight;
 	@FXML
-	private RangeSlider						heightSlider;
+	private RangeSlider								heightSlider;
 	@FXML
-	private HBox							regionSettings;
+	private HBox									regionSettings;
 	@FXML
-	private ChoiceBox<String>				shadingBox;
+	private ChoiceBox<String>						shadingBox;
 	@FXML
-	private ChoiceBox<String>				colorBox;
+	private ChoiceBox<String>						colorBox;
 	@FXML
-	private CheckBox						gridBox;
+	private CheckBox								gridBox;
 
-	protected MapPane						pane;
+	protected MapPane								pane;
 	protected ObjectProperty<Path>			currentPath		= new SimpleObjectProperty<>();
-	protected ObjectProperty<RegionFolder>	regionFolder	= new SimpleObjectProperty<>();
 
 	public GuiController() {
 	}
@@ -72,14 +79,14 @@ public class GuiController implements Initializable {
 		log.debug("Initializing GUI");
 		RenderSettings settings = new RenderSettings();
 		settings.loadDefaultColors();
-		renderer = new WorldRendererCanvas(new RegionRenderer(settings));
+		regionRenderer = new RegionRenderer(settings);
+
+		renderer = new WorldRendererCanvas(null);
 		root.setCenter(pane = new MapPane(renderer));
 		pane.decorationLayers.add(new DragScrollDecoration(renderer.viewport));
 		GridDecoration grid = new GridDecoration(renderer.viewport);
 		pane.decorationLayers.add(grid);
 		grid.visibleProperty().bind(gridBox.selectedProperty());
-
-		currentPath.addListener(e -> reloadWorld());
 
 		{
 			statusBar.setSkin(new StatusBarSkin2(statusBar));
@@ -89,7 +96,9 @@ public class GuiController implements Initializable {
 
 			Label pathLabel = new Label();
 			pathLabel.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-			pathLabel.textProperty().bind(Bindings.createStringBinding(() -> currentPath.get() == null ? "" : currentPath.get().toString(), currentPath));
+			pathLabel.textProperty().bind(Bindings.createStringBinding(
+					() -> regionFolderProvider.get() == null ? "" : regionFolderProvider.get().getLocation(),
+					regionFolderProvider));
 			statusBar.getLeftItems().add(pathLabel);
 
 			Label mouseLabel = new Label();
@@ -105,9 +114,9 @@ public class GuiController implements Initializable {
 		ChangeListener<? super Boolean> heightListener = (e, oldVal, newVal) -> {
 			if (oldVal && !newVal) {
 				if (e == heightSlider.lowValueChangingProperty())
-					renderer.getRegionRenderer().settings.minY = (int) Math.round(heightSlider.lowValueProperty().getValue().doubleValue());
+					settings.minY = (int) Math.round(heightSlider.lowValueProperty().getValue().doubleValue());
 				else if (e == heightSlider.highValueChangingProperty())
-					renderer.getRegionRenderer().settings.maxY = (int) Math.round(heightSlider.highValueProperty().getValue().doubleValue());
+					settings.maxY = (int) Math.round(heightSlider.highValueProperty().getValue().doubleValue());
 				renderer.invalidateTextures();
 				renderer.repaint();
 			}
@@ -127,33 +136,60 @@ public class GuiController implements Initializable {
 			renderer.repaint();
 		});
 
-		regionFolder.addListener((observable, previous, val) -> renderer.loadWorld(val));
+		regionFolderProvider.addListener((observable, previous, val) -> {
+			regionFolder.bind(val.folderProperty());
+			regionSettings.getChildren().clear();
+			regionSettings.getChildren().addAll(val.getGUI());
+		});
+		renderer.regionFolder.bind(regionFolder);
 	}
 
 	@FXML
-	public void browse() {
+	public void browseFolder() {
 		DirectoryChooser dialog = new DirectoryChooser();
-		File f = (currentPath.get() == null) ? DotMinecraft.DOTMINECRAFT.resolve("saves").toFile() : currentPath.get().getParent().toFile();
+		File f = (lastBrowsedPath == null) ? DotMinecraft.DOTMINECRAFT.resolve("saves").toFile() : lastBrowsedPath.getParent().toFile();
 		if (!f.isDirectory())
 			f = DotMinecraft.DOTMINECRAFT.resolve("saves").toFile();
 		if (!f.isDirectory())
 			f = null;
 		dialog.setInitialDirectory(f);
 		f = dialog.showDialog(null);
-		if (f != null)
-			currentPath.set(f.toPath());
+		if (f != null) {
+			lastBrowsedPath = f.toPath();
+			regionFolderProvider.set(RegionFolderProvider.byPath(lastBrowsedPath, regionRenderer));
+		}
+	}
+
+	@FXML
+	public void browseFile() {
+		FileChooser dialog = new FileChooser();
+		File f = (lastBrowsedPath == null) ? DotMinecraft.DOTMINECRAFT.resolve("saves").toFile() : lastBrowsedPath.getParent().toFile();
+		if (!f.isDirectory())
+			f = DotMinecraft.DOTMINECRAFT.resolve("saves").toFile();
+		if (!f.isDirectory())
+			f = null;
+		dialog.setInitialDirectory(f);
+		dialog.getExtensionFilters().add(new ExtensionFilter("JSON files", "json"));
+		f = dialog.showOpenDialog(null);
+		if (f != null) {
+			lastBrowsedPath = f.toPath();
+			regionFolderProvider.set(RegionFolderProvider.byPath(lastBrowsedPath, regionRenderer));
+		}
+	}
+
+	@FXML
+	public void loadRemote() {
+
 	}
 
 	@FXML
 	public void reloadWorld() {
-		RegionFolderProvider folder = RegionFolderProvider.byPath(currentPath.get());
-		load(folder);
+		if (regionFolderProvider.get() != null)
+			regionFolderProvider.get().reload();
 	}
 
 	public void load(RegionFolderProvider world) {
-		regionFolder.bind(world.folderProperty());
-		regionSettings.getChildren().clear();
-		regionSettings.getChildren().addAll(world.getGUI());
+		regionFolderProvider.set(world);
 	}
 
 	@FXML

@@ -5,11 +5,9 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.joml.AABBd;
-import org.joml.ImmutableVector2i;
 import org.joml.Vector2i;
 import org.joml.Vector2ic;
 
-import de.piegames.blockmap.Region;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
@@ -31,20 +29,17 @@ public class RenderedRegion {
 	protected final RenderedMap						map;
 	protected final RenderedImage					image;
 	public final int								level;
-	public final ImmutableVector2i					position;
+	public final Vector2ic							position;
 	public final AtomicReference<RenderingState>	valid	= new AtomicReference<>(RenderingState.INVALID);
 
-	public Region								region;
-
-	public RenderedRegion(RenderedMap map, Region region) {
-		this(map, 0, new ImmutableVector2i(region.position));
-		this.region = region;
+	public RenderedRegion(RenderedMap map, Vector2ic pos) {
+		this(map, 0, pos);
 	}
 
-	public RenderedRegion(RenderedMap map, int level, ImmutableVector2i position) {
+	public RenderedRegion(RenderedMap map, int level, Vector2ic position) {
 		this.map = map;
 		this.level = level;
-		this.position = position;
+		this.position = new Vector2i(position);
 		this.image = map.createImage(this);
 		// setImage(null);
 	}
@@ -100,7 +95,8 @@ public class RenderedRegion {
 				WritableImage aboveImage = above.getImage(true);
 				// upscale image
 				if (aboveImage != null)
-					image = RenderedMap.doubleSize(image, aboveImage, level, new Vector2i(position.x() & ((1 << level) - 1), position.y() & ((1 << level) - 1)));
+					image = RenderedMap.doubleSize(image, aboveImage, level, new Vector2i(position.x() & ((1 << level) - 1), position.y() & ((1 << level)
+							- 1)));
 			} else if (level < 0) {
 				// check below
 				RenderedRegion[] below = getBelow(true);

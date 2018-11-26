@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -14,16 +13,15 @@ import java.util.concurrent.TimeUnit;
 import org.joml.Vector2dc;
 import org.joml.Vector3d;
 
-import com.flowpowered.nbt.regionfile.RegionFile;
-
 import de.piegames.blockmap.RegionFolder;
 import de.piegames.blockmap.gui.RenderedRegion.RenderingState;
-import de.piegames.blockmap.renderer.RegionRenderer;
 import javafx.application.Platform;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyFloatProperty;
 import javafx.beans.property.ReadOnlyFloatWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -32,22 +30,26 @@ import javafx.scene.paint.Color;
 
 public class WorldRendererCanvas extends Canvas implements Runnable {
 
-	public static final int					THREAD_COUNT	= 4;
+	public static final int						THREAD_COUNT	= 4;
 
-	protected RegionRenderer				renderer;
-	protected RenderedMap					map;
+	protected RenderedMap						map;
 
-	protected ScheduledThreadPoolExecutor	executor;
-	protected final List<Future<?>>			submitted		= Collections.synchronizedList(new LinkedList<>());
+	protected ScheduledThreadPoolExecutor		executor;
+	protected final List<Future<?>>				submitted		= Collections.synchronizedList(new LinkedList<>());
 
-	protected GraphicsContext				gc				= getGraphicsContext2D();
+	protected GraphicsContext					gc				= getGraphicsContext2D();
 
-	public final DisplayViewport			viewport		= new DisplayViewport();
-	protected ReadOnlyObjectWrapper<String>	status			= new ReadOnlyObjectWrapper<String>();
-	protected ReadOnlyFloatWrapper			progress		= new ReadOnlyFloatWrapper();
+	public final DisplayViewport				viewport		= new DisplayViewport();
+	protected ReadOnlyObjectWrapper<String>		status			= new ReadOnlyObjectWrapper<String>();
+	protected ReadOnlyFloatWrapper				progress		= new ReadOnlyFloatWrapper();
+	public final ObjectProperty<RegionFolder>	regionFolder	= new SimpleObjectProperty<>();
 
-	public WorldRendererCanvas(RegionRenderer regionRenderer) {
-		this.renderer = Objects.requireNonNull(regionRenderer);
+	public WorldRendererCanvas(RegionFolder regionFolder) {
+		this.regionFolder.set(regionFolder);
+		this.regionFolder.addListener((obs, prev, val) -> {
+			map.clearReload(val != null ? val.listRegions() : Collections.emptyList());
+			invalidateTextures();
+		});
 
 		{// Executor
 			executor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(THREAD_COUNT);
@@ -74,11 +76,6 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 		invalidateTextures();
 		viewport.frustumProperty.addListener(e -> repaint());
 		repaint();
-	}
-
-	public void loadWorld(RegionFolder world) {
-		map.clearReload(world.regions.values());
-		invalidateTextures();
 	}
 
 	public void invalidateTextures() {
@@ -132,10 +129,6 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 		// gc.strokeRect(0, 0, getWidth() - 0, getHeight() - 0);
 	}
 
-	public RegionRenderer getRegionRenderer() {
-		return renderer;
-	}
-
 	public ReadOnlyObjectProperty<String> getStatus() {
 		return status.getReadOnlyProperty();
 	}
@@ -155,10 +148,10 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 		repaint();
 		Platform.runLater(this::renderWorld);
 		Platform.runLater(() -> status.set("Rendering"));
-		try (RegionFile rf = new RegionFile(region.region.path)) {
+		try {
 			BufferedImage texture2 = null;
 			do {
-				texture2 = renderer.render(region.region.position, rf);
+				texture2 = regionFolder.get().render(region.position);
 				// Re-render the texture if it has been invalidated ('REDRAW')
 			} while (region.valid.compareAndSet(RenderingState.REDRAW, RenderingState.DRAWING) && !Thread.interrupted());
 			map.updateCounter(region);

@@ -8,6 +8,6 @@
 
 # Eclipse
 **/bin/
-**/\.settings/org\.eclipse\.jdt\.core\.prefs
+**/\.settings/
 **/\.classpath
 **/\.project

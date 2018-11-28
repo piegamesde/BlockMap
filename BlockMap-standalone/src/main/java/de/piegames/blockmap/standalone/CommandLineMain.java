@@ -104,6 +104,9 @@ public class CommandLineMain implements Runnable {
 		@Option(names = "--create-big-image",
 				description = "Merge all rendered images into a single file. May require a lot of RAM.")
 		private boolean				createBigPic;
+		@Option(names = "--save",
+				description = "Save the rendering information to a file for later use. The output path is OUTPUT/rendered.json")
+		private boolean				saveFile;
 
 		@Override
 		public void run() {
@@ -163,6 +166,13 @@ public class CommandLineMain implements Runnable {
 				PostProcessing.createBigImage(world, output, settings);
 			if (createHtml)
 				PostProcessing.createTileHtml(cached.save(), output, settings);
+			if (saveFile)
+				try {
+					log.info("Saving rendering information to " + output.resolve("rendered.json"));
+					cached.save(output.resolve("rendered.json"));
+				} catch (IOException e) {
+					log.error(e);
+				}
 			log.info("Done.");
 		}
 

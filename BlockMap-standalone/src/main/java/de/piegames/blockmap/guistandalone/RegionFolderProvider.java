@@ -1,6 +1,7 @@
 package de.piegames.blockmap.guistandalone;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -12,6 +13,8 @@ import org.apache.commons.logging.LogFactory;
 
 import de.piegames.blockmap.MinecraftDimension;
 import de.piegames.blockmap.RegionFolder;
+import de.piegames.blockmap.RegionFolder.RemoteRegionFolder;
+import de.piegames.blockmap.RegionFolder.SavedRegionFolder;
 import de.piegames.blockmap.RegionFolder.WorldRegionFolder;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -75,6 +78,80 @@ public abstract class RegionFolderProvider {
 		@Override
 		public boolean hideSettings() {
 			return false;
+		}
+	}
+
+	public static class SavedFolderProvider extends RegionFolderProvider {
+
+		protected Path				file;
+		protected RegionRenderer	renderer;
+		protected List<Node>		gui	= new ArrayList<>();
+
+		public SavedFolderProvider(Path file) {
+			this.file = file;
+			reload();
+		}
+
+		@Override
+		public List<Node> getGUI() {
+			return gui;
+		}
+
+		@Override
+		public void reload() {
+			try {
+				folder.set(new SavedRegionFolder(file));
+			} catch (IOException e) {
+				folder.set(null);
+				log.warn("Could not load world " + file, e);
+			}
+		}
+
+		@Override
+		public String getLocation() {
+			return file.toString();
+		}
+
+		@Override
+		public boolean hideSettings() {
+			return true;
+		}
+	}
+
+	public static class RemoteFolderProvider extends RegionFolderProvider {
+
+		protected URI				file;
+		protected RegionRenderer	renderer;
+		protected List<Node>		gui	= new ArrayList<>();
+
+		public RemoteFolderProvider(URI file) {
+			this.file = file;
+			reload();
+		}
+
+		@Override
+		public List<Node> getGUI() {
+			return gui;
+		}
+
+		@Override
+		public void reload() {
+			try {
+				folder.set(new RemoteRegionFolder(file));
+			} catch (IOException e) {
+				folder.set(null);
+				log.warn("Could not load world " + file, e);
+			}
+		}
+
+		@Override
+		public String getLocation() {
+			return file.toString();
+		}
+
+		@Override
+		public boolean hideSettings() {
+			return true;
 		}
 	}
 

@@ -34,11 +34,14 @@
 									text="Load rendered world..."
 									onAction="#browseFile" />
 								<MenuItem
-									text="Load remove world..."
+									text="Load remote world..."
 									onAction="#loadRemote" />
 								<MenuItem
 									text="Reload"
 									onAction="#reloadWorld" />
+								<MenuItem
+									text="Unload"
+									onAction="#unload" />
 								<MenuItem
 									text="Exit"
 									onAction="#exit" />

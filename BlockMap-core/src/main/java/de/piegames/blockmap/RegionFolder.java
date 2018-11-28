@@ -2,6 +2,8 @@ package de.piegames.blockmap;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -93,11 +95,11 @@ public abstract class RegionFolder {
 		}
 
 		@SuppressWarnings("unchecked")
-		public SavedRegionFolder(Path path) throws IOException {
+		public SavedRegionFolder(Path file) throws IOException {
 			/* Parse the saved file and stream it to a map */
-			JsonObject rawFile = new JsonParser().parse(Files.newBufferedReader(path)).getAsJsonObject();
+			JsonObject rawFile = new JsonParser().parse(Files.newBufferedReader(file)).getAsJsonObject();
 			regions = ((List<RegionHelper>) GSON.fromJson(rawFile.getAsJsonArray("regions"), new TypeToken<List<RegionHelper>>() {
-			}.getType())).stream().collect(Collectors.toMap(r -> new Vector2i(r.x, r.z), r -> Paths.get(r.image)));
+			}.getType())).stream().collect(Collectors.toMap(r -> new Vector2i(r.x, r.z), r -> file.resolveSibling(Paths.get(r.image))));
 		}
 
 		@Override
@@ -169,6 +171,8 @@ public abstract class RegionFolder {
 				writer.name("regions");
 				writer.beginArray();
 				for (Entry<Vector2ic, Path> e : world.regions.entrySet()) {
+					writer.beginObject();
+
 					writer.name("x");
 					writer.value(e.getKey().x());
 					writer.name("z");
@@ -176,13 +180,43 @@ public abstract class RegionFolder {
 					writer.name("image");
 					Path value = imageFolder.resolve(e.getValue().getFileName().toString().replace(".mca", ".png"));
 					if (relativePaths) {
-						value = file.relativize(value);
+						value = file.getParent().relativize(value);
 					}
 					writer.value(value.toString());
+
+					writer.endObject();
 				}
 				writer.endArray();
-				writer.beginObject();
+				writer.endObject();
+				writer.flush();
 			}
+		}
+	}
+
+	public static class RemoteRegionFolder extends RegionFolder {
+
+		protected final Map<Vector2ic, URI> regions;
+
+		@SuppressWarnings("unchecked")
+		public RemoteRegionFolder(URI file) throws IOException {
+			/* Parse the saved file and stream it to a map */
+			JsonObject rawFile = new JsonParser().parse(new InputStreamReader(file.toURL().openStream())).getAsJsonObject();
+			regions = ((List<RegionHelper>) GSON.fromJson(rawFile.getAsJsonArray("regions"), new TypeToken<List<RegionHelper>>() {
+			}.getType())).stream()
+					.collect(Collectors.toMap(r -> new Vector2i(r.x, r.z), r -> file.resolve(r.image)));
+		}
+
+		@Override
+		public BufferedImage render(Vector2ic pos) throws IOException {
+			if (regions.containsKey(pos))
+				return ImageIO.read(regions.get(pos).toURL().openStream());
+			else
+				return null;
+		}
+
+		@Override
+		public Set<Vector2ic> listRegions() {
+			return Collections.unmodifiableSet(regions.keySet());
 		}
 	}
 

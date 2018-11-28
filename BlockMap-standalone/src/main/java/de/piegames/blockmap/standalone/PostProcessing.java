@@ -146,6 +146,6 @@ public class PostProcessing {
 
 	/** Test if the given region file contains blocks that should be rendered. The bounds are given in world space. */
 	public static boolean inBounds(int region, int min, int max) {
-		return (min >> 9) >= region && region <= (max << 9);
+		return (min >> 9) <= region && region <= (max >> 9);
 	}
 }

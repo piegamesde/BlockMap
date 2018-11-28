@@ -1,6 +1,8 @@
 package de.piegames.blockmap.guistandalone;
 
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.ResourceBundle;
@@ -17,6 +19,8 @@ import de.piegames.blockmap.gui.MapPane;
 import de.piegames.blockmap.gui.WorldRendererCanvas;
 import de.piegames.blockmap.gui.decoration.DragScrollDecoration;
 import de.piegames.blockmap.gui.decoration.GridDecoration;
+import de.piegames.blockmap.guistandalone.RegionFolderProvider.RemoteFolderProvider;
+import de.piegames.blockmap.guistandalone.RegionFolderProvider.SavedFolderProvider;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RegionShader;
 import de.piegames.blockmap.renderer.RenderSettings;
@@ -31,11 +35,11 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
-import javafx.stage.FileChooser.ExtensionFilter;
 
 public class GuiController implements Initializable {
 
@@ -69,7 +73,7 @@ public class GuiController implements Initializable {
 	private CheckBox								gridBox;
 
 	protected MapPane								pane;
-	protected ObjectProperty<Path>			currentPath		= new SimpleObjectProperty<>();
+	protected ObjectProperty<Path>					currentPath				= new SimpleObjectProperty<>();
 
 	public GuiController() {
 	}
@@ -137,10 +141,20 @@ public class GuiController implements Initializable {
 		});
 
 		regionFolderProvider.addListener((observable, previous, val) -> {
-			regionFolder.bind(val.folderProperty());
 			regionSettings.getChildren().clear();
-			regionSettings.getChildren().addAll(val.getGUI());
+			if (val == null) {
+				regionFolder.unbind();
+				regionFolder.set(null);
+			} else {
+				regionFolder.bind(val.folderProperty());
+				regionSettings.getChildren().addAll(val.getGUI());
+			}
+			boolean disabled = val == null ? true : val.hideSettings();
+			heightSlider.setDisable(disabled);
+			colorBox.setDisable(disabled);
+			shadingBox.setDisable(disabled);
 		});
+		regionFolderProvider.set(null); /* Force listener update */
 		renderer.regionFolder.bind(regionFolder);
 	}
 
@@ -169,23 +183,37 @@ public class GuiController implements Initializable {
 		if (!f.isDirectory())
 			f = null;
 		dialog.setInitialDirectory(f);
-		dialog.getExtensionFilters().add(new ExtensionFilter("JSON files", "json"));
 		f = dialog.showOpenDialog(null);
 		if (f != null) {
 			lastBrowsedPath = f.toPath();
-			regionFolderProvider.set(RegionFolderProvider.byPath(lastBrowsedPath, regionRenderer));
+			regionFolderProvider.set(new SavedFolderProvider(lastBrowsedPath));
 		}
 	}
 
 	@FXML
 	public void loadRemote() {
-
+		TextInputDialog dialog = new TextInputDialog();
+		dialog.setTitle("Load remote world");
+		dialog.setHeaderText("Enter the URL to the remote world you want to load");
+		dialog.setGraphic(null);
+		dialog.showAndWait().ifPresent(s -> {
+			try {
+				regionFolderProvider.set(new RemoteFolderProvider(new URI(s)));
+			} catch (URISyntaxException | IllegalArgumentException e) {
+				log.warn("Malformed input uri", e);
+			}
+		});
 	}
 
 	@FXML
 	public void reloadWorld() {
 		if (regionFolderProvider.get() != null)
 			regionFolderProvider.get().reload();
+	}
+
+	@FXML
+	public void unload() {
+		regionFolderProvider.set(null);
 	}
 
 	public void load(RegionFolderProvider world) {

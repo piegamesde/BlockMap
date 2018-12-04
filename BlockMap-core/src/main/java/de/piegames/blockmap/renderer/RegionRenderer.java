@@ -121,7 +121,7 @@ public class RegionRenderer {
 				{// Check chunk status
 					String status = ((String) level.get("Status").getValue());
 					if (!status.equals("postprocessed") && !status.equals("fullchunk") && !status.equals("mobs_spawned")) {
-						// log.warn("Skipping chunk because status is " + status);
+						log.debug("Skipping chunk because status is " + status);
 						continue;
 					}
 				}

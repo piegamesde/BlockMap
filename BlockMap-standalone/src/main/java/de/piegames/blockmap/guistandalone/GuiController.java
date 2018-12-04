@@ -19,8 +19,8 @@ import de.piegames.blockmap.gui.MapPane;
 import de.piegames.blockmap.gui.WorldRendererCanvas;
 import de.piegames.blockmap.gui.decoration.DragScrollDecoration;
 import de.piegames.blockmap.gui.decoration.GridDecoration;
+import de.piegames.blockmap.guistandalone.RegionFolderProvider.LocalFolderProvider;
 import de.piegames.blockmap.guistandalone.RegionFolderProvider.RemoteFolderProvider;
-import de.piegames.blockmap.guistandalone.RegionFolderProvider.SavedFolderProvider;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RegionShader;
 import de.piegames.blockmap.renderer.RenderSettings;
@@ -186,7 +186,7 @@ public class GuiController implements Initializable {
 		f = dialog.showOpenDialog(null);
 		if (f != null) {
 			lastBrowsedPath = f.toPath();
-			regionFolderProvider.set(new SavedFolderProvider(lastBrowsedPath));
+			regionFolderProvider.set(new LocalFolderProvider(lastBrowsedPath));
 		}
 	}
 

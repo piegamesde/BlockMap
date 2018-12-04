@@ -31,7 +31,7 @@ public class PostProcessing {
 	private PostProcessing() {
 	}
 
-	public static void createTileHtml(SavedRegionFolder world, Path outputDir, RenderSettings settings) {
+	public static void createTileHtml(SavedRegionFolder<Path> world, Path outputDir, RenderSettings settings) {
 		log.info("Writing HTML tiles...");
 		if (world.listRegions().isEmpty()) {
 			log.warn("The world is empty, there is nothing to do!");

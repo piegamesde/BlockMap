@@ -1,19 +1,24 @@
 package de.piegames.blockmap.guistandalone;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import de.piegames.blockmap.MinecraftDimension;
 import de.piegames.blockmap.RegionFolder;
-import de.piegames.blockmap.RegionFolder.RemoteRegionFolder;
 import de.piegames.blockmap.RegionFolder.SavedRegionFolder;
 import de.piegames.blockmap.RegionFolder.WorldRegionFolder;
 import de.piegames.blockmap.renderer.RegionRenderer;
@@ -81,14 +86,21 @@ public abstract class RegionFolderProvider {
 		}
 	}
 
-	public static class SavedFolderProvider extends RegionFolderProvider {
+	public static abstract class SavedFolderProvider<T> extends RegionFolderProvider {
+		protected T							file;
+		protected RegionRenderer			renderer;
+		protected List<Node>				gui	= new ArrayList<>();
+		protected ChoiceBox<String>			worldBox;
+		protected Map<String, JsonObject>	worlds;
 
-		protected Path				file;
-		protected RegionRenderer	renderer;
-		protected List<Node>		gui	= new ArrayList<>();
-
-		public SavedFolderProvider(Path file) {
+		public SavedFolderProvider(T file) {
 			this.file = file;
+			worldBox = new ChoiceBox<>();
+			worldBox.valueProperty().addListener((o, old, val) -> {
+				if (old != val)
+					folder.set(load(val));
+			});
+			gui.add(worldBox);
 			reload();
 		}
 
@@ -100,12 +112,23 @@ public abstract class RegionFolderProvider {
 		@Override
 		public void reload() {
 			try {
-				folder.set(new SavedRegionFolder(file));
+				worlds = SavedRegionFolder.parseSaved(load());
+				String selected = worldBox.getValue();
+
+				worldBox.setItems(FXCollections.observableList(new ArrayList<>(worlds.keySet())));
+				if (worlds.keySet().contains(selected))
+					worldBox.setValue(selected);
+				else if (!worlds.isEmpty())
+					worldBox.setValue(worldBox.getItems().get(0));
 			} catch (IOException e) {
 				folder.set(null);
 				log.warn("Could not load world " + file, e);
 			}
 		}
+
+		protected abstract JsonElement load() throws IOException;
+
+		protected abstract SavedRegionFolder<T> load(String world);
 
 		@Override
 		public String getLocation() {
@@ -118,40 +141,47 @@ public abstract class RegionFolderProvider {
 		}
 	}
 
-	public static class RemoteFolderProvider extends RegionFolderProvider {
+	public static class LocalFolderProvider extends SavedFolderProvider<Path> {
 
-		protected URI				file;
-		protected RegionRenderer	renderer;
-		protected List<Node>		gui	= new ArrayList<>();
-
-		public RemoteFolderProvider(URI file) {
-			this.file = file;
-			reload();
+		public LocalFolderProvider(Path file) {
+			super(file);
 		}
 
 		@Override
-		public List<Node> getGUI() {
-			return gui;
+		protected JsonElement load() throws IOException {
+			return new JsonParser().parse(new InputStreamReader(Files.newInputStream(file)));
 		}
 
 		@Override
-		public void reload() {
+		protected SavedRegionFolder<Path> load(String world) {
 			try {
-				folder.set(new RemoteRegionFolder(file));
+				return new RegionFolder.LocalRegionFolder(file, world);
 			} catch (IOException e) {
-				folder.set(null);
-				log.warn("Could not load world " + file, e);
+				log.warn("Could not load world " + world + " from file " + file);
+				return null;
 			}
 		}
+	}
 
-		@Override
-		public String getLocation() {
-			return file.toString();
+	public static class RemoteFolderProvider extends SavedFolderProvider<URI> {
+
+		public RemoteFolderProvider(URI file) {
+			super(file);
 		}
 
 		@Override
-		public boolean hideSettings() {
-			return true;
+		protected JsonElement load() throws IOException {
+			return new JsonParser().parse(new InputStreamReader(file.toURL().openStream()));
+		}
+
+		@Override
+		protected SavedRegionFolder<URI> load(String world) {
+			try {
+				return new RegionFolder.RemoteRegionFolder(file, world);
+			} catch (IOException e) {
+				log.warn("Could not load world " + world + " from remote file " + file);
+				return null;
+			}
 		}
 	}
 

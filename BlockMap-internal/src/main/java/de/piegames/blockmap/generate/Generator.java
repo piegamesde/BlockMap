@@ -286,7 +286,7 @@ public class Generator {
 				GuiMain.instance.stage.show();
 				GuiMain.instance.controller.load(
 						RegionFolderProvider.byPath(
-								Paths.get(URI.create(Generator.class.getResource("/BlockMapWorld/").toString()))));
+								Paths.get(URI.create(Generator.class.getResource("/BlockMapWorld/").toString())), renderer));
 				GuiMain.instance.controller.renderer.viewport.translationProperty.set(new Vector2d(512, -512));
 			});
 			while (GuiMain.instance.controller.renderer.getStatus().get().equals("No regions loaded"))
@@ -322,6 +322,9 @@ public class Generator {
 	}
 
 	public static void main(String[] args) throws Exception {
+		/* Without this, JOML will print vectors out in scientific notation which isn't the most human readable thing in the world */
+		System.setProperty("joml.format", "false");
+
 		Configurator.setRootLevel(Level.DEBUG);
 		log.info("Output path " + OUTPUT.toAbsolutePath());
 		log.debug("Local resources path: " + Generator.class.getResource("/"));

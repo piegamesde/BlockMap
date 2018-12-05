@@ -5,6 +5,8 @@ import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.concurrent.Callable;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -50,8 +52,9 @@ public class CommandLineMain implements Runnable {
 			sortOptions = false,
 			description = "Render a folder containing region files to another folder through the command line interface",
 			footer = "Please don't forget that you can use global options too, which can be accessed through `BlockMap help`."
-					+ " These have to be put before the render command.")
-	public static class CommandRender implements Runnable {
+					+ " These have to be put before the render command.",
+			subcommands = { CommandSaveRendered.class })
+	public static class CommandRender implements Callable<CachedRegionFolder> {
 
 		@ParentCommand
 		private CommandLineMain		main;
@@ -104,17 +107,10 @@ public class CommandLineMain implements Runnable {
 		@Option(names = "--create-big-image",
 				description = "Merge all rendered images into a single file. May require a lot of RAM.")
 		private boolean				createBigPic;
-		@Option(names = "--save",
-				description = "Save the rendering information to a file for later use. The output path is OUTPUT/rendered.json. The WORLDNAME is used to identify multiple worlds "
-						+ "in one such file. If the file already exists, the existing worlds will be preserved.",
-				paramLabel = "WORLDNAME")
-		private String				saveFile;
 
 		@Override
-		public void run() {
-			if (main.verbose) {
-				Configurator.setRootLevel(Level.DEBUG);
-			}
+		public CachedRegionFolder call() {
+			main.runAll();
 			RenderSettings settings = new RenderSettings();
 			settings.minX = minX;
 			settings.maxX = maxX;
@@ -129,7 +125,7 @@ public class CommandLineMain implements Runnable {
 					settings.blockColors = BlockColorMap.load(r);
 				} catch (IOException e) {
 					log.error("Could not load custom block color map", e);
-					return;
+					return null;
 				}
 			if (customBiomeMap == null)
 				settings.biomeColors = BiomeColorMap.loadDefault();
@@ -138,19 +134,19 @@ public class CommandLineMain implements Runnable {
 					settings.biomeColors = BiomeColorMap.load(r);
 				} catch (IOException e) {
 					log.error("Could not load custom block color map", e);
-					return;
+					return null;
 				}
 			settings.shader = shader.getShader();
 
 			RegionRenderer renderer = new RegionRenderer(settings);
-			log.debug("Input " + input.toAbsolutePath());
-			log.debug("Output: " + output.toAbsolutePath());
+			log.debug("Input " + input.normalize().toAbsolutePath());
+			log.debug("Output: " + output.normalize().toAbsolutePath());
 			WorldRegionFolder world;
 			try {
 				world = WorldRegionFolder.load(input, renderer);
 			} catch (IOException e) {
 				log.error("Could not load region folder", e);
-				return;
+				return null;
 			}
 			CachedRegionFolder cached = new CachedRegionFolder(world, lazy, output);
 
@@ -168,24 +164,54 @@ public class CommandLineMain implements Runnable {
 				PostProcessing.createBigImage(world, output, settings);
 			if (createHtml)
 				PostProcessing.createTileHtml(cached.save(), output, settings);
-			if (saveFile != null)
-				try {
-					log.info("Saving rendering information to " + output.resolve("rendered.json"));
-					cached.save(output.resolve("rendered.json"), saveFile);
-				} catch (IOException e) {
-					log.error(e);
-				}
-			log.info("Done.");
+			return cached;
 		}
 
 	}
 
-	@Override
-	public void run() {
+	@Command(name = "save",
+			description = "Save the rendering information to a file for later use. The output path is OUTPUT/rendered.json. The WORLDNAME is used to identify multiple worlds "
+					+ "in one such file. If the file already exists, the existing worlds will be preserved.")
+	public static class CommandSaveRendered implements Runnable {
+		@ParentCommand
+		CommandRender	parent;
+
+		@Option(names = "--world-name", required = true)
+		private String	name;
+		@Option(names = "--file")
+		private Path	file;
+		@Option(names = "--absolute")
+		private boolean	absolute;
+
+		@Override
+		public void run() {
+			CachedRegionFolder rendered = parent.call();
+			if (rendered != null)
+				try {
+					Path out = file;
+					if (out == null)
+						out = Paths.get("rendered.json");
+					if (!out.isAbsolute())
+						out = parent.output.resolve(out);
+					log.info("Saving rendering information to " + out.normalize());
+					rendered.save(out, name, !absolute);
+				} catch (IOException e) {
+					log.error(e);
+				}
+			else
+				log.warn("Could not save the world's information to a file since it didn't get rendered correctly");
+		}
+	}
+
+	public void runAll() {
 		if (verbose) {
 			Configurator.setRootLevel(Level.DEBUG);
 		}
+	}
 
+	@Override
+	public void run() {
+		runAll();
 		/*
 		 * Using generics will make sure the class is only loaded now and not before. Loading this class may cause to load JavaFX classes which
 		 * might not be on the class path with some java installations. This way, even users without JavaFX can still use the CLI
@@ -207,7 +233,7 @@ public class CommandLineMain implements Runnable {
 		System.setProperty("joml.format", "false");
 
 		CommandLine cli = new CommandLine(new CommandLineMain());
-		// cli.setTrimQuotes(true);
 		cli.parseWithHandler(new RunLast(), args);
 	}
+
 }

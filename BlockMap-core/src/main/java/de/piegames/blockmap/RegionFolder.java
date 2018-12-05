@@ -242,8 +242,9 @@ public abstract class RegionFolder {
 					StandardOpenOption.TRUNCATE_EXISTING))) {
 				if (!existing.isEmpty()) {
 					writer.beginArray();
-					for (JsonElement e : existing)
-						writer.jsonValue(new Gson().toJson(e));
+					for (JsonObject e : existing)
+						if (!name.equals(e.getAsJsonPrimitive("name").getAsString()))
+							writer.jsonValue(RegionFolder.GSON.toJson(e));
 				}
 				writer.beginObject();
 				writer.name("name");
@@ -259,15 +260,14 @@ public abstract class RegionFolder {
 					writer.value(e.getKey().y());
 					writer.name("image");
 					Path value = imageFolder.resolve(e.getValue().getFileName().toString().replace(".mca", ".png"));
-					if (relativePaths) {
-						value = file.getParent().relativize(value);
-					}
+					if (relativePaths)
+						value = file.normalize().getParent().relativize(value.normalize());
 					writer.value(value.toString());
 
 					writer.endObject();
 				}
 				writer.endArray();
-				writer.beginObject();
+				writer.endObject();
 				if (!existing.isEmpty())
 					writer.endArray();
 				writer.flush();

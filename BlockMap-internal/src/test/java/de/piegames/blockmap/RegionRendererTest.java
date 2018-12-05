@@ -28,7 +28,6 @@ public class RegionRendererTest {
 	public void simpleTest1() throws IOException, URISyntaxException, InterruptedException {
 		RenderSettings settings = new RenderSettings();
 		settings.loadDefaultColors();
-		Files.createDirectories(Paths.get("./output"));
 		RegionRenderer renderer = new RegionRenderer(settings);
 		BufferedImage image = renderer.render(new Vector2i(0, 0), new RegionFile(Paths.get(URI.create(getClass().getResource("/r.0.0.mca").toString()))));
 		ImageIO.write(image, "png", Files.newOutputStream(folder.newFile().toPath()));

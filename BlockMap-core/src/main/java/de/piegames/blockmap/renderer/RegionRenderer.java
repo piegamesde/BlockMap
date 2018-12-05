@@ -84,7 +84,7 @@ public class RegionRenderer {
 		Arrays.fill(height, settings.minY);
 		Arrays.fill(regionBiomes, -1);
 
-		for (Chunk chunk : file) {
+		chunk: for (Chunk chunk : file) {
 			if (chunk == null)
 				continue;
 			try {
@@ -195,7 +195,14 @@ public class RegionRenderer {
 								continue;
 							if (s < lowestLoadedSection) {
 								// log.debug("Loading section " + s);
-								loadedSections[s] = renderSection(sections.get(s));
+								try {
+									loadedSections[s] = renderSection(sections.get(s));
+								} catch (Exception e) {
+									log.warn("Failed to render chunk (" + chunk.x + ", " + chunk.z + ") section " + s
+											+ ". This is very likely because your chunk is corrupt. If possible, please verify it "
+											+ "manually before sending a bug report.", e);
+									continue chunk;
+								}
 								lowestLoadedSection = s;
 							}
 							if (loadedSections[s] == null) {
@@ -234,7 +241,7 @@ public class RegionRenderer {
 						map[chunk.x << 4 | x | chunk.z << 13 | z << 9] = color.getFinal();
 					}
 			} catch (Exception e) {
-				log.warn("Skipping chunk", e);
+				log.warn("Failed to render chunk (" + chunk.x + ", " + chunk.z + ")", e);
 				throw e;
 			}
 		}

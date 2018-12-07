@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.spi.FileSystemProvider;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,14 +38,38 @@ import com.google.gson.stream.JsonWriter;
 
 import de.piegames.blockmap.renderer.RegionRenderer;
 
+/**
+ * This class represents a mapping from region file positions in a world to {@link BufferedImage}s of that rendered region. How this is done
+ * is up to the implementation.
+ */
 public abstract class RegionFolder {
 
 	public static Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
+	/**
+	 * List all existing region file in this RegionFolder. If one of the returned positions is passed to {@link #render(Vector2ic)}, it must not
+	 * return {@code null}.
+	 */
 	public abstract Set<Vector2ic> listRegions();
 
+	/**
+	 * Generates an image of the region file at the given position, however this might be done. Will return {@code null} if the passed position
+	 * is not contained in {@link #listRegions()}. This method will block until the image data is retrieved and may throw an exception if it
+	 * fails to do so.
+	 * 
+	 * @param pos
+	 *            the position of the region file to render
+	 * @return the rendered region file as {@link BufferedImage} or {@code null} if {@code listRegions().contains(pos)} evaluates to
+	 *         {@code false}
+	 * @throws IOException
+	 *             if the image could not be retrieved
+	 */
 	public abstract BufferedImage render(Vector2ic pos) throws IOException;
 
+	/**
+	 * This {@link RegionFolder} implementation will render region files using a {@link RegionRenderer}. Calling {@link #render(Vector2ic)}
+	 * repeatedly on the same location will render the same image multiple times.
+	 */
 	public static class WorldRegionFolder extends RegionFolder {
 
 		static final Pattern					rfpat	= Pattern.compile("^r\\.(-?\\d+)\\.(-?\\d+)\\.mca$");
@@ -52,7 +77,16 @@ public abstract class RegionFolder {
 		protected final Map<Vector2ic, Path>	regions;
 		protected final RegionRenderer			renderer;
 
-		WorldRegionFolder(Map<Vector2ic, Path> files, RegionRenderer renderer) {
+		/**
+		 * @param files
+		 *            a mapping from region coordinates to paths pointing to the respective file. Those are treaded as the "world" represented by
+		 *            this RegionFolder.
+		 * @param renderer
+		 *            the {@link RegionRenderer} used to render the files
+		 * @see #load(Path, RegionRenderer)
+		 * @see #load(Path, MinecraftDimension, RegionRenderer)
+		 */
+		public WorldRegionFolder(Map<Vector2ic, Path> files, RegionRenderer renderer) {
 			this.regions = Objects.requireNonNull(files);
 			this.renderer = Objects.requireNonNull(renderer);
 		}
@@ -74,10 +108,28 @@ public abstract class RegionFolder {
 			return regions.get(pos);
 		}
 
+		/**
+		 * Load a region folder from a given world path.
+		 * 
+		 * @param world
+		 *            the path to the world folder. Must be a directory pointing to a valid Minecraft worlds.
+		 * @param dimension
+		 *            the Minecraft dimension to render. It will be used to resolve the region folder path from the world path.
+		 * @see #load(Path, MinecraftDimension, RegionRenderer)
+		 */
 		public static WorldRegionFolder load(Path world, MinecraftDimension dimension, RegionRenderer renderer) throws IOException {
 			return load(dimension.resolve(world), renderer);
 		}
 
+		/**
+		 * Load a region folder from a given path. All region files found in this folder (not searching recursively) will be added to the returned
+		 * object. Files added later on won't be recognized. Removing files will lead to errors when trying to render them. All files whose name
+		 * matches {@code ^r\.(-?\d+)\.(-?\d+)\.mca$} will be taken. If they are not proper region files, rendering them will lead to errors.
+		 * 
+		 * @param regionFolder
+		 *            the path to the folder containing all region files. This folder is commonly called {@code region} and is situated inside a
+		 *            Minecraft world, but this is not a hard requirement. Must be a directory.
+		 */
 		public static WorldRegionFolder load(Path regionFolder, RegionRenderer renderer) throws IOException {
 			Map<Vector2ic, Path> files = new HashMap<>();
 			for (Path p : Files.list(regionFolder).collect(Collectors.toList())) {
@@ -89,14 +141,35 @@ public abstract class RegionFolder {
 		}
 	}
 
+	/**
+	 * A RegionFolder implementation that loads already rendered images from disk. To find them, a save file is passed in the constructor. It is
+	 * abstract to work on local systems as well as with remote servers.
+	 * 
+	 * @see LocalRegionFolder LocalRegionFolder for loading files on your hard drive
+	 * @see RemoteRegionFolder RemoteRegionFolder for loading files via uri, either local or on servers
+	 * @param T
+	 *            the type of the file mapping, like URL, URI, Path, File, etc.
+	 */
 	public static abstract class SavedRegionFolder<T> extends RegionFolder {
 
 		protected final Map<Vector2ic, T> regions;
 
+		/**
+		 * Create the region folder with a custom mapping
+		 * 
+		 * @param regions
+		 *            map from each region file's position in the world to a T that represents its location for loading
+		 * @see #parseSaved(JsonElement)
+		 */
 		protected SavedRegionFolder(Map<Vector2ic, T> regions) {
 			this.regions = Collections.unmodifiableMap(regions);
 		}
 
+		/**
+		 * Load a json file that contains the information about all rendered files.
+		 * 
+		 * @see #parseSaved(JsonElement)
+		 */
 		@SuppressWarnings("unchecked")
 		protected SavedRegionFolder(T file, String name) throws IOException {
 			Map<String, JsonObject> saved = parseSaved(new JsonParser().parse(new InputStreamReader(getInputStream(file))));
@@ -122,8 +195,18 @@ public abstract class RegionFolder {
 				return null;
 		}
 
+		/** Mapping from the path type T to an input stream. */
 		protected abstract InputStream getInputStream(T path) throws IOException;
 
+		/**
+		 * Resolve a path to a subpath. This does exactly the same thing as {@link Path#resolve(Path)}, but for the type T.
+		 * 
+		 * @param file
+		 *            the base path
+		 * @param relative
+		 *            the resolution step to take
+		 * @return the resolved path {@code file/relative}
+		 */
 		protected abstract T resolve(T file, String relative);
 
 		@Override
@@ -135,6 +218,28 @@ public abstract class RegionFolder {
 			return regions.get(pos);
 		}
 
+		/**
+		 * Parse a save file describing rendered worlds. It is a json file containing json objects, with each one representing one "world":
+		 * 
+		 * <pre>
+		 * {
+		 *     "name": &lt;STRING>,
+		 *     "regions": [&lt;REGION ARRAY>]
+		 * }
+		 * </pre>
+		 * 
+		 * Each region is represented like this:
+		 * 
+		 * <pre>
+		 * {"x": &lt;NUMBER>, "z": &lt;NUMBER>, "image": &lt;STRING>}
+		 * </pre>
+		 * 
+		 * If the top-level element is an object, it will be a world. If it is an array, it will represent a list of worlds. More tags are going to
+		 * be added in the future.
+		 * 
+		 * @return A mapping from world names to a {@link JsonObject} containing their data. Each JsonObject may be converted directly to a
+		 *         {@link RegionHelper} using GSON.
+		 */
 		public static Map<String, JsonObject> parseSaved(JsonElement parsed) {
 			Map<String, JsonObject> saved = new HashMap<>();
 			if (parsed.isJsonArray()) {
@@ -150,6 +255,11 @@ public abstract class RegionFolder {
 		}
 	}
 
+	/**
+	 * An implementation of {@link SavedRegionFolder} based on the Java {@link Path} API. Use it for accessing files from your local file
+	 * system, but Java paths work with other URI schemata as well. Check {@link FileSystemProvider#installedProviders()} for more information.
+	 * (There is even an URLSystemProvider somewhere on GitHub ...)
+	 */
 	public static class LocalRegionFolder extends SavedRegionFolder<Path> {
 		protected LocalRegionFolder(Map<Vector2ic, Path> regions) {
 			super(regions);
@@ -170,6 +280,10 @@ public abstract class RegionFolder {
 		}
 	}
 
+	/**
+	 * An implementation of {@link SavedRegionFolder} based on URIs. It is intended for primary use on remote servers, but with the {@code file}
+	 * schema it can open local files as well.
+	 */
 	public static class RemoteRegionFolder extends SavedRegionFolder<URI> {
 
 		protected RemoteRegionFolder(Map<Vector2ic, URI> regions) {
@@ -191,18 +305,39 @@ public abstract class RegionFolder {
 		}
 	}
 
+	/**
+	 * This {@link RegionFolder} wraps a {@link WorldRegionFolder} in a way so that each rendered image will be written to disk to avoid
+	 * re-rendering. It can be used to create save files to load in {@link SavedRegionFolder}s.
+	 */
 	public static class CachedRegionFolder extends RegionFolder {
 
 		protected WorldRegionFolder	world;
 		protected boolean			lazy;
 		protected Path				imageFolder;
 
+		/**
+		 * @param world
+		 *            the renderer to use internally
+		 * @param lazy
+		 *            if set to false, no cached files will be returned for re-rendering. If set to true, a re-render will load the image from disk
+		 *            if the respective region file has not been modified since then (based on the timestamp). Laziness has the effect that changing
+		 *            the render settings will not cause already rendered files to be updated.
+		 * @param imageFolder
+		 *            the folder where to put all the rendered images. The images will be named like their region file name, but with the
+		 *            {@code .mca} replaced with {@code .png}.
+		 */
 		public CachedRegionFolder(WorldRegionFolder world, boolean lazy, Path imageFolder) {
 			this.lazy = lazy;
 			this.world = Objects.requireNonNull(world);
 			this.imageFolder = Objects.requireNonNull(imageFolder);
 		}
 
+		/**
+		 * If the image folder already contains a matching image for this position <b>and</b> we are lazy <b>and</b> the saved file is newer than
+		 * the region file, then this image will be returned. In all other cases, it will be rendered again and written to disk.
+		 * 
+		 * @see SavedRegionFolder#render(Vector2ic)
+		 */
 		@Override
 		public BufferedImage render(Vector2ic pos) throws IOException {
 			Path region = world.getPath(pos);
@@ -210,7 +345,7 @@ public abstract class RegionFolder {
 				return null;
 			Path image = imageFolder.resolve(region.getFileName().toString().replace(".mca", ".png"));
 			if (Files.exists(image)
-					&& (!lazy || Files.getLastModifiedTime(image).compareTo(Files.getLastModifiedTime(region)) > 0)) {
+					&& lazy && Files.getLastModifiedTime(image).compareTo(Files.getLastModifiedTime(region)) > 0) {
 				return ImageIO.read(Files.newInputStream(image));
 			} else {
 				BufferedImage rendered = world.render(pos);
@@ -224,6 +359,10 @@ public abstract class RegionFolder {
 			return world.listRegions();
 		}
 
+		/**
+		 * Transform this object into a {@link LocalRegionFolder} for further use. The returned object will know of every region file in
+		 * {@link #listRegions()}, even if it has not been rendered yet. In that case, rendering those from the returned object will throw an error.
+		 */
 		public LocalRegionFolder save() {
 			Map<Vector2ic, Path> regions = new HashMap<>();
 			for (Entry<Vector2ic, Path> e : world.regions.entrySet())
@@ -231,10 +370,22 @@ public abstract class RegionFolder {
 			return new LocalRegionFolder(regions);
 		}
 
+		/** @see #save(Path, String, boolean) */
 		public void save(Path file, String name) throws IOException {
 			save(file, name, true);
 		}
 
+		/**
+		 * Save the paths to all rendered files (and to files that have yet to be rendered; see {@link #save()}) into a save file that will be
+		 * accepted by {@link SavedRegionFolder#parseSaved(JsonElement)}.
+		 * 
+		 * @param file
+		 *            where to write this information. If the file already exist, the data will be appended, keeping the existing one intact.
+		 * @param name
+		 *            the name of the saved world in that file
+		 * @param relativePaths
+		 *            wether to use relative paths for referencing the saved images
+		 */
 		public void save(Path file, String name, boolean relativePaths) throws IOException {
 			Collection<JsonObject> existing = Files.exists(file) ? SavedRegionFolder.parseSaved(new JsonParser().parse(new String(Files.readAllBytes(file))))
 					.values() : Collections.emptyList();

@@ -40,7 +40,7 @@ task generateData(type: JavaExec) {
 	description 'Generate color maps and other files using the Minecraft resource pack (in client.jar) and compile it to a less abstract form'
 	classpath = sourceSets.main.runtimeClasspath
 	main = "de.piegames.blockmap.generate.Generator"
-	args = ['generateBlockColors', 'generateBiomeColors', 'generateHeightmap', 'generateTestWorld']
+	args = ['generateBlockColors', 'generateBiomeColors', 'generateHeightmap']
     inputs.dir "${project(":BlockMap-internal").sourceSets.main.java.srcDirs[0]}/de/piegames/blockmap/generate/"
     inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[0]}/block-color-instructions.json"
     inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[0]}/biome-color-instructions.json"
@@ -51,10 +51,10 @@ task generateData(type: JavaExec) {
 task generateScreenshots(type: JavaExec) {
 	dependsOn 'generateData'
 	group 'Generation'
-	description 'Automatically render certain files and create screenshots from the GUI to show off on Twitter'
+	description 'Automatically render certain files and create screenshots from the GUI to show off on Twitter. Takes a really long time to process because a large demo world is generated first.'
 	classpath = sourceSets.main.runtimeClasspath
 	main = "de.piegames.blockmap.generate.Generator"
-	args = ['generateScreenshots']
+	args = ['generateTestWorld', 'generateScreenshots']
 }
 
 dependencies {
@@ -67,6 +67,7 @@ dependencies {
 	implementation 'commons-io:commons-io:2.6'
 	implementation 'com.google.guava:guava:27.0-jre'
 	implementation 'info.picocli:picocli:3.7.0'
+	implementation 'com.github.Sommerlilie:MinecraftLandGenerator:5d9fa3d144'
 
 	/* This is not an actual dependency, but some biome color data has been copied from there so it will show up in the credits list */
 	// Currently broken because it does not compile on jitpack

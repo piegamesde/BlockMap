@@ -53,7 +53,7 @@ public class CommandLineMain implements Runnable {
 			description = "Render a folder containing region files to another folder through the command line interface",
 			footer = "Please don't forget that you can use global options too, which can be accessed through `BlockMap help`."
 					+ " These have to be put before the render command.",
-			subcommands = { CommandSaveRendered.class })
+			subcommands = { CommandSaveRendered.class, HelpCommand.class })
 	public static class CommandRender implements Callable<CachedRegionFolder> {
 
 		@ParentCommand
@@ -170,17 +170,26 @@ public class CommandLineMain implements Runnable {
 	}
 
 	@Command(name = "save",
-			description = "Save the rendering information to a file for later use. The output path is OUTPUT/rendered.json. The WORLDNAME is used to identify multiple worlds "
-					+ "in one such file. If the file already exists, the existing worlds will be preserved.")
+			description = "Save the rendering information to a file for later use. If the file already exists, the rendering's data will be appended, preserving the existing ones. "
+					+ "The file is in json format and contains the paths of the rendered images, along with additional data.")
 	public static class CommandSaveRendered implements Runnable {
 		@ParentCommand
 		CommandRender	parent;
 
-		@Option(names = "--world-name", required = true)
+		@Option(names = "--world-name",
+				required = true,
+				description = "A saved rendering can contain multiple rendered worlds, no matter if they are of the same world but with different settings or multiple actually distinct "
+						+ "worlds. This name is used as identifier to distinguish between them. It is recommended to encode useful information like the world's name or distinct render "
+						+ "settings into it.")
 		private String	name;
-		@Option(names = "--file")
+		@Option(names = "--file",
+				description = "The path of the file to write. If relative, it will be resolved against the output directory.",
+				defaultValue = "./rendered.json",
+				showDefaultValue = Visibility.ALWAYS)
 		private Path	file;
-		@Option(names = "--absolute")
+		@Option(names = "--absolute",
+				description = "By default, all paths are relativized to this file so moving the whole folder won't break the paths. This is useful if you want to put this file on a server, "
+						+ "but if you want to be able to move this file and keep all images in place, use this option instead.")
 		private boolean	absolute;
 
 		@Override

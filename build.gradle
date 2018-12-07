@@ -53,7 +53,7 @@ task regenerate(type: GradleBuild) {
 task beforeCommit(type: GradleBuild) {
 	group 'Distribution'
 	description 'Call this before each commit to make sure it works'
-	tasks = ['clean', 'regenerate', 'test', 'BlockMap-internal:generateScreenshots']
+	tasks = ['clean', 'regenerate', 'test']
 }
 
 task initEclipse(type: GradleBuild) {

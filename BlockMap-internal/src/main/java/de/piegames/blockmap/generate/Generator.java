@@ -1,11 +1,9 @@
 package de.piegames.blockmap.generate;
 
-import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.net.URI;
@@ -14,6 +12,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,17 +22,13 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
-import javax.imageio.ImageIO;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.joml.Vector2d;
 import org.joml.Vector2i;
 
-import com.flowpowered.nbt.regionfile.RegionFile;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -43,14 +38,10 @@ import de.piegames.blockmap.BlockStateHelper.BlockStateHelperState;
 import de.piegames.blockmap.color.BiomeColorMap;
 import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.color.Color;
-import de.piegames.blockmap.guistandalone.GuiMain;
-import de.piegames.blockmap.guistandalone.RegionFolderProvider;
-import de.piegames.blockmap.renderer.RegionRenderer;
-import de.piegames.blockmap.renderer.RegionShader;
-import de.piegames.blockmap.renderer.RenderSettings;
-import javafx.application.Platform;
-import javafx.embed.swing.SwingFXUtils;
-import javafx.scene.image.WritableImage;
+import morlok8k.MinecraftLandGenerator.MinecraftLandGenerator;
+import morlok8k.MinecraftLandGenerator.Server;
+import morlok8k.MinecraftLandGenerator.World;
+import morlok8k.MinecraftLandGenerator.World.Dimension;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
@@ -94,9 +85,29 @@ public class Generator {
 	}
 
 	@Command
-	public void generateTestWorld() throws IOException {
+	public void generateTestWorld() throws IOException, InterruptedException {
 		log.info("Generating test world");
-		// FileUtils.copyDirectory(new File(Generator.class), OUTPUT_INTERNAL_TEST.toFile());
+
+		Path worldPath = OUTPUT_INTERNAL_MAIN.resolve("BlockMapWorld");
+
+		FileUtils.copyDirectory(new File(URI.create(Generator.class.getResource("/BlockMapWorld").toString())), worldPath
+				.toFile());
+		Path serverFolder = Files.createTempDirectory("generateTestWorldServer");
+		Path serverFile = serverFolder.resolve("server.jar");
+		Files.copy(Generator.class.getResourceAsStream("/server.jar"), serverFile);
+		Files.createSymbolicLink(serverFolder.resolve("world"), worldPath.toAbsolutePath());
+
+		Server server = new Server(serverFile, null);
+		World world = server.initWorld(Paths.get("world"), true);
+
+		int SIZE = 256;// 256;
+		ArrayList<Vector2i> chunks = new ArrayList<>(SIZE * SIZE * 4);
+		for (int z = -SIZE; z < SIZE; z++)
+			for (int x = -SIZE; x < SIZE; x++)
+				chunks.add(new Vector2i(x, z));
+		MinecraftLandGenerator.forceloadChunks(server, world, chunks, Dimension.OVERWORLD, true, 64 * 64, false);
+		world.resetChanges();
+		server.resetChanges();
 
 		processResources();
 	}
@@ -156,7 +167,7 @@ public class Generator {
 
 		Comparator<BlockStateHelper> c = Comparator.comparing(s -> s.name);
 
-		// Map each block id to a set of possible block states
+		/* Map each block id to a set of possible block states */
 		Map<String, Set<BlockStateHelper>> statesByBlock = new HashMap<>();
 
 		for (Entry<String, BlockStateHelperBlock> e : blocks.entrySet()) {
@@ -169,7 +180,7 @@ public class Generator {
 			}
 		}
 
-		// Reverse map each block state to the blocks that are allowed to use it (maybe a BiMap would help?)
+		/* Reverse map each block state to the blocks that are allowed to use it (maybe a BiMap would help?) */
 		Map<BlockStateHelper, Set<String>> blocksByState = new TreeMap<>(c.thenComparing(Comparator.comparing(s -> s.value)));
 		for (Entry<String, Set<BlockStateHelper>> e : statesByBlock.entrySet()) {
 			for (BlockStateHelper state : e.getValue()) {
@@ -183,7 +194,7 @@ public class Generator {
 			}
 		}
 
-		// We can now start generating our actual enum code
+		/* We can now start generating our actual enum code */
 		StringBuilder builder = new StringBuilder();
 		for (Entry<BlockStateHelper, Set<String>> e : blocksByState.entrySet()) {
 			String key = e.getKey().name;
@@ -207,11 +218,11 @@ public class Generator {
 			builder.append("),");
 			builder.append(System.getProperty("line.separator"));
 		}
-		// Hardcode the map property of item frames since it does not show up in this list
+		/* Hardcode the map property of item frames since it does not show up in this list */
 		builder.append("\tMAP_TRUE(\"map\", \"true\"),");
 		builder.append(System.getProperty("line.separator"));
 		builder.append("\tMAP_FALSE(\"map\", \"false\");");
-		// Load template file and replace original
+		/* Load template file and replace original */
 		// String original = new String(Files.readAllBytes(Paths.get(URI.create(Generator.class.getResource("/BlockState.java").toString()))));
 		// original = original.replace("$REPLACE", builder.toString());
 		// Files.write(Paths.get("./src/main/java", "togos/minecraft/maprend/renderer", "BlockState.java"), original.getBytes());
@@ -221,104 +232,11 @@ public class Generator {
 	}
 
 	@Command
-	public void generateScreenshots() throws IOException {
+	public void generateScreenshots() throws Exception {
 		log.info("Generating screenshots");
-		RenderSettings settings = new RenderSettings();
-		settings.loadDefaultColors();
-		RegionRenderer renderer = new RegionRenderer(settings);
-		{ /* Color maps */
-			settings.maxY = 50;
-			BufferedImage img1 = generateScreenshot(renderer, settings, new Vector2i(-1, 1), BlockColorMap.InternalColorMap.CAVES);
-			settings.maxY = 255;
-			BufferedImage img2 = generateScreenshot(renderer, settings, new Vector2i(0, 1), BlockColorMap.InternalColorMap.NO_FOLIAGE);
-			BufferedImage img3 = generateScreenshot(renderer, settings, new Vector2i(-1, 2), BlockColorMap.InternalColorMap.OCEAN_GROUND);
-			BufferedImage img4 = generateScreenshot(renderer, settings, new Vector2i(0, 2), BlockColorMap.InternalColorMap.DEFAULT);
-			BufferedImage img = new BufferedImage(1024, 1024, BufferedImage.TYPE_INT_ARGB);
-			Graphics2D g = img.createGraphics();
-			g.drawImage(img1, 0, 0, null);
-			g.drawImage(img2, 512, 0, null);
-			g.drawImage(img3, 0, 512, null);
-			g.drawImage(img4, 512, 512, null);
-			g.setFont(g.getFont().deriveFont(0, 32.0f));
-			g.drawString("Caves", 0 + 32, 512 - 32);
-			g.drawString("No foliage", 1024 - 32 - g.getFontMetrics().stringWidth("No foliage"), 512 - 32);
-			g.drawString("Ocean ground", 0 + 32, 1024 - 32);
-			g.drawString("Default", 1024 - 32 - g.getFontMetrics().stringWidth("Default"), 1024 - 32);
-			g.dispose();
-			try (OutputStream out = Files.newOutputStream(OUTPUT_SCREENSHOTS.resolve("screenshot-1.png"))) {
-				ImageIO.write(img, "png", out);
-			}
-		}
-		{ /* Shaders */
-			BufferedImage img1 = generateScreenshot(renderer, settings, new Vector2i(-1, 1), BlockColorMap.InternalColorMap.DEFAULT);
-			settings.shader = RegionShader.DefaultShader.RELIEF.getShader();
-			settings.shader = RegionShader.DefaultShader.FLAT.getShader();
-			BufferedImage img2 = generateScreenshot(renderer, settings, new Vector2i(0, 1), BlockColorMap.InternalColorMap.DEFAULT);
-			settings.shader = RegionShader.DefaultShader.HEIGHTMAP.getShader();
-			BufferedImage img3 = generateScreenshot(renderer, settings, new Vector2i(-1, 2), BlockColorMap.InternalColorMap.OCEAN_GROUND);
-			settings.shader = RegionShader.DefaultShader.BIOMES.getShader();
-			BufferedImage img4 = generateScreenshot(renderer, settings, new Vector2i(0, 2), BlockColorMap.InternalColorMap.DEFAULT);
-			BufferedImage img = new BufferedImage(1024, 1024, BufferedImage.TYPE_INT_ARGB);
-			Graphics2D g = img.createGraphics();
-			g.drawImage(img1, 0, 0, null);
-			g.drawImage(img2, 512, 0, null);
-			g.drawImage(img3, 0, 512, null);
-			g.drawImage(img4, 512, 512, null);
-			g.setFont(g.getFont().deriveFont(0, 32.0f));
-			g.drawString("Relief", 0 + 32, 512 - 32);
-			g.drawString("Flat", 1024 - 32 - g.getFontMetrics().stringWidth("Flat"), 512 - 32);
-			g.drawString("Heightmap", 0 + 32, 1024 - 32);
-			g.drawString("Biomes", 1024 - 32 - g.getFontMetrics().stringWidth("Biomes"), 1024 - 32);
-			g.dispose();
-			try (OutputStream out = Files.newOutputStream(OUTPUT_SCREENSHOTS.resolve("screenshot-2.png"))) {
-				ImageIO.write(img, "png", out);
-			}
-		}
-		{ /* GUI */
-			Thread th = new Thread(() -> GuiMain.main());
-			th.start();
-			while (GuiMain.instance == null)
-				Thread.yield();
-			Platform.runLater(() -> {
-				GuiMain.instance.stage.setWidth(1280);
-				GuiMain.instance.stage.setHeight(720);
-				GuiMain.instance.stage.hide();
-				GuiMain.instance.stage.show();
-				GuiMain.instance.controller.load(
-						RegionFolderProvider.byPath(
-								Paths.get(URI.create(Generator.class.getResource("/BlockMapWorld/").toString())), renderer));
-				GuiMain.instance.controller.renderer.viewport.translationProperty.set(new Vector2d(512, -512));
-			});
-			while (GuiMain.instance.controller.renderer.getStatus().get().equals("No regions loaded"))
-				Thread.yield();
-			while (GuiMain.instance.controller.renderer.getProgress().get() < 1)
-				Thread.yield();
-			Platform.runLater(() -> {
-				WritableImage img = GuiMain.instance.stage.getScene().snapshot(null);
-				try (OutputStream out = Files.newOutputStream(OUTPUT_SCREENSHOTS.resolve("screenshot-3.png"))) {
-					ImageIO.write(SwingFXUtils.fromFXImage(img, null), "png", out);
-				} catch (IOException e) {
-					log.error(e);
-				}
-				GuiMain.instance.controller.exit();
-			});
-			try {
-				th.join();
-			} catch (InterruptedException e) {
-				log.error(e);
-			}
-		}
-
+		Screenshots.generateDemoRenders();
+		Screenshots.generateScreenshots();
 		processResources();
-	}
-
-	private static BufferedImage generateScreenshot(RegionRenderer renderer, RenderSettings settings, Vector2i toRender, BlockColorMap.InternalColorMap colors)
-			throws IOException {
-		RegionFile file = new RegionFile(Paths.get(URI.create(Generator.class.getResource("/BlockMapWorld/region/r." + toRender.x + "." + toRender.y
-				+ ".mca")
-				.toString())));
-		settings.blockColors = colors.getColorMap();
-		return renderer.render(toRender, file);
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -333,6 +251,9 @@ public class Generator {
 		for (Path p : OUTPUTS)
 			Files.createDirectories(p);
 
+		// new Generator().generateTestWorld();
+		// if (true)
+		// return;
 		CommandLine cli = new CommandLine(new Generator());
 		for (String s : args)
 			cli.parseWithHandler(new CommandLine.RunLast(), new String[] { s });
@@ -347,6 +268,7 @@ public class Generator {
 	 */
 	public static void processResources() throws IOException {
 		log.info("Updating resources");
+		// TODO lazy copying will save a lot of time
 		for (Path p : OUTPUTS)
 			if (p != OUTPUT_INTERNAL_TEST)
 				FileUtils.copyDirectory(p.toFile(), Paths.get("./build/resources/main").toFile());

@@ -15,7 +15,7 @@ buildscript {
 apply plugin: "com.github.ben-manes.versions"
 
 allprojects {
-	version = '1.2.0-DEVELOP'
+	version = '1.2.0'
 	apply plugin: 'eclipse'
 	apply plugin: 'idea'
 }

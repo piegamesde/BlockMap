@@ -1,5 +1,14 @@
 # Changelog
 
+## Version 1.2
+### Changes
+- Reworked the `RegionFolder` API. It remains not being great, but at least now with more features
+- Rendered worlds can now be saved to a file using the `save` subcommand
+- Rendered worlds can be loaded from the GUI, even on remote servers
+- More automatically generated screenshots (and source code)
+- Updated to a newer version of the NBT library, which got its region file API rewritten
+- Fixed bugs
+
 ## Version 1.1.2
 ### Changes
 - Added a grid overlay

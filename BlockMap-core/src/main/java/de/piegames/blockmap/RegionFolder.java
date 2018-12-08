@@ -47,8 +47,8 @@ public abstract class RegionFolder {
 	public static Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
 	/**
-	 * List all existing region file in this RegionFolder. If one of the returned positions is passed to {@link #render(Vector2ic)}, it must not
-	 * return {@code null}.
+	 * Lists all existing region file in this RegionFolder. If one of the returned positions is passed to {@link #render(Vector2ic)}, it must
+	 * not return {@code null}.
 	 */
 	public abstract Set<Vector2ic> listRegions();
 
@@ -78,9 +78,9 @@ public abstract class RegionFolder {
 		protected final RegionRenderer			renderer;
 
 		/**
-		 * @param files
-		 *            a mapping from region coordinates to paths pointing to the respective file. Those are treaded as the "world" represented by
-		 *            this RegionFolder.
+		 * @param file
+		 *            map region coordinates to paths, which point to the respective file. Those are treated as the "world" represented by this
+		 *            RegionFolder
 		 * @param renderer
 		 *            the {@link RegionRenderer} used to render the files
 		 * @see #load(Path, RegionRenderer)
@@ -109,10 +109,10 @@ public abstract class RegionFolder {
 		}
 
 		/**
-		 * Load a region folder from a given world path.
+		 * Loads a region folder from a given world path.
 		 * 
 		 * @param world
-		 *            the path to the world folder. Must be a directory pointing to a valid Minecraft worlds.
+		 *            the path to the world folder. It has to be a directory pointing to a valid Minecraft world.
 		 * @param dimension
 		 *            the Minecraft dimension to render. It will be used to resolve the region folder path from the world path.
 		 * @see #load(Path, MinecraftDimension, RegionRenderer)
@@ -122,13 +122,13 @@ public abstract class RegionFolder {
 		}
 
 		/**
-		 * Load a region folder from a given path. All region files found in this folder (not searching recursively) will be added to the returned
+		 * Loads a region folder from a given path. All region files found in this folder (not searching recursively) will be added to the returned
 		 * object. Files added later on won't be recognized. Removing files will lead to errors when trying to render them. All files whose name
-		 * matches {@code ^r\.(-?\d+)\.(-?\d+)\.mca$} will be taken. If they are not proper region files, rendering them will lead to errors.
+		 * matches {@code ^r\.(-?\d+)\.(-?\d+)\.mca$} are taken. If one of them isn't a proper region file, rendering it will fail.
 		 * 
 		 * @param regionFolder
 		 *            the path to the folder containing all region files. This folder is commonly called {@code region} and is situated inside a
-		 *            Minecraft world, but this is not a hard requirement. Must be a directory.
+		 *            Minecraft world, but this is not a hard requirement. It has to be a directory.
 		 */
 		public static WorldRegionFolder load(Path regionFolder, RegionRenderer renderer) throws IOException {
 			Map<Vector2ic, Path> files = new HashMap<>();
@@ -142,8 +142,8 @@ public abstract class RegionFolder {
 	}
 
 	/**
-	 * A RegionFolder implementation that loads already rendered images from disk. To find them, a save file is passed in the constructor. It is
-	 * abstract to work on local systems as well as with remote servers.
+	 * A RegionFolder implementation that loads already rendered images from the disk. To find them, a save file is passed in the constructor.
+	 * It is abstract to work on local systems as well as on remote servers.
 	 * 
 	 * @see LocalRegionFolder LocalRegionFolder for loading files on your hard drive
 	 * @see RemoteRegionFolder RemoteRegionFolder for loading files via uri, either local or on servers
@@ -155,10 +155,10 @@ public abstract class RegionFolder {
 		protected final Map<Vector2ic, T> regions;
 
 		/**
-		 * Create the region folder with a custom mapping
+		 * Creates the region folder with a custom mapping
 		 * 
 		 * @param regions
-		 *            map from each region file's position in the world to a T that represents its location for loading
+		 *            a mapping from each region file's position in the world to a T that represents its location for loading
 		 * @see #parseSaved(JsonElement)
 		 */
 		protected SavedRegionFolder(Map<Vector2ic, T> regions) {
@@ -166,7 +166,7 @@ public abstract class RegionFolder {
 		}
 
 		/**
-		 * Load a json file that contains the information about all rendered files.
+		 * Loads a json file that contains the information about all rendered files.
 		 * 
 		 * @see #parseSaved(JsonElement)
 		 */
@@ -199,7 +199,7 @@ public abstract class RegionFolder {
 		protected abstract InputStream getInputStream(T path) throws IOException;
 
 		/**
-		 * Resolve a path to a subpath. This does exactly the same thing as {@link Path#resolve(Path)}, but for the type T.
+		 * Resolves a path to a subpath. This does exactly the same as {@link Path#resolve(Path)}, but for the type T.
 		 * 
 		 * @param file
 		 *            the base path
@@ -219,7 +219,7 @@ public abstract class RegionFolder {
 		}
 
 		/**
-		 * Parse a save file describing rendered worlds. It is a json file containing json objects, with each one representing one "world":
+		 * Parses a save file which describes rendered worlds. It is a json file containing json objects, with each one representing one "world":
 		 * 
 		 * <pre>
 		 * {
@@ -306,7 +306,7 @@ public abstract class RegionFolder {
 	}
 
 	/**
-	 * This {@link RegionFolder} wraps a {@link WorldRegionFolder} in a way so that each rendered image will be written to disk to avoid
+	 * This {@link RegionFolder} wraps a {@link WorldRegionFolder} in a way that each rendered image will be written to disk to avoid
 	 * re-rendering. It can be used to create save files to load in {@link SavedRegionFolder}s.
 	 */
 	public static class CachedRegionFolder extends RegionFolder {
@@ -317,13 +317,13 @@ public abstract class RegionFolder {
 
 		/**
 		 * @param world
-		 *            the renderer to use internally
+		 *            the renderer used to create images of region files if they haven't been rendered yet
 		 * @param lazy
 		 *            if set to false, no cached files will be returned for re-rendering. If set to true, a re-render will load the image from disk
 		 *            if the respective region file has not been modified since then (based on the timestamp). Laziness has the effect that changing
 		 *            the render settings will not cause already rendered files to be updated.
 		 * @param imageFolder
-		 *            the folder where to put all the rendered images. The images will be named like their region file name, but with the
+		 *            the folder where all the rendered images will be stored. The images will be named like their region file name, but with the
 		 *            {@code .mca} replaced with {@code .png}.
 		 */
 		public CachedRegionFolder(WorldRegionFolder world, boolean lazy, Path imageFolder) {
@@ -333,8 +333,9 @@ public abstract class RegionFolder {
 		}
 
 		/**
-		 * If the image folder already contains a matching image for this position <b>and</b> we are lazy <b>and</b> the saved file is newer than
-		 * the region file, then this image will be returned. In all other cases, it will be rendered again and written to disk.
+		 * If the image folder already contains a matching image for this position <b>and</b> the {@code lazy} flag was set in the constructor
+		 * <b>and</b> the saved file is newer than the region file, this image will be returned. Otherwise, it will be rendered again and written to
+		 * disk.
 		 * 
 		 * @see SavedRegionFolder#render(Vector2ic)
 		 */
@@ -360,7 +361,7 @@ public abstract class RegionFolder {
 		}
 
 		/**
-		 * Transform this object into a {@link LocalRegionFolder} for further use. The returned object will know of every region file in
+		 * Transforms this object into a {@link LocalRegionFolder} for further use. The returned object will know of every region file in
 		 * {@link #listRegions()}, even if it has not been rendered yet. In that case, rendering those from the returned object will throw an error.
 		 */
 		public LocalRegionFolder save() {
@@ -376,11 +377,11 @@ public abstract class RegionFolder {
 		}
 
 		/**
-		 * Save the paths to all rendered files (and to files that have yet to be rendered; see {@link #save()}) into a save file that will be
+		 * Saves the paths to all rendered files (and to files that have yet to be rendered; see {@link #save()}) into a save file which will be
 		 * accepted by {@link SavedRegionFolder#parseSaved(JsonElement)}.
 		 * 
 		 * @param file
-		 *            where to write this information. If the file already exist, the data will be appended, keeping the existing one intact.
+		 *            where to write this information to. If the file already exist, the data will be appended, keeping the existing one intact.
 		 * @param name
 		 *            the name of the saved world in that file
 		 * @param relativePaths

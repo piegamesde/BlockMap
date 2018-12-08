@@ -155,13 +155,24 @@ public class Screenshots {
 				GuiMain.instance.controller.renderer.repaint();
 				return true;
 			});
-			for (double i = 6.6; i >= -5; i -= 0.2) {
+			tasks.add(() -> {
+				GuiMain.instance.controller.renderer.viewport.mousePosProperty.set(new Vector2d(640, 360));
+				GuiMain.instance.controller.renderer.viewport.zoomProperty.set(-7);
+				GuiMain.instance.controller.renderer.repaint();
+				Thread.sleep(5000);
+				GuiMain.instance.controller.renderer.repaint();
+				return true;
+			});
+			for (double i = 6.6; i >= -5; i -= 0.5) {
 				final double zoom = i;
 				tasks.add(() -> {
 					GuiMain.instance.controller.renderer.viewport.mousePosProperty.set(new Vector2d(640, 360));
 					GuiMain.instance.controller.renderer.viewport.zoomProperty.set(zoom);
 					GuiMain.instance.controller.renderer.repaint();
-					Thread.sleep(1000);
+					Thread.sleep(750);
+					GuiMain.instance.controller.renderer.repaint();
+					Thread.sleep(750);
+					GuiMain.instance.controller.renderer.repaint();
 					return true;
 				});
 				tasks.add(() -> {
@@ -176,7 +187,7 @@ public class Screenshots {
 			log.debug("Writing final gif to disk");
 			GifSequenceWriter writer = new GifSequenceWriter(
 					new FileImageOutputStream(Generator.OUTPUT_SCREENSHOTS.resolve("screenshot-4.gif").toFile()),
-					BufferedImage.TYPE_INT_ARGB, 100, true);
+					BufferedImage.TYPE_INT_ARGB, 350, true);
 			try {
 				for (BufferedImage i : screenshots)
 					writer.writeToSequence(i);

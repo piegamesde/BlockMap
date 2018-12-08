@@ -18,8 +18,8 @@ task extractMinecraftData(type: JavaExec) {
 	classpath = sourceSets.main.runtimeClasspath
 	main = "de.piegames.blockmap.generate.Generator"
 	args = ['extractData']
-    //inputs.dir "${project(":BlockMap-internal").sourceSets.main.java.srcDirs[1]}/server.jar"
-    //outputs.dir "${buildDir}/generated-resources/BlockMap-internal/generated-resources-main/data/"
+    inputs.dir "${project(":BlockMap-internal").sourceSets.main.java.srcDirs[1]}/server.jar"
+    outputs.dir "${buildDir}/generated-resources/BlockMap-internal/generated-resources-main/data/"
 }
 
 task generateSources(type: JavaExec) {
@@ -49,7 +49,7 @@ task generateData(type: JavaExec) {
 }
 
 task generateScreenshots(type: JavaExec) {
-	dependsOn 'generateData'
+	//dependsOn 'generateData'
 	group 'Generation'
 	description 'Automatically render certain files and create screenshots from the GUI to show off on Twitter. Takes a really long time to process because a large demo world is generated first.'
 	classpath = sourceSets.main.runtimeClasspath
@@ -67,7 +67,7 @@ dependencies {
 	implementation 'commons-io:commons-io:2.6'
 	implementation 'com.google.guava:guava:27.0-jre'
 	implementation 'info.picocli:picocli:3.7.0'
-	implementation 'com.github.Sommerlilie:MinecraftLandGenerator:5d9fa3d144'
+	implementation 'com.github.Sommerlilie:MinecraftLandGenerator:a627245fc3'
 
 	/* This is not an actual dependency, but some biome color data has been copied from there so it will show up in the credits list */
 	// Currently broken because it does not compile on jitpack

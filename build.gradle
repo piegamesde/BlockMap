@@ -15,7 +15,7 @@ buildscript {
 apply plugin: "com.github.ben-manes.versions"
 
 allprojects {
-	version = '1.1.2'
+	version = '1.2.0-DEVELOP'
 	apply plugin: 'eclipse'
 	apply plugin: 'idea'
 }
@@ -47,7 +47,7 @@ task regenerate(type: GradleBuild) {
 	group 'Generation'
 	description 'Regenerate all resources except screenshots'
     // All other generators are called as transitive dependencies
-    tasks = ['BlockMap-internal:generateBlockStates', 'BlockMap-internal:generateData']
+    tasks = ['BlockMap-internal:generateSources', 'BlockMap-internal:generateData']
 }
 
 task beforeCommit(type: GradleBuild) {

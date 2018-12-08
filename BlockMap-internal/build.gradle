@@ -18,20 +18,20 @@ task extractMinecraftData(type: JavaExec) {
 	classpath = sourceSets.main.runtimeClasspath
 	main = "de.piegames.blockmap.generate.Generator"
 	args = ['extractData']
-    inputs.dir "${project(":BlockMap-internal").sourceSets.main.java.srcDirs[1]}/server.jar"
-    outputs.dir "${buildDir}/generated-resources/BlockMap-internal/generated-resources-main/data/"
+    //inputs.dir "${project(":BlockMap-internal").sourceSets.main.java.srcDirs[1]}/server.jar"
+    //outputs.dir "${buildDir}/generated-resources/BlockMap-internal/generated-resources-main/data/"
 }
 
-task generateBlockStates(type: JavaExec) {
+task generateSources(type: JavaExec) {
 	dependsOn 'extractMinecraftData'
 	group 'Generation'
-	description 'Generate all enum values from BlockState.java'
+	description 'Generate all enum values from BlockState.java and the version sources'
 	classpath = sourceSets.main.runtimeClasspath
 	main = "de.piegames.blockmap.generate.Generator"
-	args = ['generateBlockStates']
-    inputs.dir "${project(":BlockMap-internal").sourceSets.main.java.srcDirs[0]}/de/piegames/blockmap/generate/"
-    inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[1]}"
-    outputs.dir "${buildDir}/generated-resources/other/"
+	args = ["generateVersion;${project.version}", 'generateBlockStates']
+    //inputs.dir "${project(":BlockMap-internal").sourceSets.main.java.srcDirs[0]}/de/piegames/blockmap/generate/"
+    //inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[1]}"
+    //outputs.dir "${buildDir}/generated-resources/other/"
 }
 
 task generateData(type: JavaExec) {
@@ -41,11 +41,11 @@ task generateData(type: JavaExec) {
 	classpath = sourceSets.main.runtimeClasspath
 	main = "de.piegames.blockmap.generate.Generator"
 	args = ['generateBlockColors', 'generateBiomeColors', 'generateHeightmap']
-    inputs.dir "${project(":BlockMap-internal").sourceSets.main.java.srcDirs[0]}/de/piegames/blockmap/generate/"
-    inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[0]}/block-color-instructions.json"
-    inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[0]}/biome-color-instructions.json"
-    inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[0]}/heightmap.png"
-    outputs.dir "${buildDir}/generated-resources/BlockMap-core/generated-resources-main/"
+    //inputs.dir "${project(":BlockMap-internal").sourceSets.main.java.srcDirs[0]}/de/piegames/blockmap/generate/"
+    //inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[0]}/block-color-instructions.json"
+    //inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[0]}/biome-color-instructions.json"
+    //inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[0]}/heightmap.png"
+    //outputs.dir "${buildDir}/generated-resources/BlockMap-core/generated-resources-main/"
 }
 
 task generateScreenshots(type: JavaExec) {

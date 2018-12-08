@@ -33,7 +33,7 @@ import picocli.CommandLine.ParentCommand;
 import picocli.CommandLine.RunLast;
 
 @Command(name = "blockmap",
-		version = { "1.1.2" },
+		versionProvider = VersionProvider.class,
 		footer = "To access the GUI, omit the [COMMAND].",
 		subcommands = { CommandRender.class, HelpCommand.class })
 public class CommandLineMain implements Runnable {

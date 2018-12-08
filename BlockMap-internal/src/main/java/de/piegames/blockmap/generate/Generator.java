@@ -9,9 +9,13 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -50,16 +54,19 @@ public class Generator {
 
 	private static Log			log						= LogFactory.getLog(Generator.class);
 
+	/*
+	 * All output paths are listed here. They are split into three categories: main-resources, test-resources, other. The resources get copied
+	 * to the runtime resources folder through #processResources(). Those are in OUTPUTS.
+	 */
+
 	static final Path			OUTPUT					= Paths.get("./build/generated-resources");
 	static final Path			OUTPUT_CORE				= OUTPUT.resolve("BlockMap-core/generated-resources-main");
 	static final Path			OUTPUT_INTERNAL_MAIN	= OUTPUT.resolve("BlockMap-internal/generated-resources-main");
 	static final Path			OUTPUT_INTERNAL_TEST	= OUTPUT.resolve("BlockMap-internal/generated-resources-test");
 	static final Path			OUTPUT_STANDALONE		= OUTPUT.resolve("BlockMap-standalone/generated-resources-main");
 	static final Path			OUTPUT_GUI				= OUTPUT.resolve("BlockMap-gui/generated-resources-main");
-	static final Path			OUTPUT_OTHER			= OUTPUT.resolve("other");
 	static final Path			OUTPUT_SCREENSHOTS		= Paths.get("../screenshots");
-	private static final Path[]	OUTPUTS					= { OUTPUT_CORE, OUTPUT_INTERNAL_MAIN, OUTPUT_INTERNAL_TEST, OUTPUT_STANDALONE, OUTPUT_GUI,
-			OUTPUT_OTHER, OUTPUT_SCREENSHOTS };
+	private static final Path[]	OUTPUTS					= { OUTPUT_CORE, OUTPUT_INTERNAL_MAIN, OUTPUT_INTERNAL_TEST, OUTPUT_STANDALONE, OUTPUT_GUI };
 
 	@Command
 	public void downloadFiles() throws IOException {
@@ -222,13 +229,40 @@ public class Generator {
 		builder.append("\tMAP_TRUE(\"map\", \"true\"),");
 		builder.append(System.getProperty("line.separator"));
 		builder.append("\tMAP_FALSE(\"map\", \"false\");");
-		/* Load template file and replace original */
-		// String original = new String(Files.readAllBytes(Paths.get(URI.create(Generator.class.getResource("/BlockState.java").toString()))));
-		// original = original.replace("$REPLACE", builder.toString());
-		// Files.write(Paths.get("./src/main/java", "togos/minecraft/maprend/renderer", "BlockState.java"), original.getBytes());
-		Files.write(OUTPUT_OTHER.resolve("BlockState.java"), builder.toString().getBytes());
+
+		{ /* Load template file and replace original */
+			Path blockState = Paths.get("../BlockMap-core", "src/main/java", "de/piegames/blockmap", "renderer/BlockState.java");
+			List<String> file = Files.readAllLines(blockState);
+			int line = 0;
+			while (!file.get(line).contains("$REPLACE_START"))
+				line++;
+			line++;
+			while (!file.get(line).contains("$REPLACE_END"))
+				file.remove(line);
+			file.add(line, builder.toString());
+			Files.write(blockState, file);
+		}
+		// String original = new String(Files.readAllBytes(Paths.get(URI.create(Generator.class.getResource("/BlockState.txt").toString()))));
+		// original = original.replace("//$REPLACE_ME_HERE", builder.toString());
+		// Files.write(OUTPUT_CORE_SRC.resolve("de/piegames/blockmap/renderer/BlockState.java"), original.getBytes());
+		// Files.write(OUTPUT_OTHER.resolve("BlockState.java"), builder.toString().getBytes());
 
 		processResources();
+	}
+
+	@Command
+	public void generateVersion(String version) throws Exception {
+		log.info("Generating VersionProvider for version " + version);
+		Path versionProvider = Paths.get("../BlockMap-standalone/", "src/main/java", "de/piegames/blockmap/standalone", "VersionProvider.java");
+		List<String> file = Files.readAllLines(versionProvider);
+		int line = 0;
+		while (!file.get(line).contains("$REPLACE_START"))
+			line++;
+		line++;
+		while (!file.get(line).contains("$REPLACE_END"))
+			file.remove(line);
+		file.add(line, "\t\treturn new String[] { \"" + version + "\" };");
+		Files.write(versionProvider, file);
 	}
 
 	@Command
@@ -256,7 +290,7 @@ public class Generator {
 		// return;
 		CommandLine cli = new CommandLine(new Generator());
 		for (String s : args)
-			cli.parseWithHandler(new CommandLine.RunLast(), new String[] { s });
+			cli.parseWithHandler(new CommandLine.RunLast(), s.split(";"));
 
 		log.info("Done.");
 	}
@@ -271,7 +305,35 @@ public class Generator {
 		// TODO lazy copying will save a lot of time
 		for (Path p : OUTPUTS)
 			if (p != OUTPUT_INTERNAL_TEST)
-				FileUtils.copyDirectory(p.toFile(), Paths.get("./build/resources/main").toFile());
-		FileUtils.copyDirectory(OUTPUT_INTERNAL_TEST.toFile(), Paths.get("./build/resources/test").toFile());
+				Files.walkFileTree(p, new CopyDirVisitor(p, Paths.get("./build/resources/main")));
+		Files.walkFileTree(OUTPUT_INTERNAL_TEST, new CopyDirVisitor(OUTPUT_INTERNAL_TEST, Paths.get("./build/resources/test")));
+	}
+
+	/** Java still has no good way to copy directories ... */
+	private static class CopyDirVisitor extends SimpleFileVisitor<Path> {
+		private Path	sourceDir;
+		private Path	targetDir;
+
+		public CopyDirVisitor(Path sourceDir, Path targetDir) {
+			this.sourceDir = sourceDir;
+			this.targetDir = targetDir;
+		}
+
+		@Override
+		public FileVisitResult visitFile(Path file,
+				BasicFileAttributes attributes) throws IOException {
+			Path targetFile = targetDir.resolve(sourceDir.relativize(file));
+			if (!Files.exists(targetFile) || Files.getLastModifiedTime(file).compareTo(Files.getLastModifiedTime(targetFile)) > 0)
+				Files.copy(file, targetFile, StandardCopyOption.REPLACE_EXISTING);
+			return FileVisitResult.CONTINUE;
+		}
+
+		@Override
+		public FileVisitResult preVisitDirectory(Path dir,
+				BasicFileAttributes attributes) throws IOException {
+			Path newDir = targetDir.resolve(sourceDir.relativize(dir));
+			Files.createDirectories(newDir);
+			return FileVisitResult.CONTINUE;
+		}
 	}
 }

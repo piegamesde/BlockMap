@@ -29,7 +29,10 @@ import java.util.Set;
  * @author piegames
  */
 public enum BlockState {
-
+	/*
+	 * THIS ENUM IS GENERATED AUTOMATICALLY THROUGH gradle generateSources
+	 */
+	// $REPLACE_START
 	AGE_0("age", "0", "minecraft:melon_stem", "minecraft:wheat", "minecraft:pumpkin_stem", "minecraft:frosted_ice", "minecraft:carrots", "minecraft:nether_wart", "minecraft:potatoes", "minecraft:kelp", "minecraft:chorus_flower", "minecraft:beetroots", "minecraft:cactus", "minecraft:cocoa", "minecraft:fire", "minecraft:sugar_cane"),
 	AGE_1("age", "1", "minecraft:melon_stem", "minecraft:wheat", "minecraft:pumpkin_stem", "minecraft:frosted_ice", "minecraft:carrots", "minecraft:nether_wart", "minecraft:potatoes", "minecraft:kelp", "minecraft:chorus_flower", "minecraft:beetroots", "minecraft:cactus", "minecraft:cocoa", "minecraft:fire", "minecraft:sugar_cane"),
 	AGE_10("age", "10", "minecraft:kelp", "minecraft:cactus", "minecraft:fire", "minecraft:sugar_cane"),
@@ -309,10 +312,10 @@ public enum BlockState {
 	WEST_UP("west", "up", "minecraft:redstone_wire"),
 	MAP_TRUE("map", "true"),
 	MAP_FALSE("map", "false");
+	// $REPLACE_END
 
-
-	public final String name, value;
-	public final String[]	allowedBlocks;
+	public final String			name, value;
+	public final String[]		allowedBlocks;
 	public final Set<String>	allowedBlocks2;
 
 	BlockState(String name, String value, String... allowedBlocks) {
@@ -324,7 +327,7 @@ public enum BlockState {
 	}
 
 	private static Map<String, EnumSet<BlockState>>	values	= new HashMap<>();
-	public static final EnumSet<BlockState> NONE = EnumSet.noneOf(BlockState.class);
+	public static final EnumSet<BlockState>			NONE	= EnumSet.noneOf(BlockState.class);
 
 	static {
 		for (BlockState state : values()) {
@@ -342,8 +345,8 @@ public enum BlockState {
 	}
 
 	/**
-	 * Returns all the possible states the given property may have in this block. For example the property "age" will contain the values 0-7 on most crops, 0-15 on
-	 * fire and 0-25 on kelp (among others)
+	 * Returns all the possible states the given property may have in this block. For example the property "age" will contain the values 0-7 on
+	 * most crops, 0-15 on fire and 0-25 on kelp (among others)
 	 */
 	public static EnumSet<BlockState> allowedStates(String blockName, String propertyName) {
 		if (!values.containsKey(propertyName))

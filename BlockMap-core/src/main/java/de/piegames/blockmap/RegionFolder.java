@@ -130,13 +130,19 @@ public abstract class RegionFolder {
 		 * Loads a region folder from a given world path.
 		 * 
 		 * @param world
-		 *            the path to the world folder. It has to be a directory pointing to a valid Minecraft world.
+		 *            the path to the world folder. It has to be a directory pointing to a valid Minecraft world. World folders usually contain a
+		 *            {@code level.dat} file.
 		 * @param dimension
 		 *            the Minecraft dimension to render. It will be used to resolve the region folder path from the world path.
+		 * @param loadPins
+		 *            if the pins should be loaded too
 		 * @see #load(Path, MinecraftDimension, RegionRenderer)
 		 */
-		public static WorldRegionFolder load(Path world, MinecraftDimension dimension, RegionRenderer renderer) throws IOException {
-			return load(world.resolve(dimension.getRegionPath()), renderer);
+		public static WorldRegionFolder load(Path world, MinecraftDimension dimension, RegionRenderer renderer, boolean loadPins) throws IOException {
+			WorldRegionFolder folder = load(world.resolve(dimension.getRegionPath()), renderer);
+			if (loadPins)
+				folder.setPins(WorldPins.loadFromWorld(world, dimension));
+			return folder;
 		}
 
 		/**

@@ -15,7 +15,8 @@ import java.util.Optional;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.joml.Vector2i;
+import org.joml.Vector2d;
+import org.joml.Vector2dc;
 import org.joml.Vector2ic;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
@@ -27,6 +28,7 @@ import com.flowpowered.nbt.CompoundTag;
 import com.flowpowered.nbt.DoubleTag;
 import com.flowpowered.nbt.IntTag;
 import com.flowpowered.nbt.ListTag;
+import com.flowpowered.nbt.LongTag;
 import com.flowpowered.nbt.stream.NBTInputStream;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -284,24 +286,24 @@ public class WorldPins {
 	}
 
 	public static class BorderPin {
-		Vector2i	center;
-		int			size;
+		Vector2dc	center;
+		double		size;
 
 		@SuppressWarnings("unused")
 		private BorderPin() {
 			// Used by GSON
 		}
 
-		public BorderPin(Vector2i center, int size) {
+		public BorderPin(Vector2dc center, double size) {
 			this.center = center;
 			this.size = size;
 		}
 
-		public Vector2i getCenter() {
+		public Vector2dc getCenter() {
 			return center;
 		}
 
-		public int getRadius() {
+		public double getRadius() {
 			return size;
 		}
 	}
@@ -347,7 +349,7 @@ public class WorldPins {
 	// }
 
 	@SuppressWarnings("unchecked")
-	public static WorldPins loadFromWorld(Path worldPath) {
+	public static WorldPins loadFromWorld(Path worldPath, MinecraftDimension filterDimension) {
 		List<PlayerPin> players = new ArrayList<>();
 		// Players
 		try (DirectoryStream<Path> d = Files.newDirectoryStream(worldPath.resolve("playerdata"))) {
@@ -359,15 +361,20 @@ public class WorldPins {
 					List<DoubleTag> pos = ((ListTag<DoubleTag>) map.get("Pos")).getValue();
 					Vector3d position = new Vector3d(pos.get(0).getValue(), pos.get(1).getValue(), pos.get(2).getValue());
 					int dimension = ((IntTag) map.get("Dimension")).getValue();
-					String UUID = BigInteger.valueOf(((IntTag) map.get("UUIDMost")).getValue())
+					if (filterDimension != null && dimension == filterDimension.index)
+						continue;
+					String UUID = BigInteger.valueOf(((LongTag) map.get("UUIDMost")).getValue())
 							.shiftLeft(64)
-							.or(BigInteger.valueOf(((IntTag) map.get("UUIDLeast")).getValue()))
+							.or(BigInteger.valueOf(((LongTag) map.get("UUIDLeast")).getValue()))
+							.and(new BigInteger("FFFFFFFFFFFFFFFF", 16))
 							.toString(16);
 					System.out.println(p.getFileName() + " " + UUID);
-					Vector3i spawnpoint = new Vector3i(
-							((IntTag) map.get("SpawnX")).getValue(),
-							((IntTag) map.get("SpawnY")).getValue(),
-							((IntTag) map.get("SpawnZ")).getValue());
+					Vector3i spawnpoint = null;
+					if (map.containsKey("SpawnX"))
+						spawnpoint = new Vector3i(
+								((IntTag) map.get("SpawnX")).getValue(),
+								((IntTag) map.get("SpawnY")).getValue(),
+								((IntTag) map.get("SpawnZ")).getValue());
 					int gamemode = ((IntTag) map.get("playerGameType")).getValue();
 					players.add(new PlayerPin(position, MinecraftDimension.forID(dimension), UUID, spawnpoint, gamemode));
 				}
@@ -377,14 +384,16 @@ public class WorldPins {
 		}
 		List<VillagePin> villages = new ArrayList<>();
 		// Villages
-		for (MinecraftDimension dimension : MinecraftDimension.values())
+		for (MinecraftDimension dimension : MinecraftDimension.values()) {
+			if (filterDimension != null && dimension != filterDimension)
+				continue;
 			try (NBTInputStream in = new NBTInputStream(Files.newInputStream(worldPath.resolve(dimension.villagePath)), NBTInputStream.GZIP_COMPRESSION)) {
 				// TODO check data version
 				CompoundMap villageMap = (CompoundMap) ((CompoundMap) in.readTag().getValue()).get("data").getValue();
 				villageMap.entrySet().forEach(System.out::println);
 				for (CompoundTag village : ((ListTag<CompoundTag>) villageMap.get("Villages")).getValue()) {
 					CompoundMap map = village.getValue();
-					map.entrySet().forEach(System.out::println);
+					// map.entrySet().forEach(System.out::println);
 					Vector3i posVec = new Vector3i(
 							((IntTag) map.get("CX")).getValue(),
 							((IntTag) map.get("CY")).getValue(),
@@ -406,6 +415,7 @@ public class WorldPins {
 			} catch (IOException e) {
 				log.warn("Could not access village data", e);
 			}
+		}
 		List<MapPin> maps = new ArrayList<>();
 		{// Maps
 
@@ -417,14 +427,14 @@ public class WorldPins {
 		BorderPin barrier = null;
 		// World spawn and World border
 		try (NBTInputStream in = new NBTInputStream(Files.newInputStream(worldPath.resolve("level.dat")), NBTInputStream.GZIP_COMPRESSION)) {
-			CompoundMap level = ((CompoundTag) in.readTag()).getValue();
+			CompoundMap level = ((CompoundTag) ((CompoundTag) in.readTag()).getValue().get("Data")).getValue();
 			worldSpawn = new WorldSpawnPin(new Vector3i(
 					((IntTag) level.get("SpawnX")).getValue(),
 					((IntTag) level.get("SpawnY")).getValue(),
 					((IntTag) level.get("SpawnZ")).getValue()));
 			barrier = new BorderPin(
-					new Vector2i(((IntTag) level.get("BorderCenterX")).getValue(), ((IntTag) level.get("BorderCenterZ")).getValue()),
-					((IntTag) level.get("BorderSize")).getValue());
+					new Vector2d(((DoubleTag) level.get("BorderCenterX")).getValue(), ((DoubleTag) level.get("BorderCenterZ")).getValue()),
+					((DoubleTag) level.get("BorderSize")).getValue());
 		} catch (IOException e) {
 			log.warn("Could not access level data", e);
 		}

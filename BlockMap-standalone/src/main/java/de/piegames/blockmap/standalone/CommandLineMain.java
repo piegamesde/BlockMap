@@ -213,7 +213,7 @@ public class CommandLineMain implements Runnable {
 					if (pins) {
 						if (parent.dimension != null) {
 							WorldRegionFolder world = rendered.getWorldRegionFolder();
-							world.setPins(WorldPins.loadFromWorld(parent.input));
+							world.setPins(WorldPins.loadFromWorld(parent.input, parent.dimension));
 						} else
 							log.error("You must specify the --dimension option to load the pin information");
 					}

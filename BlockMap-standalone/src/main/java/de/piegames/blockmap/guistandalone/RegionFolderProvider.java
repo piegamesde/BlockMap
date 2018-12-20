@@ -237,7 +237,7 @@ public abstract class RegionFolderProvider {
 		@Override
 		public void reload() {
 			try {
-				folder.set(WorldRegionFolder.load(worldPath, dimensionBox.getValue(), renderer));
+				folder.set(WorldRegionFolder.load(worldPath, dimensionBox.getValue(), renderer, true));
 			} catch (IOException e) {
 				folder.set(null);
 				log.warn("Could not load world " + worldPath, e);

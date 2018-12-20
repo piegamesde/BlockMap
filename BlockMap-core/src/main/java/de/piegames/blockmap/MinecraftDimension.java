@@ -5,9 +5,9 @@ import java.nio.file.Paths;
 
 public enum MinecraftDimension {
 
-	OVERWORLD("Overworld", 0, Paths.get(""), Paths.get("data", "villages.dat")),
-	NETHER("Nether", -1, Paths.get("DIM-1"), Paths.get("data", "villages_nether.dat")),
-	END("End", 1, Paths.get("DIM1"), Paths.get("data", "villages_end.dat"));
+	OVERWORLD("Overworld", 0, Paths.get("region"), Paths.get("data", "villages.dat")),
+	NETHER("Nether", -1, Paths.get("DIM-1", "region"), Paths.get("data", "villages_nether.dat")),
+	END("End", 1, Paths.get("DIM1", "region"), Paths.get("data", "villages_end.dat"));
 
 	public final int	index;
 	public final String	name;

@@ -17,23 +17,27 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.joml.Vector2d;
 import org.joml.Vector2dc;
+import org.joml.Vector2i;
 import org.joml.Vector2ic;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
 import org.joml.Vector3i;
 import org.joml.Vector3ic;
 
+import com.flowpowered.nbt.ByteTag;
 import com.flowpowered.nbt.CompoundMap;
 import com.flowpowered.nbt.CompoundTag;
 import com.flowpowered.nbt.DoubleTag;
 import com.flowpowered.nbt.IntTag;
 import com.flowpowered.nbt.ListTag;
 import com.flowpowered.nbt.LongTag;
+import com.flowpowered.nbt.StringTag;
 import com.flowpowered.nbt.stream.NBTInputStream;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import de.piegames.blockmap.MinecraftDimension;
+import de.piegames.blockmap.pin.WorldPins.MapPin.BannerPin;
 
 /** Each world may be annotated with a set of pins, represented by instances of this class */
 public class WorldPins {
@@ -158,23 +162,29 @@ public class WorldPins {
 	}
 
 	public static class MapPin {
-		int							scale;
 		Vector2ic					position;
+		MinecraftDimension			dimension;
+		byte						scale;
 
-		Optional<List<MarkerPin>>	markers;
+		Optional<List<BannerPin>>	banners;
 
 		@SuppressWarnings("unused")
 		private MapPin() {
 			// Used by GSON
 		}
 
-		public MapPin(int scale, Vector2ic position, Optional<List<MarkerPin>> markers) {
-			this.scale = scale;
-			this.position = position;
-			this.markers = markers;
+		public MapPin(byte scale, Vector2ic position, MinecraftDimension dimension, List<BannerPin> banners) {
+			this(scale, position, dimension, Optional.ofNullable(banners));
 		}
 
-		public int getScale() {
+		public MapPin(byte scale, Vector2ic position, MinecraftDimension dimension, Optional<List<BannerPin>> banners) {
+			this.scale = scale;
+			this.position = position;
+			this.dimension = dimension;
+			this.banners = banners;
+		}
+
+		public byte getScale() {
 			return scale;
 		}
 
@@ -182,21 +192,29 @@ public class WorldPins {
 			return position;
 		}
 
-		public Optional<List<MarkerPin>> getMarkers() {
-			return markers;
+		public MinecraftDimension getDimension() {
+			return dimension;
 		}
 
-		public static class MarkerPin {
+		public Optional<List<BannerPin>> getBanners() {
+			return banners;
+		}
+
+		public static class BannerPin {
 			Vector3ic			position;
-			Optional<Integer>	color;
+			Optional<String>	color;
 			Optional<String>	name;
 
 			@SuppressWarnings("unused")
-			private MarkerPin() {
+			private BannerPin() {
 				// Used by GSON
 			}
 
-			public MarkerPin(Vector3ic position, Optional<Integer> color, Optional<String> name) {
+			public BannerPin(Vector3ic position, String color, String name) {
+				this(position, Optional.ofNullable(color), Optional.ofNullable(name));
+			}
+
+			public BannerPin(Vector3ic position, Optional<String> color, Optional<String> name) {
 				this.position = position;
 				this.color = color;
 				this.name = name;
@@ -206,7 +224,7 @@ public class WorldPins {
 				return position;
 			}
 
-			public Optional<Integer> getColor() {
+			public Optional<String> getColor() {
 				return color;
 			}
 
@@ -361,14 +379,13 @@ public class WorldPins {
 					List<DoubleTag> pos = ((ListTag<DoubleTag>) map.get("Pos")).getValue();
 					Vector3d position = new Vector3d(pos.get(0).getValue(), pos.get(1).getValue(), pos.get(2).getValue());
 					int dimension = ((IntTag) map.get("Dimension")).getValue();
-					if (filterDimension != null && dimension == filterDimension.index)
+					if (filterDimension != null && dimension != filterDimension.index)
 						continue;
 					String UUID = BigInteger.valueOf(((LongTag) map.get("UUIDMost")).getValue())
-							.shiftLeft(64)
-							.or(BigInteger.valueOf(((LongTag) map.get("UUIDLeast")).getValue()))
 							.and(new BigInteger("FFFFFFFFFFFFFFFF", 16))
+							.shiftLeft(64)
+							.or(BigInteger.valueOf(((LongTag) map.get("UUIDLeast")).getValue()).and(new BigInteger("FFFFFFFFFFFFFFFF", 16)))
 							.toString(16);
-					System.out.println(p.getFileName() + " " + UUID);
 					Vector3i spawnpoint = null;
 					if (map.containsKey("SpawnX"))
 						spawnpoint = new Vector3i(
@@ -376,7 +393,7 @@ public class WorldPins {
 								((IntTag) map.get("SpawnY")).getValue(),
 								((IntTag) map.get("SpawnZ")).getValue());
 					int gamemode = ((IntTag) map.get("playerGameType")).getValue();
-					players.add(new PlayerPin(position, MinecraftDimension.forID(dimension), UUID, spawnpoint, gamemode));
+					players.add(new PlayerPin(position, MinecraftDimension.byID(dimension), UUID, spawnpoint, gamemode));
 				}
 			}
 		} catch (IOException e) {
@@ -417,9 +434,44 @@ public class WorldPins {
 			}
 		}
 		List<MapPin> maps = new ArrayList<>();
-		{// Maps
-
+		// Maps
+		try (DirectoryStream<Path> d = Files.newDirectoryStream(worldPath.resolve("data"))) {
+			for (Path p : d) {
+				if (!p.getFileName().toString().endsWith(".dat")
+						|| !p.getFileName().toString().startsWith("map_"))
+					continue;
+				try (NBTInputStream in = new NBTInputStream(Files.newInputStream(p), NBTInputStream.GZIP_COMPRESSION)) {
+					CompoundMap map = (CompoundMap) ((CompoundMap) in.readTag().getValue()).get("data").getValue();
+					byte scale = ((ByteTag) map.get("scale")).getValue();
+					Vector2i center = new Vector2i(
+							((IntTag) map.get("xCenter")).getValue(),
+							((IntTag) map.get("zCenter")).getValue());
+					List<BannerPin> banners = null;
+					if (map.containsKey("banners")) {
+						banners = new ArrayList<>();
+						for (CompoundTag banner : ((ListTag<CompoundTag>) map.get("banners")).getValue()) {
+							CompoundMap bannerMap = banner.getValue();
+							String color = bannerMap.containsKey("Color") ? ((StringTag) bannerMap.get("Color")).getValue() : null;
+							String name = bannerMap.containsKey("Name") ? ((StringTag) bannerMap.get("Name")).getValue() : null;
+							CompoundMap pos = ((CompoundTag) bannerMap.get("Pos")).getValue();
+							banners.add(new BannerPin(new Vector3i(
+									((IntTag) pos.get("X")).getValue(),
+									((IntTag) pos.get("Y")).getValue(),
+									((IntTag) pos.get("Z")).getValue()), color, name));
+						}
+					}
+					int dimension = ((IntTag) map.get("dimension")).getValue();
+					if (filterDimension != null && dimension != filterDimension.index)
+						continue;
+					maps.add(new MapPin(scale, center, MinecraftDimension.byID(dimension), banners));
+				} catch (RuntimeException | IOException e) {
+					log.warn("Could not access map " + p.getFileName(), e);
+				}
+			}
+		} catch (IOException e) {
+			log.warn("Could not access map data", e);
 		}
+
 		{ // Loaded chunks
 
 		}

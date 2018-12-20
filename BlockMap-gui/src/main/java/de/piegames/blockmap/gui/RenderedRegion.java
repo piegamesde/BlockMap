@@ -90,13 +90,13 @@ public class RenderedRegion {
 				// check above
 				// get above image
 				RenderedRegion above = getGround(true);
-				if (above == null)
-					System.out.println(getGround(true));
-				WritableImage aboveImage = above.getImage(true);
-				// upscale image
-				if (aboveImage != null)
-					image = RenderedMap.doubleSize(image, aboveImage, level, new Vector2i(position.x() & ((1 << level) - 1), position.y() & ((1 << level)
-							- 1)));
+				if (above != null) {
+					WritableImage aboveImage = above.getImage(true);
+					// upscale image
+					if (aboveImage != null)
+						image = RenderedMap.doubleSize(image, aboveImage, level, new Vector2i(position.x() & ((1 << level) - 1), position.y() & ((1 << level)
+								- 1)));
+				}
 			} else if (level < 0) {
 				// check below
 				RenderedRegion[] below = getBelow(true);

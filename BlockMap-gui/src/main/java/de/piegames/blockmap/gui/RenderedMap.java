@@ -298,10 +298,6 @@ public class RenderedMap {
 		};
 	}
 
-	public static WritableImage halfSize(WritableImage old, WritableImage... corners) {
-		return halfSize(corners[0], corners[1], corners[2], corners[3]);
-	}
-
 	public static WritableImage halfSize(WritableImage old, WritableImage topLeft, WritableImage topRight, WritableImage bottomLeft, WritableImage bottomRight) {
 		WritableImage output = old != null ? old : new WritableImage(512, 512);
 

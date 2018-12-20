@@ -36,6 +36,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonWriter;
 
+import de.piegames.blockmap.pin.WorldPins;
 import de.piegames.blockmap.renderer.RegionRenderer;
 
 /**
@@ -66,6 +67,9 @@ public abstract class RegionFolder {
 	 */
 	public abstract BufferedImage render(Vector2ic pos) throws IOException;
 
+	/** Returns the pins of this specific world or {@code null} if they are not loaded. */
+	public abstract WorldPins getPins();
+
 	/**
 	 * This {@link RegionFolder} implementation will render region files using a {@link RegionRenderer}. Calling {@link #render(Vector2ic)}
 	 * repeatedly on the same location will render the same image multiple times.
@@ -76,15 +80,20 @@ public abstract class RegionFolder {
 
 		protected final Map<Vector2ic, Path>	regions;
 		protected final RegionRenderer			renderer;
+		protected WorldPins						pins;
 
 		/**
 		 * @param file
 		 *            map region coordinates to paths, which point to the respective file. Those are treated as the "world" represented by this
-		 *            RegionFolder
+		 *            RegionFolder. May not be {@code null}.
+		 * @param pins
+		 *            The pins of this world. May not be {@code null}.
 		 * @param renderer
-		 *            the {@link RegionRenderer} used to render the files
+		 *            the {@link RegionRenderer} used to render the files. May not be {@code null}.
 		 * @see #load(Path, RegionRenderer)
 		 * @see #load(Path, MinecraftDimension, RegionRenderer)
+		 * @throws NullPointerException
+		 *             if any of the arguments is {@code null}
 		 */
 		public WorldRegionFolder(Map<Vector2ic, Path> files, RegionRenderer renderer) {
 			this.regions = Objects.requireNonNull(files);
@@ -108,6 +117,15 @@ public abstract class RegionFolder {
 			return regions.get(pos);
 		}
 
+		@Override
+		public WorldPins getPins() {
+			return pins;
+		}
+
+		public void setPins(WorldPins pins) {
+			this.pins = pins;
+		}
+
 		/**
 		 * Loads a region folder from a given world path.
 		 * 
@@ -118,7 +136,7 @@ public abstract class RegionFolder {
 		 * @see #load(Path, MinecraftDimension, RegionRenderer)
 		 */
 		public static WorldRegionFolder load(Path world, MinecraftDimension dimension, RegionRenderer renderer) throws IOException {
-			return load(dimension.resolve(world), renderer);
+			return load(world.resolve(dimension.getRegionPath()), renderer);
 		}
 
 		/**
@@ -152,17 +170,21 @@ public abstract class RegionFolder {
 	 */
 	public static abstract class SavedRegionFolder<T> extends RegionFolder {
 
-		protected final Map<Vector2ic, T> regions;
+		protected final Map<Vector2ic, T>	regions;
+		protected final WorldPins			pins;
 
 		/**
 		 * Creates the region folder with a custom mapping
 		 * 
 		 * @param regions
 		 *            a mapping from each region file's position in the world to a T that represents its location for loading
+		 * @param pins
+		 *            the pins of this world. May be {@code null} if they haven't been loaded.
 		 * @see #parseSaved(JsonElement)
 		 */
-		protected SavedRegionFolder(Map<Vector2ic, T> regions) {
+		protected SavedRegionFolder(Map<Vector2ic, T> regions, WorldPins pins) {
 			this.regions = Collections.unmodifiableMap(regions);
+			this.pins = pins;
 		}
 
 		/**
@@ -183,6 +205,7 @@ public abstract class RegionFolder {
 					throw new IllegalArgumentException("The specified file contains more than one saved map, but no name was given");
 				rawFile = saved.values().iterator().next();
 			}
+			pins = GSON.fromJson(rawFile.get("pins"), WorldPins.class);
 			regions = ((List<RegionHelper>) GSON.fromJson(rawFile.getAsJsonArray("regions"), new TypeToken<List<RegionHelper>>() {
 			}.getType())).stream().collect(Collectors.toMap(r -> new Vector2i(r.x, r.z), r -> resolve(file, r.image)));
 		}
@@ -212,6 +235,11 @@ public abstract class RegionFolder {
 		@Override
 		public Set<Vector2ic> listRegions() {
 			return Collections.unmodifiableSet(regions.keySet());
+		}
+
+		@Override
+		public WorldPins getPins() {
+			return pins;
 		}
 
 		public T getPath(Vector2ic pos) {
@@ -261,8 +289,8 @@ public abstract class RegionFolder {
 	 * (There is even an URLSystemProvider somewhere on GitHub ...)
 	 */
 	public static class LocalRegionFolder extends SavedRegionFolder<Path> {
-		protected LocalRegionFolder(Map<Vector2ic, Path> regions) {
-			super(regions);
+		protected LocalRegionFolder(Map<Vector2ic, Path> regions, WorldPins pins) {
+			super(regions, pins);
 		}
 
 		public LocalRegionFolder(Path file, String name) throws IOException {
@@ -286,8 +314,8 @@ public abstract class RegionFolder {
 	 */
 	public static class RemoteRegionFolder extends SavedRegionFolder<URI> {
 
-		protected RemoteRegionFolder(Map<Vector2ic, URI> regions) {
-			super(regions);
+		protected RemoteRegionFolder(Map<Vector2ic, URI> regions, WorldPins pins) {
+			super(regions, pins);
 		}
 
 		public RemoteRegionFolder(URI file, String name) throws IOException {
@@ -360,6 +388,16 @@ public abstract class RegionFolder {
 			return world.listRegions();
 		}
 
+		@Override
+		public WorldPins getPins() {
+			return world.getPins();
+		}
+
+		/** A link to the {@link WorldRegionFolder} that is cached by this object. */
+		public WorldRegionFolder getWorldRegionFolder() {
+			return world;
+		}
+
 		/**
 		 * Transforms this object into a {@link LocalRegionFolder} for further use. The returned object will know of every region file in
 		 * {@link #listRegions()}, even if it has not been rendered yet. In that case, rendering those from the returned object will throw an error.
@@ -368,7 +406,7 @@ public abstract class RegionFolder {
 			Map<Vector2ic, Path> regions = new HashMap<>();
 			for (Entry<Vector2ic, Path> e : world.regions.entrySet())
 				regions.put(new Vector2i(e.getKey().x(), e.getKey().y()), imageFolder.resolve(e.getValue().getFileName().toString().replace(".mca", ".png")));
-			return new LocalRegionFolder(regions);
+			return new LocalRegionFolder(regions, world.getPins());
 		}
 
 		/** @see #save(Path, String, boolean) */

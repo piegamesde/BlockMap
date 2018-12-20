@@ -200,7 +200,7 @@ public abstract class RegionFolderProvider {
 			this.renderer = renderer;
 			available = new ArrayList<>(3);
 			for (MinecraftDimension d : MinecraftDimension.values())
-				if (Files.exists(d.resolve(worldPath)) && Files.isDirectory(d.resolve(worldPath)))
+				if (Files.exists(worldPath.resolve(d.getRegionPath())) && Files.isDirectory(worldPath.resolve(d.getRegionPath())))
 					available.add(d);
 			if (available.isEmpty())
 				throw new IllegalArgumentException("Not a vaild world folder");

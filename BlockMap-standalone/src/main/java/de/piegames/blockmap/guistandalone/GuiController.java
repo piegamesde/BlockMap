@@ -19,6 +19,8 @@ import de.piegames.blockmap.gui.MapPane;
 import de.piegames.blockmap.gui.WorldRendererCanvas;
 import de.piegames.blockmap.gui.decoration.DragScrollDecoration;
 import de.piegames.blockmap.gui.decoration.GridDecoration;
+import de.piegames.blockmap.gui.decoration.Pin;
+import de.piegames.blockmap.gui.decoration.PinDecoration;
 import de.piegames.blockmap.guistandalone.RegionFolderProvider.LocalFolderProvider;
 import de.piegames.blockmap.guistandalone.RegionFolderProvider.RemoteFolderProvider;
 import de.piegames.blockmap.renderer.RegionRenderer;
@@ -29,6 +31,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -74,6 +77,7 @@ public class GuiController implements Initializable {
 
 	protected MapPane								pane;
 	protected ObjectProperty<Path>					currentPath				= new SimpleObjectProperty<>();
+	protected PinDecoration							pins;
 
 	public GuiController() {
 	}
@@ -91,6 +95,8 @@ public class GuiController implements Initializable {
 		GridDecoration grid = new GridDecoration(renderer.viewport);
 		pane.decorationLayers.add(grid);
 		grid.visibleProperty().bind(gridBox.selectedProperty());
+		pins = new PinDecoration(renderer.viewport);
+		pane.decorationLayers.add(pins);
 
 		{
 			statusBar.setSkin(new StatusBarSkin2(statusBar));
@@ -156,6 +162,10 @@ public class GuiController implements Initializable {
 		});
 		regionFolderProvider.set(null); /* Force listener update */
 		renderer.regionFolder.bind(regionFolder);
+		renderer.regionFolder.addListener((observable, previous, val) -> {
+			if (val != null)
+				pins.pins.set(FXCollections.observableList(Pin.convert(val.getPins())));
+		});
 	}
 
 	@FXML

@@ -26,6 +26,8 @@ import com.flowpowered.nbt.regionfile.Chunk;
 import com.flowpowered.nbt.regionfile.RegionFile;
 
 import de.piegames.blockmap.color.Color;
+import de.piegames.blockmap.world.ChunkMetadata;
+import de.piegames.blockmap.world.Region.BufferedRegion;
 
 /**
  * Use this class to transform a Minecraft region file into a top-down image view of it.
@@ -51,16 +53,16 @@ public class RegionRenderer {
 	 *            The position of the region file in region coordinates. Used to check if blocks are within the bounds of the area to render.
 	 * @return An array of colors representing the final image. The image is square and 512x512 wide. The array sorted in XZ order.
 	 */
-	public BufferedImage render(Vector2ic regionPos, RegionFile file) throws IOException {
+	public BufferedRegion render(Vector2ic regionPos, RegionFile file) throws IOException {
 		log.info("Rendering region file " + regionPos.x() + " " + regionPos.y());
 		BufferedImage image = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
-		Color[] colors = renderRaw(regionPos, file);
+		Color[] colors = renderRaw(regionPos, file, null);
 		// image.setRGB(0, 0, 512, 512, colors, 0, 512);
 		for (int x = 0; x < 512; x++)
 			for (int z = 0; z < 512; z++)
 				if (colors[x | (z << 9)] != null)
 					image.setRGB(x, z, colors[x | (z << 9)].toRGB());
-		return image;
+		return new BufferedRegion(regionPos, image, Collections.emptyMap());
 	}
 
 	/**
@@ -75,7 +77,7 @@ public class RegionRenderer {
 	 * @see Color
 	 * @see RegionFile
 	 */
-	public Color[] renderRaw(Vector2ic regionPos, RegionFile file) throws IOException {
+	public Color[] renderRaw(Vector2ic regionPos, RegionFile file, Map<Vector2ic, ChunkMetadata> metadata) throws IOException {
 		/* The final map of the chunk, 512*512 pixels, XZ */
 		Color[] map = new Color[512 * 512];
 		/* If nothing is set otherwise, the height map is set to the minimum height. */

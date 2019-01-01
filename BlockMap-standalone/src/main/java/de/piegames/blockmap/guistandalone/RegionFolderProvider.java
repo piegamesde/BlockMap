@@ -18,10 +18,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import de.piegames.blockmap.MinecraftDimension;
-import de.piegames.blockmap.RegionFolder;
-import de.piegames.blockmap.RegionFolder.SavedRegionFolder;
-import de.piegames.blockmap.RegionFolder.WorldRegionFolder;
 import de.piegames.blockmap.renderer.RegionRenderer;
+import de.piegames.blockmap.world.RegionFolder;
+import de.piegames.blockmap.world.RegionFolder.SavedRegionFolder;
+import de.piegames.blockmap.world.RegionFolder.WorldRegionFolder;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;

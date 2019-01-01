@@ -18,10 +18,10 @@ import org.apache.commons.logging.LogFactory;
 import org.joml.Vector2i;
 import org.joml.Vector2ic;
 
-import de.piegames.blockmap.RegionFolder;
-import de.piegames.blockmap.RegionFolder.SavedRegionFolder;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RenderSettings;
+import de.piegames.blockmap.world.RegionFolder;
+import de.piegames.blockmap.world.RegionFolder.SavedRegionFolder;
 
 /** This class contains a collection of methods that transform the rendered map into another, more accessible representation */
 public class PostProcessing {

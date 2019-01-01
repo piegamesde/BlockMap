@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 import org.joml.AABBd;
 import org.joml.Vector2d;
 
-import de.piegames.blockmap.pin.WorldPins;
+import de.piegames.blockmap.world.WorldPins;
 import javafx.scene.Node;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;

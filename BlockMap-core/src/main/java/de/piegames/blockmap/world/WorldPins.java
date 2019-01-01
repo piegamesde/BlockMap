@@ -1,16 +1,13 @@
-package de.piegames.blockmap.pin;
+package de.piegames.blockmap.world;
 
 import java.io.IOException;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.math.BigInteger;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.logging.Log;
@@ -37,33 +34,22 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import de.piegames.blockmap.MinecraftDimension;
-import de.piegames.blockmap.pin.WorldPins.MapPin.BannerPin;
+import de.piegames.blockmap.world.WorldPins.MapPin.BannerPin;
 
 /** Each world may be annotated with a set of pins, represented by instances of this class */
 public class WorldPins {
 
 	private static Log log = LogFactory.getLog(WorldPins.class);
 
-	@Retention(RetentionPolicy.RUNTIME)
-	@Target(ElementType.FIELD)
-	private static @interface Property {
-		public Class<?> value();
-	}
-
 	public static final Gson	GSON	= new GsonBuilder().create();
 
-	@Property(PlayerPin.class)
 	Optional<List<PlayerPin>>	players;
-	@Property(MapPin.class)
 	Optional<List<MapPin>>		maps;
-	@Property(VillagePin.class)
 	Optional<List<VillagePin>>	villages;
-	@Property(ChunkPin.class)
 	Optional<List<ChunkPin>>	slimeChunks, loadedChunks;
-	@Property(ChunkPin.class)
 	Optional<BorderPin>			barrier;
-	@Property(WorldSpawnPin.class)
 	Optional<WorldSpawnPin>		worldSpawn;
+	Optional<Map<Vector2ic, ChunkMetadata>>	chunkMetadata;
 
 	@SuppressWarnings("unused")
 	private WorldPins() {

@@ -13,8 +13,8 @@ import java.util.concurrent.TimeUnit;
 import org.joml.Vector2dc;
 import org.joml.Vector3d;
 
-import de.piegames.blockmap.RegionFolder;
 import de.piegames.blockmap.gui.RenderedRegion.RenderingState;
+import de.piegames.blockmap.world.RegionFolder;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyFloatProperty;

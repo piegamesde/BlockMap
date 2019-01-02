@@ -13,7 +13,6 @@ import org.controlsfx.control.RangeSlider;
 import org.controlsfx.control.StatusBar;
 
 import de.piegames.blockmap.DotMinecraft;
-import de.piegames.blockmap.RegionFolder;
 import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.gui.MapPane;
 import de.piegames.blockmap.gui.WorldRendererCanvas;
@@ -26,6 +25,7 @@ import de.piegames.blockmap.guistandalone.RegionFolderProvider.RemoteFolderProvi
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RegionShader;
 import de.piegames.blockmap.renderer.RenderSettings;
+import de.piegames.blockmap.world.RegionFolder;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;

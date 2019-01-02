@@ -216,7 +216,7 @@ public class Screenshots {
 				+ ".mca")
 				.toString())));
 		settings.blockColors = colors.getColorMap();
-		return renderer.render(toRender, file);
+		return renderer.render(toRender, file).getImage();
 	}
 
 	private static void processSteps(List<Callable<Boolean>> steps) throws InterruptedException, ExecutionException {

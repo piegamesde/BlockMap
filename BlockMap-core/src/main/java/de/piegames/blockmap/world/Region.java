@@ -51,9 +51,9 @@ public abstract class Region {
 			return metadata;
 		}
 
-		public SavedRegion save(Path out) throws IOException {
+		public LocalSavedRegion save(Path out) throws IOException {
 			ImageIO.write(image, "png", Files.newOutputStream(out));
-			return new SavedRegion(position, out.toUri(), metadata);
+			return new LocalSavedRegion(position, out, metadata);
 		}
 	}
 
@@ -90,7 +90,26 @@ public abstract class Region {
 			return metadata;
 		}
 
-		public URI getPath() {
+		public URI getURI() {
+			return path;
+		}
+	}
+
+	public static class LocalSavedRegion extends SavedRegion {
+
+		protected Path path;
+
+		public LocalSavedRegion(Vector2ic position, Path path, ChunkMetadata[] metadata) {
+			super(position, path.toUri(), metadata);
+			this.path = path;
+		}
+
+		public LocalSavedRegion(Vector2ic position, Path path, Map<Vector2ic, ChunkMetadata> metadata) {
+			super(position, path.toUri(), metadata);
+			this.path = path;
+		}
+
+		public Path getPath() {
 			return path;
 		}
 	}

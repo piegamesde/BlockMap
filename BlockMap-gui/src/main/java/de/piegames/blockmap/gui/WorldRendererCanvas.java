@@ -151,7 +151,7 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 		try {
 			BufferedImage texture2 = null;
 			do {
-				texture2 = regionFolder.get().render(region.position);
+				texture2 = regionFolder.get().render(region.position).getImage();
 				// Re-render the texture if it has been invalidated ('REDRAW')
 			} while (region.valid.compareAndSet(RenderingState.REDRAW, RenderingState.DRAWING) && !Thread.interrupted());
 			map.updateCounter(region);

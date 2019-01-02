@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.spi.FileSystemProvider;
 import java.util.Collection;
@@ -37,6 +36,7 @@ import com.google.gson.stream.JsonWriter;
 import de.piegames.blockmap.MinecraftDimension;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.world.Region.BufferedRegion;
+import de.piegames.blockmap.world.Region.LocalSavedRegion;
 import de.piegames.blockmap.world.Region.SavedRegion;
 
 /**
@@ -174,10 +174,10 @@ public abstract class RegionFolder {
 	 * @param T
 	 *            the type of the file mapping, like URL, URI, Path, File, etc.
 	 */
-	public static abstract class SavedRegionFolder<T> extends RegionFolder {
+	public static abstract class SavedRegionFolder<T, R extends SavedRegion> extends RegionFolder {
 
-		protected final Map<Vector2ic, Region>	regions;
-		protected final WorldPins				pins;
+		protected final Map<Vector2ic, R>	regions;
+		protected final WorldPins					pins;
 
 		/**
 		 * Creates the region folder with a custom mapping
@@ -188,7 +188,7 @@ public abstract class RegionFolder {
 		 *            the pins of this world. May be {@code null} if they haven't been loaded.
 		 * @see #parseSaved(JsonElement)
 		 */
-		protected SavedRegionFolder(Map<Vector2ic, Region> regions, WorldPins pins) {
+		protected SavedRegionFolder(Map<Vector2ic, R> regions, WorldPins pins) {
 			this.regions = Collections.unmodifiableMap(regions);
 			this.pins = pins;
 		}
@@ -217,14 +217,14 @@ public abstract class RegionFolder {
 		}
 
 		@Override
-		public Region render(Vector2ic pos) throws IOException {
+		public R render(Vector2ic pos) throws IOException {
 			return regions.get(pos);
 		}
 
 		/** Mapping from the path type T to an input stream. */
 		protected abstract InputStream getInputStream(T path) throws IOException;
 
-		protected abstract Region getRegion(RegionHelper rawRegion, T basePath);
+		protected abstract R getRegion(RegionHelper rawRegion, T basePath);
 
 		@Override
 		public Set<Vector2ic> listRegions() {
@@ -278,8 +278,8 @@ public abstract class RegionFolder {
 	 * system, but Java paths work with other URI schemata as well. Check {@link FileSystemProvider#installedProviders()} for more information.
 	 * (There is even an URLSystemProvider somewhere on GitHub ...)
 	 */
-	public static class LocalRegionFolder extends SavedRegionFolder<Path> {
-		protected LocalRegionFolder(Map<Vector2ic, Region> regions, WorldPins pins) {
+	public static class LocalRegionFolder extends SavedRegionFolder<Path, LocalSavedRegion> {
+		protected LocalRegionFolder(Map<Vector2ic, LocalSavedRegion> regions, WorldPins pins) {
 			super(regions, pins);
 		}
 
@@ -293,10 +293,10 @@ public abstract class RegionFolder {
 		}
 
 		@Override
-		protected Region getRegion(RegionHelper rawRegion, Path basePath) {
-			return new SavedRegion(
+		protected LocalSavedRegion getRegion(RegionHelper rawRegion, Path basePath) {
+			return new LocalSavedRegion(
 					new Vector2i(rawRegion.x, rawRegion.z),
-					basePath.resolveSibling(rawRegion.image).toUri(),
+					basePath.resolveSibling(rawRegion.image),
 					rawRegion.metadata);
 		}
 	}
@@ -305,9 +305,9 @@ public abstract class RegionFolder {
 	 * An implementation of {@link SavedRegionFolder} based on URIs. It is intended for primary use on remote servers, but with the {@code file}
 	 * schema it can open local files as well.
 	 */
-	public static class RemoteRegionFolder extends SavedRegionFolder<URI> {
+	public static class RemoteRegionFolder extends SavedRegionFolder<URI, SavedRegion> {
 
-		protected RemoteRegionFolder(Map<Vector2ic, Region> regions, WorldPins pins) {
+		protected RemoteRegionFolder(Map<Vector2ic, SavedRegion> regions, WorldPins pins) {
 			super(regions, pins);
 		}
 
@@ -321,7 +321,7 @@ public abstract class RegionFolder {
 		}
 
 		@Override
-		protected Region getRegion(RegionHelper rawRegion, URI basePath) {
+		protected SavedRegion getRegion(RegionHelper rawRegion, URI basePath) {
 			return new SavedRegion(
 					new Vector2i(rawRegion.x, rawRegion.z),
 					basePath.resolve(rawRegion.image),
@@ -335,10 +335,10 @@ public abstract class RegionFolder {
 	 */
 	public static class CachedRegionFolder extends RegionFolder {
 
-		protected WorldRegionFolder				world;
-		protected boolean						lazy;
-		protected Path							imageFolder;
-		protected Map<Vector2ic, SavedRegion>	cache;
+		protected WorldRegionFolder					world;
+		protected boolean							lazy;
+		protected Path								imageFolder;
+		protected Map<Vector2ic, LocalSavedRegion>	cache	= new HashMap<>();
 
 		/**
 		 * @param world
@@ -435,7 +435,7 @@ public abstract class RegionFolder {
 				writer.value(name);
 				writer.name("regions");
 				writer.beginArray();
-				for (Entry<Vector2ic, SavedRegion> e : cache.entrySet()) {
+				for (Entry<Vector2ic, LocalSavedRegion> e : cache.entrySet()) {
 					writer.beginObject();
 
 					writer.name("x");
@@ -443,7 +443,7 @@ public abstract class RegionFolder {
 					writer.name("z");
 					writer.value(e.getKey().y());
 					writer.name("image");
-					Path value = imageFolder.resolve(Paths.get(e.getValue().getPath()).getFileName().toString().replace(".mca", ".png"));
+					Path value = imageFolder.resolve(e.getValue().getPath().getFileName().toString().replace(".mca", ".png"));
 					if (relativePaths)
 						value = file.normalize().getParent().relativize(value.normalize());
 					writer.value(value.toString());

@@ -56,15 +56,16 @@ public class ColorCompilerTest {
 				.get("default");
 		settings.biomeColors = ColorCompiler.compileBiomeColors(minecraftJarfile, Paths.get(getClass().getResource("/biome-color-instructions.json").toURI()));
 		RegionRenderer renderer = new RegionRenderer(settings);
-		assertNoMissing(renderer.render(new Vector2i(-1, -1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.-1.-1.mca").toURI()))));
-		assertNoMissing(renderer.render(new Vector2i(-1, 0), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.-1.0.mca").toURI()))));
-		assertNoMissing(renderer.render(new Vector2i(-1, 1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.-1.1.mca").toURI()))));
-		assertNoMissing(renderer.render(new Vector2i(0, -1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.0.-1.mca").toURI()))));
-		assertNoMissing(renderer.render(new Vector2i(0, 0), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.0.0.mca").toURI()))));
-		assertNoMissing(renderer.render(new Vector2i(0, 1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.0.1.mca").toURI()))));
-		assertNoMissing(renderer.render(new Vector2i(1, -1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.1.-1.mca").toURI()))));
-		assertNoMissing(renderer.render(new Vector2i(1, 0), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.1.0.mca").toURI()))));
-		assertNoMissing(renderer.render(new Vector2i(1, 1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.1.1.mca").toURI()))));
+		assertNoMissing(renderer.render(new Vector2i(-1, -1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.-1.-1.mca").toURI())))
+				.getImage());
+		assertNoMissing(renderer.render(new Vector2i(-1, 0), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.-1.0.mca").toURI()))).getImage());
+		assertNoMissing(renderer.render(new Vector2i(-1, 1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.-1.1.mca").toURI()))).getImage());
+		assertNoMissing(renderer.render(new Vector2i(0, -1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.0.-1.mca").toURI()))).getImage());
+		assertNoMissing(renderer.render(new Vector2i(0, 0), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.0.0.mca").toURI()))).getImage());
+		assertNoMissing(renderer.render(new Vector2i(0, 1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.0.1.mca").toURI()))).getImage());
+		assertNoMissing(renderer.render(new Vector2i(1, -1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.1.-1.mca").toURI()))).getImage());
+		assertNoMissing(renderer.render(new Vector2i(1, 0), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.1.0.mca").toURI()))).getImage());
+		assertNoMissing(renderer.render(new Vector2i(1, 1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.1.1.mca").toURI()))).getImage());
 	}
 
 	/**

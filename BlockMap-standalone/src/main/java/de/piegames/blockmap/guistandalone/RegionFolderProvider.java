@@ -19,6 +19,8 @@ import com.google.gson.JsonParser;
 
 import de.piegames.blockmap.MinecraftDimension;
 import de.piegames.blockmap.renderer.RegionRenderer;
+import de.piegames.blockmap.world.Region.LocalSavedRegion;
+import de.piegames.blockmap.world.Region.SavedRegion;
 import de.piegames.blockmap.world.RegionFolder;
 import de.piegames.blockmap.world.RegionFolder.SavedRegionFolder;
 import de.piegames.blockmap.world.RegionFolder.WorldRegionFolder;
@@ -128,7 +130,7 @@ public abstract class RegionFolderProvider {
 
 		protected abstract JsonElement load() throws IOException;
 
-		protected abstract SavedRegionFolder<T> load(String world);
+		protected abstract SavedRegionFolder<T, ?> load(String world);
 
 		@Override
 		public String getLocation() {
@@ -153,7 +155,7 @@ public abstract class RegionFolderProvider {
 		}
 
 		@Override
-		protected SavedRegionFolder<Path> load(String world) {
+		protected SavedRegionFolder<Path, LocalSavedRegion> load(String world) {
 			try {
 				return new RegionFolder.LocalRegionFolder(file, world);
 			} catch (IOException e) {
@@ -175,7 +177,7 @@ public abstract class RegionFolderProvider {
 		}
 
 		@Override
-		protected SavedRegionFolder<URI> load(String world) {
+		protected SavedRegionFolder<URI, SavedRegion> load(String world) {
 			try {
 				return new RegionFolder.RemoteRegionFolder(file, world);
 			} catch (IOException e) {

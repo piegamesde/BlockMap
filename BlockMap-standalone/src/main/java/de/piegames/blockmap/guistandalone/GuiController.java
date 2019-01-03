@@ -11,6 +11,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.controlsfx.control.RangeSlider;
 import org.controlsfx.control.StatusBar;
+import org.joml.Vector2ic;
 
 import de.piegames.blockmap.DotMinecraft;
 import de.piegames.blockmap.color.BlockColorMap;
@@ -25,6 +26,7 @@ import de.piegames.blockmap.guistandalone.RegionFolderProvider.RemoteFolderProvi
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RegionShader;
 import de.piegames.blockmap.renderer.RenderSettings;
+import de.piegames.blockmap.world.ChunkMetadata;
 import de.piegames.blockmap.world.RegionFolder;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -32,6 +34,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
+import javafx.collections.MapChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -164,7 +167,18 @@ public class GuiController implements Initializable {
 		renderer.regionFolder.bind(regionFolder);
 		renderer.regionFolder.addListener((observable, previous, val) -> {
 			if (val != null)
-				pins.pins.set(FXCollections.observableList(Pin.convert(val.getPins())));
+				this.pins.pins.set(FXCollections.observableList(Pin.convert(val.getPins())));
+		});
+		renderer.getChunkMetadata().addListener(new MapChangeListener<Vector2ic, ChunkMetadata>() {
+
+			@Override
+			public void onChanged(Change<? extends Vector2ic, ? extends ChunkMetadata> change) {
+				// System.out.println(Pin.convert(change.getValueAdded()));
+				if (change.wasRemoved())
+					GuiController.this.pins.chunkPins.removeIf(p -> p.chunkPosition.equals(change.getKey()));
+				if (change.wasAdded())
+					GuiController.this.pins.chunkPins.addAll(Pin.convert(change.getValueAdded()));
+			}
 		});
 	}
 

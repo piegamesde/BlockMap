@@ -7,6 +7,7 @@ import org.joml.Vector2dc;
 
 import de.piegames.blockmap.gui.CanvasHelper;
 import de.piegames.blockmap.gui.DisplayViewport;
+import de.piegames.blockmap.gui.decoration.Pin.ChunkPin;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
@@ -14,9 +15,10 @@ import javafx.collections.FXCollections;
 
 public class PinDecoration extends CanvasHelper {
 
-	protected final DisplayViewport viewport;
+	protected final DisplayViewport		viewport;
 
-	public final ListProperty<Pin>	pins	= new SimpleListProperty<>(FXCollections.emptyObservableList());
+	public final ListProperty<Pin>		pins		= new SimpleListProperty<>(FXCollections.emptyObservableList());
+	public final ListProperty<ChunkPin>	chunkPins	= new SimpleListProperty<>(FXCollections.observableArrayList());
 
 	public PinDecoration(DisplayViewport viewport) {
 		this.viewport = Objects.requireNonNull(viewport);
@@ -40,10 +42,18 @@ public class PinDecoration extends CanvasHelper {
 
 		AABBd frustum = viewport.frustumProperty.get();
 
+		for (ChunkPin p : chunkPins) {
+			// TODO check bounds
+			p.draw(gc);
+		}
 		for (Pin p : pins) {
 			if (!frustum.testPoint(p.position.x, p.position.y, 0))
 				continue;
-			p.draw(gc);
+			p.drawBackground(gc);
+		}
+		for (Pin p : pins) {
+			if (!frustum.testPoint(p.position.x, p.position.y, 0))
+				continue;
 			gc.drawImage(p.image, p.position.x - 16 / scale, p.position.y - 16 / scale, 32 / scale, 32 / scale);
 		}
 

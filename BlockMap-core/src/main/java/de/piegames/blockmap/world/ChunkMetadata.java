@@ -5,13 +5,17 @@ import org.joml.Vector2ic;
 public class ChunkMetadata {
 
 	public static enum ChunkRenderState {
-		RENDERED, NOT_RENDERED, FAILED, CULLED, TOO_OLD, TOO_NEW, NOT_GENERATED;
+		RENDERED, FAILED, CULLED, TOO_OLD, TOO_NEW, NOT_GENERATED;
 	}
 
+	/** Relative to the world */
 	public Vector2ic		position;
-	public ChunkRenderState	renderState	= ChunkRenderState.NOT_RENDERED;
+	public ChunkRenderState	renderState;
 	public boolean			slimeChunk;
 
-	public ChunkMetadata() {
+	public ChunkMetadata(Vector2ic position, ChunkRenderState renderState) {
+		this.position = position;
+		this.renderState = renderState;
+		this.slimeChunk = false;
 	}
 }

@@ -1,10 +1,10 @@
 package de.piegames.blockmap.renderer;
 
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.joml.Vector2i;
 import org.joml.Vector2ic;
 
 import com.flowpowered.nbt.CompoundMap;
@@ -27,6 +28,7 @@ import com.flowpowered.nbt.regionfile.RegionFile;
 
 import de.piegames.blockmap.color.Color;
 import de.piegames.blockmap.world.ChunkMetadata;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkRenderState;
 import de.piegames.blockmap.world.Region.BufferedRegion;
 
 /**
@@ -53,16 +55,17 @@ public class RegionRenderer {
 	 *            The position of the region file in region coordinates. Used to check if blocks are within the bounds of the area to render.
 	 * @return An array of colors representing the final image. The image is square and 512x512 wide. The array sorted in XZ order.
 	 */
-	public BufferedRegion render(Vector2ic regionPos, RegionFile file) throws IOException {
+	public BufferedRegion render(Vector2ic regionPos, RegionFile file) {
 		log.info("Rendering region file " + regionPos.x() + " " + regionPos.y());
 		BufferedImage image = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
-		Color[] colors = renderRaw(regionPos, file, null);
+		Map<Vector2ic, ChunkMetadata> metadata = new HashMap<>();
+		Color[] colors = renderRaw(regionPos, file, metadata);
 		// image.setRGB(0, 0, 512, 512, colors, 0, 512);
 		for (int x = 0; x < 512; x++)
 			for (int z = 0; z < 512; z++)
 				if (colors[x | (z << 9)] != null)
 					image.setRGB(x, z, colors[x | (z << 9)].toRGB());
-		return new BufferedRegion(regionPos, image, Collections.emptyMap());
+		return new BufferedRegion(regionPos, image, metadata);
 	}
 
 	/**
@@ -77,7 +80,7 @@ public class RegionRenderer {
 	 * @see Color
 	 * @see RegionFile
 	 */
-	public Color[] renderRaw(Vector2ic regionPos, RegionFile file, Map<Vector2ic, ChunkMetadata> metadata) throws IOException {
+	public Color[] renderRaw(Vector2ic regionPos, RegionFile file, Map<Vector2ic, ChunkMetadata> metadata) {
 		/* The final map of the chunk, 512*512 pixels, XZ */
 		Color[] map = new Color[512 * 512];
 		/* If nothing is set otherwise, the height map is set to the minimum height. */
@@ -89,11 +92,13 @@ public class RegionRenderer {
 		chunk: for (Chunk chunk : file) {
 			if (chunk == null)
 				continue;
+			int chunkX = ((regionPos.x() << 5) | chunk.x);
+			int chunkZ = ((regionPos.y() << 5) | chunk.z);
+			Vector2ic chunkPos = new Vector2i(chunkX, chunkZ);
 			try {
-				int chunkX = ((regionPos.x() << 5) | chunk.x);
-				int chunkZ = ((regionPos.y() << 5) | chunk.z);
 				if ((chunkX + 16 < settings.minX || chunkX > settings.maxX)
 						&& (chunkZ + 16 < settings.minZ || chunkZ > settings.maxZ)) {
+					metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.CULLED));
 					continue;
 				}
 
@@ -105,6 +110,7 @@ public class RegionRenderer {
 						int dataVersion = ((Integer) root.get("DataVersion").getValue());
 						if (dataVersion < 1519) {
 							log.warn("Skipping chunk because it is too old");
+							metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.TOO_OLD));
 							continue;
 						}
 						// throw new IllegalArgumentException("Only chunks saved in 1.13+ are supported. Please optimize your world in Minecraft before
@@ -112,6 +118,7 @@ public class RegionRenderer {
 						// will be accepted again one day");
 					} else {
 						log.warn("Skipping chunk because it is way too old (pre 1.9)");
+						metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.TOO_OLD));
 						continue;
 						// throw new IllegalArgumentException(
 						// "Only chunks saved in 1.13+ are supported, this is pre 1.9!. Please optimize your world in Minecraft before rendering");
@@ -124,6 +131,7 @@ public class RegionRenderer {
 					String status = ((String) level.get("Status").getValue());
 					if (!status.equals("postprocessed") && !status.equals("fullchunk") && !status.equals("mobs_spawned")) {
 						log.debug("Skipping chunk because status is " + status);
+						metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.NOT_GENERATED));
 						continue;
 					}
 				}
@@ -203,6 +211,7 @@ public class RegionRenderer {
 									log.warn("Failed to render chunk (" + chunk.x + ", " + chunk.z + ") section " + s
 											+ ". This is very likely because your chunk is corrupt. If possible, please verify it "
 											+ "manually before sending a bug report.", e);
+									metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.FAILED));
 									continue chunk;
 								}
 								lowestLoadedSection = s;
@@ -244,7 +253,8 @@ public class RegionRenderer {
 					}
 			} catch (Exception e) {
 				log.warn("Failed to render chunk (" + chunk.x + ", " + chunk.z + ")", e);
-				throw e;
+				metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.FAILED));
+				break;
 			}
 		}
 

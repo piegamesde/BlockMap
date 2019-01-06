@@ -7,8 +7,9 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
 		BlockStateTest.class,
 		ColorCompilerTest.class,
-		CommandLineTest.class,
-		RegionRendererTest.class
+		RegionRendererTest.class,
+		RegionFolderTest.class,
+		CommandLineTest.class
 })
 public class AllTests {
 }

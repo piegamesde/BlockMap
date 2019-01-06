@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -177,7 +178,7 @@ public abstract class RegionFolder {
 	public static abstract class SavedRegionFolder<T, R extends SavedRegion> extends RegionFolder {
 
 		protected final Map<Vector2ic, R>	regions;
-		protected final WorldPins					pins;
+		protected final WorldPins			pins;
 
 		/**
 		 * Creates the region folder with a custom mapping
@@ -297,7 +298,7 @@ public abstract class RegionFolder {
 			return new LocalSavedRegion(
 					new Vector2i(rawRegion.x, rawRegion.z),
 					basePath.resolveSibling(rawRegion.image),
-					rawRegion.metadata);
+					rawRegion.metadata.stream().collect(Collectors.toMap(meta -> meta.position, Function.identity())));
 		}
 	}
 
@@ -325,7 +326,7 @@ public abstract class RegionFolder {
 			return new SavedRegion(
 					new Vector2i(rawRegion.x, rawRegion.z),
 					basePath.resolve(rawRegion.image),
-					rawRegion.metadata);
+					rawRegion.metadata.stream().collect(Collectors.toMap(meta -> meta.position, Function.identity())));
 		}
 	}
 
@@ -448,18 +449,8 @@ public abstract class RegionFolder {
 						value = file.normalize().getParent().relativize(value.normalize());
 					writer.value(value.toString());
 
-					{ // Write metadata
-						Map<Vector2ic, ChunkMetadata> metadata = e.getValue().getChunkMetadata();
-						writer.name("metadata");
-						writer.beginArray();
-						for (int z = 0; z < 32; z++)
-							for (int x = 0; x < 32; x++)
-								if (metadata.containsKey(new Vector2i(x, z)))
-									writer.jsonValue(RegionFolder.GSON.toJson(metadata.get(new Vector2i(x, z))));
-								else
-									writer.nullValue();
-						writer.endArray();
-					}
+					writer.name("metadata");
+					writer.jsonValue(RegionFolder.GSON.toJson(e.getValue().getChunkMetadata().values()));
 
 					writer.endObject();
 				}
@@ -473,8 +464,8 @@ public abstract class RegionFolder {
 	}
 
 	public static class RegionHelper {
-		int				x, z;
-		String			image;
-		ChunkMetadata[]	metadata;
+		int					x, z;
+		String				image;
+		List<ChunkMetadata>	metadata;
 	}
 }

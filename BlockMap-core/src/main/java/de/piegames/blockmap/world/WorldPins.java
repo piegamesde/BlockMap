@@ -7,7 +7,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.logging.Log;
@@ -49,7 +48,6 @@ public class WorldPins {
 	Optional<List<ChunkPin>>	slimeChunks, loadedChunks;
 	Optional<BorderPin>			barrier;
 	Optional<WorldSpawnPin>		worldSpawn;
-	Optional<Map<Vector2ic, ChunkMetadata>>	chunkMetadata;
 
 	@SuppressWarnings("unused")
 	private WorldPins() {

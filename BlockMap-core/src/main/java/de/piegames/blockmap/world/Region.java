@@ -7,12 +7,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import javax.imageio.ImageIO;
 
-import org.joml.Vector2i;
 import org.joml.Vector2ic;
 
 public abstract class Region {
@@ -28,14 +25,14 @@ public abstract class Region {
 
 	public abstract BufferedImage getImage() throws IOException;
 
-	public abstract Map<Vector2ic, ChunkMetadata> getChunkMetadata();
+	public abstract Map<? extends Vector2ic, ChunkMetadata> getChunkMetadata();
 
 	public static class BufferedRegion extends Region {
 
 		protected BufferedImage					image;
-		protected Map<Vector2ic, ChunkMetadata>	metadata;
+		protected Map<? extends Vector2ic, ChunkMetadata>	metadata;
 
-		public BufferedRegion(Vector2ic position, BufferedImage image, Map<Vector2ic, ChunkMetadata> metadata) {
+		public BufferedRegion(Vector2ic position, BufferedImage image, Map<? extends Vector2ic, ChunkMetadata> metadata) {
 			super(position);
 			this.image = Objects.requireNonNull(image);
 			this.metadata = Objects.requireNonNull(metadata);
@@ -47,7 +44,7 @@ public abstract class Region {
 		}
 
 		@Override
-		public Map<Vector2ic, ChunkMetadata> getChunkMetadata() {
+		public Map<? extends Vector2ic, ChunkMetadata> getChunkMetadata() {
 			return metadata;
 		}
 
@@ -60,20 +57,9 @@ public abstract class Region {
 	public static class SavedRegion extends Region {
 
 		protected URI							path;
-		protected Map<Vector2ic, ChunkMetadata>	metadata;
+		protected Map<? extends Vector2ic, ChunkMetadata>	metadata;
 
-		public SavedRegion(Vector2ic position, URI path, ChunkMetadata[] metadata) {
-			super(position);
-			this.path = path;
-			this.metadata = IntStream.range(0, 32 * 32)
-					.mapToObj(Integer::valueOf)
-					.collect(Collectors.toMap(
-							i -> new Vector2i(position.x() + (i & 15), position.y() + (i >> 4)),
-							i -> metadata[i]));
-
-		}
-
-		public SavedRegion(Vector2ic position, URI path, Map<Vector2ic, ChunkMetadata> metadata) {
+		public SavedRegion(Vector2ic position, URI path, Map<? extends Vector2ic, ChunkMetadata> metadata) {
 			super(position);
 			this.path = Objects.requireNonNull(path);
 			this.metadata = Objects.requireNonNull(metadata);
@@ -86,7 +72,7 @@ public abstract class Region {
 		}
 
 		@Override
-		public Map<Vector2ic, ChunkMetadata> getChunkMetadata() {
+		public Map<? extends Vector2ic, ChunkMetadata> getChunkMetadata() {
 			return metadata;
 		}
 
@@ -99,12 +85,7 @@ public abstract class Region {
 
 		protected Path path;
 
-		public LocalSavedRegion(Vector2ic position, Path path, ChunkMetadata[] metadata) {
-			super(position, path.toUri(), metadata);
-			this.path = path;
-		}
-
-		public LocalSavedRegion(Vector2ic position, Path path, Map<Vector2ic, ChunkMetadata> metadata) {
+		public LocalSavedRegion(Vector2ic position, Path path, Map<? extends Vector2ic, ChunkMetadata> metadata) {
 			super(position, path.toUri(), metadata);
 			this.path = path;
 		}

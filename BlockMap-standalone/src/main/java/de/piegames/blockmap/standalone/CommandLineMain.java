@@ -161,7 +161,7 @@ public class CommandLineMain implements Runnable {
 				}
 			}
 			if (createBigPic)
-				PostProcessing.createBigImage(world, output, settings);
+				PostProcessing.createBigImage(cached.save(), output, settings);
 			if (createHtml)
 				PostProcessing.createTileHtml(cached.save(), output, settings);
 			return cached;

@@ -15,6 +15,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.joml.Vector2i;
 import org.joml.Vector2ic;
+import org.joml.Vector3i;
+import org.joml.Vector3ic;
 
 import com.flowpowered.nbt.CompoundMap;
 import com.flowpowered.nbt.CompoundTag;
@@ -136,6 +138,24 @@ public class RegionRenderer {
 					}
 				}
 
+				Map<String, Vector3ic> structureCenters = new HashMap<>();
+				if (level.containsKey("Structures") && ((CompoundTag) level.get("Structures")).getValue().containsKey("Starts")) {// Load saved structures
+					CompoundMap structures = ((CompoundTag) ((CompoundTag) level.get("Structures")).getValue().get("Starts")).getValue();
+					for (Tag<?> structureTag : structures.values()) {
+						CompoundMap structure = ((CompoundTag) structureTag).getValue();
+						String id = ((StringTag) structure.get("id")).getValue();
+						if (!id.equals("INVALID")) {
+							int[] bb = ((IntArrayTag) structure.get("BB")).getValue();
+							Vector3i center = new Vector3i(bb[0], bb[1], bb[2]).add(bb[3], bb[4], bb[5]);
+							// JOML has no Vector3i#div function, why?
+							center.x /= 2;
+							center.y /= 2;
+							center.z /= 2;
+							structureCenters.put(id, center);
+						}
+					}
+				}
+
 				int[] biomes = ((IntArrayTag) level.get("Biomes")).getValue();
 
 				/*
@@ -251,6 +271,7 @@ public class RegionRenderer {
 						}
 						map[chunk.x << 4 | x | chunk.z << 13 | z << 9] = color.getFinal();
 					}
+				metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.RENDERED, structureCenters));
 			} catch (Exception e) {
 				log.warn("Failed to render chunk (" + chunk.x + ", " + chunk.z + ")", e);
 				metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.FAILED));

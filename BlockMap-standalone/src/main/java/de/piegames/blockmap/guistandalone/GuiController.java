@@ -7,10 +7,12 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.controlsfx.control.CheckTreeView;
 import org.controlsfx.control.RangeSlider;
 import org.controlsfx.control.StatusBar;
 import org.joml.Vector2ic;
@@ -22,6 +24,9 @@ import de.piegames.blockmap.gui.WorldRendererCanvas;
 import de.piegames.blockmap.gui.decoration.DragScrollDecoration;
 import de.piegames.blockmap.gui.decoration.GridDecoration;
 import de.piegames.blockmap.gui.decoration.Pin;
+import de.piegames.blockmap.gui.decoration.Pin.CompressiblePin;
+import de.piegames.blockmap.gui.decoration.Pin.CompressiblePinType;
+import de.piegames.blockmap.gui.decoration.Pin.PinType;
 import de.piegames.blockmap.gui.decoration.PinDecoration;
 import de.piegames.blockmap.guistandalone.RegionFolderProvider.LocalFolderProvider;
 import de.piegames.blockmap.guistandalone.RegionFolderProvider.RemoteFolderProvider;
@@ -102,9 +107,10 @@ public class GuiController implements Initializable {
 		pane.decorationLayers.add(grid);
 		grid.visibleProperty().bind(gridBox.selectedProperty());
 		pins = new PinDecoration(renderer.viewport);
-		pane.decorationLayers.add(pins);
+		pane.settingsLayers.add(pins);
+		pins.addEventFilter(EventType.ROOT, event -> pane.decorationLayers.forEach(l1 -> l1.fireEvent(event)));
 
-		{
+		{ // Status bar initialization
 			statusBar.setSkin(new StatusBarSkin2(statusBar));
 			statusBar.progressProperty().bind(renderer.getProgress());
 			statusBar.setText(null);

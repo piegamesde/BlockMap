@@ -369,6 +369,10 @@ public abstract class Pin {
 				pins.add(new ButtonPin(false, new Vector2d(banner.getPosition().x(), banner.getPosition().y()), CompressiblePinType.MAP_BANNER, viewport));
 			}
 		}
+		pin.getWorldSpawn().map(spawn -> new ButtonPin(false, new Vector2d(spawn.getSpawnpoint().x(), spawn.getSpawnpoint().z()),
+				CompressiblePinType.WORLD_SPAWN, viewport))
+				.ifPresent(pins::add);
+
 		return pins;
 	}
 

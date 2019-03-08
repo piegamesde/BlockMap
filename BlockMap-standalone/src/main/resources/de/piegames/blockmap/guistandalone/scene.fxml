@@ -6,64 +6,70 @@
 <?import javafx.scene.text.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.geometry.Insets?>
 <?import org.controlsfx.control.*?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.CheckBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Menu?>
+<?import org.controlsfx.control.CheckListView?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
 
 <BorderPane
-	maxHeight="-Infinity"
-	maxWidth="-Infinity"
-	minHeight="-Infinity"
-	minWidth="-Infinity"
+	maxHeight="0"
+	maxWidth="0"
+	minHeight="0"
+	minWidth="0"
 	xmlns="http://javafx.com/javafx/8"
 	xmlns:fx="http://javafx.com/fxml/1"
 	fx:controller="de.piegames.blockmap.guistandalone.GuiController"
 	fx:id="root">
 	<top>
-		<VBox spacing="4">
+		<MenuBar>
+			<menus>
+				<Menu text="_File">
+					<items>
+						<MenuItem
+							text="Load world..."
+							onAction="#browseFolder" />
+						<MenuItem
+							text="Load rendered world..."
+							onAction="#browseFile" />
+						<MenuItem
+							text="Load remote world..."
+							onAction="#loadRemote" />
+						<MenuItem
+							text="Reload"
+							onAction="#reloadWorld" />
+						<MenuItem
+							text="Unload"
+							onAction="#unload" />
+						<MenuItem
+							text="Exit"
+							onAction="#exit" />
+					</items>
+				</Menu>
+				<Menu text="_Help">
+					<items>
+						<MenuItem text="About" />
+					</items>
+				</Menu>
+			</menus>
+		</MenuBar>
+	</top>
+	<left>
+		<HBox spacing="4">
 			<children>
-				<MenuBar>
-					<menus>
-						<Menu text="File">
-							<items>
-								<MenuItem
-									text="Load world..."
-									onAction="#browseFolder" />
-								<MenuItem
-									text="Load rendered world..."
-									onAction="#browseFile" />
-								<MenuItem
-									text="Load remote world..."
-									onAction="#loadRemote" />
-								<MenuItem
-									text="Reload"
-									onAction="#reloadWorld" />
-								<MenuItem
-									text="Unload"
-									onAction="#unload" />
-								<MenuItem
-									text="Exit"
-									onAction="#exit" />
-							</items>
-						</Menu>
-						<Menu text="Help">
-							<items>
-								<MenuItem text="About" />
-							</items>
-						</Menu>
-					</menus>
-				</MenuBar>
-				<HBox
+				<VBox
 					spacing="10"
 					alignment="CENTER"
-					VBox.vgrow="NEVER">
+					HBox.hgrow="NEVER">
 					<children>
-						<Label fx:id="minHeight" />
+						<Label fx:id="maxHeight" />
 						<RangeSlider
 							fx:id="heightSlider"
-							HBox.hgrow="ALWAYS"
-							orientation="HORIZONTAL"
+							VBox.vgrow="ALWAYS"
+							orientation="VERTICAL"
 							min="0"
 							lowValue="0"
 							max="255"
@@ -74,60 +80,103 @@
 							snapToTicks="true"
 							showTickLabels="true"
 							showTickMarks="true" />
-						<Label fx:id="maxHeight" />
+						<Label fx:id="minHeight" />
 					</children>
-				</HBox>
-				<HBox
-					spacing="2"
-					alignment="CENTER_LEFT"
-					VBox.vgrow="NEVER">
+				</VBox>
+				<!-- Split the GridPane into three ones combined by a vbox. This is because the content of the second one will change dynamically and it's difficult to add and remove rows from a grid pane. -->
+				<VBox spacing="6">
 					<children>
-						<HBox
-							fx:id="regionSettings"
-							spacing="2"
-							alignment="CENTER_LEFT"
-							VBox.vgrow="NEVER" />
-						<Label text="Color pack:" />
-						<ChoiceBox
-							value="Default"
-							fx:id="colorBox">
-							<items>
-								<FXCollections fx:factory="observableArrayList">
-									<String fx:value="Default" />
-									<String fx:value="Caves" />
-									<String fx:value="No foliage" />
-									<String fx:value="Ocean ground" />
-								</FXCollections>
-							</items>
-						</ChoiceBox>
-						<Label text="Shading:" />
-						<ChoiceBox
-							value="Relief"
-							fx:id="shadingBox">
-							<items>
-								<FXCollections fx:factory="observableArrayList">
-									<String fx:value="Flat" />
-									<String fx:value="Relief" />
-									<String fx:value="Biome color" />
-									<String fx:value="Height map" />
-								</FXCollections>
-							</items>
-						</ChoiceBox>
-						<CheckBox
-							text="Show grid"
-							fx:id="gridBox" />
+						<GridPane
+							hgap="6"
+							vgap="3">
+							<children>
+								<Label
+									text="Color pack:"
+									GridPane.rowIndex="0"
+									GridPane.columnIndex="0" />
+								<ChoiceBox
+									value="Default"
+									fx:id="colorBox"
+									maxWidth="Infinity"
+									GridPane.rowIndex="0"
+									GridPane.columnIndex="1">
+									<items>
+										<FXCollections fx:factory="observableArrayList">
+											<String fx:value="Default" />
+											<String fx:value="Caves" />
+											<String fx:value="No foliage" />
+											<String fx:value="Ocean ground" />
+										</FXCollections>
+									</items>
+								</ChoiceBox>
+								<Label
+									text="Shading:"
+									GridPane.rowIndex="1"
+									GridPane.columnIndex="0" />
+								<ChoiceBox
+									value="Relief"
+									fx:id="shadingBox"
+									maxWidth="Infinity"
+									GridPane.rowIndex="1"
+									GridPane.columnIndex="1">
+									<items>
+										<FXCollections fx:factory="observableArrayList">
+											<String fx:value="Flat" />
+											<String fx:value="Relief" />
+											<String fx:value="Biome color" />
+											<String fx:value="Height map" />
+										</FXCollections>
+									</items>
+								</ChoiceBox>
+								<CheckBox
+									text="Show grid"
+									fx:id="gridBox"
+									GridPane.rowIndex="2"
+									GridPane.columnIndex="0"
+									GridPane.columnSpan="2">
+								</CheckBox>
+							</children>
+							<columnConstraints>
+								<ColumnConstraints hgrow="ALWAYS" />
+								<ColumnConstraints hgrow="ALWAYS" />
+							</columnConstraints>
+							<rowConstraints>
+								<RowConstraints />
+								<RowConstraints />
+								<RowConstraints />
+							</rowConstraints>
+						</GridPane>
+						<GridPane fx:id="regionSettings">
+							<columnConstraints>
+								<ColumnConstraints hgrow="ALWAYS" />
+								<ColumnConstraints hgrow="ALWAYS" />
+							</columnConstraints>
+						</GridPane>
+						<GridPane
+							hgap="6"
+							vgap="3"
+							VBox.vgrow="ALWAYS">
+							<children>
+								<CheckTreeView
+									fx:id="pinView"
+									GridPane.rowIndex="0"
+									GridPane.columnIndex="0"
+									GridPane.columnSpan="2">
+								</CheckTreeView>
+							</children>
+							<columnConstraints>
+								<ColumnConstraints hgrow="ALWAYS" />
+								<ColumnConstraints hgrow="ALWAYS" />
+							</columnConstraints>
+							<rowConstraints>
+								<RowConstraints vgrow="ALWAYS" />
+							</rowConstraints>
+						</GridPane>
 					</children>
-				</HBox>
+				</VBox>
 			</children>
-			<BorderPane.margin>
-				<Insets
-					bottom="2.0"
-					left="3.0"
-					right="3.0"
-					top="0.0" />
-			</BorderPane.margin>
-		</VBox>
-	</top>
+		</HBox>
+	</left>
 	<center>
 	</center>
 	<bottom>

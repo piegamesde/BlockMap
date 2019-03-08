@@ -47,11 +47,15 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.CheckBoxTreeItem;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.TreeItem;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.GridPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 
@@ -78,13 +82,15 @@ public class GuiController implements Initializable {
 	@FXML
 	private RangeSlider								heightSlider;
 	@FXML
-	private HBox									regionSettings;
+	private GridPane								regionSettings;
 	@FXML
 	private ChoiceBox<String>						shadingBox;
 	@FXML
 	private ChoiceBox<String>						colorBox;
 	@FXML
 	private CheckBox								gridBox;
+	@FXML
+	private CheckTreeView<PinType>					pinView;
 
 	protected MapPane								pane;
 	protected ObjectProperty<Path>					currentPath				= new SimpleObjectProperty<>();
@@ -158,21 +164,67 @@ public class GuiController implements Initializable {
 			renderer.repaint();
 		});
 
-		regionFolderProvider.addListener((observable, previous, val) -> {
-			regionSettings.getChildren().clear();
-			if (val == null) {
-				regionFolder.unbind();
-				regionFolder.set(null);
-			} else {
-				regionFolder.bind(val.folderProperty());
-				regionSettings.getChildren().addAll(val.getGUI());
+		{ /* Pin tree */
+			class Pocket<T> {
+				T elem;
 			}
-			boolean disabled = val == null ? true : val.hideSettings();
-			heightSlider.setDisable(disabled);
-			colorBox.setDisable(disabled);
-			shadingBox.setDisable(disabled);
-		});
-		regionFolderProvider.set(null); /* Force listener update */
+			Pocket<Function<PinType, CheckBoxTreeItem<PinType>>> convertHolder = new Pocket<>();
+			Function<PinType, CheckBoxTreeItem<PinType>> convert = (type) -> {
+				CheckBoxTreeItem<PinType> ret;
+				// TODO clean up
+				if (type instanceof CompressiblePinType && false)
+					ret = new CheckBoxTreeItem<>(type, new ImageView(((CompressiblePinType) type).image));
+				else
+					ret = new CheckBoxTreeItem<>(type);
+				ret.setExpanded(type.expandedByDefault);
+				ret.setSelected(type.selectedByDefault);
+				if (type.selectedByDefault)
+					pins.visiblePins.add(type);
+				ret.getChildren().addAll(type.getChildren().stream().map(p -> convertHolder.elem.apply(p)).collect(Collectors.toList()));
+				return ret;
+			};
+			convertHolder.elem = convert;
+			CheckBoxTreeItem<PinType> root = convert.apply(PinType.ANY_PIN);
+			pinView.setRoot(root);
+			pinView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+
+			/* Terrible hack, but necessary depending on the layout. Do not use if possible */
+			// Platform.runLater(() -> {
+			// double rowHeight = pinView.lookupAll(".tree-cell").iterator().next().prefHeight(pinView.getWidth());
+			// pinView.prefHeightProperty().bind(pinView.expandedItemCountProperty().multiply(rowHeight).add(10));
+			// });
+
+			pinView.getCheckModel().getCheckedItems().addListener((ListChangeListener<TreeItem<PinType>>) e -> {
+				while (e.next()) {
+					pins.visiblePins.addAll(e.getAddedSubList().stream().map(t -> t.getValue()).collect(Collectors.toSet()));
+					pins.visiblePins.removeAll(e.getRemoved().stream().map(t -> t.getValue()).collect(Collectors.toSet()));
+				}
+			});
+		}
+
+		{
+			ChangeListener<? super RegionFolderProvider> regionFolderProviderListener = (observable, previous, val) -> {
+				regionSettings.getChildren().clear();
+				if (val == null) {
+					regionFolder.unbind();
+					regionFolder.set(null);
+				} else {
+					regionFolder.bind(val.folderProperty());
+					regionSettings.getChildren().addAll(val.getGUI());
+				}
+				regionSettings.setVisible(!regionSettings.getChildren().isEmpty());
+				boolean disabled = val == null ? true : val.hideSettings();
+				heightSlider.setDisable(disabled);
+				colorBox.setDisable(disabled);
+				shadingBox.setDisable(disabled);
+				pinView.setDisable(val == null);
+				gridBox.setDisable(val == null);
+			};
+			regionFolderProvider.addListener(regionFolderProviderListener);
+			/* Force listener update */
+			regionFolderProviderListener.changed(regionFolderProvider, null, null);
+		}
+
 		renderer.regionFolder.bind(regionFolder);
 		renderer.regionFolder.addListener((observable, previous, val) -> {
 			if (val != null) {

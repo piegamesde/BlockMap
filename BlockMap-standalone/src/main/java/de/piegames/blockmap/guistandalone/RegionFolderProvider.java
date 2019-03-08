@@ -30,6 +30,7 @@ import javafx.collections.FXCollections;
 import javafx.scene.Node;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
 
 public abstract class RegionFolderProvider {
@@ -225,7 +226,12 @@ public abstract class RegionFolderProvider {
 					return null;
 				}
 			});
-			gui.add(new Label("Dimension:"));
+			dimensionBox.setMaxWidth(Double.POSITIVE_INFINITY);
+
+			Label text = new Label("Dimension:");
+			GridPane.setColumnIndex(text, 0);
+			GridPane.setColumnIndex(dimensionBox, 1);
+			gui.add(text);
 			gui.add(dimensionBox);
 
 			reload();

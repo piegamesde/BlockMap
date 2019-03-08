@@ -5,7 +5,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,8 +35,9 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.MapChangeListener;
+import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -166,19 +169,16 @@ public class GuiController implements Initializable {
 		regionFolderProvider.set(null); /* Force listener update */
 		renderer.regionFolder.bind(regionFolder);
 		renderer.regionFolder.addListener((observable, previous, val) -> {
-			if (val != null)
-				this.pins.pins.set(FXCollections.observableList(Pin.convert(val.getPins())));
-		});
-		renderer.getChunkMetadata().addListener(new MapChangeListener<Vector2ic, ChunkMetadata>() {
-
-			@Override
-			public void onChanged(Change<? extends Vector2ic, ? extends ChunkMetadata> change) {
-				// System.out.println(Pin.convert(change.getValueAdded()));
-				if (change.wasRemoved())
-					GuiController.this.pins.chunkPins.removeIf(p -> p.chunkPosition.equals(change.getKey()));
-				if (change.wasAdded())
-					GuiController.this.pins.chunkPins.addAll(Pin.convert(change.getValueAdded()));
+			if (val != null) {
+				this.pins.clear();
+				this.pins.setStaticPins(Pin.convert(val.getPins(), renderer.viewport));
 			}
+		});
+		renderer.getChunkMetadata().addListener((MapChangeListener<Vector2ic, Map<Vector2ic, ChunkMetadata>>) change -> {
+			GuiController.this.pins.setDynamicPins(change.getKey(),
+					change.getValueAdded().values().stream().flatMap(metadata -> Pin.convert(metadata, renderer.viewport).stream())
+							.filter(p -> p instanceof CompressiblePin).map(p -> (CompressiblePin) p)
+							.collect(Collectors.toSet()));
 		});
 	}
 

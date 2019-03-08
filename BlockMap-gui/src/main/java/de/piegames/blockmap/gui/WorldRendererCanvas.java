@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -48,7 +49,7 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 	public final DisplayViewport							viewport		= new DisplayViewport();
 	protected ReadOnlyObjectWrapper<String>					status			= new ReadOnlyObjectWrapper<String>();
 	protected ReadOnlyFloatWrapper							progress		= new ReadOnlyFloatWrapper();
-	protected ReadOnlyMapWrapper<Vector2ic, ChunkMetadata>	chunkMetadata	= new ReadOnlyMapWrapper<>(FXCollections.observableHashMap());
+	protected ReadOnlyMapWrapper<Vector2ic, Map<Vector2ic, ChunkMetadata>>	chunkMetadata	= new ReadOnlyMapWrapper<>(FXCollections.observableHashMap());
 
 	public final ObjectProperty<RegionFolder>				regionFolder	= new SimpleObjectProperty<>();
 
@@ -146,7 +147,7 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 		return progress.getReadOnlyProperty();
 	}
 
-	public ReadOnlyMapProperty<Vector2ic, ChunkMetadata> getChunkMetadata() {
+	public ReadOnlyMapProperty<Vector2ic, Map<Vector2ic, ChunkMetadata>> getChunkMetadata() {
 		return chunkMetadata.getReadOnlyProperty();
 	}
 
@@ -164,9 +165,10 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 		try {
 			BufferedImage texture2 = null;
 			do {
-				Region renderedRegion = regionFolder.get().render(region.position);
+				Vector2ic position = region.position;
+				Region renderedRegion = regionFolder.get().render(position);
 				texture2 = renderedRegion.getImage();
-				Platform.runLater(() -> chunkMetadata.putAll(renderedRegion.getChunkMetadata()));
+				Platform.runLater(() -> chunkMetadata.put(position, Collections.unmodifiableMap(renderedRegion.getChunkMetadata())));
 				// Re-render the texture if it has been invalidated ('REDRAW')
 			} while (region.valid.compareAndSet(RenderingState.REDRAW, RenderingState.DRAWING) && !Thread.interrupted());
 			map.updateCounter(region);

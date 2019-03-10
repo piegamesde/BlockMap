@@ -24,7 +24,6 @@ import de.piegames.blockmap.gui.WorldRendererCanvas;
 import de.piegames.blockmap.gui.decoration.DragScrollDecoration;
 import de.piegames.blockmap.gui.decoration.GridDecoration;
 import de.piegames.blockmap.gui.decoration.Pin;
-import de.piegames.blockmap.gui.decoration.Pin.CompressiblePin;
 import de.piegames.blockmap.gui.decoration.Pin.CompressiblePinType;
 import de.piegames.blockmap.gui.decoration.Pin.PinType;
 import de.piegames.blockmap.gui.decoration.PinDecoration;
@@ -233,10 +232,7 @@ public class GuiController implements Initializable {
 			}
 		});
 		renderer.getChunkMetadata().addListener((MapChangeListener<Vector2ic, Map<Vector2ic, ChunkMetadata>>) change -> {
-			GuiController.this.pins.setDynamicPins(change.getKey(),
-					change.getValueAdded().values().stream().flatMap(metadata -> Pin.convert(metadata, renderer.viewport).stream())
-							.filter(p -> p instanceof CompressiblePin).map(p -> (CompressiblePin) p)
-							.collect(Collectors.toSet()));
+			GuiController.this.pins.setDynamicPins(change.getKey(), Pin.convert(change.getValueAdded(), renderer.viewport));
 		});
 	}
 

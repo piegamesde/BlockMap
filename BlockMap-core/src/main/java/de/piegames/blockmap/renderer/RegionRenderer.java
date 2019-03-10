@@ -30,6 +30,7 @@ import com.flowpowered.nbt.regionfile.RegionFile;
 
 import de.piegames.blockmap.color.Color;
 import de.piegames.blockmap.world.ChunkMetadata;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkGenerationStatus;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkRenderState;
 import de.piegames.blockmap.world.Region.BufferedRegion;
 
@@ -100,7 +101,7 @@ public class RegionRenderer {
 			try {
 				if ((chunkX + 16 < settings.minX || chunkX > settings.maxX)
 						&& (chunkZ + 16 < settings.minZ || chunkZ > settings.maxZ)) {
-					metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.CULLED));
+					metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.CULLED, null));
 					continue;
 				}
 
@@ -112,30 +113,23 @@ public class RegionRenderer {
 						int dataVersion = ((Integer) root.get("DataVersion").getValue());
 						if (dataVersion < 1519) {
 							log.warn("Skipping chunk because it is too old");
-							metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.TOO_OLD));
+							metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.TOO_OLD, null));
 							continue;
 						}
-						// throw new IllegalArgumentException("Only chunks saved in 1.13+ are supported. Please optimize your world in Minecraft before
-						// rendering. Maybe pre 1.13 worlds
-						// will be accepted again one day");
 					} else {
 						log.warn("Skipping chunk because it is way too old (pre 1.9)");
-						metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.TOO_OLD));
+						metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.TOO_OLD, null));
 						continue;
-						// throw new IllegalArgumentException(
-						// "Only chunks saved in 1.13+ are supported, this is pre 1.9!. Please optimize your world in Minecraft before rendering");
 					}
 				}
 
 				CompoundMap level = ((CompoundTag) root.get("Level")).getValue();
 
-				{// Check chunk status
-					String status = ((String) level.get("Status").getValue());
-					if (!status.equals("postprocessed") && !status.equals("fullchunk") && !status.equals("mobs_spawned")) {
-						log.debug("Skipping chunk because status is " + status);
-						metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.NOT_GENERATED));
-						continue;
-					}
+				/* Check chunk status */
+				ChunkGenerationStatus generationStatus = ChunkGenerationStatus.forName(((String) level.get("Status").getValue()));
+				if (generationStatus == ChunkGenerationStatus.EMPTY) {
+					metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.RENDERED, generationStatus));
+					continue;
 				}
 
 				Map<String, Vector3ic> structureCenters = new HashMap<>();
@@ -231,7 +225,7 @@ public class RegionRenderer {
 									log.warn("Failed to render chunk (" + chunk.x + ", " + chunk.z + ") section " + s
 											+ ". This is very likely because your chunk is corrupt. If possible, please verify it "
 											+ "manually before sending a bug report.", e);
-									metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.FAILED));
+									metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.FAILED, generationStatus));
 									continue chunk;
 								}
 								lowestLoadedSection = s;
@@ -271,11 +265,11 @@ public class RegionRenderer {
 						}
 						map[chunk.x << 4 | x | chunk.z << 13 | z << 9] = color.getFinal();
 					}
-				metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.RENDERED, structureCenters));
+				metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.RENDERED, generationStatus, structureCenters));
 			} catch (Exception e) {
 				log.warn("Failed to render chunk (" + chunk.x + ", " + chunk.z + ")", e);
-				metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.FAILED));
-				break;
+				metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.FAILED, null));
+				continue;
 			}
 		}
 

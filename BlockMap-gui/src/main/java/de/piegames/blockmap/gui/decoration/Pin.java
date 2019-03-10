@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -19,6 +20,7 @@ import org.joml.Vector3ic;
 
 import de.piegames.blockmap.gui.DisplayViewport;
 import de.piegames.blockmap.world.ChunkMetadata;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkGenerationStatus;
 import de.piegames.blockmap.world.WorldPins;
 import de.piegames.blockmap.world.WorldPins.MapPin.BannerPin;
 import de.piegames.blockmap.world.WorldPins.VillagePin;
@@ -33,6 +35,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.ImagePattern;
+import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Translate;
 
@@ -108,31 +112,32 @@ public abstract class Pin {
 	}
 
 	public static class CompressiblePinType extends PinType {
-		public static final CompressiblePinType	BUTTON_PIN					= new CompressiblePinType("Buttons", PinType.ANY_PIN, false, true, "/tmp.png");
+		@Deprecated
+		public static final CompressiblePinType	BUTTON_PIN					= new CompressiblePinType("Buttons", null, false, true, "/tmp.png");
 
-		public static final CompressiblePinType	PLAYER						= new CompressiblePinType("Player", BUTTON_PIN, true, false, "/tmp.png");
+		public static final CompressiblePinType	PLAYER						= new CompressiblePinType("Player", PinType.ANY_PIN, true, false, "/tmp.png");
 		public static final CompressiblePinType	PLAYER_POSITION				= new CompressiblePinType("Position", PLAYER, true, false,
 				"textures/pins/player.png");
 		public static final CompressiblePinType	PLAYER_SPAWN				= new CompressiblePinType("Spawnpoint", PLAYER, true, false,
 				"textures/pins/spawn_player.png");
 
-		public static final CompressiblePinType	MAP							= new CompressiblePinType("Map", BUTTON_PIN, true, false, "/tmp.png");
+		public static final CompressiblePinType	MAP							= new CompressiblePinType("Map", PinType.ANY_PIN, true, false, "/tmp.png");
 		public static final CompressiblePinType	MAP_POSITION				= new CompressiblePinType("Position", MAP, true, false,
 				"textures/pins/map.png");
 		public static final CompressiblePinType	MAP_BANNER					= new CompressiblePinType("Banner", MAP, true, false,
 				"textures/pins/banner.png");																												// TODO
 																																							// color
 
-		public static final CompressiblePinType	VILLAGE						= new CompressiblePinType("Village", BUTTON_PIN, false, false, "/tmp.png");
+		public static final CompressiblePinType	VILLAGE						= new CompressiblePinType("Village", PinType.ANY_PIN, false, false, "/tmp.png");
 		public static final CompressiblePinType	VILLAGE_CENTER				= new CompressiblePinType("Center", VILLAGE, false, false,
 				"textures/structures/village.png");
 		public static final CompressiblePinType	VILLAGE_DOOR				= new CompressiblePinType("House", VILLAGE, false, false,
 				"textures/structures/house.png");
 
-		public static final CompressiblePinType	WORLD_SPAWN					= new CompressiblePinType("Spawnpoint", BUTTON_PIN, true, false,
+		public static final CompressiblePinType	WORLD_SPAWN					= new CompressiblePinType("Spawnpoint", PinType.ANY_PIN, true, false,
 				"textures/pins/spawn_map.png");
 
-		public static final CompressiblePinType	STRUCTURE					= new CompressiblePinType("Structures", BUTTON_PIN, false, false, "/tmp.png");
+		public static final CompressiblePinType	STRUCTURE					= new CompressiblePinType("Structures", PinType.ANY_PIN, false, false, "/tmp.png");
 		public static final CompressiblePinType	STRUCTURE_TREASURE			= new CompressiblePinType("Treasure", STRUCTURE, false, false,
 				"textures/structures/buried_treasure.png");
 		public static final CompressiblePinType	STRUCTURE_PYRAMID			= new CompressiblePinType("Pyramid", STRUCTURE, false, false,
@@ -247,16 +252,48 @@ public abstract class Pin {
 			return wrapGui(button, position, viewport);
 		}
 	}
+	
+	public static class ChunkPin2 extends Pin {
+		public final Set<Vector2ic> chunkPositions;
+		public final Image image;
+		
+		public ChunkPin2(Set<Vector2ic> chunkPositions, Image image, DisplayViewport viewport) {
+			super(null, PinType.CHUNK_PIN, viewport);
+			this.chunkPositions = Objects.requireNonNull(chunkPositions);
+			this.image = image;
+		}
+		@Override
+		protected Node initBottomGui() {
+			Polygon shape = new Polygon();
+			shape.setFill(new ImagePattern(image));
+			return shape;
+		}
+	}
 
 	public static class ChunkPin extends Pin {
 
 		public final Vector2ic	chunkPosition;
 		public final Image		image;
 
-		public ChunkPin(Vector2ic regionPosition, Vector2ic chunkPosition, Image image, DisplayViewport viewport) {
-			super(regionPosition, PinType.CHUNK_PIN, viewport);
+		public ChunkPin(Vector2ic chunkPosition, Image image, DisplayViewport viewport) {
+			super(null, PinType.CHUNK_PIN, viewport);
 			this.chunkPosition = Objects.requireNonNull(chunkPosition);
 			this.image = image;
+		}
+
+		@Override
+		protected Node initBottomGui() {
+			ImageView view = new ImageView(image);
+			view.setFitWidth(16);
+			view.setFitHeight(16);
+			view.setTranslateX(chunkPosition.x() * 16);
+			view.setTranslateY(chunkPosition.y() * 16);
+			Rectangle r = new Rectangle(16, 16);
+			r.setFill(Color.RED);
+			StackPane s = new StackPane(r);
+			s.setTranslateX(chunkPosition.x() * 16);
+			s.setTranslateY(chunkPosition.y() * 16);
+			return view;
 		}
 	}
 
@@ -376,31 +413,37 @@ public abstract class Pin {
 		return pins;
 	}
 
-	public static Set<Pin> convert(ChunkMetadata metadata, DisplayViewport viewport) {
+	public static Set<Pin> convert(Map<Vector2ic, ChunkMetadata> metadataMap, DisplayViewport viewport) {
 		Set<Pin> pins = new HashSet<>();
-		// {
-		// Image image = null;
-		// switch (metadata.renderState) {
-		// case FAILED:
-		// image = new Image(Pin.class.getResource("overlays/chunk_corrupt.png").toString());
-		// break;
-		// case NOT_GENERATED:
-		// image = new Image(Pin.class.getResource("overlays/chunk_unfinished.png").toString());
-		// break;
-		// case TOO_OLD:
-		// image = new Image(Pin.class.getResource("overlays/chunk_outdated.png").toString());
-		// break;
-		// default:
-		// }
-		// if (image != null) {
-		// ChunkPin p = new ChunkPin(metadata.position, new Vector2d(metadata.position.x() * 16 + 8, metadata.position.y() * 16 + 8), image);
-		// pins.add(p);
-		// }
-		// }
-		metadata.structures.forEach((name, pos) -> {
+		Set<Vector2ic> oldChunks = new HashSet<>(), failedChunks = new HashSet<>(), unfinishedChunks = new HashSet<>();
+		for (ChunkMetadata metadata : metadataMap.values()) {
+			// Image image = null;
+			switch (metadata.renderState) {
+				case RENDERED:
+					if (metadata.generationStatus != null && metadata.generationStatus != ChunkGenerationStatus.POSTPROCESSED)
+						unfinishedChunks.add(metadata.position);
+//						image = new Image(Pin.class.getResource("textures/replacements/chunk_unfinished.png").toString(), 16, 16, true, false);
+					break;
+				case FAILED:
+					failedChunks.add(metadata.position);
+//					image = new Image(Pin.class.getResource("textures/replacements/chunk_corrupted.png").toString(), 16, 16, true, false);
+					break;
+				case TOO_OLD:
+					oldChunks.add(metadata.position);
+//					image = new Image(Pin.class.getResource("textures/replacements/chunk_outdated.png").toString(), 16, 16, true, false);
+					break;
+				default:
+			}
+//			if (image != null) {
+//				ChunkPin p = new ChunkPin(metadata.position, image, viewport);
+//				pins.add(p);
+			// }
+		}
+
+		metadataMap.values().stream().flatMap(m->m.structures.entrySet().stream()).forEach(e -> {
 			CompressiblePinType type = null;
 			// TODO refactor this into the pin type; this is ugly AF
-			switch (name) {
+			switch (e.getKey()) {
 			case "Igloo":
 				type = CompressiblePinType.STRUCTURE_IGLOO;
 				break;
@@ -435,10 +478,10 @@ public abstract class Pin {
 				/* Villages are handled separately, so ignore them */
 				break;
 			default:
-				log.warn("Could not find a pin type named " + name);
+				log.warn("Could not find a pin type named " + e.getKey());
 			}
 			if (type != null)
-				pins.add(new ButtonPin(true, new Vector2d(pos.x(), pos.z()), type, viewport));
+				pins.add(new ButtonPin(true, new Vector2d(e.getValue().x(), e.getValue().z()), type, viewport));
 		});
 		return pins;
 	}

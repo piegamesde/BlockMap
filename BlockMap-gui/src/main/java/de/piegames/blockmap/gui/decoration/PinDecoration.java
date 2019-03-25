@@ -24,7 +24,6 @@ import com.codepoetics.protonpack.StreamUtils;
 import com.google.common.collect.Streams;
 
 import de.piegames.blockmap.gui.DisplayViewport;
-import de.piegames.blockmap.gui.decoration.Pin.ButtonPin;
 import de.piegames.blockmap.gui.decoration.Pin.CompressiblePin;
 import de.piegames.blockmap.gui.decoration.Pin.CompressiblePinType;
 import de.piegames.blockmap.gui.decoration.Pin.PinType;
@@ -53,7 +52,6 @@ import javafx.scene.transform.Translate;
 import javafx.util.Duration;
 import smile.clustering.HierarchicalClustering;
 import smile.clustering.linkage.Linkage;
-import smile.clustering.linkage.UPGMALinkage;
 
 public class PinDecoration extends AnchorPane implements ChangeListener<Number> {
 
@@ -139,7 +137,7 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 				Collectors.toList()));
 		world.getChildren().addAll(allPins.stream().map(p -> p.getTopGui()).filter(g -> g != null).collect(
 				Collectors.toList()));
-		List<CompressiblePin> compressiblePins = allPins.stream().filter(p -> p instanceof ButtonPin).map(p -> (CompressiblePin) p).collect(Collectors
+		List<CompressiblePin> compressiblePins = allPins.stream().filter(p -> p instanceof CompressiblePin).map(p -> (CompressiblePin) p).collect(Collectors
 				.toList());
 
 		/* Clustering */
@@ -155,7 +153,7 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 						compressiblePins.get(col).position);
 		}
 
-		Linkage linkage = new UPGMALinkage(dist);
+		Linkage linkage = new smile.clustering.linkage.UPGMCLinkage(dist);
 		HierarchicalClustering cluster = new HierarchicalClustering(linkage);
 		this.height = cluster.getHeight();
 
@@ -256,13 +254,10 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 					() -> 1 * Math.min(1 / viewport.scaleProperty.get(), 2),
 					viewport.scaleProperty);
 			Button button = new Button(null, box);
-			button.setTranslateX(pos.x());
-			button.setTranslateY(pos.y());
-			button.scaleXProperty().bind(scale);
-			button.scaleYProperty().bind(scale);
-			button.setOpacity(0);
 			button.setStyle("-fx-background-radius: 6em;");
-			mergedPins.add(button);
+			Node mergedPin = Pin.wrapGui(button, pos, scale, viewport);
+			mergedPin.setOpacity(0);
+			mergedPins.add(mergedPin);
 
 			PopOver info = new PopOver();
 			info.setArrowLocation(ArrowLocation.BOTTOM_CENTER);

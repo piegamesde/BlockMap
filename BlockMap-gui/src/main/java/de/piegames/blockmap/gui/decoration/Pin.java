@@ -3,10 +3,14 @@ package de.piegames.blockmap.gui.decoration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Queue;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -69,7 +73,7 @@ import javafx.scene.transform.Translate;
 // - ButtonPin
 //   - PlayerPin
 //   - MapPin
-// - ChunkPin
+//   - ChunkPin
 //   - ChunkStatusPin?
 // - BarrierPin
 
@@ -79,7 +83,6 @@ public abstract class Pin {
 
 	public static class PinType {
 		public static final PinType		ANY_PIN		= new PinType("Show pins", null, false, true);
-		public static final PinType		CHUNK_PIN	= new PinType("Chunk pins", ANY_PIN, false, false);
 		public static final PinType		BARRIER_PIN	= new PinType("Barrier", ANY_PIN, true, false);
 
 		protected final List<PinType>	children	= new ArrayList<>();
@@ -115,6 +118,14 @@ public abstract class Pin {
 		@Deprecated
 		public static final CompressiblePinType	BUTTON_PIN					= new CompressiblePinType("Buttons", null, false, true, "/tmp.png");
 
+		public static final CompressiblePinType	CHUNK_PIN					= new CompressiblePinType("Chunk pins", PinType.ANY_PIN, false, false, "/tmp.png");
+		public static final CompressiblePinType	CHUNK_UNFINISHED			= new CompressiblePinType("Unfinished chunk", CHUNK_PIN, false, false,
+				"textures/overlays/pin_chunk_unfinished.png");
+		public static final CompressiblePinType	CHUNK_FAILED				= new CompressiblePinType("Corrupt chunk", CHUNK_PIN, false, false,
+				"textures/overlays/pin_chunk_corrupted.png");
+		public static final CompressiblePinType	CHUNK_OLD					= new CompressiblePinType("Old chunk", CHUNK_PIN, false, false,
+				"textures/overlays/pin_chunk_outdated.png");
+
 		public static final CompressiblePinType	PLAYER						= new CompressiblePinType("Player", PinType.ANY_PIN, true, false, "/tmp.png");
 		public static final CompressiblePinType	PLAYER_POSITION				= new CompressiblePinType("Position", PLAYER, true, false,
 				"textures/pins/player.png");
@@ -125,8 +136,8 @@ public abstract class Pin {
 		public static final CompressiblePinType	MAP_POSITION				= new CompressiblePinType("Position", MAP, true, false,
 				"textures/pins/map.png");
 		public static final CompressiblePinType	MAP_BANNER					= new CompressiblePinType("Banner", MAP, true, false,
-				"textures/pins/banner.png");																												// TODO
-																																							// color
+				"textures/pins/banner.png");																													// TODO
+																																								// color
 
 		public static final CompressiblePinType	VILLAGE						= new CompressiblePinType("Village", PinType.ANY_PIN, false, false, "/tmp.png");
 		public static final CompressiblePinType	VILLAGE_CENTER				= new CompressiblePinType("Center", VILLAGE, false, false,
@@ -217,7 +228,7 @@ public abstract class Pin {
 		public final CompressiblePinType	type;
 		public final Vector2dc				position;
 
-		public CompressiblePin(Vector2d position, CompressiblePinType type, Vector2ic regionPosition, DisplayViewport viewport) {
+		public CompressiblePin(Vector2dc position, CompressiblePinType type, Vector2ic regionPosition, DisplayViewport viewport) {
 			super(regionPosition, type, viewport);
 			this.position = Objects.requireNonNull(position);
 			this.type = type;
@@ -230,8 +241,8 @@ public abstract class Pin {
 
 		protected boolean	isDynamic;
 
-		public ButtonPin(boolean isDynamic, Vector2d position, CompressiblePinType type, DisplayViewport viewport) {
-			super(position, type, new Vector2i((int) position.x >> 9, (int) position.y >> 9), viewport);
+		public ButtonPin(boolean isDynamic, Vector2dc position, CompressiblePinType type, DisplayViewport viewport) {
+			super(position, type, new Vector2i((int) position.x() >> 9, (int) position.y() >> 9), viewport);
 			this.isDynamic = isDynamic;
 		}
 
@@ -241,7 +252,7 @@ public abstract class Pin {
 			img.setSmooth(false);
 			button = new Button(null, img);
 			img.setPreserveRatio(true);
-			button.setTooltip(new Tooltip("BLUBBA"));
+			button.setTooltip(new Tooltip(type.toString()));
 			button.setStyle("-fx-background-radius: 6em;");
 			img.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> button.getFont().getSize() * 2, button.fontProperty()));
 
@@ -252,64 +263,52 @@ public abstract class Pin {
 			return wrapGui(button, position, viewport);
 		}
 	}
-	
-	public static class ChunkPin2 extends Pin {
-		public final Set<Vector2ic> chunkPositions;
-		public final Image image;
-		
-		public ChunkPin2(Set<Vector2ic> chunkPositions, Image image, DisplayViewport viewport) {
-			super(null, PinType.CHUNK_PIN, viewport);
+
+	public static class ChunkPin extends ButtonPin {
+		public final List<Vector2ic>	chunkPositions;
+		public final Image				image;
+
+		public ChunkPin(CompressiblePinType type, Vector2dc centerPos, List<Vector2ic> chunkPositions, Image image, DisplayViewport viewport) {
+			super(true, centerPos, type, viewport);
 			this.chunkPositions = Objects.requireNonNull(chunkPositions);
 			this.image = image;
 		}
+
 		@Override
 		protected Node initBottomGui() {
 			Polygon shape = new Polygon();
-			shape.setFill(new ImagePattern(image));
+			shape.getPoints().setAll(chunkPositions.stream().flatMap(v -> Stream.of(v.x(), v.y())).map(d -> (d + 1) * 16.0).collect(Collectors.toList()));
+			shape.setFill(new ImagePattern(image, 0, 0, 16, 16, false));
+			shape.setStrokeWidth(3);
+			shape.setStroke(Color.YELLOW);
+			shape.setOpacity(0.2);
+			shape.setMouseTransparent(true);
 			return shape;
 		}
 	}
 
-	public static class ChunkPin extends Pin {
+	public static class UnfinishedChunkPin extends ChunkPin {
 
-		public final Vector2ic	chunkPosition;
-		public final Image		image;
+		protected int[] chunkCount;
 
-		public ChunkPin(Vector2ic chunkPosition, Image image, DisplayViewport viewport) {
-			super(null, PinType.CHUNK_PIN, viewport);
-			this.chunkPosition = Objects.requireNonNull(chunkPosition);
-			this.image = image;
+		public UnfinishedChunkPin(Vector2dc centerPos, List<Vector2ic> chunkPositions, int[] chunkCount, Image image, DisplayViewport viewport) {
+			super(CompressiblePinType.CHUNK_UNFINISHED, centerPos, chunkPositions, image, viewport);
+			this.chunkCount = Objects.requireNonNull(chunkCount);
 		}
 
 		@Override
-		protected Node initBottomGui() {
-			ImageView view = new ImageView(image);
-			view.setFitWidth(16);
-			view.setFitHeight(16);
-			view.setTranslateX(chunkPosition.x() * 16);
-			view.setTranslateY(chunkPosition.y() * 16);
-			Rectangle r = new Rectangle(16, 16);
-			r.setFill(Color.RED);
-			StackPane s = new StackPane(r);
-			s.setTranslateX(chunkPosition.x() * 16);
-			s.setTranslateY(chunkPosition.y() * 16);
-			return view;
+		public Node initTopGui() {
+			Node n = super.initTopGui();
+
+			GridPane popContent = new GridPane();
+			info.setContentNode(popContent);
+
+			for (int i = 0; i < chunkCount.length; i++) {
+				popContent.add(new Label(ChunkGenerationStatus.values()[i].name().toLowerCase() + ":"), 0, i);
+				popContent.add(new Label(chunkCount[i] + " chunks"), 1, i);
+			}
+			return n;
 		}
-	}
-
-	public static StackPane wrapGui(Node node, Vector2dc position, DisplayViewport viewport) {
-		DoubleBinding scale = Bindings.createDoubleBinding(
-				() -> 2 * Math.min(1 / viewport.scaleProperty.get(), 1),
-				viewport.scaleProperty);
-		node.scaleXProperty().bind(scale);
-		node.scaleYProperty().bind(scale);
-
-		StackPane stack = new StackPane(node);
-		Translate t = new Translate();
-		t.xProperty().bind(stack.widthProperty().multiply(-0.5));
-		t.yProperty().bind(stack.heightProperty().multiply(-0.5));
-		stack.getTransforms().addAll(t, new Translate(position.x(), position.y()));
-		return stack;
 	}
 
 	public static class MapPin extends ButtonPin {
@@ -358,9 +357,6 @@ public abstract class Pin {
 		protected Node initTopGui() {
 			Node node = super.initTopGui();
 			PopOver info = this.info;
-			info.setArrowLocation(ArrowLocation.BOTTOM_CENTER);
-			info.setAutoHide(true);
-			button.setOnAction(mouseEvent -> info.show(button));
 			GridPane playerContent = new GridPane();
 			info.setContentNode(playerContent);
 
@@ -416,31 +412,49 @@ public abstract class Pin {
 	public static Set<Pin> convert(Map<Vector2ic, ChunkMetadata> metadataMap, DisplayViewport viewport) {
 		Set<Pin> pins = new HashSet<>();
 		Set<Vector2ic> oldChunks = new HashSet<>(), failedChunks = new HashSet<>(), unfinishedChunks = new HashSet<>();
+		/* Map each generation status to the amount of chunks with this state */
+		int[] unfinishedCount = new int[ChunkGenerationStatus.values().length];
 		for (ChunkMetadata metadata : metadataMap.values()) {
-			// Image image = null;
 			switch (metadata.renderState) {
-				case RENDERED:
-					if (metadata.generationStatus != null && metadata.generationStatus != ChunkGenerationStatus.POSTPROCESSED)
-						unfinishedChunks.add(metadata.position);
-//						image = new Image(Pin.class.getResource("textures/replacements/chunk_unfinished.png").toString(), 16, 16, true, false);
-					break;
-				case FAILED:
-					failedChunks.add(metadata.position);
-//					image = new Image(Pin.class.getResource("textures/replacements/chunk_corrupted.png").toString(), 16, 16, true, false);
-					break;
-				case TOO_OLD:
-					oldChunks.add(metadata.position);
-//					image = new Image(Pin.class.getResource("textures/replacements/chunk_outdated.png").toString(), 16, 16, true, false);
-					break;
-				default:
+			case RENDERED:
+				if (metadata.generationStatus != null && metadata.generationStatus != ChunkGenerationStatus.POSTPROCESSED)
+					unfinishedChunks.add(metadata.position);
+				unfinishedCount[metadata.generationStatus.ordinal()]++;
+				break;
+			case FAILED:
+				failedChunks.add(metadata.position);
+				break;
+			case TOO_OLD:
+				oldChunks.add(metadata.position);
+				break;
+			default:
+				break;
 			}
-//			if (image != null) {
-//				ChunkPin p = new ChunkPin(metadata.position, image, viewport);
-//				pins.add(p);
-			// }
 		}
 
-		metadataMap.values().stream().flatMap(m->m.structures.entrySet().stream()).forEach(e -> {
+		for (Set<Vector2ic> chunks : splitChunks(unfinishedChunks)) {
+			Vector2dc center = chunks.stream().map(v -> new Vector2d(v.x() * 16.0 + 8, v.y() * 16.0 + 8)).collect(Vector2d::new, Vector2d::add,
+					Vector2d::add).mul(1.0 / chunks.size());
+			pins.add(new UnfinishedChunkPin(center, outlineSet(chunks), unfinishedCount,
+					new Image(Pin.class.getResource("textures/overlays/chunk_unfinished.png").toString(), 64, 64, true, false),
+					viewport));
+		}
+		for (Set<Vector2ic> chunks : splitChunks(failedChunks)) {
+			Vector2dc center = chunks.stream().map(v -> new Vector2d(v.x() * 16.0 + 8, v.y() * 16.0 + 8)).collect(Vector2d::new, Vector2d::add,
+					Vector2d::add).mul(1.0 / chunks.size());
+			pins.add(new ChunkPin(CompressiblePinType.CHUNK_UNFINISHED, center, outlineSet(chunks),
+					new Image(Pin.class.getResource("textures/overlays/chunk_corrupted.png").toString(), 64, 64, true, false),
+					viewport));
+		}
+		for (Set<Vector2ic> chunks : splitChunks(oldChunks)) {
+			Vector2dc center = chunks.stream().map(v -> new Vector2d(v.x() * 16.0 + 8, v.y() * 16.0 + 8)).collect(Vector2d::new, Vector2d::add,
+					Vector2d::add).mul(1.0 / chunks.size());
+			pins.add(new ChunkPin(CompressiblePinType.CHUNK_UNFINISHED, center, outlineSet(chunks),
+					new Image(Pin.class.getResource("textures/overlays/chunk_outdated.png").toString(), 64, 64, true, false),
+					viewport));
+		}
+
+		metadataMap.values().stream().flatMap(m -> m.structures.entrySet().stream()).forEach(e -> {
 			CompressiblePinType type = null;
 			// TODO refactor this into the pin type; this is ugly AF
 			switch (e.getKey()) {
@@ -484,6 +498,177 @@ public abstract class Pin {
 				pins.add(new ButtonPin(true, new Vector2d(e.getValue().x(), e.getValue().z()), type, viewport));
 		});
 		return pins;
+	}
+
+	public static StackPane wrapGui(Node node, Vector2dc position, DisplayViewport viewport) {
+		return wrapGui(node, position, Bindings.createDoubleBinding(
+				() -> 2 * Math.min(1 / viewport.scaleProperty.get(), 1),
+				viewport.scaleProperty), viewport);
+	}
+
+	public static StackPane wrapGui(Node node, Vector2dc position, DoubleBinding scale, DisplayViewport viewport) {
+		if (scale != null) {
+			node.scaleXProperty().bind(scale);
+			node.scaleYProperty().bind(scale);
+		}
+
+		StackPane stack = new StackPane(node);
+		Translate t = new Translate();
+		t.xProperty().bind(stack.widthProperty().multiply(-0.5));
+		t.yProperty().bind(stack.heightProperty().multiply(-0.5));
+		stack.getTransforms().addAll(t, new Translate(position.x(), position.y()));
+		return stack;
+	}
+
+	/**
+	 * Takes in a set of chunk positions, identifies all connected subsets and calculates the outline of each one.
+	 * 
+	 * @param chunks
+	 *            A set of chunk positions. This will be emptied during the calculation.
+	 */
+	private static List<Set<Vector2ic>> splitChunks(Set<Vector2ic> chunks) {
+		List<Set<Vector2ic>> islands = new ArrayList<>();
+		while (!chunks.isEmpty()) {
+			Set<Vector2ic> done = new HashSet<>();
+			Queue<Vector2ic> todo = new LinkedList<>();
+			todo.add(chunks.iterator().next());
+			chunks.remove(todo.element());
+			while (!todo.isEmpty()) {
+				Vector2ic current = todo.remove();
+				for (Vector2i neighbor : new Vector2i[] { new Vector2i(-1, 0), new Vector2i(1, 0), new Vector2i(0, -1), new Vector2i(0, 1) }) {
+					neighbor.add(current);
+					if (chunks.remove(neighbor))
+						todo.add(neighbor);
+				}
+				done.add(current);
+			}
+			islands.add(done);
+		}
+		return islands;
+	}
+
+	private static List<Vector2ic> outlineSet(Set<Vector2ic> chunks) {
+		if (chunks.isEmpty())
+			return Collections.emptyList();
+		Vector2i pos = new Vector2i(chunks.iterator().next());
+		/* O O <- bit 4, 3 */
+		/* O X <- bit 2, 1 | X: Current position */
+		int sample = 0;
+		/* top-left */
+		if (chunks.contains(new Vector2i(0, 0).add(pos)))
+			sample |= 0b1000;
+		/* top-right */
+		if (chunks.contains(new Vector2i(1, 0).add(pos)))
+			sample |= 0b0100;
+		/* bottom-left */
+		if (chunks.contains(new Vector2i(0, 1).add(pos)))
+			sample |= 0b0010;
+		/* bottom-right */
+		if (chunks.contains(new Vector2i(1, 1).add(pos)))
+			sample |= 0b0001;
+		int direction = 0;
+
+		ArrayList<Vector2ic> outline = new ArrayList<>();
+		while (outline.isEmpty() || !pos.equals(outline.get(0))) {
+
+			/* To which pixel to move next? */
+			switch (sample) {
+			/* Move right */
+			case 0b0001:
+			case 0b1011:
+				outline.add(new Vector2i(pos));
+			case 0b0011:
+			case 0b1111:
+				direction = 0;
+				break;
+			/* Move down */
+			case 0b0010:
+			case 0b1110:
+				outline.add(new Vector2i(pos));
+			case 0b1010:
+				direction = 1;
+				break;
+			/* Move left */
+			case 0b1000:
+			case 0b1101:
+				outline.add(new Vector2i(pos));
+			case 0b1100:
+				direction = 2;
+				break;
+			/* Move up */
+			case 0b0100:
+			case 0b0111:
+				outline.add(new Vector2i(pos));
+			case 0b0101:
+				direction = 3;
+				break;
+			/* Ambiguous: Turn 90° CW from previous */
+			case 0b1001:
+			case 0b0110:
+				direction = (direction + 1) & 3;
+				break;
+
+			default:
+				throw new InternalError("Invalid state while finding the outline. Either the input is not valid or something is seriously wrong.");
+			}
+
+			/* Move to the next pixel and sample at the new position */
+			switch (direction) {
+			/* Move right */
+			case 0:
+				pos.add(1, 0);
+				sample = (sample << 1) & 0b1010;
+
+				/* top-right */
+				if (chunks.contains(new Vector2i(1, 0).add(pos)))
+					sample |= 0b0100;
+				/* bottom-right */
+				if (chunks.contains(new Vector2i(1, 1).add(pos)))
+					sample |= 0b0001;
+				break;
+
+			/* Move down */
+			case 1:
+				pos.add(0, 1);
+				sample = (sample << 2) & 0b1100;
+
+				/* bottom-left */
+				if (chunks.contains(new Vector2i(0, 1).add(pos)))
+					sample |= 0b0010;
+				/* bottom-right */
+				if (chunks.contains(new Vector2i(1, 1).add(pos)))
+					sample |= 0b0001;
+				break;
+
+			/* Move left */
+			case 2:
+				pos.add(-1, 0);
+				sample = (sample >>> 1) & 0b0101;
+
+				/* top-left */
+				if (chunks.contains(new Vector2i(0, 0).add(pos)))
+					sample |= 0b1000;
+				/* bottom-left */
+				if (chunks.contains(new Vector2i(0, 1).add(pos)))
+					sample |= 0b0010;
+				break;
+
+			/* Move up */
+			case 3:
+				pos.add(0, -1);
+				sample = (sample >>> 2) & 0b0011;
+
+				/* top-left */
+				if (chunks.contains(new Vector2i(0, 0).add(pos)))
+					sample |= 0b1000;
+				/* top-right */
+				if (chunks.contains(new Vector2i(1, 0).add(pos)))
+					sample |= 0b0100;
+				break;
+			}
+		}
+
+		return outline;
 	}
 
 	// protected static Mojang mojang = new Mojang();

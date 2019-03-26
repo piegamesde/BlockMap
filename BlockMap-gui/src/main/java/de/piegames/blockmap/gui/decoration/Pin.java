@@ -82,19 +82,79 @@ import javafx.scene.transform.Translate;
 public abstract class Pin {
 
 	public static class PinType {
-		public static final PinType		ANY_PIN		= new PinType("Show pins", null, false, true);
-		public static final PinType		BARRIER_PIN	= new PinType("Barrier", ANY_PIN, true, false);
+		public static final PinType		ANY_PIN						= new PinType("Show pins", null, false, true, "/tmp.png");
 
-		protected final List<PinType>	children	= new ArrayList<>();
+		public static final PinType		CHUNK_PIN					= new PinType("Chunk pins", ANY_PIN, false, false, "/tmp.png");
+		public static final PinType		CHUNK_UNFINISHED			= new PinType("Unfinished chunk", CHUNK_PIN, false, false,
+				"textures/overlays/pin_chunk_unfinished.png");
+		public static final PinType		CHUNK_FAILED				= new PinType("Corrupt chunk", CHUNK_PIN, false, false,
+				"textures/overlays/pin_chunk_corrupted.png");
+		public static final PinType		CHUNK_OLD					= new PinType("Old chunk", CHUNK_PIN, false, false,
+				"textures/overlays/pin_chunk_outdated.png");
+
+		public static final PinType		PLAYER						= new PinType("Player", ANY_PIN, true, false, "/tmp.png");
+		public static final PinType		PLAYER_POSITION				= new PinType("Position", PLAYER, true, false,
+				"textures/pins/player.png");
+		public static final PinType		PLAYER_SPAWN				= new PinType("Spawnpoint", PLAYER, true, false,
+				"textures/pins/spawn_player.png");
+
+		public static final PinType		MAP							= new PinType("Map", ANY_PIN, true, false, "/tmp.png");
+		public static final PinType		MAP_POSITION				= new PinType("Position", MAP, true, false,
+				"textures/pins/map.png");
+		public static final PinType		MAP_BANNER					= new PinType("Banner", MAP, true, false,
+				"textures/pins/banner.png");																						// TODO color
+
+		public static final PinType		VILLAGE						= new PinType("Village", ANY_PIN, false, false, "/tmp.png");
+		public static final PinType		VILLAGE_CENTER				= new PinType("Center", VILLAGE, false, false,
+				"textures/structures/village.png");
+		public static final PinType		VILLAGE_DOOR				= new PinType("House", VILLAGE, false, false,
+				"textures/structures/house.png");
+
+		public static final PinType		WORLD_SPAWN					= new PinType("Spawnpoint", ANY_PIN, true, false,
+				"textures/pins/spawn_map.png");
+
+		public static final PinType		STRUCTURE					= new PinType("Structures", ANY_PIN, false, false, "/tmp.png");
+		public static final PinType		STRUCTURE_TREASURE			= new PinType("Treasure", STRUCTURE, false, false,
+				"textures/structures/buried_treasure.png");
+		public static final PinType		STRUCTURE_PYRAMID			= new PinType("Pyramid", STRUCTURE, false, false,
+				"textures/structures/desert_pyramid.png");
+		public static final PinType		STRUCTURE_END_CITY			= new PinType("End city", STRUCTURE, false, false,
+				"textures/structures/end_city.png");
+		public static final PinType		STRUCTURE_FORTRESS			= new PinType("Fortress", STRUCTURE, false, false,
+				"textures/structures/fortress.png");
+		public static final PinType		STRUCTURE_IGLOO				= new PinType("Igloo", STRUCTURE, false, false,
+				"textures/structures/igloo.png");
+		public static final PinType		STRUCTURE_JUNGLE_TEMPLE		= new PinType("Jungle temple", STRUCTURE, false, false,
+				"textures/structures/jungle_pyramid.png");
+		public static final PinType		STRUCTURE_MANSION			= new PinType("Mansion", STRUCTURE, false, false,
+				"textures/structures/mansion.png");
+		public static final PinType		STRUCTURE_MINESHAFT			= new PinType("Mineshaft", STRUCTURE, false, false,
+				"textures/structures/mineshaft.png");
+		public static final PinType		STRUCTURE_OCEAN_MONUMENT	= new PinType("Ocean monument", STRUCTURE, false, false,
+				"textures/structures/monument.png");
+		public static final PinType		STRUCTURE_OCEAN_RUIN		= new PinType("Ocean ruin", STRUCTURE, false, false,
+				"textures/structures/ocean_ruin.png");
+		public static final PinType		STRUCTURE_SHIPWRECK			= new PinType("Shipwreck", STRUCTURE, false, false,
+				"textures/structures/shipwreck.png");
+		public static final PinType		STRUCTURE_STRONGHOLD		= new PinType("Stronghold", STRUCTURE, false, false,
+				"textures/structures/stronghold.png");
+		public static final PinType		STRUCTURE_WITCH_HUT			= new PinType("Witch hut", STRUCTURE, false, false,
+				"textures/structures/swamp_hut.png");
+
+		protected final List<PinType>	children					= new ArrayList<>();
 		private final String			name;
-		private final PinType			parent;
 		public final boolean			selectedByDefault, expandedByDefault;
+		public final Image				image;
 
-		public PinType(String name, PinType parent, boolean selectedByDefault, boolean expandedByDefault) {
+		PinType(String name, PinType parent, boolean selectedByDefault, boolean expandedByDefault, String path) {
+			this(name, parent, selectedByDefault, expandedByDefault, new Image(Pin.class.getResource(path).toString(), 128, 128, true, false));
+		}
+
+		PinType(String name, PinType parent, boolean selectedByDefault, boolean expandedByDefault, Image image) {
 			this.name = name;
-			this.parent = parent;
 			this.selectedByDefault = selectedByDefault;
 			this.expandedByDefault = expandedByDefault;
+			this.image = image;
 			if (parent != null)
 				parent.children.add(this);
 		}
@@ -107,98 +167,20 @@ public abstract class Pin {
 		public String toString() {
 			return name;
 		}
-
-		static {
-			/* Force initialization of the class */
-			Object o = CompressiblePinType.BUTTON_PIN;
-		}
-	}
-
-	public static class CompressiblePinType extends PinType {
-		@Deprecated
-		public static final CompressiblePinType	BUTTON_PIN					= new CompressiblePinType("Buttons", null, false, true, "/tmp.png");
-
-		public static final CompressiblePinType	CHUNK_PIN					= new CompressiblePinType("Chunk pins", PinType.ANY_PIN, false, false, "/tmp.png");
-		public static final CompressiblePinType	CHUNK_UNFINISHED			= new CompressiblePinType("Unfinished chunk", CHUNK_PIN, false, false,
-				"textures/overlays/pin_chunk_unfinished.png");
-		public static final CompressiblePinType	CHUNK_FAILED				= new CompressiblePinType("Corrupt chunk", CHUNK_PIN, false, false,
-				"textures/overlays/pin_chunk_corrupted.png");
-		public static final CompressiblePinType	CHUNK_OLD					= new CompressiblePinType("Old chunk", CHUNK_PIN, false, false,
-				"textures/overlays/pin_chunk_outdated.png");
-
-		public static final CompressiblePinType	PLAYER						= new CompressiblePinType("Player", PinType.ANY_PIN, true, false, "/tmp.png");
-		public static final CompressiblePinType	PLAYER_POSITION				= new CompressiblePinType("Position", PLAYER, true, false,
-				"textures/pins/player.png");
-		public static final CompressiblePinType	PLAYER_SPAWN				= new CompressiblePinType("Spawnpoint", PLAYER, true, false,
-				"textures/pins/spawn_player.png");
-
-		public static final CompressiblePinType	MAP							= new CompressiblePinType("Map", PinType.ANY_PIN, true, false, "/tmp.png");
-		public static final CompressiblePinType	MAP_POSITION				= new CompressiblePinType("Position", MAP, true, false,
-				"textures/pins/map.png");
-		public static final CompressiblePinType	MAP_BANNER					= new CompressiblePinType("Banner", MAP, true, false,
-				"textures/pins/banner.png");																													// TODO
-																																								// color
-
-		public static final CompressiblePinType	VILLAGE						= new CompressiblePinType("Village", PinType.ANY_PIN, false, false, "/tmp.png");
-		public static final CompressiblePinType	VILLAGE_CENTER				= new CompressiblePinType("Center", VILLAGE, false, false,
-				"textures/structures/village.png");
-		public static final CompressiblePinType	VILLAGE_DOOR				= new CompressiblePinType("House", VILLAGE, false, false,
-				"textures/structures/house.png");
-
-		public static final CompressiblePinType	WORLD_SPAWN					= new CompressiblePinType("Spawnpoint", PinType.ANY_PIN, true, false,
-				"textures/pins/spawn_map.png");
-
-		public static final CompressiblePinType	STRUCTURE					= new CompressiblePinType("Structures", PinType.ANY_PIN, false, false, "/tmp.png");
-		public static final CompressiblePinType	STRUCTURE_TREASURE			= new CompressiblePinType("Treasure", STRUCTURE, false, false,
-				"textures/structures/buried_treasure.png");
-		public static final CompressiblePinType	STRUCTURE_PYRAMID			= new CompressiblePinType("Pyramid", STRUCTURE, false, false,
-				"textures/structures/desert_pyramid.png");
-		public static final CompressiblePinType	STRUCTURE_END_CITY			= new CompressiblePinType("End city", STRUCTURE, false, false,
-				"textures/structures/end_city.png");
-		public static final CompressiblePinType	STRUCTURE_FORTRESS			= new CompressiblePinType("Fortress", STRUCTURE, false, false,
-				"textures/structures/fortress.png");
-		public static final CompressiblePinType	STRUCTURE_IGLOO				= new CompressiblePinType("Igloo", STRUCTURE, false, false,
-				"textures/structures/igloo.png");
-		public static final CompressiblePinType	STRUCTURE_JUNGLE_TEMPLE		= new CompressiblePinType("Jungle temple", STRUCTURE, false, false,
-				"textures/structures/jungle_pyramid.png");
-		public static final CompressiblePinType	STRUCTURE_MANSION			= new CompressiblePinType("Mansion", STRUCTURE, false, false,
-				"textures/structures/mansion.png");
-		public static final CompressiblePinType	STRUCTURE_MINESHAFT			= new CompressiblePinType("Mineshaft", STRUCTURE, false, false,
-				"textures/structures/mineshaft.png");
-		public static final CompressiblePinType	STRUCTURE_OCEAN_MONUMENT	= new CompressiblePinType("Ocean monument", STRUCTURE, false, false,
-				"textures/structures/monument.png");
-		public static final CompressiblePinType	STRUCTURE_OCEAN_RUIN		= new CompressiblePinType("Ocean ruin", STRUCTURE, false, false,
-				"textures/structures/ocean_ruin.png");
-		public static final CompressiblePinType	STRUCTURE_SHIPWRECK			= new CompressiblePinType("Shipwreck", STRUCTURE, false, false,
-				"textures/structures/shipwreck.png");
-		public static final CompressiblePinType	STRUCTURE_STRONGHOLD		= new CompressiblePinType("Stronghold", STRUCTURE, false, false,
-				"textures/structures/stronghold.png");
-		public static final CompressiblePinType	STRUCTURE_WITCH_HUT			= new CompressiblePinType("Witch hut", STRUCTURE, false, false,
-				"textures/structures/swamp_hut.png");
-
-		public final Image						image;
-
-		CompressiblePinType(String name, PinType parent, boolean selectedByDefault, boolean expandedByDefault, String path) {
-			this(name, parent, selectedByDefault, expandedByDefault, new Image(Pin.class.getResource(path).toString(), 128, 128, true, false));
-		}
-
-		CompressiblePinType(String name, PinType parent, boolean selectedByDefault, boolean expandedByDefault, Image image) {
-			super(name, parent, selectedByDefault, expandedByDefault);
-			this.image = image;
-		}
 	}
 
 	private static Log				log	= LogFactory.getLog(Pin.class);
 
 	public final PinType			type;
-	// public final Vector2ic regionPosition;
+	public final Vector2dc			position;
 	protected final DisplayViewport	viewport;
 	protected Node					topGui, bottomGui;
 
-	public Pin(Vector2ic regionPosition, PinType type, DisplayViewport viewport) {
+	public Pin(Vector2dc position, PinType type, Vector2ic regionPosition, DisplayViewport viewport) {
 		// this.regionPosition = regionPosition;
 		this.type = Objects.requireNonNull(type);
 		this.viewport = viewport;
+		this.position = Objects.requireNonNull(position);
 	}
 
 	public final Node getTopGui() {
@@ -223,25 +205,13 @@ public abstract class Pin {
 		return null;
 	}
 
-	public static abstract class CompressiblePin extends Pin {
-
-		public final CompressiblePinType	type;
-		public final Vector2dc				position;
-
-		public CompressiblePin(Vector2dc position, CompressiblePinType type, Vector2ic regionPosition, DisplayViewport viewport) {
-			super(regionPosition, type, viewport);
-			this.position = Objects.requireNonNull(position);
-			this.type = type;
-		}
-	}
-
-	public static class ButtonPin extends CompressiblePin {
+	public static class ButtonPin extends Pin {
 		protected Button	button;
 		protected PopOver	info;
 
 		protected boolean	isDynamic;
 
-		public ButtonPin(boolean isDynamic, Vector2dc position, CompressiblePinType type, DisplayViewport viewport) {
+		public ButtonPin(boolean isDynamic, Vector2dc position, PinType type, DisplayViewport viewport) {
 			super(position, type, new Vector2i((int) position.x() >> 9, (int) position.y() >> 9), viewport);
 			this.isDynamic = isDynamic;
 		}
@@ -268,7 +238,7 @@ public abstract class Pin {
 		public final List<Vector2ic>	chunkPositions;
 		public final Image				image;
 
-		public ChunkPin(CompressiblePinType type, Vector2dc centerPos, List<Vector2ic> chunkPositions, Image image, DisplayViewport viewport) {
+		public ChunkPin(PinType type, Vector2dc centerPos, List<Vector2ic> chunkPositions, Image image, DisplayViewport viewport) {
 			super(true, centerPos, type, viewport);
 			this.chunkPositions = Objects.requireNonNull(chunkPositions);
 			this.image = image;
@@ -292,7 +262,7 @@ public abstract class Pin {
 		protected int[] chunkCount;
 
 		public UnfinishedChunkPin(Vector2dc centerPos, List<Vector2ic> chunkPositions, int[] chunkCount, Image image, DisplayViewport viewport) {
-			super(CompressiblePinType.CHUNK_UNFINISHED, centerPos, chunkPositions, image, viewport);
+			super(PinType.CHUNK_UNFINISHED, centerPos, chunkPositions, image, viewport);
 			this.chunkCount = Objects.requireNonNull(chunkCount);
 		}
 
@@ -316,7 +286,7 @@ public abstract class Pin {
 		public int scale;
 
 		public MapPin(Vector2d position, int scale, DisplayViewport viewport) {
-			super(false, position, CompressiblePinType.MAP_POSITION, viewport);
+			super(false, position, PinType.MAP_POSITION, viewport);
 			this.scale = scale;
 		}
 
@@ -348,7 +318,7 @@ public abstract class Pin {
 		protected de.piegames.blockmap.world.WorldPins.PlayerPin player;
 
 		public PlayerPin(de.piegames.blockmap.world.WorldPins.PlayerPin player, DisplayViewport viewport) {
-			super(false, new Vector2d(player.getPosition().x(), player.getPosition().z()), CompressiblePinType.PLAYER_POSITION,
+			super(false, new Vector2d(player.getPosition().x(), player.getPosition().z()), PinType.PLAYER_POSITION,
 					viewport);
 			this.player = player;
 		}
@@ -374,7 +344,7 @@ public abstract class Pin {
 
 	public static class PlayerSpawnpointPin extends ButtonPin {
 		public PlayerSpawnpointPin(de.piegames.blockmap.world.WorldPins.PlayerPin player, DisplayViewport viewport) {
-			super(false, new Vector2d(player.getSpawnpoint().get().x(), player.getSpawnpoint().get().z()), CompressiblePinType.PLAYER_SPAWN, viewport);
+			super(false, new Vector2d(player.getSpawnpoint().get().x(), player.getSpawnpoint().get().z()), PinType.PLAYER_SPAWN, viewport);
 		}
 	}
 
@@ -389,21 +359,21 @@ public abstract class Pin {
 		for (VillagePin village : pin.getVillages().orElse(Collections.emptyList())) {
 			pins.add(new ButtonPin(false,
 					new Vector2d(village.getPosition().x(), village.getPosition().z()),
-					CompressiblePinType.VILLAGE_CENTER, viewport));
+					PinType.VILLAGE_CENTER, viewport));
 			for (Vector3ic door : village.getDoors().orElse(Collections.emptyList()))
 				pins.add(new ButtonPin(false,
 						new Vector2d(door.x(), door.z()),
-						CompressiblePinType.VILLAGE_DOOR, viewport));
+						PinType.VILLAGE_DOOR, viewport));
 		}
 
 		for (de.piegames.blockmap.world.WorldPins.MapPin map : pin.getMaps().orElse(Collections.emptyList())) {
 			pins.add(new MapPin(new Vector2d(map.getPosition().x(), map.getPosition().y()), map.getScale(), viewport));
 			for (BannerPin banner : map.getBanners().orElse(Collections.emptyList())) {
-				pins.add(new ButtonPin(false, new Vector2d(banner.getPosition().x(), banner.getPosition().y()), CompressiblePinType.MAP_BANNER, viewport));
+				pins.add(new ButtonPin(false, new Vector2d(banner.getPosition().x(), banner.getPosition().y()), PinType.MAP_BANNER, viewport));
 			}
 		}
 		pin.getWorldSpawn().map(spawn -> new ButtonPin(false, new Vector2d(spawn.getSpawnpoint().x(), spawn.getSpawnpoint().z()),
-				CompressiblePinType.WORLD_SPAWN, viewport))
+				PinType.WORLD_SPAWN, viewport))
 				.ifPresent(pins::add);
 
 		return pins;
@@ -442,51 +412,51 @@ public abstract class Pin {
 		for (Set<Vector2ic> chunks : splitChunks(failedChunks)) {
 			Vector2dc center = chunks.stream().map(v -> new Vector2d(v.x() * 16.0 + 8, v.y() * 16.0 + 8)).collect(Vector2d::new, Vector2d::add,
 					Vector2d::add).mul(1.0 / chunks.size());
-			pins.add(new ChunkPin(CompressiblePinType.CHUNK_UNFINISHED, center, outlineSet(chunks),
+			pins.add(new ChunkPin(PinType.CHUNK_UNFINISHED, center, outlineSet(chunks),
 					new Image(Pin.class.getResource("textures/overlays/chunk_corrupted.png").toString(), 64, 64, true, false),
 					viewport));
 		}
 		for (Set<Vector2ic> chunks : splitChunks(oldChunks)) {
 			Vector2dc center = chunks.stream().map(v -> new Vector2d(v.x() * 16.0 + 8, v.y() * 16.0 + 8)).collect(Vector2d::new, Vector2d::add,
 					Vector2d::add).mul(1.0 / chunks.size());
-			pins.add(new ChunkPin(CompressiblePinType.CHUNK_UNFINISHED, center, outlineSet(chunks),
+			pins.add(new ChunkPin(PinType.CHUNK_UNFINISHED, center, outlineSet(chunks),
 					new Image(Pin.class.getResource("textures/overlays/chunk_outdated.png").toString(), 64, 64, true, false),
 					viewport));
 		}
 
 		metadataMap.values().stream().flatMap(m -> m.structures.entrySet().stream()).forEach(e -> {
-			CompressiblePinType type = null;
+			PinType type = null;
 			// TODO refactor this into the pin type; this is ugly AF
 			switch (e.getKey()) {
 			case "Igloo":
-				type = CompressiblePinType.STRUCTURE_IGLOO;
+				type = PinType.STRUCTURE_IGLOO;
 				break;
 			case "Monument":
-				type = CompressiblePinType.STRUCTURE_OCEAN_MONUMENT;
+				type = PinType.STRUCTURE_OCEAN_MONUMENT;
 				break;
 			case "Ocean_Ruin":
-				type = CompressiblePinType.STRUCTURE_OCEAN_RUIN;
+				type = PinType.STRUCTURE_OCEAN_RUIN;
 				break;
 			case "Swamp_Hut":
-				type = CompressiblePinType.STRUCTURE_WITCH_HUT;
+				type = PinType.STRUCTURE_WITCH_HUT;
 				break;
 			case "Desert_Pyramid":
-				type = CompressiblePinType.STRUCTURE_PYRAMID;
+				type = PinType.STRUCTURE_PYRAMID;
 				break;
 			case "Jungle_Pyramid":
-				type = CompressiblePinType.STRUCTURE_JUNGLE_TEMPLE;
+				type = PinType.STRUCTURE_JUNGLE_TEMPLE;
 				break;
 			case "Mineshaft":
-				type = CompressiblePinType.STRUCTURE_MINESHAFT;
+				type = PinType.STRUCTURE_MINESHAFT;
 				break;
 			case "Buried_Treasure":
-				type = CompressiblePinType.STRUCTURE_TREASURE;
+				type = PinType.STRUCTURE_TREASURE;
 				break;
 			case "Shipwreck":
-				type = CompressiblePinType.STRUCTURE_SHIPWRECK;
+				type = PinType.STRUCTURE_SHIPWRECK;
 				break;
 			case "Stronghold":
-				type = CompressiblePinType.STRUCTURE_STRONGHOLD;
+				type = PinType.STRUCTURE_STRONGHOLD;
 				break;
 			case "Village":
 				/* Villages are handled separately, so ignore them */

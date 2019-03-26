@@ -24,8 +24,6 @@ import com.codepoetics.protonpack.StreamUtils;
 import com.google.common.collect.Streams;
 
 import de.piegames.blockmap.gui.DisplayViewport;
-import de.piegames.blockmap.gui.decoration.Pin.CompressiblePin;
-import de.piegames.blockmap.gui.decoration.Pin.CompressiblePinType;
 import de.piegames.blockmap.gui.decoration.Pin.PinType;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -128,29 +126,27 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 	double[]				height		= new double[] {};
 
 	private void updatePins() {
-		Set<Pin> allPins = Streams.concat(
+		List<Pin> allPins = Streams.concat(
 				dynamicPins.entrySet().stream().flatMap(e -> e.getValue().stream()).filter(p -> visiblePins.contains(p.type)),
 				staticPins.stream().filter(p -> visiblePins.contains(p.type)))
-				.collect(Collectors.toSet());
+				.collect(Collectors.toList());
 		world.getChildren().clear();
 		world.getChildren().addAll(allPins.stream().map(p -> p.getBottomGui()).filter(g -> g != null).collect(
 				Collectors.toList()));
 		world.getChildren().addAll(allPins.stream().map(p -> p.getTopGui()).filter(g -> g != null).collect(
 				Collectors.toList()));
-		List<CompressiblePin> compressiblePins = allPins.stream().filter(p -> p instanceof CompressiblePin).map(p -> (CompressiblePin) p).collect(Collectors
-				.toList());
 
 		/* Clustering */
 
-		final int n = compressiblePins.size();
+		final int n = allPins.size();
 		if (n == 0) // TODO cleanup
 			return;
 		double[][] dist = new double[n][];
 		for (int row = 0; row < n; row++) {
 			dist[row] = new double[row + 1];
 			for (int col = 0; col < row; col++)
-				dist[row][col] = compressiblePins.get(row).position.distance(
-						compressiblePins.get(col).position);
+				dist[row][col] = allPins.get(row).position.distance(
+						allPins.get(col).position);
 		}
 
 		Linkage linkage = new smile.clustering.linkage.UPGMCLinkage(dist);
@@ -159,7 +155,7 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 
 		/* Cluster analysis */
 
-		List<List<CompressiblePin>> clusters = new ArrayList<>();
+		List<List<Pin>> clusters = new ArrayList<>();
 		List<Node> mergedPins = new ArrayList<>();
 
 		/* First index: 0..n-1 -> time */
@@ -167,10 +163,10 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 
 		for (int i = 0; i < n - 1; i++) {
 			int[] merged = cluster.getTree()[i];
-			List<CompressiblePin> c = new ArrayList<>();
+			List<Pin> c = new ArrayList<>();
 
 			if (merged[0] < n) {
-				CompressiblePin pin = compressiblePins.get(merged[0]);
+				Pin pin = allPins.get(merged[0]);
 				c.add(pin);
 				for (int j = 0; j < n - 1; j++) {
 					keyvalues.get(j).add(new KeyValue(pin.getTopGui().opacityProperty(), j <= i ? 1 : 0,
@@ -190,7 +186,7 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 			}
 
 			if (merged[1] < n) {
-				CompressiblePin pin = compressiblePins.get(merged[1]);
+				Pin pin = allPins.get(merged[1]);
 				c.add(pin);
 				for (int j = 0; j < n - 1; j++) {
 					keyvalues.get(j).add(new KeyValue(pin.getTopGui().opacityProperty(), j <= i ? 1 : 0,
@@ -211,7 +207,7 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 
 			clusters.add(c);
 
-			Map<CompressiblePinType, Long> combined = c.stream().map(p -> p.type).collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+			Map<PinType, Long> combined = c.stream().map(p -> p.type).collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 			// System.out.println(combined.size());
 
 			int columns = (int) Math.floor(Math.sqrt(combined.size()));

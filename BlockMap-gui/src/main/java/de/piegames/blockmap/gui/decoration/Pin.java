@@ -16,6 +16,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.control.PopOver.ArrowLocation;
+import org.joml.AABBd;
 import org.joml.Vector2d;
 import org.joml.Vector2dc;
 import org.joml.Vector2i;
@@ -33,6 +34,7 @@ import javafx.beans.binding.DoubleBinding;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -49,35 +51,32 @@ import javafx.scene.transform.Translate;
 // Pin type hierarchy (not class hierarchy; meta pins in brackets):
 //
 // (Pin)
-// - (Button pin)
-//   - (Structure pin)
+//  - (Structure pin)
 //     - ...
 //     - ...
-//   - Player pin
+//  - Player pin
 //     - Player spawnpoint pin
-//   - Map pin
+//  - Map pin
 //     - Banner pin
-//   - Village pin
+//  - Village pin
 //     - Door pin
-//   - Spawnpoint pin
-// - Barrier pin
-// - (Chunk pin)
-//   - Force chunk pin
-//   - Slime chunk pin
-//   - Chunk status pin
+//  - Spawnpoint pin
+//  - (Chunk pin)
+//     - Force chunk pin
+//     - Slime chunk pin
+//     - Chunk status pin
 
 //##############
 
-// Actual pin class hierarchy
-// Pin
-// - ButtonPin
-//   - PlayerPin
-//   - MapPin
-//   - ChunkPin
-//   - ChunkStatusPin?
-// - BarrierPin
-
-//##############
+// Player pin: Spawnpoint position, Name, Icon, precise position, game mode
+// Player spawnpoint: Player position
+// Map: Scale, …
+// Village: radius, population, golems, doorcount
+// Village door: Village
+// Unfinished chunk: Generation statistics
+// Slime chunk:
+// Failed chunk: Generic info text, exception?
+// Old chunk: Generic info text, Minecraft version?
 
 public abstract class Pin {
 
@@ -315,7 +314,7 @@ public abstract class Pin {
 
 	public static class PlayerPin extends ButtonPin {
 
-		protected de.piegames.blockmap.world.WorldPins.PlayerPin player;
+		protected de.piegames.blockmap.world.WorldPins.PlayerPin	player;
 
 		public PlayerPin(de.piegames.blockmap.world.WorldPins.PlayerPin player, DisplayViewport viewport) {
 			super(false, new Vector2d(player.getPosition().x(), player.getPosition().z()), PinType.PLAYER_POSITION,
@@ -327,16 +326,27 @@ public abstract class Pin {
 		protected Node initTopGui() {
 			Node node = super.initTopGui();
 			PopOver info = this.info;
-			GridPane playerContent = new GridPane();
-			info.setContentNode(playerContent);
+			GridPane content = new GridPane();
+
+			content.add(new Label("Player"), 0, 0, 1, 2);
+			content.add(new Separator(), 0, 1, 1, 2);
+
+			// TODO add player name
 
 			if (player.getSpawnpoint().isPresent()) {
-				playerContent.add(new Label("Spawnpoint: " + player.getSpawnpoint().get()), 0, 0);
-				Button jumpButton = new Button("Go there");
-				playerContent.add(jumpButton, 1, 0);
-				Vector2d spawnpoint = new Vector2d(player.getSpawnpoint().get().x(), player.getSpawnpoint().get().z());
-				jumpButton.setOnAction(e -> viewport.translationProperty.set(spawnpoint));
+				content.add(new Label("Spawnpoint: "), 0, 2);
+				Button jumpButton = new Button(player.getSpawnpoint().get().toString());
+				jumpButton.setTooltip(new Tooltip("Click to go there"));
+				content.add(jumpButton, 1, 2);
+				jumpButton.setOnAction(e -> {
+					Vector2d spawnpoint = new Vector2d(player.getSpawnpoint().get().x(), player.getSpawnpoint().get().z());
+					AABBd frustum = viewport.frustumProperty.get();
+					viewport.translationProperty.set(spawnpoint.negate().add((frustum.maxX - frustum.minX) / 2, (frustum.maxY - frustum.minY) / 2));
+					info.hide();
+				});
 			}
+
+			info.setContentNode(content);
 
 			return node;
 		}
@@ -345,6 +355,43 @@ public abstract class Pin {
 	public static class PlayerSpawnpointPin extends ButtonPin {
 		public PlayerSpawnpointPin(de.piegames.blockmap.world.WorldPins.PlayerPin player, DisplayViewport viewport) {
 			super(false, new Vector2d(player.getSpawnpoint().get().x(), player.getSpawnpoint().get().z()), PinType.PLAYER_SPAWN, viewport);
+		}
+	}
+
+	public static class _VillagePin extends ButtonPin {
+
+		protected VillagePin village;
+
+		public _VillagePin(VillagePin village, DisplayViewport viewport) {
+			super(false, new Vector2d(village.getPosition().x(), village.getPosition().z()), PinType.VILLAGE_CENTER, viewport);
+			this.village = Objects.requireNonNull(village);
+		}
+
+		@Override
+		protected Node initTopGui() {
+			Node node = super.initTopGui();
+			PopOver info = this.info;
+			GridPane content = new GridPane();
+
+			content.add(new Label("Village"), 0, 0, 1, 2);
+			content.add(new Separator(), 0, 1, 1, 2);
+
+			if (village.getRadius().isPresent()) {
+				content.add(new Label("Radius: "), 0, 2);
+				content.add(new Label(village.getRadius().get().toString()), 1, 2);
+			}
+			if (village.getGolems().isPresent()) {
+				content.add(new Label("Golem count: "), 0, 3);
+				content.add(new Label(village.getGolems().get().toString()), 1, 3);
+			}
+			if (village.getDoors().isPresent()) {
+				content.add(new Label("Door count: "), 0, 4);
+				content.add(new Label(String.valueOf(village.getDoors().get().size())), 1, 4);
+			}
+
+			info.setContentNode(content);
+
+			return node;
 		}
 	}
 
@@ -357,9 +404,9 @@ public abstract class Pin {
 		}
 
 		for (VillagePin village : pin.getVillages().orElse(Collections.emptyList())) {
-			pins.add(new ButtonPin(false,
-					new Vector2d(village.getPosition().x(), village.getPosition().z()),
-					PinType.VILLAGE_CENTER, viewport));
+			pins.add(new _VillagePin(
+					village,
+					viewport));
 			for (Vector3ic door : village.getDoors().orElse(Collections.emptyList()))
 				pins.add(new ButtonPin(false,
 						new Vector2d(door.x(), door.z()),

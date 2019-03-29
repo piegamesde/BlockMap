@@ -7,7 +7,6 @@ dependencies {
     implementation project(':BlockMap-core')
 
 	implementation 'org.controlsfx:controlsfx:8.40.12'
-    implementation 'com.github.SparklingComet:java-mojang-api:60d6231d42'
 
 	implementation 'info.picocli:picocli:3.7.0'
 	//implementation 'info.picocli:picocli:3.3.0'

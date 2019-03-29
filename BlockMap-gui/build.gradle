@@ -5,4 +5,8 @@ dependencies {
 	// GUI dependencies
 	implementation 'org.mapdb:mapdb:3.0.7'
 	implementation 'org.controlsfx:controlsfx:8.40.12'
+	implementation group: 'com.github.haifengl', name: 'smile-core', version: '1.5.2'
+	implementation group: 'com.codepoetics', name: 'protonpack', version: '1.15'
+    //implementation 'com.github.SparklingComet:java-mojang-api:60d6231d42'
+    implementation 'com.github.piegamesde:java-mojang-api:6208364d0f'
 }

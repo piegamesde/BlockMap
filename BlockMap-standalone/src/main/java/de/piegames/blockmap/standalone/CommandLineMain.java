@@ -226,7 +226,7 @@ public class CommandLineMain implements Runnable {
 		 * might not be on the class path with some java installations. This way, even users without JavaFX can still use the CLI
 		 */
 		try {
-			Class.forName("de.piegames.blockmap.guistandalone.GuiMain").getMethod("main2").invoke(null);
+			Class.forName("de.piegames.blockmap.guistandalone.GuiMain").getMethod("main", String[].class).invoke(null, (Object) new String[0]);
 		} catch (NoClassDefFoundError e) {
 			log.fatal("Could not load GUI classes. Please make sure you have JavaFX loaded and on your class path. "
 					+ "Alternatively, use Java 8 which includes JavaFX. You can use the BlockMap CLI anyway with `BlockMap help` or `BlockMap render`.",

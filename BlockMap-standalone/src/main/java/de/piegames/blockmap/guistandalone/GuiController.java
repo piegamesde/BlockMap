@@ -24,7 +24,7 @@ import de.piegames.blockmap.gui.WorldRendererCanvas;
 import de.piegames.blockmap.gui.decoration.DragScrollDecoration;
 import de.piegames.blockmap.gui.decoration.GridDecoration;
 import de.piegames.blockmap.gui.decoration.Pin;
-import de.piegames.blockmap.gui.decoration.Pin.CompressiblePinType;
+import de.piegames.blockmap.gui.decoration.Pin.PinType;
 import de.piegames.blockmap.gui.decoration.Pin.PinType;
 import de.piegames.blockmap.gui.decoration.PinDecoration;
 import de.piegames.blockmap.guistandalone.RegionFolderProvider.LocalFolderProvider;
@@ -171,8 +171,8 @@ public class GuiController implements Initializable {
 			Function<PinType, CheckBoxTreeItem<PinType>> convert = (type) -> {
 				CheckBoxTreeItem<PinType> ret;
 				// TODO clean up
-				if (type instanceof CompressiblePinType && false)
-					ret = new CheckBoxTreeItem<>(type, new ImageView(((CompressiblePinType) type).image));
+				if (type instanceof PinType && false)
+					ret = new CheckBoxTreeItem<>(type, new ImageView(((PinType) type).image));
 				else
 					ret = new CheckBoxTreeItem<>(type);
 				ret.setExpanded(type.expandedByDefault);
@@ -232,7 +232,9 @@ public class GuiController implements Initializable {
 			}
 		});
 		renderer.getChunkMetadata().addListener((MapChangeListener<Vector2ic, Map<Vector2ic, ChunkMetadata>>) change -> {
-			GuiController.this.pins.setDynamicPins(change.getKey(), Pin.convert(change.getValueAdded(), renderer.viewport));
+			// TODO this needs a proper add/remove handling
+			if (change.getValueAdded() != null)
+				GuiController.this.pins.setDynamicPins(change.getKey(), Pin.convert(change.getValueAdded(), renderer.viewport));
 		});
 	}
 

@@ -78,7 +78,7 @@ import javafx.scene.transform.Translate;
 // Failed chunk: Generic info text, exception?
 // Old chunk: Generic info text, Minecraft version?
 
-public abstract class Pin {
+public class Pin {
 
 	public static class PinType {
 		public static final PinType		ANY_PIN						= new PinType("Show pins", null, false, true, "/tmp.png");
@@ -175,11 +175,16 @@ public abstract class Pin {
 	protected final DisplayViewport	viewport;
 	protected Node					topGui, bottomGui;
 
-	public Pin(Vector2dc position, PinType type, Vector2ic regionPosition, DisplayViewport viewport) {
-		// this.regionPosition = regionPosition;
+	protected Button				button;
+	protected PopOver				info;
+
+	protected boolean				isDynamic;
+
+	public Pin(boolean isDynamic, Vector2dc position, PinType type, DisplayViewport viewport) {
 		this.type = Objects.requireNonNull(type);
 		this.viewport = viewport;
 		this.position = Objects.requireNonNull(position);
+		this.isDynamic = isDynamic;
 	}
 
 	public final Node getTopGui() {
@@ -197,43 +202,26 @@ public abstract class Pin {
 	}
 
 	protected Node initTopGui() {
-		return null;
+		ImageView img = new ImageView(type.image);
+		img.setSmooth(false);
+		button = new Button(null, img);
+		img.setPreserveRatio(true);
+		button.setTooltip(new Tooltip(type.toString()));
+		button.setStyle("-fx-background-radius: 6em;");
+		img.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> button.getFont().getSize() * 2, button.fontProperty()));
+
+		info = new PopOver();
+		info.setArrowLocation(ArrowLocation.BOTTOM_CENTER);
+		info.setAutoHide(true);
+		button.setOnAction(mouseEvent -> info.show(button));
+		return wrapGui(button, position, viewport);
 	}
 
 	protected Node initBottomGui() {
 		return null;
 	}
 
-	public static class ButtonPin extends Pin {
-		protected Button	button;
-		protected PopOver	info;
-
-		protected boolean	isDynamic;
-
-		public ButtonPin(boolean isDynamic, Vector2dc position, PinType type, DisplayViewport viewport) {
-			super(position, type, new Vector2i((int) position.x() >> 9, (int) position.y() >> 9), viewport);
-			this.isDynamic = isDynamic;
-		}
-
-		@Override
-		protected Node initTopGui() {
-			ImageView img = new ImageView(type.image);
-			img.setSmooth(false);
-			button = new Button(null, img);
-			img.setPreserveRatio(true);
-			button.setTooltip(new Tooltip(type.toString()));
-			button.setStyle("-fx-background-radius: 6em;");
-			img.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> button.getFont().getSize() * 2, button.fontProperty()));
-
-			info = new PopOver();
-			info.setArrowLocation(ArrowLocation.BOTTOM_CENTER);
-			info.setAutoHide(true);
-			button.setOnAction(mouseEvent -> info.show(button));
-			return wrapGui(button, position, viewport);
-		}
-	}
-
-	public static class ChunkPin extends ButtonPin {
+	public static class ChunkPin extends Pin {
 		public final List<Vector2ic>	chunkPositions;
 		public final Image				image;
 
@@ -280,7 +268,7 @@ public abstract class Pin {
 		}
 	}
 
-	public static class MapPin extends ButtonPin {
+	public static class MapPin extends Pin {
 
 		public int scale;
 
@@ -312,7 +300,7 @@ public abstract class Pin {
 		}
 	}
 
-	public static class PlayerPin extends ButtonPin {
+	public static class PlayerPin extends Pin {
 
 		protected de.piegames.blockmap.world.WorldPins.PlayerPin	player;
 
@@ -352,13 +340,13 @@ public abstract class Pin {
 		}
 	}
 
-	public static class PlayerSpawnpointPin extends ButtonPin {
+	public static class PlayerSpawnpointPin extends Pin {
 		public PlayerSpawnpointPin(de.piegames.blockmap.world.WorldPins.PlayerPin player, DisplayViewport viewport) {
 			super(false, new Vector2d(player.getSpawnpoint().get().x(), player.getSpawnpoint().get().z()), PinType.PLAYER_SPAWN, viewport);
 		}
 	}
 
-	public static class _VillagePin extends ButtonPin {
+	public static class _VillagePin extends Pin {
 
 		protected VillagePin village;
 
@@ -393,6 +381,7 @@ public abstract class Pin {
 
 			return node;
 		}
+
 	}
 
 	public static Set<Pin> convert(WorldPins pin, DisplayViewport viewport) {
@@ -408,7 +397,7 @@ public abstract class Pin {
 					village,
 					viewport));
 			for (Vector3ic door : village.getDoors().orElse(Collections.emptyList()))
-				pins.add(new ButtonPin(false,
+				pins.add(new Pin(false,
 						new Vector2d(door.x(), door.z()),
 						PinType.VILLAGE_DOOR, viewport));
 		}
@@ -416,10 +405,10 @@ public abstract class Pin {
 		for (de.piegames.blockmap.world.WorldPins.MapPin map : pin.getMaps().orElse(Collections.emptyList())) {
 			pins.add(new MapPin(new Vector2d(map.getPosition().x(), map.getPosition().y()), map.getScale(), viewport));
 			for (BannerPin banner : map.getBanners().orElse(Collections.emptyList())) {
-				pins.add(new ButtonPin(false, new Vector2d(banner.getPosition().x(), banner.getPosition().y()), PinType.MAP_BANNER, viewport));
+				pins.add(new Pin(false, new Vector2d(banner.getPosition().x(), banner.getPosition().y()), PinType.MAP_BANNER, viewport));
 			}
 		}
-		pin.getWorldSpawn().map(spawn -> new ButtonPin(false, new Vector2d(spawn.getSpawnpoint().x(), spawn.getSpawnpoint().z()),
+		pin.getWorldSpawn().map(spawn -> new Pin(false, new Vector2d(spawn.getSpawnpoint().x(), spawn.getSpawnpoint().z()),
 				PinType.WORLD_SPAWN, viewport))
 				.ifPresent(pins::add);
 
@@ -512,7 +501,7 @@ public abstract class Pin {
 				log.warn("Could not find a pin type named " + e.getKey());
 			}
 			if (type != null)
-				pins.add(new ButtonPin(true, new Vector2d(e.getValue().x(), e.getValue().z()), type, viewport));
+				pins.add(new Pin(true, new Vector2d(e.getValue().x(), e.getValue().z()), type, viewport));
 		});
 		return pins;
 	}

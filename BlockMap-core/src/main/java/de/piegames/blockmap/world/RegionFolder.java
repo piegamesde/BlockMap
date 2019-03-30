@@ -16,11 +16,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.joml.Vector2i;
 import org.joml.Vector2ic;
@@ -68,8 +70,8 @@ public abstract class RegionFolder {
 	 */
 	public abstract Region render(Vector2ic pos) throws IOException;
 
-	/** Returns the pins of this specific world or {@code null} if they are not loaded. */
-	public abstract WorldPins getPins();
+	/** Returns the pins of this specific world or {@code Optional.empty()} if they are not loaded. */
+	public abstract Optional<WorldPins> getPins();
 
 	/**
 	 * This {@link RegionFolder} implementation will render region files using a {@link RegionRenderer}. Calling {@link #render(Vector2ic)}
@@ -119,8 +121,8 @@ public abstract class RegionFolder {
 		}
 
 		@Override
-		public WorldPins getPins() {
-			return pins;
+		public Optional<WorldPins> getPins() {
+			return Optional.ofNullable(pins);
 		}
 
 		public void setPins(WorldPins pins) {
@@ -178,7 +180,7 @@ public abstract class RegionFolder {
 	public static abstract class SavedRegionFolder<T, R extends SavedRegion> extends RegionFolder {
 
 		protected final Map<Vector2ic, R>	regions;
-		protected final WorldPins			pins;
+		protected final Optional<WorldPins>	pins;
 
 		/**
 		 * Creates the region folder with a custom mapping
@@ -189,7 +191,7 @@ public abstract class RegionFolder {
 		 *            the pins of this world. May be {@code null} if they haven't been loaded.
 		 * @see #parseSaved(JsonElement)
 		 */
-		protected SavedRegionFolder(Map<Vector2ic, R> regions, WorldPins pins) {
+		protected SavedRegionFolder(Map<Vector2ic, R> regions, Optional<WorldPins> pins) {
 			this.regions = Collections.unmodifiableMap(regions);
 			this.pins = pins;
 		}
@@ -212,7 +214,7 @@ public abstract class RegionFolder {
 					throw new IllegalArgumentException("The specified file contains more than one saved map, but no name was given");
 				rawFile = saved.values().iterator().next();
 			}
-			pins = GSON.fromJson(rawFile.get("pins"), WorldPins.class);
+			pins = Optional.ofNullable(GSON.fromJson(rawFile.get("pins"), WorldPins.class));
 			regions = ((List<RegionHelper>) GSON.fromJson(rawFile.getAsJsonArray("regions"), new TypeToken<List<RegionHelper>>() {
 			}.getType())).stream().collect(Collectors.toMap(r -> new Vector2i(r.x, r.z), r -> getRegion(r, file)));
 		}
@@ -233,7 +235,7 @@ public abstract class RegionFolder {
 		}
 
 		@Override
-		public WorldPins getPins() {
+		public Optional<WorldPins> getPins() {
 			return pins;
 		}
 
@@ -280,7 +282,7 @@ public abstract class RegionFolder {
 	 * (There is even an URLSystemProvider somewhere on GitHub ...)
 	 */
 	public static class LocalRegionFolder extends SavedRegionFolder<Path, LocalSavedRegion> {
-		protected LocalRegionFolder(Map<Vector2ic, LocalSavedRegion> regions, WorldPins pins) {
+		protected LocalRegionFolder(Map<Vector2ic, LocalSavedRegion> regions, Optional<WorldPins> pins) {
 			super(regions, pins);
 		}
 
@@ -308,7 +310,7 @@ public abstract class RegionFolder {
 	 */
 	public static class RemoteRegionFolder extends SavedRegionFolder<URI, SavedRegion> {
 
-		protected RemoteRegionFolder(Map<Vector2ic, SavedRegion> regions, WorldPins pins) {
+		protected RemoteRegionFolder(Map<Vector2ic, SavedRegion> regions, Optional<WorldPins> pins) {
 			super(regions, pins);
 		}
 
@@ -326,7 +328,8 @@ public abstract class RegionFolder {
 			return new SavedRegion(
 					new Vector2i(rawRegion.x, rawRegion.z),
 					basePath.resolve(rawRegion.image),
-					rawRegion.metadata.stream().collect(Collectors.toMap(meta -> meta.position, Function.identity())));
+					Optional.ofNullable(rawRegion.metadata).map(List::stream).orElse(Stream.empty())
+							.collect(Collectors.toMap(meta -> meta.position, Function.identity())));
 		}
 	}
 
@@ -387,7 +390,7 @@ public abstract class RegionFolder {
 		}
 
 		@Override
-		public WorldPins getPins() {
+		public Optional<WorldPins> getPins() {
 			return world.getPins();
 		}
 

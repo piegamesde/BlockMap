@@ -25,7 +25,6 @@ import de.piegames.blockmap.gui.decoration.DragScrollDecoration;
 import de.piegames.blockmap.gui.decoration.GridDecoration;
 import de.piegames.blockmap.gui.decoration.Pin;
 import de.piegames.blockmap.gui.decoration.Pin.PinType;
-import de.piegames.blockmap.gui.decoration.Pin.PinType;
 import de.piegames.blockmap.gui.decoration.PinDecoration;
 import de.piegames.blockmap.guistandalone.RegionFolderProvider.LocalFolderProvider;
 import de.piegames.blockmap.guistandalone.RegionFolderProvider.RemoteFolderProvider;
@@ -172,7 +171,7 @@ public class GuiController implements Initializable {
 				CheckBoxTreeItem<PinType> ret;
 				// TODO clean up
 				if (type instanceof PinType && false)
-					ret = new CheckBoxTreeItem<>(type, new ImageView(((PinType) type).image));
+					ret = new CheckBoxTreeItem<>(type, new ImageView(type.image));
 				else
 					ret = new CheckBoxTreeItem<>(type);
 				ret.setExpanded(type.expandedByDefault);
@@ -194,6 +193,7 @@ public class GuiController implements Initializable {
 			// });
 
 			pinView.getCheckModel().getCheckedItems().addListener((ListChangeListener<TreeItem<PinType>>) e -> {
+				// TODO only one call per user input
 				while (e.next()) {
 					pins.visiblePins.addAll(e.getAddedSubList().stream().map(t -> t.getValue()).collect(Collectors.toSet()));
 					pins.visiblePins.removeAll(e.getRemoved().stream().map(t -> t.getValue()).collect(Collectors.toSet()));
@@ -228,7 +228,8 @@ public class GuiController implements Initializable {
 		renderer.regionFolder.addListener((observable, previous, val) -> {
 			if (val != null) {
 				this.pins.clear();
-				this.pins.setStaticPins(Pin.convert(val.getPins(), renderer.viewport));
+				if (val.getPins().isPresent())
+					this.pins.setStaticPins(Pin.convert(val.getPins().get(), renderer.viewport));
 			}
 		});
 		renderer.getChunkMetadata().addListener((MapChangeListener<Vector2ic, Map<Vector2ic, ChunkMetadata>>) change -> {

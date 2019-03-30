@@ -120,7 +120,7 @@ public class Pin {
 		public static final PinType		WORLD_SPAWN					= new PinType("Spawnpoint", ANY_PIN, true, false,
 				"textures/pins/spawn_map.png");
 
-		public static final PinType		STRUCTURE					= new PinType("Structures", ANY_PIN, false, false, "/tmp.png");
+		public static final PinType		STRUCTURE					= new PinType("Structures", ANY_PIN, false, true, "/tmp.png");
 		public static final PinType		STRUCTURE_TREASURE			= new PinType("Treasure", STRUCTURE, false, false,
 				"textures/structures/buried_treasure.png");
 		public static final PinType		STRUCTURE_PYRAMID			= new PinType("Pyramid", STRUCTURE, false, false,
@@ -298,10 +298,10 @@ public class Pin {
 				content.add(new Label(Integer.toString(maps.size())), 1, 2);
 
 				content.add(new Label("Scales:"), 0, 3);
-				content.add(new Label(maps.stream().map(m -> m.getScale()).collect(Collectors.toList()).toString()), 1, 3);
+				content.add(new Label(maps.stream().map(m -> m.getScale()).map(scale -> "1:" + (1 << scale)).collect(Collectors.toSet()).toString()), 1, 3);
 			} else {
 				content.add(new Label("Scale:"), 0, 2);
-				content.add(new Label(maps.stream().map(m -> m.getScale()).findAny().get().toString()), 1, 2);
+				content.add(new Label(maps.stream().map(m -> m.getScale()).map(scale -> "1:" + (1 << scale)).findAny().get().toString()), 1, 2);
 			}
 
 			// TODO maybe add the map's image?
@@ -313,8 +313,8 @@ public class Pin {
 		@Override
 		protected Node initBottomGui() {
 			StackPane stack = new StackPane();
-			stack.getChildren().setAll(maps.stream().map(map -> {
-				int size = 128 * (1 << map.getScale());
+			stack.getChildren().setAll(maps.stream().map(map -> map.getScale()).distinct().map(scale -> {
+				int size = 128 * (1 << scale);
 				Rectangle rect = new Rectangle(size, size, new Color(0.9f, 0.15f, 0.15f, 0.02f));
 				rect.setStroke(new Color(0.9f, 0.15f, 0.15f, 0.4f));
 				rect.setMouseTransparent(true);
@@ -526,7 +526,23 @@ public class Pin {
 				.collect(Collectors.toList()));
 
 		pin.getWorldSpawn().map(spawn -> new Pin(false, new Vector2d(spawn.getSpawnpoint().x(), spawn.getSpawnpoint().z()),
-				PinType.WORLD_SPAWN, viewport))
+				PinType.WORLD_SPAWN, viewport) {
+			@Override
+			public Node initTopGui() {
+				// TODO cleanup
+				Node n = super.initTopGui();
+				GridPane content = new GridPane();
+
+				content.add(new Label("Spawnpoint"), 0, 0, 2, 1);
+				content.add(new Separator(), 0, 1, 2, 1);
+
+				content.add(new Label("Position:"), 0, 2);
+				content.add(new Label(spawn.getSpawnpoint().toString()), 1, 2);
+
+				info.setContentNode(content);
+				return n;
+			}
+		})
 				.ifPresent(pins::add);
 
 		return pins;
@@ -611,6 +627,8 @@ public class Pin {
 			case "Stronghold":
 				type = PinType.STRUCTURE_STRONGHOLD;
 				break;
+			case "Mansion":
+				type = PinType.STRUCTURE_MANSION;
 			case "Village":
 				/* Villages are handled separately, so ignore them */
 				break;

@@ -43,12 +43,4 @@ public class GuiMain extends Application {
 	public static void main(String... args) {
 		Application.launch(args);
 	}
-
-	/*
-	 * Apparently, I can't get it to launch the default main method using generics, but this works. To fix it, remove this method and adapt
-	 * CommandLineMain#run.
-	 */
-	public static void main2() {
-		main(new String[0]);
-	}
 }

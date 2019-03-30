@@ -46,7 +46,7 @@ import de.piegames.blockmap.world.Region.SavedRegion;
  */
 public abstract class RegionFolder {
 
-	public static Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+	public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
 	/**
 	 * Lists all existing region file in this RegionFolder. If one of the returned positions is passed to {@link #render(Vector2ic)}, it must

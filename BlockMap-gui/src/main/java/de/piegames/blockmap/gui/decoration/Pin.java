@@ -10,6 +10,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -29,14 +30,23 @@ import org.shanerx.mojang.Mojang.ServiceStatus;
 import org.shanerx.mojang.Mojang.ServiceType;
 import org.shanerx.mojang.PlayerProfile;
 
+import com.codepoetics.protonpack.StreamUtils;
+
 import de.piegames.blockmap.gui.DisplayViewport;
 import de.piegames.blockmap.world.ChunkMetadata;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkGenerationStatus;
 import de.piegames.blockmap.world.WorldPins;
 import de.piegames.blockmap.world.WorldPins.VillagePin;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -54,41 +64,10 @@ import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Translate;
 
-//##############
-
-// Pin type hierarchy (not class hierarchy; meta pins in brackets):
-//
-// (Pin)
-//  - (Structure pin)
-//     - ...
-//     - ...
-//  - Player pin
-//     - Player spawnpoint pin
-//  - Map pin
-//     - Banner pin
-//  - Village pin
-//     - Door pin
-//  - Spawnpoint pin
-//  - (Chunk pin)
-//     - Force chunk pin
-//     - Slime chunk pin
-//     - Chunk status pin
-
-//##############
-
-// Player pin: Spawnpoint position, Name, Icon, precise position, game mode
-// Player spawnpoint: Player position
-// Map: Scale, …
-// Village: radius, population, golems, doorcount
-// Village door: Village
-// Unfinished chunk: Generation statistics
-// Slime chunk:
-// Failed chunk: Generic info text, exception?
-// Old chunk: Generic info text, Minecraft version?
-
 public class Pin {
 
 	public static class PinType {
+		public static final PinType		MERGED_PIN					= new PinType("Merged pin", null, false, false, "/tmp.png");
 		public static final PinType		ANY_PIN						= new PinType("Show pins", null, false, true, "/tmp.png");
 
 		public static final PinType		CHUNK_PIN					= new PinType("Chunk pins", ANY_PIN, false, false, "/tmp.png");
@@ -109,7 +88,7 @@ public class Pin {
 		public static final PinType		MAP_POSITION				= new PinType("Position", MAP, true, false,
 				"textures/pins/map.png");
 		public static final PinType		MAP_BANNER					= new PinType("Banner", MAP, true, false,
-				"textures/pins/banner.png");																						// TODO color
+				"textures/pins/banner.png");
 
 		public static final PinType		VILLAGE						= new PinType("Village", ANY_PIN, false, false, "/tmp.png");
 		public static final PinType		VILLAGE_CENTER				= new PinType("Center", VILLAGE, false, false,
@@ -186,13 +165,10 @@ public class Pin {
 	protected Button				button;
 	protected PopOver				info;
 
-	protected boolean				isDynamic;
-
-	public Pin(boolean isDynamic, Vector2dc position, PinType type, DisplayViewport viewport) {
+	public Pin(Vector2dc position, PinType type, DisplayViewport viewport) {
 		this.type = Objects.requireNonNull(type);
 		this.viewport = viewport;
-		this.position = Objects.requireNonNull(position);
-		this.isDynamic = isDynamic;
+		this.position = position;
 	}
 
 	public final Node getTopGui() {
@@ -234,7 +210,7 @@ public class Pin {
 		public final Image				image;
 
 		public ChunkPin(PinType type, Vector2dc centerPos, List<Vector2ic> chunkPositions, Image image, DisplayViewport viewport) {
-			super(true, centerPos, type, viewport);
+			super(centerPos, type, viewport);
 			this.chunkPositions = Objects.requireNonNull(chunkPositions);
 			this.image = image;
 		}
@@ -281,7 +257,7 @@ public class Pin {
 		protected List<de.piegames.blockmap.world.WorldPins.MapPin> maps;
 
 		public MapPin(Vector2d position, List<de.piegames.blockmap.world.WorldPins.MapPin> maps, DisplayViewport viewport) {
-			super(false, position, PinType.MAP_POSITION, viewport);
+			super(position, PinType.MAP_POSITION, viewport);
 			this.maps = Objects.requireNonNull(maps);
 		}
 
@@ -342,7 +318,7 @@ public class Pin {
 		protected Label												playerName;
 
 		public PlayerPin(de.piegames.blockmap.world.WorldPins.PlayerPin player, DisplayViewport viewport) {
-			super(false, new Vector2d(player.getPosition().x(), player.getPosition().z()), PinType.PLAYER_POSITION,
+			super(new Vector2d(player.getPosition().x(), player.getPosition().z()), PinType.PLAYER_POSITION,
 					viewport);
 			this.player = player;
 		}
@@ -389,6 +365,19 @@ public class Pin {
 			return node;
 		}
 
+		private ImageView getSkin(String url) {
+			log.debug("Loading player skin from: " + url);
+			Image image = new Image(url);
+			PixelReader reader = image.getPixelReader();
+			image = new WritableImage(reader, 8, 8, 8, 8);
+
+			ImageView graphic = new ImageView(image);
+			graphic.setSmooth(false);
+			graphic.setPreserveRatio(true);
+			graphic.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> button.getFont().getSize() * 2, button.fontProperty()));
+			return graphic;
+		}
+
 		private static Mojang mojang = new Mojang().connect();
 
 		private static Optional<PlayerProfile> getPlayerInfo(String uuid) {
@@ -398,26 +387,13 @@ public class Pin {
 				return Optional.empty();
 			}
 		}
-
-		private static ImageView getSkin(String url) {
-			System.out.println(url);
-			Image image = new Image(url);
-			PixelReader reader = image.getPixelReader();
-			image = new WritableImage(reader, 8, 8, 8, 8);
-
-			ImageView graphic = new ImageView(image);
-			graphic.setSmooth(false);
-			graphic.setFitWidth(32);
-			graphic.setFitHeight(32);
-			return graphic;
-		}
 	}
 
 	public static class PlayerSpawnpointPin extends Pin {
 		protected de.piegames.blockmap.world.WorldPins.PlayerPin player;
 
 		public PlayerSpawnpointPin(de.piegames.blockmap.world.WorldPins.PlayerPin player, DisplayViewport viewport) {
-			super(false, new Vector2d(player.getSpawnpoint().get().x(), player.getSpawnpoint().get().z()), PinType.PLAYER_SPAWN, viewport);
+			super(new Vector2d(player.getSpawnpoint().get().x(), player.getSpawnpoint().get().z()), PinType.PLAYER_SPAWN, viewport);
 			this.player = Objects.requireNonNull(player);
 		}
 
@@ -454,7 +430,7 @@ public class Pin {
 		protected VillagePin village;
 
 		public _VillagePin(VillagePin village, DisplayViewport viewport) {
-			super(false, new Vector2d(village.getPosition().x(), village.getPosition().z()), PinType.VILLAGE_CENTER, viewport);
+			super(new Vector2d(village.getPosition().x(), village.getPosition().z()), PinType.VILLAGE_CENTER, viewport);
 			this.village = Objects.requireNonNull(village);
 		}
 
@@ -486,6 +462,80 @@ public class Pin {
 		}
 	}
 
+	public static class MergedPin extends Pin implements InvalidationListener {
+
+		public final ObservableList<Pin>		subPins		= FXCollections.observableArrayList();
+		public final ObjectProperty<Vector2dc>	position	= new SimpleObjectProperty<>(new Vector2d(0, 0));
+
+		private GridPane						popContent;
+
+		public MergedPin(DisplayViewport viewport) {
+			super(null, PinType.MERGED_PIN, viewport);
+			subPins.addListener(this);
+			initTopGui();
+			this.position.bind(Bindings.createObjectBinding(() -> subPins.stream().map(p -> p.position).collect(Vector2d::new, Vector2d::add, Vector2d::add)
+					.mul(1.0 / subPins.size()), subPins));
+			popContent = new GridPane();
+		}
+
+		@Override
+		protected Node initTopGui() {
+			button = new Button(null, null);
+
+			button.setStyle("-fx-background-radius: 6em;");
+
+			info = new PopOver();
+			info.setArrowLocation(ArrowLocation.BOTTOM_CENTER);
+			info.setAutoHide(true);
+			button.setOnAction(mouseEvent -> info.show(button));
+
+			DoubleBinding scale = Bindings.createDoubleBinding(
+					() -> 1 * Math.min(1 / viewport.scaleProperty.get(), 2),
+					viewport.scaleProperty);
+
+			info.setContentNode(popContent);
+			return wrapGui(button, null, position, scale, viewport);
+		}
+
+		@Override
+		public void invalidated(Observable observable) {
+			Map<PinType, Long> combined = subPins.stream().map(p -> p.type).collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+			int columns = (int) Math.floor(Math.sqrt(combined.size()));
+			popContent.getChildren().clear();
+			GridPane box = new GridPane();
+			box.setPadding(new Insets(5));
+			box.setStyle("-fx-background-color: transparent;");
+			StreamUtils.zipWithIndex(combined.entrySet().stream()).forEach(e -> {
+				{/* Image for the pin's button */
+					ImageView img = new ImageView(e.getValue().getKey().image);
+					img.setSmooth(false);
+					img.setPreserveRatio(true);
+					Label label = new Label(String.format("%dx", e.getValue().getValue()), img);
+					label.setPadding(new Insets(5));
+					img.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> label.getFont().getSize() * 2, label.fontProperty()));
+
+					GridPane.setMargin(label, new Insets(5));
+					box.add(label, (int) e.getIndex() % columns, (int) e.getIndex() / columns);
+				}
+
+				{/* Image+Text for the popover */
+					ImageView img = new ImageView(e.getValue().getKey().image);
+					img.setSmooth(false);
+					img.setPreserveRatio(true);
+					Label label1 = new Label(e.getValue().getKey().toString(), img);
+					img.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> label1.getFont().getSize() * 1.3, label1.fontProperty()));
+					popContent.add(label1, 0, (int) e.getIndex());
+					Label label2 = new Label(String.format("%dx", e.getValue().getValue()));
+					popContent.add(label2, 1, (int) e.getIndex());
+					GridPane.setMargin(label1, new Insets(5));
+					GridPane.setMargin(label2, new Insets(5));
+				}
+			});
+			Platform.runLater(() -> button.setGraphic(box));
+		}
+	}
+
 	public static Set<Pin> convert(WorldPins pin, DisplayViewport viewport) {
 		Set<Pin> pins = new HashSet<>();
 		for (de.piegames.blockmap.world.WorldPins.PlayerPin player : pin.getPlayers().orElse(Collections.emptyList())) {
@@ -499,7 +549,7 @@ public class Pin {
 					village,
 					viewport));
 			for (Vector3ic door : village.getDoors().orElse(Collections.emptyList()))
-				pins.add(new Pin(false,
+				pins.add(new Pin(
 						new Vector2d(door.x(), door.z()),
 						PinType.VILLAGE_DOOR, viewport) {
 					// TODO cleanup
@@ -522,10 +572,10 @@ public class Pin {
 		/* All banner pins of the maps */
 		pins.addAll(pin.getMaps().map(List::stream).orElse(Stream.empty())
 				.flatMap(map -> map.getBanners().map(List::stream).orElse(Stream.empty()))
-				.map(banner -> new Pin(false, new Vector2d(banner.getPosition().x(), banner.getPosition().y()), PinType.MAP_BANNER, viewport))
+				.map(banner -> new Pin(new Vector2d(banner.getPosition().x(), banner.getPosition().y()), PinType.MAP_BANNER, viewport))
 				.collect(Collectors.toList()));
 
-		pin.getWorldSpawn().map(spawn -> new Pin(false, new Vector2d(spawn.getSpawnpoint().x(), spawn.getSpawnpoint().z()),
+		pin.getWorldSpawn().map(spawn -> new Pin(new Vector2d(spawn.getSpawnpoint().x(), spawn.getSpawnpoint().z()),
 				PinType.WORLD_SPAWN, viewport) {
 			@Override
 			public Node initTopGui() {
@@ -636,7 +686,7 @@ public class Pin {
 				log.warn("Could not find a pin type named " + e.getKey());
 			}
 			if (type != null) {
-				pins.add(new Pin(true, new Vector2d(e.getValue().x(), e.getValue().z()), type, viewport) {
+				pins.add(new Pin(new Vector2d(e.getValue().x(), e.getValue().z()), type, viewport) {
 					@Override
 					public Node initTopGui() {
 						// TODO cleanup
@@ -651,22 +701,31 @@ public class Pin {
 	}
 
 	public static StackPane wrapGui(Node node, Vector2dc position, DisplayViewport viewport) {
-		return wrapGui(node, position, Bindings.createDoubleBinding(
+		return wrapGui(node, position, null, Bindings.createDoubleBinding(
 				() -> 2 * Math.min(1 / viewport.scaleProperty.get(), 1),
 				viewport.scaleProperty), viewport);
 	}
 
-	public static StackPane wrapGui(Node node, Vector2dc position, DoubleBinding scale, DisplayViewport viewport) {
+	public static StackPane wrapGui(Node node, Vector2dc basePosition, ObjectProperty<Vector2dc> variablePosition, DoubleBinding scale,
+			DisplayViewport viewport) {
 		if (scale != null) {
 			node.scaleXProperty().bind(scale);
 			node.scaleYProperty().bind(scale);
 		}
 
 		StackPane stack = new StackPane(node);
-		Translate t = new Translate();
-		t.xProperty().bind(stack.widthProperty().multiply(-0.5));
-		t.yProperty().bind(stack.heightProperty().multiply(-0.5));
-		stack.getTransforms().addAll(t, new Translate(position.x(), position.y()));
+		Translate center = new Translate();
+		center.xProperty().bind(stack.widthProperty().multiply(-0.5));
+		center.yProperty().bind(stack.heightProperty().multiply(-0.5));
+		stack.getTransforms().add(center);
+		if (basePosition != null)
+			stack.getTransforms().add(new Translate(basePosition.x(), basePosition.y()));
+		if (variablePosition != null) {
+			Translate pos = new Translate();
+			pos.xProperty().bind(Bindings.createDoubleBinding(() -> variablePosition.get().x(), variablePosition));
+			pos.yProperty().bind(Bindings.createDoubleBinding(() -> variablePosition.get().y(), variablePosition));
+			stack.getTransforms().add(pos);
+		}
 		return stack;
 	}
 

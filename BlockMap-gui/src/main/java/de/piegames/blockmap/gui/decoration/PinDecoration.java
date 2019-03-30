@@ -8,22 +8,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.controlsfx.control.PopOver;
-import org.controlsfx.control.PopOver.ArrowLocation;
-import org.joml.Vector2d;
-import org.joml.Vector2dc;
 import org.joml.Vector2ic;
 
-import com.codepoetics.protonpack.StreamUtils;
 import com.google.common.collect.Streams;
 
 import de.piegames.blockmap.gui.DisplayViewport;
+import de.piegames.blockmap.gui.decoration.Pin.MergedPin;
 import de.piegames.blockmap.gui.decoration.Pin.PinType;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -31,19 +26,13 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.DoubleBinding;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
-import javafx.geometry.Insets;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Scale;
 import javafx.scene.transform.Translate;
@@ -145,8 +134,7 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 		for (int row = 0; row < n; row++) {
 			dist[row] = new double[row + 1];
 			for (int col = 0; col < row; col++)
-				dist[row][col] = allPins.get(row).position.distance(
-						allPins.get(col).position);
+				dist[row][col] = allPins.get(row).position.distance(allPins.get(col).position);
 		}
 
 		Linkage linkage = new smile.clustering.linkage.UPGMCLinkage(dist);
@@ -207,59 +195,10 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 
 			clusters.add(c);
 
-			Map<PinType, Long> combined = c.stream().map(p -> p.type).collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-			// System.out.println(combined.size());
-
-			int columns = (int) Math.floor(Math.sqrt(combined.size()));
-			GridPane popContent = new GridPane();
-			GridPane box = new GridPane();
-			box.setPadding(new Insets(5));
-			box.getChildren().addAll(
-					StreamUtils.zipWithIndex(
-							combined.entrySet().stream())
-							.map(e -> {
-								ImageView img = new ImageView(e.getValue().getKey().image);
-								img.setSmooth(false);
-								img.setPreserveRatio(true);
-								Label label = new Label(String.format("%dx", e.getValue().getValue()), img);
-								label.setPadding(new Insets(5));
-								img.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> label.getFont().getSize() * 2, label.fontProperty()));
-
-								GridPane.setColumnIndex(label, (int) e.getIndex() % columns);
-								GridPane.setRowIndex(label, (int) e.getIndex() / columns);
-								GridPane.setMargin(label, new Insets(5));
-
-								// Wohoo, this is ugly TODO
-								img = new ImageView(e.getValue().getKey().image);
-								img.setSmooth(false);
-								img.setPreserveRatio(true);
-								Label label2 = new Label(e.getValue().getKey().toString(), img);
-								img.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> label2.getFont().getSize() * 1.3, label.fontProperty()));
-								popContent.add(label2, 0, (int) e.getIndex());
-								Label label3 = new Label(String.format("%dx", e.getValue().getValue()));
-								popContent.add(label3, 1, (int) e.getIndex());
-								GridPane.setMargin(label2, new Insets(5));
-								GridPane.setMargin(label3, new Insets(5));
-
-								return label;
-							})
-							.collect(Collectors.toList()));
-			Vector2dc pos = c.stream().map(p -> p.position).collect(Vector2d::new, Vector2d::add, Vector2d::add).mul(1.0 / c.size());
-			box.setStyle("-fx-background-color: transparent;");
-			DoubleBinding scale = Bindings.createDoubleBinding(
-					() -> 1 * Math.min(1 / viewport.scaleProperty.get(), 2),
-					viewport.scaleProperty);
-			Button button = new Button(null, box);
-			button.setStyle("-fx-background-radius: 6em;");
-			Node mergedPin = Pin.wrapGui(button, pos, scale, viewport);
-			mergedPin.setOpacity(0);
-			mergedPins.add(mergedPin);
-
-			PopOver info = new PopOver();
-			info.setArrowLocation(ArrowLocation.BOTTOM_CENTER);
-			info.setAutoHide(true);
-			button.setOnAction(mouseEvent -> info.show(button));
-			info.setContentNode(popContent);
+			MergedPin mergedPin = new MergedPin(viewport);
+			mergedPin.subPins.setAll(c);
+			mergedPin.getTopGui().setOpacity(0);
+			mergedPins.add(mergedPin.getTopGui());
 
 			/* add keyvalues for last merged pin here if needed */
 		}

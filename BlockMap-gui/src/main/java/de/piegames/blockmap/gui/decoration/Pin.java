@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -21,14 +22,19 @@ import org.joml.Vector2d;
 import org.joml.Vector2dc;
 import org.joml.Vector2i;
 import org.joml.Vector2ic;
+import org.joml.Vector3dc;
 import org.joml.Vector3ic;
+import org.shanerx.mojang.Mojang;
+import org.shanerx.mojang.Mojang.ServiceStatus;
+import org.shanerx.mojang.Mojang.ServiceType;
+import org.shanerx.mojang.PlayerProfile;
 
 import de.piegames.blockmap.gui.DisplayViewport;
 import de.piegames.blockmap.world.ChunkMetadata;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkGenerationStatus;
 import de.piegames.blockmap.world.WorldPins;
-import de.piegames.blockmap.world.WorldPins.MapPin.BannerPin;
 import de.piegames.blockmap.world.WorldPins.VillagePin;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.scene.Node;
@@ -38,6 +44,8 @@ import javafx.scene.control.Separator;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelReader;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -270,27 +278,55 @@ public class Pin {
 
 	public static class MapPin extends Pin {
 
-		public int scale;
+		protected List<de.piegames.blockmap.world.WorldPins.MapPin> maps;
 
-		public MapPin(Vector2d position, int scale, DisplayViewport viewport) {
+		public MapPin(Vector2d position, List<de.piegames.blockmap.world.WorldPins.MapPin> maps, DisplayViewport viewport) {
 			super(false, position, PinType.MAP_POSITION, viewport);
-			this.scale = scale;
+			this.maps = Objects.requireNonNull(maps);
+		}
+
+		@Override
+		protected Node initTopGui() {
+			Node n = super.initTopGui();
+			GridPane content = new GridPane();
+
+			content.add(new Label("Map"), 0, 0, 2, 1);
+			content.add(new Separator(), 0, 1, 2, 1);
+
+			if (maps.size() > 1) {
+				content.add(new Label("Map count:"), 0, 2);
+				content.add(new Label(Integer.toString(maps.size())), 1, 2);
+
+				content.add(new Label("Scales:"), 0, 3);
+				content.add(new Label(maps.stream().map(m -> m.getScale()).collect(Collectors.toList()).toString()), 1, 3);
+			} else {
+				content.add(new Label("Scale:"), 0, 2);
+				content.add(new Label(maps.stream().map(m -> m.getScale()).findAny().get().toString()), 1, 2);
+			}
+
+			// TODO maybe add the map's image?
+
+			info.setContentNode(content);
+			return n;
 		}
 
 		@Override
 		protected Node initBottomGui() {
-			int size = 128 * (1 << this.scale);
-			Rectangle rect = new Rectangle(size, size, new Color(0.9f, 0.15f, 0.15f, 0.02f));
-			rect.setStroke(new Color(0.9f, 0.15f, 0.15f, 0.4f));
-			rect.setMouseTransparent(true);
-			rect.setPickOnBounds(false);
-			getTopGui().hoverProperty().addListener(e -> {
-				if (getTopGui().isHover())
-					rect.setFill(new Color(0.9f, 0.15f, 0.15f, 0.2f));
-				else
-					rect.setFill(new Color(0.9f, 0.15f, 0.15f, 0.02f));
-			});
-			StackPane stack = new StackPane(rect);
+			StackPane stack = new StackPane();
+			stack.getChildren().setAll(maps.stream().map(map -> {
+				int size = 128 * (1 << map.getScale());
+				Rectangle rect = new Rectangle(size, size, new Color(0.9f, 0.15f, 0.15f, 0.02f));
+				rect.setStroke(new Color(0.9f, 0.15f, 0.15f, 0.4f));
+				rect.setMouseTransparent(true);
+				rect.setPickOnBounds(false);
+				getTopGui().hoverProperty().addListener(e -> {
+					if (getTopGui().isHover())
+						rect.setFill(new Color(0.9f, 0.15f, 0.15f, 0.2f));
+					else
+						rect.setFill(new Color(0.9f, 0.15f, 0.15f, 0.02f));
+				});
+				return rect;
+			}).collect(Collectors.toList()));
 			Translate t = new Translate();
 			t.xProperty().bind(stack.widthProperty().multiply(-0.5));
 			t.yProperty().bind(stack.heightProperty().multiply(-0.5));
@@ -303,6 +339,7 @@ public class Pin {
 	public static class PlayerPin extends Pin {
 
 		protected de.piegames.blockmap.world.WorldPins.PlayerPin	player;
+		protected Label												playerName;
 
 		public PlayerPin(de.piegames.blockmap.world.WorldPins.PlayerPin player, DisplayViewport viewport) {
 			super(false, new Vector2d(player.getPosition().x(), player.getPosition().z()), PinType.PLAYER_POSITION,
@@ -316,33 +353,99 @@ public class Pin {
 			PopOver info = this.info;
 			GridPane content = new GridPane();
 
-			content.add(new Label("Player"), 0, 0, 1, 2);
-			content.add(new Separator(), 0, 1, 1, 2);
+			content.add(new Label("Player"), 0, 0, 2, 1);
+			content.add(new Separator(), 0, 1, 2, 1);
 
-			// TODO add player name
+			content.add(new Label("Name:"), 0, 2);
+			content.add(playerName = new Label("loading..."), 1, 2);
 
-			if (player.getSpawnpoint().isPresent()) {
-				content.add(new Label("Spawnpoint: "), 0, 2);
-				Button jumpButton = new Button(player.getSpawnpoint().get().toString());
+			new Thread(() -> {
+				Optional<PlayerProfile> playerInfo = player.getUUID().flatMap(uuid -> getPlayerInfo(uuid));
+				if (playerInfo.isPresent()) {
+					Platform.runLater(() -> playerName.setText(playerInfo.get().getUsername()));
+					playerInfo.get().getTextures().flatMap(textures -> textures.getSkin()).ifPresent(url -> {
+						Platform.runLater(() -> button.setGraphic(getSkin(url.toString())));
+					});
+				} else {
+					Platform.runLater(() -> playerName.setText("(failed loading)"));
+				}
+			}).start();
+
+			player.getSpawnpoint().ifPresent(spawn -> {
+				content.add(new Label("Spawnpoint: "), 0, 3);
+				Button jumpButton = new Button(spawn.toString());
 				jumpButton.setTooltip(new Tooltip("Click to go there"));
-				content.add(jumpButton, 1, 2);
+				content.add(jumpButton, 1, 3);
 				jumpButton.setOnAction(e -> {
-					Vector2d spawnpoint = new Vector2d(player.getSpawnpoint().get().x(), player.getSpawnpoint().get().z());
+					Vector2d spawnpoint = new Vector2d(spawn.x(), spawn.z());
 					AABBd frustum = viewport.frustumProperty.get();
 					viewport.translationProperty.set(spawnpoint.negate().add((frustum.maxX - frustum.minX) / 2, (frustum.maxY - frustum.minY) / 2));
 					info.hide();
 				});
-			}
+			});
 
 			info.setContentNode(content);
 
 			return node;
 		}
+
+		private static Mojang mojang = new Mojang().connect();
+
+		private static Optional<PlayerProfile> getPlayerInfo(String uuid) {
+			if (mojang.getStatus(ServiceType.API_MOJANG_COM) == ServiceStatus.GREEN) {
+				return Optional.of(mojang.getPlayerProfile(uuid));
+			} else {
+				return Optional.empty();
+			}
+		}
+
+		private static ImageView getSkin(String url) {
+			System.out.println(url);
+			Image image = new Image(url);
+			PixelReader reader = image.getPixelReader();
+			image = new WritableImage(reader, 8, 8, 8, 8);
+
+			ImageView graphic = new ImageView(image);
+			graphic.setSmooth(false);
+			graphic.setFitWidth(32);
+			graphic.setFitHeight(32);
+			return graphic;
+		}
 	}
 
 	public static class PlayerSpawnpointPin extends Pin {
+		protected de.piegames.blockmap.world.WorldPins.PlayerPin player;
+
 		public PlayerSpawnpointPin(de.piegames.blockmap.world.WorldPins.PlayerPin player, DisplayViewport viewport) {
 			super(false, new Vector2d(player.getSpawnpoint().get().x(), player.getSpawnpoint().get().z()), PinType.PLAYER_SPAWN, viewport);
+			this.player = Objects.requireNonNull(player);
+		}
+
+		@Override
+		protected Node initTopGui() {
+			Node node = super.initTopGui();
+			PopOver info = this.info;
+			GridPane content = new GridPane();
+
+			content.add(new Label("Player Spawnpoint"), 0, 0, 2, 1);
+			content.add(new Separator(), 0, 1, 2, 1);
+
+			content.add(new Label("Player position:"), 0, 2);
+
+			Vector3dc position = player.getPosition();
+			Button jumpButton = new Button(position.toString());
+			jumpButton.setTooltip(new Tooltip("Click to go there"));
+			content.add(jumpButton, 1, 2);
+			jumpButton.setOnAction(e -> {
+				Vector2d spawnpoint = new Vector2d(position.x(), position.z());
+				AABBd frustum = viewport.frustumProperty.get();
+				viewport.translationProperty.set(spawnpoint.negate().add((frustum.maxX - frustum.minX) / 2, (frustum.maxY - frustum.minY) / 2));
+				info.hide();
+			});
+
+			info.setContentNode(content);
+
+			return node;
 		}
 	}
 
@@ -381,7 +484,6 @@ public class Pin {
 
 			return node;
 		}
-
 	}
 
 	public static Set<Pin> convert(WorldPins pin, DisplayViewport viewport) {
@@ -399,15 +501,30 @@ public class Pin {
 			for (Vector3ic door : village.getDoors().orElse(Collections.emptyList()))
 				pins.add(new Pin(false,
 						new Vector2d(door.x(), door.z()),
-						PinType.VILLAGE_DOOR, viewport));
+						PinType.VILLAGE_DOOR, viewport) {
+					// TODO cleanup
+					@Override
+					protected Node initTopGui() {
+						Node n = super.initTopGui();
+						info.setContentNode(new Label("Door"));
+						return n;
+					}
+				});
 		}
 
-		for (de.piegames.blockmap.world.WorldPins.MapPin map : pin.getMaps().orElse(Collections.emptyList())) {
-			pins.add(new MapPin(new Vector2d(map.getPosition().x(), map.getPosition().y()), map.getScale(), viewport));
-			for (BannerPin banner : map.getBanners().orElse(Collections.emptyList())) {
-				pins.add(new Pin(false, new Vector2d(banner.getPosition().x(), banner.getPosition().y()), PinType.MAP_BANNER, viewport));
-			}
-		}
+		/* Cluster maps at identical position to merge their pins. */
+		pins.addAll(pin.getMaps().map(List::stream).orElse(Stream.empty())
+				.collect(Collectors.groupingBy(map -> map.getPosition()))
+				.entrySet()
+				.stream()
+				.map(e -> new MapPin(new Vector2d(e.getKey().x(), e.getKey().y()), e.getValue(), viewport))
+				.collect(Collectors.toList()));
+		/* All banner pins of the maps */
+		pins.addAll(pin.getMaps().map(List::stream).orElse(Stream.empty())
+				.flatMap(map -> map.getBanners().map(List::stream).orElse(Stream.empty()))
+				.map(banner -> new Pin(false, new Vector2d(banner.getPosition().x(), banner.getPosition().y()), PinType.MAP_BANNER, viewport))
+				.collect(Collectors.toList()));
+
 		pin.getWorldSpawn().map(spawn -> new Pin(false, new Vector2d(spawn.getSpawnpoint().x(), spawn.getSpawnpoint().z()),
 				PinType.WORLD_SPAWN, viewport))
 				.ifPresent(pins::add);
@@ -500,8 +617,17 @@ public class Pin {
 			default:
 				log.warn("Could not find a pin type named " + e.getKey());
 			}
-			if (type != null)
-				pins.add(new Pin(true, new Vector2d(e.getValue().x(), e.getValue().z()), type, viewport));
+			if (type != null) {
+				pins.add(new Pin(true, new Vector2d(e.getValue().x(), e.getValue().z()), type, viewport) {
+					@Override
+					public Node initTopGui() {
+						// TODO cleanup
+						Node n = super.initTopGui();
+						info.setContentNode(new Label(type.name));
+						return n;
+					}
+				});
+			}
 		});
 		return pins;
 	}
@@ -676,19 +802,4 @@ public class Pin {
 
 		return outline;
 	}
-
-	// protected static Mojang mojang = new Mojang();
-	//
-	// public static void listPlayers(Path worldPath) {
-	// mojang.connect();
-	// if (mojang.getStatus(ServiceType.API_MOJANG_COM) == ServiceStatus.GREEN) {
-	// System.out.println("Player UUID " + p.getFileName().toString().replace("-", "").split("\\.")[0]);
-	// PlayerProfile profile = mojang.getPlayerProfile(p.getFileName().toString().replace("-", "").split("\\.")[0]);
-	// name = profile.getUsername();
-	// profile.getProperties().forEach(prop -> System.out.println(prop.getName() + ", " + prop.getValue() + ", " + prop
-	// .getSignature()));
-	// } else {
-	// System.out.println("Status is " + mojang.getStatus(ServiceType.API_MOJANG_COM));
-	// }
-	// }
 }

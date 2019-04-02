@@ -1,6 +1,7 @@
 package de.piegames.blockmap.gui.decoration;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -10,7 +11,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -37,15 +37,12 @@ import de.piegames.blockmap.world.ChunkMetadata;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkGenerationStatus;
 import de.piegames.blockmap.world.WorldPins;
 import de.piegames.blockmap.world.WorldPins.VillagePin;
+import javafx.animation.Interpolator;
+import javafx.animation.KeyValue;
 import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -158,17 +155,20 @@ public class Pin {
 	private static Log				log	= LogFactory.getLog(Pin.class);
 
 	public final PinType			type;
-	public final Vector2dc			position;
+	protected final Vector2dc		position;
 	protected final DisplayViewport	viewport;
-	protected Node					topGui, bottomGui;
+	private Node					topGui, bottomGui;
+	private List<KeyValue>			animShow, animHide;
 
 	protected Button				button;
 	protected PopOver				info;
 
+	int								level, parentLevel, zoomLevel = -1;
+
 	public Pin(Vector2dc position, PinType type, DisplayViewport viewport) {
 		this.type = Objects.requireNonNull(type);
 		this.viewport = viewport;
-		this.position = position;
+		this.position = Objects.requireNonNull(position);
 	}
 
 	public final Node getTopGui() {
@@ -203,6 +203,39 @@ public class Pin {
 
 	protected Node initBottomGui() {
 		return null;
+	}
+
+	public List<KeyValue> getAnimShow() {
+		if (animShow == null)
+			return animShow = animationKeys(true);
+		else
+			return animShow;
+	}
+
+	public List<KeyValue> getAnimHide() {
+		if (animHide == null)
+			return animHide = animationKeys(false);
+		else
+			return animHide;
+	}
+
+	protected List<KeyValue> animationKeys(boolean visible) {
+		return Collections.unmodifiableList(Arrays.asList(
+				new KeyValue(getTopGui().opacityProperty(), visible ? 1.0 : 0.0, Interpolator.EASE_BOTH),
+				new KeyValue(getTopGui().visibleProperty(), visible, Interpolator.DISCRETE)));
+	}
+
+	public boolean isVisible(int level) {
+		return level >= this.level && level < parentLevel;
+	}
+
+	public List<KeyValue> setZoomLevel(int level) {
+		boolean visible = isVisible(level);
+		if (visible != isVisible(zoomLevel) || zoomLevel == -1) {
+			zoomLevel = -1;
+			return visible ? getAnimShow() : getAnimHide();
+		} else
+			return Collections.emptyList();
 	}
 
 	public static class ChunkPin extends Pin {
@@ -462,51 +495,28 @@ public class Pin {
 		}
 	}
 
-	public static class MergedPin extends Pin implements InvalidationListener {
+	public static final class MergedPin extends Pin {
 
-		public final ObservableList<Pin>		subPins		= FXCollections.observableArrayList();
-		public final ObjectProperty<Vector2dc>	position	= new SimpleObjectProperty<>(new Vector2d(0, 0));
+		final int					subCount;
+		final Map<PinType, Long>	pinCount;
 
-		private GridPane						popContent;
+		private GridPane			popContent;
 
-		public MergedPin(DisplayViewport viewport) {
-			super(null, PinType.MERGED_PIN, viewport);
-			subPins.addListener(this);
-			initTopGui();
-			this.position.bind(Bindings.createObjectBinding(() -> subPins.stream().map(p -> p.position).collect(Vector2d::new, Vector2d::add, Vector2d::add)
-					.mul(1.0 / subPins.size()), subPins));
-			popContent = new GridPane();
+		public MergedPin(Pin subLeft, Pin subRight, int subCount, Vector2dc position, Map<PinType, Long> pinCount, DisplayViewport viewport) {
+			super(position, PinType.MERGED_PIN, viewport);
+			this.subCount = subCount;
+			this.pinCount = Collections.unmodifiableMap(pinCount);
 		}
 
 		@Override
 		protected Node initTopGui() {
-			button = new Button(null, null);
+			popContent = new GridPane();
 
-			button.setStyle("-fx-background-radius: 6em;");
-
-			info = new PopOver();
-			info.setArrowLocation(ArrowLocation.BOTTOM_CENTER);
-			info.setAutoHide(true);
-			button.setOnAction(mouseEvent -> info.show(button));
-
-			DoubleBinding scale = Bindings.createDoubleBinding(
-					() -> 1 * Math.min(1 / viewport.scaleProperty.get(), 2),
-					viewport.scaleProperty);
-
-			info.setContentNode(popContent);
-			return wrapGui(button, null, position, scale, viewport);
-		}
-
-		@Override
-		public void invalidated(Observable observable) {
-			Map<PinType, Long> combined = subPins.stream().map(p -> p.type).collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-
-			int columns = (int) Math.floor(Math.sqrt(combined.size()));
-			popContent.getChildren().clear();
+			int columns = (int) Math.floor(Math.sqrt(pinCount.size()));
 			GridPane box = new GridPane();
 			box.setPadding(new Insets(5));
 			box.setStyle("-fx-background-color: transparent;");
-			StreamUtils.zipWithIndex(combined.entrySet().stream()).forEach(e -> {
+			StreamUtils.zipWithIndex(pinCount.entrySet().stream()).forEach(e -> {
 				{/* Image for the pin's button */
 					ImageView img = new ImageView(e.getValue().getKey().image);
 					img.setSmooth(false);
@@ -532,7 +542,22 @@ public class Pin {
 					GridPane.setMargin(label2, new Insets(5));
 				}
 			});
-			Platform.runLater(() -> button.setGraphic(box));
+
+			button = new Button(null, box);
+			button.setStyle("-fx-background-radius: 6em;");
+
+			info = new PopOver();
+			info.setArrowLocation(ArrowLocation.BOTTOM_CENTER);
+			info.setAutoHide(true);
+			button.setOnAction(mouseEvent -> info.show(button));
+
+			DoubleBinding scale = Bindings.createDoubleBinding(
+					() -> 1 * Math.min(1 / viewport.scaleProperty.get(), 2),
+					viewport.scaleProperty);
+
+			info.setContentNode(popContent);
+
+			return wrapGui(button, position, null, scale, viewport);
 		}
 	}
 
@@ -577,6 +602,7 @@ public class Pin {
 
 		pin.getWorldSpawn().map(spawn -> new Pin(new Vector2d(spawn.getSpawnpoint().x(), spawn.getSpawnpoint().z()),
 				PinType.WORLD_SPAWN, viewport) {
+
 			@Override
 			public Node initTopGui() {
 				// TODO cleanup
@@ -592,14 +618,14 @@ public class Pin {
 				info.setContentNode(content);
 				return n;
 			}
-		})
-				.ifPresent(pins::add);
+
+		}).ifPresent(pins::add);
 
 		return pins;
 	}
 
-	public static Set<Pin> convert(Map<Vector2ic, ChunkMetadata> metadataMap, DisplayViewport viewport) {
-		Set<Pin> pins = new HashSet<>();
+	public static List<Pin> convert(Map<Vector2ic, ChunkMetadata> metadataMap, DisplayViewport viewport) {
+		List<Pin> pins = new ArrayList<>();
 		Set<Vector2ic> oldChunks = new HashSet<>(), failedChunks = new HashSet<>(), unfinishedChunks = new HashSet<>();
 		/* Map each generation status to the amount of chunks with this state */
 		int[] unfinishedCount = new int[ChunkGenerationStatus.values().length];
@@ -706,6 +732,7 @@ public class Pin {
 				viewport.scaleProperty), viewport);
 	}
 
+	// TODO maybe remove variablePosition if not needed
 	public static StackPane wrapGui(Node node, Vector2dc basePosition, ObjectProperty<Vector2dc> variablePosition, DoubleBinding scale,
 			DisplayViewport viewport) {
 		if (scale != null) {

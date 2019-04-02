@@ -1,18 +1,17 @@
 package de.piegames.blockmap.gui.decoration;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.joml.Vector2d;
+import org.joml.Vector2dc;
 import org.joml.Vector2ic;
 
 import com.google.common.collect.Streams;
@@ -20,18 +19,17 @@ import com.google.common.collect.Streams;
 import de.piegames.blockmap.gui.DisplayViewport;
 import de.piegames.blockmap.gui.decoration.Pin.MergedPin;
 import de.piegames.blockmap.gui.decoration.Pin.PinType;
-import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.SetProperty;
+import javafx.beans.property.SimpleSetProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableSet;
-import javafx.scene.Node;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Scale;
@@ -42,16 +40,23 @@ import smile.clustering.linkage.Linkage;
 
 public class PinDecoration extends AnchorPane implements ChangeListener<Number> {
 
-	private static Log					log			= LogFactory.getLog(PinDecoration.class);
+	private static Log					log				= LogFactory.getLog(PinDecoration.class);
 
 	protected final DisplayViewport		viewport;
 
 	protected AnchorPane				world;
 
-	public final ObservableSet<PinType>	visiblePins	= FXCollections.observableSet();
+	public final SetProperty<PinType>	visiblePins		= new SimpleSetProperty<>(FXCollections.observableSet());
 
-	protected Set<Pin>					staticPins	= new HashSet<>();
-	protected Map<Vector2ic, Set<Pin>>	dynamicPins	= new HashMap<>();
+	protected List<Pin>					staticPins		= new ArrayList<>();
+	protected Map<Vector2ic, List<Pin>>	dynamicPins		= new HashMap<>();
+	protected Map<DistanceItem, Double>	distanceMatrix	= new HashMap<>();
+
+	private List<Pin>					allPins			= new ArrayList<>();
+	private double[]					height			= new double[] {};
+
+	private Timeline					timeline;
+	private int							lastLevel		= 0;
 
 	public PinDecoration(DisplayViewport viewport) {
 		this.viewport = Objects.requireNonNull(viewport);
@@ -105,18 +110,15 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 		updatePins();
 	}
 
-	public void setDynamicPins(Vector2ic regionPos, Set<Pin> pins) {
+	public void setDynamicPins(Vector2ic regionPos, List<Pin> pins) {
 		dynamicPins.put(regionPos, Objects.requireNonNull(pins));
 		updatePins();
 	}
 
-	Timeline				timeline;
-	List<List<KeyValue>>	keyvalues	= Collections.emptyList();
-	double[]				height		= new double[] {};
-
 	private void updatePins() {
-		List<Pin> allPins = Streams.concat(
-				dynamicPins.entrySet().stream().flatMap(e -> e.getValue().stream()).filter(p -> visiblePins.contains(p.type)),
+		log.debug("Calling updatePins()");
+		allPins = Streams.concat(
+				dynamicPins.entrySet().stream().flatMap(e -> e.getValue().stream().filter(p -> visiblePins.contains(p.type))),
 				staticPins.stream().filter(p -> visiblePins.contains(p.type)))
 				.collect(Collectors.toList());
 		world.getChildren().clear();
@@ -134,7 +136,7 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 		for (int row = 0; row < n; row++) {
 			dist[row] = new double[row + 1];
 			for (int col = 0; col < row; col++)
-				dist[row][col] = allPins.get(row).position.distance(allPins.get(col).position);
+				dist[row][col] = distanceMatrix.computeIfAbsent(new DistanceItem(allPins.get(row).position, allPins.get(col).position), e -> e.a.distance(e.b));
 		}
 
 		Linkage linkage = new smile.clustering.linkage.UPGMCLinkage(dist);
@@ -143,103 +145,110 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 
 		/* Cluster analysis */
 
-		List<List<Pin>> clusters = new ArrayList<>();
-		List<Node> mergedPins = new ArrayList<>();
-
-		/* First index: 0..n-1 -> time */
-		keyvalues = IntStream.range(0, n - 1).mapToObj(i -> new ArrayList<KeyValue>()).collect(Collectors.toList());
-
+		List<MergedPin> clusters = new ArrayList<>();
 		for (int i = 0; i < n - 1; i++) {
-			int[] merged = cluster.getTree()[i];
-			List<Pin> c = new ArrayList<>();
+			Map<PinType, Long> subTypes = new HashMap<>();
 
-			if (merged[0] < n) {
-				Pin pin = allPins.get(merged[0]);
-				c.add(pin);
-				for (int j = 0; j < n - 1; j++) {
-					keyvalues.get(j).add(new KeyValue(pin.getTopGui().opacityProperty(), j <= i ? 1 : 0,
-							Interpolator.EASE_BOTH));
-					keyvalues.get(j).add(new KeyValue(pin.getTopGui().visibleProperty(), j <= i,
-							Interpolator.EASE_BOTH));
-				}
+			int mergedLeft = cluster.getTree()[i][0];
+			Pin subLeft;
+			int sizeLeft = 1;
+			if (mergedLeft < n) {
+				subLeft = allPins.get(mergedLeft);
+				subLeft.level = 0;
+				subTypes.put(subLeft.type, 1L);
 			} else {
-				c.addAll(clusters.get(merged[0] - n));
-				Node pin = mergedPins.get(merged[0] - n);
-				for (int j = 0; j < n - 1; j++) {
-					keyvalues.get(j).add(new KeyValue(pin.opacityProperty(), merged[0] - n < j && j <= i ? 1 : 0,
-							Interpolator.EASE_BOTH));
-					keyvalues.get(j).add(new KeyValue(pin.visibleProperty(), merged[0] - n < j && j <= i,
-							Interpolator.EASE_BOTH));
-				}
+				MergedPin m = clusters.get(mergedLeft - n);
+				sizeLeft = m.subCount;
+				subLeft = m;
+				subTypes.putAll(m.pinCount);
 			}
+			subLeft.parentLevel = i + 1;
 
-			if (merged[1] < n) {
-				Pin pin = allPins.get(merged[1]);
-				c.add(pin);
-				for (int j = 0; j < n - 1; j++) {
-					keyvalues.get(j).add(new KeyValue(pin.getTopGui().opacityProperty(), j <= i ? 1 : 0,
-							Interpolator.EASE_BOTH));
-					keyvalues.get(j).add(new KeyValue(pin.getTopGui().visibleProperty(), j <= i,
-							Interpolator.EASE_BOTH));
-				}
+			int mergedRight = cluster.getTree()[i][1];
+			Pin subRight;
+			int sizeRight = 1;
+			if (mergedRight < n) {
+				subRight = allPins.get(mergedRight);
+				subTypes.compute(subRight.type, (k, v) -> (v == null) ? 1 : v + 1);
 			} else {
-				c.addAll(clusters.get(merged[1] - n));
-				Node pin = mergedPins.get(merged[1] - n);
-				for (int j = 0; j < n - 1; j++) {
-					keyvalues.get(j).add(new KeyValue(pin.opacityProperty(), merged[1] - n < j && j <= i ? 1 : 0,
-							Interpolator.EASE_BOTH));
-					keyvalues.get(j).add(new KeyValue(pin.visibleProperty(), merged[1] - n < j && j <= i,
-							Interpolator.EASE_BOTH));
-				}
+				MergedPin m = clusters.get(mergedRight - n);
+				sizeRight = m.subCount;
+				m.pinCount.forEach((k, v) -> subTypes.put(k, v + subTypes.getOrDefault(k, 0L)));
+				subRight = m;
 			}
+			subRight.parentLevel = i + 1;
 
-			clusters.add(c);
-
-			MergedPin mergedPin = new MergedPin(viewport);
-			mergedPin.subPins.setAll(c);
-			mergedPin.getTopGui().setOpacity(0);
-			mergedPins.add(mergedPin.getTopGui());
-
-			/* add keyvalues for last merged pin here if needed */
+			Vector2dc position = new Vector2d(
+					subLeft.position.x() * sizeLeft + subRight.position.x() * sizeRight,
+					subLeft.position.y() * sizeLeft + subRight.position.y() * sizeRight)
+							.mul(1.0 / (sizeLeft + sizeRight));
+			MergedPin mergedPin = new MergedPin(subLeft, subRight, sizeLeft + sizeRight, position, subTypes, viewport);
+			mergedPin.level = i + 1;
+			mergedPin.parentLevel = n; /* We'll set this to a lower value if there is a parent. */
+			clusters.add(mergedPin);
+			allPins.add(mergedPin);
+			world.getChildren().add(mergedPin.getTopGui());
 		}
-		world.getChildren().addAll(mergedPins);
 
-		/*
-		 * When regenerating the pins, their opacity is equivalent to level 0 (All pins shown, all merged pins hidden). We trigger an update to
-		 * recalculate the level (since our height calculation is invalid now) which will start the animation if the calculated level changes.
-		 */
-		lastLevel = 0;
+		/* Invalidate animation and recalculate */
+		lastLevel = -1;
+		allPins.forEach(pin -> pin.zoomLevel = -1);
 		changed(viewport.scaleProperty, viewport.scaleProperty.getValue(), viewport.scaleProperty.getValue());
 		if (timeline != null)
 			timeline.jumpTo("end");
 	}
 
-	int lastLevel = 0;
-
 	@Override
 	public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
 		double height = 60 / newValue.doubleValue();
 
-		// System.out.println(height + "\t" + Arrays.toString(this.height));
-
 		/* Determine which tree heights to switch between */
 		for (int i = 0; i < this.height.length - 1; i++) {
-			if (this.height[i] >= height && i != lastLevel) {
-				/* The zoom switched between two heights */
-				if (timeline != null) {
-					timeline.stop();
-				}
-				timeline = new Timeline(
-						new KeyFrame(
-								Duration.millis(500),
-								null,
-								null,
-								keyvalues.get(i)));
-				timeline.playFromStart();
+			if (this.height[i] >= height) {
+				if (i != lastLevel) {
+					/* The zoom switched between two heights */
+					if (timeline != null) {
+						timeline.pause();
+					}
+					final int newLevel = i;
+					List<KeyValue> values = allPins.stream().flatMap(pin -> pin.setZoomLevel(newLevel).stream()).collect(Collectors.toList());
 
-				lastLevel = i;
+					timeline = new Timeline(
+							new KeyFrame(
+									Duration.millis(500),
+									null,
+									e -> allPins.forEach(pin -> pin.zoomLevel = newLevel),
+									values));
+					timeline.playFromStart();
+
+					lastLevel = newLevel;
+				}
 				break;
 			}
+		}
+	}
+
+	private static final class DistanceItem {
+		private Vector2dc a, b;
+
+		private DistanceItem(Vector2dc a, Vector2dc b) {
+			this.a = a;
+			this.b = b;
+		}
+
+		@Override
+		public int hashCode() {
+			return ((a == null) ? 0 : a.hashCode()) ^ ((b == null) ? 0 : b.hashCode());
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			DistanceItem other = (DistanceItem) obj;
+			return (a == other.a && b == other.b) || (a == other.b && b == other.a);
 		}
 	}
 }

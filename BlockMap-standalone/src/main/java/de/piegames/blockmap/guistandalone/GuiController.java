@@ -193,7 +193,6 @@ public class GuiController implements Initializable {
 			// });
 
 			pinView.getCheckModel().getCheckedItems().addListener((ListChangeListener<TreeItem<PinType>>) e -> {
-				// TODO only one call per user input
 				while (e.next()) {
 					pins.visiblePins.addAll(e.getAddedSubList().stream().map(t -> t.getValue()).collect(Collectors.toSet()));
 					pins.visiblePins.removeAll(e.getRemoved().stream().map(t -> t.getValue()).collect(Collectors.toSet()));
@@ -227,7 +226,7 @@ public class GuiController implements Initializable {
 		renderer.regionFolder.bind(regionFolder);
 		renderer.regionFolder.addListener((observable, previous, val) -> {
 			if (val != null) {
-				this.pins.clear();
+				this.pins.clearPins();
 				if (val.getPins().isPresent())
 					this.pins.setStaticPins(Pin.convert(val.getPins().get(), renderer.viewport));
 			}

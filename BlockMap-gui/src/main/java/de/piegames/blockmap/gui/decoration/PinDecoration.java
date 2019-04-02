@@ -6,6 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
@@ -15,6 +19,7 @@ import org.joml.Vector2dc;
 import org.joml.Vector2ic;
 
 import com.google.common.collect.Streams;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import de.piegames.blockmap.gui.DisplayViewport;
 import de.piegames.blockmap.gui.decoration.Pin.MergedPin;
@@ -22,6 +27,7 @@ import de.piegames.blockmap.gui.decoration.Pin.PinType;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SetProperty;
@@ -50,13 +56,20 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 
 	protected List<Pin>					staticPins		= new ArrayList<>();
 	protected Map<Vector2ic, List<Pin>>	dynamicPins		= new HashMap<>();
-	protected Map<DistanceItem, Double>	distanceMatrix	= new HashMap<>();
 
+	protected Map<DistanceItem, Double>	distanceMatrix	= new HashMap<>();
 	private List<Pin>					allPins			= new ArrayList<>();
 	private double[]					height			= new double[] {};
 
 	private Timeline					timeline;
 	private int							lastLevel		= 0;
+
+	private ScheduledExecutorService	executor		= Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat(
+			"pin-background-thread-%d").build());
+	private LimitedExecutionHandler		executeUpdate	= new LimitedExecutionHandler(this::updatePinsImpl, (r) -> executor.schedule(r, 50,
+			TimeUnit.MILLISECONDS));
+	private LimitedExecutionHandler		executeZoom		= new LimitedExecutionHandler(this::updateZoomImpl,
+			(r) -> new Timeline(new KeyFrame(Duration.millis(50), e -> r.run())).play());
 
 	public PinDecoration(DisplayViewport viewport) {
 		this.viewport = Objects.requireNonNull(viewport);
@@ -90,42 +103,46 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 			});
 		}
 
-		InvalidationListener l = e -> updatePins();
-		visiblePins.addListener(l);
+		visiblePins.addListener((InvalidationListener) e -> executeUpdate.requestExecution());
 	}
 
-	public void clear() {
-		staticPins.clear();
-		dynamicPins.clear();
+	public void clearPins() {
+		executor.submit(() -> {
+			staticPins.clear();
+			dynamicPins.clear();
+			allPins.clear();
+			distanceMatrix.clear();
+		});
 		world.getChildren().clear();
 	}
 
 	public void clearDynamic() {
-		dynamicPins.clear();
+		executor.submit(() -> {
+			dynamicPins.clear();
+			executeUpdate.requestExecution();
+		});
 	}
 
 	public void setStaticPins(Set<Pin> pins) {
-		staticPins.clear();
-		staticPins.addAll(pins);
-		updatePins();
+		executor.submit(() -> {
+			staticPins.clear();
+			staticPins.addAll(pins);
+			executeUpdate.requestExecution();
+		});
 	}
 
 	public void setDynamicPins(Vector2ic regionPos, List<Pin> pins) {
-		dynamicPins.put(regionPos, Objects.requireNonNull(pins));
-		updatePins();
+		executor.submit(() -> {
+			dynamicPins.put(regionPos, Objects.requireNonNull(pins));
+			executeUpdate.requestExecution();
+		});
 	}
 
-	private void updatePins() {
-		log.debug("Calling updatePins()");
+	private void updatePinsImpl() {
 		allPins = Streams.concat(
 				dynamicPins.entrySet().stream().flatMap(e -> e.getValue().stream().filter(p -> visiblePins.contains(p.type))),
 				staticPins.stream().filter(p -> visiblePins.contains(p.type)))
 				.collect(Collectors.toList());
-		world.getChildren().clear();
-		world.getChildren().addAll(allPins.stream().map(p -> p.getBottomGui()).filter(g -> g != null).collect(
-				Collectors.toList()));
-		world.getChildren().addAll(allPins.stream().map(p -> p.getTopGui()).filter(g -> g != null).collect(
-				Collectors.toList()));
 
 		/* Clustering */
 
@@ -136,7 +153,9 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 		for (int row = 0; row < n; row++) {
 			dist[row] = new double[row + 1];
 			for (int col = 0; col < row; col++)
-				dist[row][col] = distanceMatrix.computeIfAbsent(new DistanceItem(allPins.get(row).position, allPins.get(col).position), e -> e.a.distance(e.b));
+				// dist[row][col] = distanceMatrix.computeIfAbsent(new DistanceItem(allPins.get(row).position, allPins.get(col).position), e ->
+				// e.a.distance(e.b));
+				dist[row][col] = allPins.get(row).position.distance(allPins.get(col).position);
 		}
 
 		Linkage linkage = new smile.clustering.linkage.UPGMCLinkage(dist);
@@ -187,20 +206,29 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 			mergedPin.parentLevel = n; /* We'll set this to a lower value if there is a parent. */
 			clusters.add(mergedPin);
 			allPins.add(mergedPin);
-			world.getChildren().add(mergedPin.getTopGui());
 		}
 
-		/* Invalidate animation and recalculate */
-		lastLevel = -1;
-		allPins.forEach(pin -> pin.zoomLevel = -1);
-		changed(viewport.scaleProperty, viewport.scaleProperty.getValue(), viewport.scaleProperty.getValue());
-		if (timeline != null)
-			timeline.jumpTo("end");
+		Platform.runLater(() -> {
+			world.getChildren().clear();
+			world.getChildren().addAll(allPins.stream().map(Pin::getBottomGui).filter(Objects::nonNull).collect(Collectors.toList()));
+			world.getChildren().addAll(allPins.stream().map(Pin::getTopGui).filter(Objects::nonNull).collect(Collectors.toList()));
+
+			/* Invalidate animation and recalculate */
+			lastLevel = -1;
+			allPins.forEach(pin -> pin.zoomLevel = -1);
+			updateZoomImpl();
+			if (timeline != null)
+				timeline.jumpTo("end");
+		});
 	}
 
 	@Override
 	public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-		double height = 60 / newValue.doubleValue();
+		executeZoom.requestExecution();
+	}
+
+	private void updateZoomImpl() {
+		double height = 60 / viewport.scaleProperty.get();
 
 		/* Determine which tree heights to switch between */
 		for (int i = 0; i < this.height.length - 1; i++) {
@@ -224,6 +252,43 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 					lastLevel = newLevel;
 				}
 				break;
+			}
+		}
+	}
+
+	public void shutDown() {
+		executor.shutdownNow();
+		try {
+			executor.awaitTermination(1, TimeUnit.MINUTES);
+		} catch (InterruptedException e) {
+			log.warn("Pin background thread did not finish", e);
+		}
+	}
+
+	private class LimitedExecutionHandler {
+		Runnable			execute;
+		Consumer<Runnable>	queueDelayed;
+		long				lastRequest	= -1;
+
+		public LimitedExecutionHandler(Runnable execute, Consumer<Runnable> queueDelayed) {
+			this.execute = execute;
+			this.queueDelayed = queueDelayed;
+		}
+
+		private void requestExecution() {
+			long old = lastRequest;
+			lastRequest = System.nanoTime();
+			if (old == -1)
+				execute();
+		}
+
+		private void execute() {
+			long time = System.nanoTime();
+			if (time - lastRequest > 50_000_000) {
+				execute.run();
+				lastRequest = -1;
+			} else {
+				queueDelayed.accept(this::execute);
 			}
 		}
 	}

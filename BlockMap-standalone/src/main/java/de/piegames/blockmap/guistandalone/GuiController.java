@@ -170,7 +170,7 @@ public class GuiController implements Initializable {
 			Function<PinType, CheckBoxTreeItem<PinType>> convert = (type) -> {
 				CheckBoxTreeItem<PinType> ret;
 				// TODO clean up
-				if (type instanceof PinType && false)
+				if (false)
 					ret = new CheckBoxTreeItem<>(type, new ImageView(type.image));
 				else
 					ret = new CheckBoxTreeItem<>(type);

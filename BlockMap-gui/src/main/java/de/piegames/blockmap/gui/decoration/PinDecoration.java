@@ -1,6 +1,7 @@
 package de.piegames.blockmap.gui.decoration;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -157,55 +158,62 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 				// e.a.distance(e.b));
 				dist[row][col] = allPins.get(row).position.distance(allPins.get(col).position);
 		}
+		{
+			Linkage linkage = new smile.clustering.linkage.UPGMCLinkage(dist);
+			HierarchicalClustering cluster = new HierarchicalClustering(linkage);
+			this.height = cluster.getHeight();
+			// System.out.println("a,b,height");
+			// for (int i = 0; i < n - 1; i++)
+			// System.out.println(""
+			// + (cluster.getTree()[i][0] < n ? -1 - cluster.getTree()[i][0] : cluster.getTree()[i][0] - n + 1) + ","
+			// + (cluster.getTree()[i][1] < n ? -1 - cluster.getTree()[i][1] : cluster.getTree()[i][1] - n + 1) + ","
+			// + cluster.getHeight()[i]);
 
-		Linkage linkage = new smile.clustering.linkage.UPGMCLinkage(dist);
-		HierarchicalClustering cluster = new HierarchicalClustering(linkage);
-		this.height = cluster.getHeight();
+			/* Cluster analysis */
 
-		/* Cluster analysis */
+			List<MergedPin> clusters = new ArrayList<>();
+			for (int i = 0; i < n - 1; i++) {
+				Map<PinType, Long> subTypes = new HashMap<>();
 
-		List<MergedPin> clusters = new ArrayList<>();
-		for (int i = 0; i < n - 1; i++) {
-			Map<PinType, Long> subTypes = new HashMap<>();
+				int mergedLeft = cluster.getTree()[i][0];
+				Pin subLeft;
+				int sizeLeft = 1;
+				if (mergedLeft < n) {
+					subLeft = allPins.get(mergedLeft);
+					subLeft.level = 0;
+					subTypes.put(subLeft.type, 1L);
+				} else {
+					MergedPin m = clusters.get(mergedLeft - n);
+					sizeLeft = m.subCount + 1;
+					subLeft = m;
+					subTypes.putAll(m.pinCount);
+				}
+				subLeft.parentLevel = i + 1;
 
-			int mergedLeft = cluster.getTree()[i][0];
-			Pin subLeft;
-			int sizeLeft = 1;
-			if (mergedLeft < n) {
-				subLeft = allPins.get(mergedLeft);
-				subLeft.level = 0;
-				subTypes.put(subLeft.type, 1L);
-			} else {
-				MergedPin m = clusters.get(mergedLeft - n);
-				sizeLeft = m.subCount;
-				subLeft = m;
-				subTypes.putAll(m.pinCount);
+				int mergedRight = cluster.getTree()[i][1];
+				Pin subRight;
+				int sizeRight = 1;
+				if (mergedRight < n) {
+					subRight = allPins.get(mergedRight);
+					subTypes.compute(subRight.type, (k, v) -> (v == null) ? 1 : v + 1);
+				} else {
+					MergedPin m = clusters.get(mergedRight - n);
+					sizeRight = m.subCount + 1;
+					m.pinCount.forEach((k, v) -> subTypes.put(k, v + subTypes.getOrDefault(k, 0L)));
+					subRight = m;
+				}
+				subRight.parentLevel = i + 1;
+
+				Vector2dc position = new Vector2d(
+						subLeft.position.x() * sizeLeft + subRight.position.x() * sizeRight,
+						subLeft.position.y() * sizeLeft + subRight.position.y() * sizeRight)
+								.mul(1.0 / (sizeLeft + sizeRight));
+				MergedPin mergedPin = new MergedPin(subLeft, subRight, sizeLeft + sizeRight, position, subTypes, viewport);
+				mergedPin.level = i + 1;
+				mergedPin.parentLevel = n; /* We'll set this to a lower value if there is a parent. */
+				clusters.add(mergedPin);
+				allPins.add(mergedPin);
 			}
-			subLeft.parentLevel = i + 1;
-
-			int mergedRight = cluster.getTree()[i][1];
-			Pin subRight;
-			int sizeRight = 1;
-			if (mergedRight < n) {
-				subRight = allPins.get(mergedRight);
-				subTypes.compute(subRight.type, (k, v) -> (v == null) ? 1 : v + 1);
-			} else {
-				MergedPin m = clusters.get(mergedRight - n);
-				sizeRight = m.subCount;
-				m.pinCount.forEach((k, v) -> subTypes.put(k, v + subTypes.getOrDefault(k, 0L)));
-				subRight = m;
-			}
-			subRight.parentLevel = i + 1;
-
-			Vector2dc position = new Vector2d(
-					subLeft.position.x() * sizeLeft + subRight.position.x() * sizeRight,
-					subLeft.position.y() * sizeLeft + subRight.position.y() * sizeRight)
-							.mul(1.0 / (sizeLeft + sizeRight));
-			MergedPin mergedPin = new MergedPin(subLeft, subRight, sizeLeft + sizeRight, position, subTypes, viewport);
-			mergedPin.level = i + 1;
-			mergedPin.parentLevel = n; /* We'll set this to a lower value if there is a parent. */
-			clusters.add(mergedPin);
-			allPins.add(mergedPin);
 		}
 
 		Platform.runLater(() -> {

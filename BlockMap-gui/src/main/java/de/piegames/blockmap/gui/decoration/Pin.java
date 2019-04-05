@@ -43,7 +43,10 @@ import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
+import javafx.scene.CacheHint;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -185,6 +188,13 @@ public class Pin {
 			return bottomGui = initBottomGui();
 	}
 
+	protected final PopOver getInfo() {
+		if (info != null)
+			return info;
+		else
+			return info = initInfo();
+	}
+
 	protected Node initTopGui() {
 		ImageView img = new ImageView(type.image);
 		img.setSmooth(false);
@@ -194,15 +204,22 @@ public class Pin {
 		button.setStyle("-fx-background-radius: 6em;");
 		img.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> button.getFont().getSize() * 2, button.fontProperty()));
 
-		info = new PopOver();
-		info.setArrowLocation(ArrowLocation.BOTTOM_CENTER);
-		info.setAutoHide(true);
-		button.setOnAction(mouseEvent -> info.show(button));
+		button.setOnAction(mouseEvent -> getInfo().show(button));
 		return wrapGui(button, position, viewport);
 	}
 
 	protected Node initBottomGui() {
 		return null;
+	}
+
+	protected PopOver initInfo() {
+		PopOver info = new PopOver();
+		info.setArrowLocation(ArrowLocation.BOTTOM_CENTER);
+		info.setAutoHide(true);
+		info.setHeaderAlwaysVisible(true);
+		info.setContentNode(new GridPane());
+		info.setTitle(type.name);
+		return info;
 	}
 
 	public List<KeyValue> getAnimShow() {
@@ -253,10 +270,16 @@ public class Pin {
 			Polygon shape = new Polygon();
 			shape.getPoints().setAll(chunkPositions.stream().flatMap(v -> Stream.of(v.x(), v.y())).map(d -> (d + 1) * 16.0).collect(Collectors.toList()));
 			shape.setFill(new ImagePattern(image, 0, 0, 16, 16, false));
-			shape.setStrokeWidth(3);
-			shape.setStroke(Color.YELLOW);
+			getTopGui().hoverProperty().addListener(e -> {
+				if (getTopGui().isHover())
+					shape.setOpacity(0.6);
+				else
+					shape.setOpacity(0.2);
+			});
 			shape.setOpacity(0.2);
 			shape.setMouseTransparent(true);
+			shape.setCache(true);
+			shape.setCacheHint(CacheHint.SCALE);
 			return shape;
 		}
 	}
@@ -271,8 +294,8 @@ public class Pin {
 		}
 
 		@Override
-		public Node initTopGui() {
-			Node n = super.initTopGui();
+		public PopOver initInfo() {
+			PopOver info = super.initInfo();
 
 			GridPane popContent = new GridPane();
 			info.setContentNode(popContent);
@@ -281,7 +304,7 @@ public class Pin {
 				popContent.add(new Label(ChunkGenerationStatus.values()[i].name().toLowerCase() + ":"), 0, i);
 				popContent.add(new Label(chunkCount[i] + " chunks"), 1, i);
 			}
-			return n;
+			return info;
 		}
 	}
 
@@ -295,8 +318,8 @@ public class Pin {
 		}
 
 		@Override
-		protected Node initTopGui() {
-			Node n = super.initTopGui();
+		protected PopOver initInfo() {
+			PopOver info = super.initInfo();
 			GridPane content = new GridPane();
 
 			content.add(new Label("Map"), 0, 0, 2, 1);
@@ -316,7 +339,7 @@ public class Pin {
 			// TODO maybe add the map's image?
 
 			info.setContentNode(content);
-			return n;
+			return info;
 		}
 
 		@Override
@@ -348,7 +371,7 @@ public class Pin {
 	public static class PlayerPin extends Pin {
 
 		protected de.piegames.blockmap.world.WorldPins.PlayerPin	player;
-		protected Label												playerName;
+		protected StringProperty									playerName	= new SimpleStringProperty("loading…");
 
 		public PlayerPin(de.piegames.blockmap.world.WorldPins.PlayerPin player, DisplayViewport viewport) {
 			super(new Vector2d(player.getPosition().x(), player.getPosition().z()), PinType.PLAYER_POSITION,
@@ -359,26 +382,34 @@ public class Pin {
 		@Override
 		protected Node initTopGui() {
 			Node node = super.initTopGui();
-			PopOver info = this.info;
+
+			new Thread(() -> {
+				Optional<PlayerProfile> playerInfo = player.getUUID().flatMap(uuid -> getPlayerInfo(uuid));
+				if (playerInfo.isPresent()) {
+					Platform.runLater(() -> playerName.set(playerInfo.get().getUsername()));
+					playerInfo.get().getTextures().flatMap(textures -> textures.getSkin()).ifPresent(url -> {
+						Platform.runLater(() -> button.setGraphic(getSkin(url.toString())));
+					});
+				} else {
+					Platform.runLater(() -> playerName.set("(failed loading)"));
+				}
+			}).start();
+
+			return node;
+		}
+
+		@Override
+		protected PopOver initInfo() {
+			PopOver info = super.initInfo();
 			GridPane content = new GridPane();
 
 			content.add(new Label("Player"), 0, 0, 2, 1);
 			content.add(new Separator(), 0, 1, 2, 1);
 
 			content.add(new Label("Name:"), 0, 2);
-			content.add(playerName = new Label("loading..."), 1, 2);
-
-			new Thread(() -> {
-				Optional<PlayerProfile> playerInfo = player.getUUID().flatMap(uuid -> getPlayerInfo(uuid));
-				if (playerInfo.isPresent()) {
-					Platform.runLater(() -> playerName.setText(playerInfo.get().getUsername()));
-					playerInfo.get().getTextures().flatMap(textures -> textures.getSkin()).ifPresent(url -> {
-						Platform.runLater(() -> button.setGraphic(getSkin(url.toString())));
-					});
-				} else {
-					Platform.runLater(() -> playerName.setText("(failed loading)"));
-				}
-			}).start();
+			Label playerName = new Label("loading...");
+			playerName.textProperty().bind(this.playerName);
+			content.add(playerName, 1, 2);
 
 			player.getSpawnpoint().ifPresent(spawn -> {
 				content.add(new Label("Spawnpoint: "), 0, 3);
@@ -394,8 +425,7 @@ public class Pin {
 			});
 
 			info.setContentNode(content);
-
-			return node;
+			return info;
 		}
 
 		private ImageView getSkin(String url) {
@@ -431,9 +461,8 @@ public class Pin {
 		}
 
 		@Override
-		protected Node initTopGui() {
-			Node node = super.initTopGui();
-			PopOver info = this.info;
+		protected PopOver initInfo() {
+			PopOver info = super.initInfo();
 			GridPane content = new GridPane();
 
 			content.add(new Label("Player Spawnpoint"), 0, 0, 2, 1);
@@ -453,8 +482,7 @@ public class Pin {
 			});
 
 			info.setContentNode(content);
-
-			return node;
+			return info;
 		}
 	}
 
@@ -468,9 +496,8 @@ public class Pin {
 		}
 
 		@Override
-		protected Node initTopGui() {
-			Node node = super.initTopGui();
-			PopOver info = this.info;
+		protected PopOver initInfo() {
+			PopOver info = super.initInfo();
 			GridPane content = new GridPane();
 
 			content.add(new Label("Village"), 0, 0, 1, 2);
@@ -490,8 +517,31 @@ public class Pin {
 			}
 
 			info.setContentNode(content);
+			return info;
+		}
+	}
 
-			return node;
+	public static final class WorldSpawnPin extends Pin {
+		protected Vector3ic spawn;
+
+		public WorldSpawnPin(Vector3ic spawn, DisplayViewport viewport) {
+			super(new Vector2d(spawn.x(), spawn.z()), PinType.WORLD_SPAWN, viewport);
+			this.spawn = spawn;
+		}
+
+		@Override
+		public PopOver initInfo() {
+			PopOver info = super.initInfo();
+			GridPane content = new GridPane();
+
+			content.add(new Label("Spawnpoint"), 0, 0, 2, 1);
+			content.add(new Separator(), 0, 1, 2, 1);
+
+			content.add(new Label("Position:"), 0, 2);
+			content.add(new Label(spawn.toString()), 1, 2);
+
+			info.setContentNode(content);
+			return info;
 		}
 	}
 
@@ -499,8 +549,6 @@ public class Pin {
 
 		final int					subCount;
 		final Map<PinType, Long>	pinCount;
-
-		private GridPane			popContent;
 
 		public MergedPin(Pin subLeft, Pin subRight, int subCount, Vector2dc position, Map<PinType, Long> pinCount, DisplayViewport viewport) {
 			super(position, PinType.MERGED_PIN, viewport);
@@ -510,54 +558,56 @@ public class Pin {
 
 		@Override
 		protected Node initTopGui() {
-			popContent = new GridPane();
-
 			int columns = (int) Math.floor(Math.sqrt(pinCount.size()));
 			GridPane box = new GridPane();
 			box.setPadding(new Insets(5));
 			box.setStyle("-fx-background-color: transparent;");
+
+			/* Image for the pin's button */
 			StreamUtils.zipWithIndex(pinCount.entrySet().stream()).forEach(e -> {
-				{/* Image for the pin's button */
-					ImageView img = new ImageView(e.getValue().getKey().image);
-					img.setSmooth(false);
-					img.setPreserveRatio(true);
-					Label label = new Label(String.format("%dx", e.getValue().getValue()), img);
-					label.setPadding(new Insets(5));
-					img.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> label.getFont().getSize() * 2, label.fontProperty()));
+				ImageView img = new ImageView(e.getValue().getKey().image);
+				img.setSmooth(false);
+				img.setPreserveRatio(true);
+				Label label = new Label(String.format("%dx", e.getValue().getValue()), img);
+				label.setPadding(new Insets(5));
+				img.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> label.getFont().getSize() * 2, label.fontProperty()));
 
-					GridPane.setMargin(label, new Insets(5));
-					box.add(label, (int) e.getIndex() % columns, (int) e.getIndex() / columns);
-				}
-
-				{/* Image+Text for the popover */
-					ImageView img = new ImageView(e.getValue().getKey().image);
-					img.setSmooth(false);
-					img.setPreserveRatio(true);
-					Label label1 = new Label(e.getValue().getKey().toString(), img);
-					img.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> label1.getFont().getSize() * 1.3, label1.fontProperty()));
-					popContent.add(label1, 0, (int) e.getIndex());
-					Label label2 = new Label(String.format("%dx", e.getValue().getValue()));
-					popContent.add(label2, 1, (int) e.getIndex());
-					GridPane.setMargin(label1, new Insets(5));
-					GridPane.setMargin(label2, new Insets(5));
-				}
+				GridPane.setMargin(label, new Insets(5));
+				box.add(label, (int) e.getIndex() % columns, (int) e.getIndex() / columns);
 			});
 
 			button = new Button(null, box);
 			button.setStyle("-fx-background-radius: 6em;");
-
-			info = new PopOver();
-			info.setArrowLocation(ArrowLocation.BOTTOM_CENTER);
-			info.setAutoHide(true);
-			button.setOnAction(mouseEvent -> info.show(button));
+			button.setOnAction(mouseEvent -> getInfo().show(button));
 
 			DoubleBinding scale = Bindings.createDoubleBinding(
 					() -> 1 * Math.min(1 / viewport.scaleProperty.get(), 2),
 					viewport.scaleProperty);
 
-			info.setContentNode(popContent);
-
 			return wrapGui(button, position, null, scale, viewport);
+		}
+
+		@Override
+		protected PopOver initInfo() {
+			PopOver info = super.initInfo();
+			GridPane popContent = new GridPane();
+
+			/* Image+Text for the popover */
+			StreamUtils.zipWithIndex(pinCount.entrySet().stream()).forEach(e -> {
+				ImageView img = new ImageView(e.getValue().getKey().image);
+				img.setSmooth(false);
+				img.setPreserveRatio(true);
+				Label label1 = new Label(e.getValue().getKey().toString(), img);
+				img.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> label1.getFont().getSize() * 1.3, label1.fontProperty()));
+				popContent.add(label1, 0, (int) e.getIndex());
+				Label label2 = new Label(String.format("%dx", e.getValue().getValue()));
+				popContent.add(label2, 1, (int) e.getIndex());
+				GridPane.setMargin(label1, new Insets(5));
+				GridPane.setMargin(label2, new Insets(5));
+			});
+
+			info.setContentNode(popContent);
+			return info;
 		}
 	}
 
@@ -570,21 +620,9 @@ public class Pin {
 		}
 
 		for (VillagePin village : pin.getVillages().orElse(Collections.emptyList())) {
-			pins.add(new _VillagePin(
-					village,
-					viewport));
+			pins.add(new _VillagePin(village, viewport));
 			for (Vector3ic door : village.getDoors().orElse(Collections.emptyList()))
-				pins.add(new Pin(
-						new Vector2d(door.x(), door.z()),
-						PinType.VILLAGE_DOOR, viewport) {
-					// TODO cleanup
-					@Override
-					protected Node initTopGui() {
-						Node n = super.initTopGui();
-						info.setContentNode(new Label("Door"));
-						return n;
-					}
-				});
+				pins.add(new Pin(new Vector2d(door.x(), door.z()), PinType.VILLAGE_DOOR, viewport));
 		}
 
 		/* Cluster maps at identical position to merge their pins. */
@@ -600,26 +638,7 @@ public class Pin {
 				.map(banner -> new Pin(new Vector2d(banner.getPosition().x(), banner.getPosition().y()), PinType.MAP_BANNER, viewport))
 				.collect(Collectors.toList()));
 
-		pin.getWorldSpawn().map(spawn -> new Pin(new Vector2d(spawn.getSpawnpoint().x(), spawn.getSpawnpoint().z()),
-				PinType.WORLD_SPAWN, viewport) {
-
-			@Override
-			public Node initTopGui() {
-				// TODO cleanup
-				Node n = super.initTopGui();
-				GridPane content = new GridPane();
-
-				content.add(new Label("Spawnpoint"), 0, 0, 2, 1);
-				content.add(new Separator(), 0, 1, 2, 1);
-
-				content.add(new Label("Position:"), 0, 2);
-				content.add(new Label(spawn.getSpawnpoint().toString()), 1, 2);
-
-				info.setContentNode(content);
-				return n;
-			}
-
-		}).ifPresent(pins::add);
+		pin.getWorldSpawn().map(spawn -> new WorldSpawnPin(spawn.getSpawnpoint(), viewport)).ifPresent(pins::add);
 
 		return pins;
 	}
@@ -712,15 +731,7 @@ public class Pin {
 				log.warn("Could not find a pin type named " + e.getKey());
 			}
 			if (type != null) {
-				pins.add(new Pin(new Vector2d(e.getValue().x(), e.getValue().z()), type, viewport) {
-					@Override
-					public Node initTopGui() {
-						// TODO cleanup
-						Node n = super.initTopGui();
-						info.setContentNode(new Label(type.name));
-						return n;
-					}
-				});
+				pins.add(new Pin(new Vector2d(e.getValue().x(), e.getValue().z()), type, viewport));
 			}
 		});
 		return pins;

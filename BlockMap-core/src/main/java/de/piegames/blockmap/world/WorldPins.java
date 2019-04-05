@@ -42,6 +42,7 @@ public class WorldPins {
 
 	public static final Gson	GSON	= new GsonBuilder().create();
 
+	int							version	= 0;
 	Optional<List<PlayerPin>>	players;
 	Optional<List<MapPin>>		maps;
 	Optional<List<VillagePin>>	villages;

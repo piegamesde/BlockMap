@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.function.Function;
@@ -225,16 +226,19 @@ public class GuiController implements Initializable {
 
 		renderer.regionFolder.bind(regionFolder);
 		renderer.regionFolder.addListener((observable, previous, val) -> {
-			if (val != null) {
-				this.pins.clearPins();
-				if (val.getPins().isPresent())
-					this.pins.setStaticPins(Pin.convert(val.getPins().get(), renderer.viewport));
-			}
+			if (val != null)
+				this.pins.loadWorld(val.listRegions(), val.getPins().map(pins -> Pin.convert(pins, renderer.viewport)).orElse(Collections.emptySet()));
+			else
+				this.pins.loadWorld(Collections.emptyList(), Collections.emptyList());
 		});
 		renderer.getChunkMetadata().addListener((MapChangeListener<Vector2ic, Map<Vector2ic, ChunkMetadata>>) change -> {
-			// TODO this needs a proper add/remove handling
+			/*
+			 * This works because the only operations are clear() and additions. There are no put operations that overwrite a previously existing item.
+			 */
+			if (change.getValueRemoved() != null)
+				GuiController.this.pins.reloadWorld();
 			if (change.getValueAdded() != null)
-				GuiController.this.pins.setDynamicPins(change.getKey(), Pin.convert(change.getValueAdded(), renderer.viewport));
+				GuiController.this.pins.loadRegion(change.getKey(), Pin.convert(change.getValueAdded(), renderer.viewport));
 		});
 	}
 

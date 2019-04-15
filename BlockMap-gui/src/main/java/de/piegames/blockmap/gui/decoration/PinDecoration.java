@@ -1,34 +1,31 @@
 package de.piegames.blockmap.gui.decoration;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.Queue;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.joml.Vector2d;
 import org.joml.Vector2dc;
+import org.joml.Vector2i;
 import org.joml.Vector2ic;
-
-import com.google.common.collect.Streams;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import de.piegames.blockmap.gui.DisplayViewport;
 import de.piegames.blockmap.gui.decoration.Pin.MergedPin;
 import de.piegames.blockmap.gui.decoration.Pin.PinType;
 import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SetProperty;
@@ -37,6 +34,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
+import javafx.geometry.Bounds;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Scale;
@@ -48,6 +46,7 @@ import smile.clustering.linkage.Linkage;
 public class PinDecoration extends AnchorPane implements ChangeListener<Number> {
 
 	private static Log					log				= LogFactory.getLog(PinDecoration.class);
+	static final double					MAX_VISIBILITY	= 1000, MAX_MERGE = 500;
 
 	protected final DisplayViewport		viewport;
 
@@ -55,22 +54,18 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 
 	public final SetProperty<PinType>	visiblePins		= new SimpleSetProperty<>(FXCollections.observableSet());
 
-	protected List<Pin>					staticPins		= new ArrayList<>();
-	protected Map<Vector2ic, List<Pin>>	dynamicPins		= new HashMap<>();
+	private Collection<Pin>				staticPins;
+	private Map<Vector2ic, PinRegion>	byRegion		= Collections.emptyMap();
+	private final List<PinGroup>		byGroup			= new ArrayList<>();
 
-	protected Map<DistanceItem, Double>	distanceMatrix	= new HashMap<>();
-	private List<Pin>					allPins			= new ArrayList<>();
-	private double[]					height			= new double[] {};
-
-	private Timeline					timeline;
-	private int							lastLevel		= 0;
-
-	private ScheduledExecutorService	executor		= Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat(
-			"pin-background-thread-%d").build());
-	private LimitedExecutionHandler		executeUpdate	= new LimitedExecutionHandler(this::updatePinsImpl, (r) -> executor.schedule(r, 50,
-			TimeUnit.MILLISECONDS));
-	private LimitedExecutionHandler		executeZoom		= new LimitedExecutionHandler(this::updateZoomImpl,
+	// private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat(
+	// "pin-background-thread-%d").build());
+	// private LimitedExecutionHandler executeUpdate = new LimitedExecutionHandler(this::updateVisible, (r) -> executor.schedule(r, 50,
+	// TimeUnit.MILLISECONDS));
+	private LimitedExecutionHandler		executeUpdate	= new LimitedExecutionHandler(this::updateVisible,
 			(r) -> new Timeline(new KeyFrame(Duration.millis(50), e -> r.run())).play());
+	// private LimitedExecutionHandler executeZoom = new LimitedExecutionHandler(this::updateZoomImpl,
+	// (r) -> new Timeline(new KeyFrame(Duration.millis(50), e -> r.run())).play());
 
 	public PinDecoration(DisplayViewport viewport) {
 		this.viewport = Objects.requireNonNull(viewport);
@@ -105,69 +100,170 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 		}
 
 		visiblePins.addListener((InvalidationListener) e -> executeUpdate.requestExecution());
+		// visiblePins.addListener((InvalidationListener) e -> updateVisible());
 	}
 
-	public void clearPins() {
-		executor.submit(() -> {
-			staticPins.clear();
-			dynamicPins.clear();
-			allPins.clear();
-			distanceMatrix.clear();
-		});
-		world.getChildren().clear();
-	}
+	class PinRegion {
 
-	public void clearDynamic() {
-		executor.submit(() -> {
-			dynamicPins.clear();
-			executeUpdate.requestExecution();
-		});
-	}
+		Vector2ic		position;
+		List<Pin>		pins		= new ArrayList<>();
+		List<PinGroup>	clusters	= new ArrayList<>();
+		PinRegion[]		neighbors;
+		boolean			valid		= false, loaded = false;
 
-	public void setStaticPins(Set<Pin> pins) {
-		executor.submit(() -> {
-			staticPins.clear();
-			staticPins.addAll(pins);
-			executeUpdate.requestExecution();
-		});
-	}
-
-	public void setDynamicPins(Vector2ic regionPos, List<Pin> pins) {
-		executor.submit(() -> {
-			dynamicPins.put(regionPos, Objects.requireNonNull(pins));
-			executeUpdate.requestExecution();
-		});
-	}
-
-	private void updatePinsImpl() {
-		allPins = Streams.concat(
-				dynamicPins.entrySet().stream().flatMap(e -> e.getValue().stream().filter(p -> visiblePins.contains(p.type))),
-				staticPins.stream().filter(p -> visiblePins.contains(p.type)))
-				.collect(Collectors.toList());
-
-		/* Clustering */
-
-		final int n = allPins.size();
-		if (n == 0) // TODO cleanup
-			return;
-		double[][] dist = new double[n][];
-		for (int row = 0; row < n; row++) {
-			dist[row] = new double[row + 1];
-			for (int col = 0; col < row; col++)
-				// dist[row][col] = distanceMatrix.computeIfAbsent(new DistanceItem(allPins.get(row).position, allPins.get(col).position), e ->
-				// e.a.distance(e.b));
-				dist[row][col] = allPins.get(row).position.distance(allPins.get(col).position);
+		PinRegion(Vector2ic position) {
+			this.position = Objects.requireNonNull(position);
 		}
-		{
+
+		void mergeGroups() {
+			if (valid && Arrays.stream(neighbors).allMatch(r -> r.valid)) {
+				/* Merge nearby clusters */
+				while (true) {
+					double minDist = Double.POSITIVE_INFINITY;
+					PinGroup minG = null, minH = null;
+					PinRegion minR = null, minS = null;
+
+					for (PinRegion r : neighbors)
+						for (PinGroup g : r.clusters)
+							for (PinRegion s : neighbors)
+								for (PinGroup h : s.clusters) {
+									if (g == h)
+										continue;
+									double dist = g.center.distance(h.center);
+									if (dist < minDist) {
+										minDist = dist;
+										minG = g;
+										minH = h;
+										minR = r;
+										minS = s;
+									}
+								}
+					if (minDist < MAX_MERGE) {
+						minR.clusters.remove(minG);
+						minS.clusters.remove(minH);
+						PinGroup merged = new PinGroup(minG, minH);
+						if (minR == minS)
+							minR.clusters.add(merged);
+						else if (minR == this || minS == this)
+							this.clusters.add(merged);
+						else {
+							Vector2i regionPos = new Vector2i((int) merged.center.x() >> 9, (int) merged.center.y() >> 9);
+							Arrays.stream(neighbors)
+									.filter(n -> n.position.equals(regionPos))
+									.findAny()
+									.orElseThrow(() -> new InternalError("regionPos should be the same as one of the merged pin's parents")).clusters.add(
+											merged);
+						}
+					} else
+						break;
+				}
+
+				/* Put all clusters to the GUI */
+				clusters.forEach(PinGroup::add);
+				byGroup.addAll(clusters);
+				clusters.clear();
+			}
+		}
+
+		/** Cluster all visible pins in this region */
+		void updatePins() {
+			if (!loaded)
+				return;
+			List<Pin> visiblePins = pins.stream().filter(p -> PinDecoration.this.visiblePins.contains(p.type)).collect(Collectors.toList());
+
+			/* Clustering */
+
+			final int n = visiblePins.size();
+			if (n > 0) {
+				double[][] dist = new double[n][];
+				for (int row = 0; row < n; row++) {
+					dist[row] = new double[row + 1];
+					for (int col = 0; col < row; col++)
+						dist[row][col] = visiblePins.get(row).position.distance(visiblePins.get(col).position);
+				}
+				Linkage linkage = new smile.clustering.linkage.UPGMCLinkage(dist);
+				HierarchicalClustering cluster = new HierarchicalClustering(linkage);
+
+				/* Split at height MAX_MERGE */
+
+				clusters.clear();
+				{
+					/* Temporary working queue containing subtree roots */
+					Queue<Integer> top = new LinkedList<>();
+					List<Integer> topCut = new ArrayList<>();
+					top.add(2 * n - 2);
+					while (!top.isEmpty()) {
+						int current = top.remove();
+						if (current < n || cluster.getHeight()[current - n] < MAX_MERGE)
+							topCut.add(current);
+						else {
+							top.add(cluster.getTree()[current - n][0]);
+							top.add(cluster.getTree()[current - n][1]);
+						}
+					}
+					for (int i : topCut) {
+						top.clear();
+						top.add(i);
+						List<Pin> group = new ArrayList<>();
+						while (!top.isEmpty()) {
+							int current = top.remove();
+							if (current < n) {
+								group.add(visiblePins.get(current));
+							} else {
+								top.add(cluster.getTree()[current - n][0]);
+								top.add(cluster.getTree()[current - n][1]);
+							}
+						}
+						clusters.add(new PinGroup(group));
+					}
+				}
+			}
+			valid = true;
+
+			/* Notify all neighbors in a 3×3 area so they may merge nearby groups */
+
+			for (PinRegion r : neighbors)
+				r.mergeGroups();
+		}
+	}
+
+	class PinGroup {
+		Bounds		bounds;
+		Vector2dc	center;
+		List<Pin>	pins;
+		boolean		added;
+
+		PinGroup(List<Pin> pins) {
+			this.pins = Objects.requireNonNull(pins);
+			center = pins.stream().map(p -> p.position).collect(Vector2d::new, Vector2d::add, Vector2d::add).mul(1.0 / pins.size());
+		}
+
+		PinGroup(PinGroup a, PinGroup b) {
+			this.pins = new ArrayList<>();
+			pins.addAll(a.pins);
+			pins.addAll(b.pins);
+			int sizeLeft = a.pins.size(), sizeRight = b.pins.size();
+			center = new Vector2d(
+					a.center.x() * sizeLeft + b.center.x() * sizeRight,
+					a.center.y() * sizeLeft + b.center.y() * sizeRight)
+							.mul(1.0 / (sizeLeft + sizeRight));
+		}
+
+		public void add() {
+			/* Clustering */
+
+			final int n = pins.size();
+			if (n == 0)
+				return;
+			double[][] dist = new double[n][];
+			for (int row = 0; row < n; row++) {
+				dist[row] = new double[row + 1];
+				for (int col = 0; col < row; col++)
+					dist[row][col] = pins.get(row).position.distance(pins.get(col).position);
+			}
 			Linkage linkage = new smile.clustering.linkage.UPGMCLinkage(dist);
 			HierarchicalClustering cluster = new HierarchicalClustering(linkage);
-			this.height = cluster.getHeight();
-			// System.out.println("a,b,height");
-			// for (int i = 0; i < n - 1; i++)
-			// System.out.println(""
-			// + (cluster.getTree()[i][0] < n ? -1 - cluster.getTree()[i][0] : cluster.getTree()[i][0] - n + 1) + ","
-			// + (cluster.getTree()[i][1] < n ? -1 - cluster.getTree()[i][1] : cluster.getTree()[i][1] - n + 1) + ","
-			// + cluster.getHeight()[i]);
+			double[] height = cluster.getHeight();
 
 			/* Cluster analysis */
 
@@ -179,8 +275,8 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 				Pin subLeft;
 				int sizeLeft = 1;
 				if (mergedLeft < n) {
-					subLeft = allPins.get(mergedLeft);
-					subLeft.level = 0;
+					subLeft = pins.get(mergedLeft);
+					subLeft.minHeight = 0;
 					subTypes.put(subLeft.type, 1L);
 				} else {
 					MergedPin m = clusters.get(mergedLeft - n);
@@ -188,13 +284,13 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 					subLeft = m;
 					subTypes.putAll(m.pinCount);
 				}
-				subLeft.parentLevel = i + 1;
+				subLeft.maxHeight = Math.min(height[i], MAX_VISIBILITY);
 
 				int mergedRight = cluster.getTree()[i][1];
 				Pin subRight;
 				int sizeRight = 1;
 				if (mergedRight < n) {
-					subRight = allPins.get(mergedRight);
+					subRight = pins.get(mergedRight);
 					subTypes.compute(subRight.type, (k, v) -> (v == null) ? 1 : v + 1);
 				} else {
 					MergedPin m = clusters.get(mergedRight - n);
@@ -202,75 +298,110 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 					m.pinCount.forEach((k, v) -> subTypes.put(k, v + subTypes.getOrDefault(k, 0L)));
 					subRight = m;
 				}
-				subRight.parentLevel = i + 1;
+				subRight.maxHeight = Math.min(height[i], MAX_VISIBILITY);
 
 				Vector2dc position = new Vector2d(
 						subLeft.position.x() * sizeLeft + subRight.position.x() * sizeRight,
 						subLeft.position.y() * sizeLeft + subRight.position.y() * sizeRight)
 								.mul(1.0 / (sizeLeft + sizeRight));
 				MergedPin mergedPin = new MergedPin(subLeft, subRight, sizeLeft + sizeRight, position, subTypes, viewport);
-				mergedPin.level = i + 1;
-				mergedPin.parentLevel = n; /* We'll set this to a lower value if there is a parent. */
+				mergedPin.minHeight = Math.min(height[i], MAX_VISIBILITY);
+				mergedPin.maxHeight = MAX_VISIBILITY; /* We'll set this to a lower value if there is a parent. */
 				clusters.add(mergedPin);
-				allPins.add(mergedPin);
+				pins.add(mergedPin);
 			}
+
+			added = true;
+			// Platform.runLater(this::updateAnimation);
+			updateAnimation();
 		}
 
-		Platform.runLater(() -> {
-			world.getChildren().clear();
-			world.getChildren().addAll(allPins.stream().map(Pin::getBottomGui).filter(Objects::nonNull).collect(Collectors.toList()));
-			world.getChildren().addAll(allPins.stream().map(Pin::getTopGui).filter(Objects::nonNull).collect(Collectors.toList()));
+		public void remove() {
+			added = false;
+			// Platform.runLater(this::updateAnimation);
+			updateAnimation();
+		}
 
-			/* Invalidate animation and recalculate */
-			lastLevel = -1;
-			allPins.forEach(pin -> pin.zoomLevel = -1);
-			updateZoomImpl();
-			if (timeline != null)
-				timeline.jumpTo("end");
+		void updateAnimation() {
+			double height = 60 / viewport.scaleProperty.get();
+			pins.forEach(p -> p.updateAnimation(height, added, world));
+		}
+	}
+
+	private static final Vector2ic[] connectivity8 = new Vector2ic[] {
+			new Vector2i(-1, -1), new Vector2i(0, -1), new Vector2i(1, -1),
+			new Vector2i(-1, 0), new Vector2i(0, 0), new Vector2i(1, 0),
+			new Vector2i(-1, 1), new Vector2i(0, 1), new Vector2i(1, 1)
+	};
+
+	public void loadWorld(Collection<Vector2ic> regions, Collection<Pin> staticPins) {
+		// executor.execute(() -> {
+		this.staticPins = Objects.requireNonNull(staticPins);
+
+		byRegion = regions.stream().collect(Collectors.toMap(Function.identity(), PinRegion::new));
+		for (Vector2ic r : byRegion.keySet())
+			byRegion.get(r).neighbors = Arrays.stream(connectivity8)
+					.map(v -> v.add(r, new Vector2i()))
+					.filter(byRegion::containsKey)
+					.map(byRegion::get)
+					.collect(Collectors.toList())
+					.toArray(new PinRegion[0]);
+		reloadWorld();
+		// });
+	}
+
+	public void reloadWorld() {
+		// executor.execute(() -> {
+		byGroup.forEach(PinGroup::remove);
+		byGroup.clear();
+		byRegion.values().forEach(r -> {
+			r.pins.clear();
+			r.loaded = r.valid = false;
 		});
+		for (Pin p : staticPins) {
+			Vector2i pos = new Vector2i((int) (p.position.x()) >> 9, (int) (p.position.y()) >> 9);
+			if (!byRegion.containsKey(pos))
+				log.warn("Pin " + p + " is outside of the world's bounds and will be ignored");
+			else
+				byRegion.get(pos).pins.add(p);
+		}
+		// });
+	}
+
+	public void loadRegion(Vector2ic region, Collection<Pin> dynamicPins) {
+		// executor.execute(() -> {
+		if (byRegion.containsKey(region)) {
+			PinRegion r = byRegion.get(region);
+			r.pins.addAll(dynamicPins);
+			r.loaded = true;
+			r.updatePins();
+		} else
+			log.warn("Dynamic pins for region " + region + " are out of the world's boudns and will be ignored");
+		// });
+	}
+
+	private void updateVisible() {
+		// executor.execute(() -> {
+		byGroup.forEach(PinGroup::remove);
+		byGroup.clear();
+		byRegion.values().forEach(r -> r.valid = false);
+		byRegion.values().stream().filter(r -> r.loaded).forEach(PinRegion::updatePins);
+		// });
 	}
 
 	@Override
 	public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-		executeZoom.requestExecution();
-	}
-
-	private void updateZoomImpl() {
-		double height = 60 / viewport.scaleProperty.get();
-
-		/* Determine which tree heights to switch between */
-		for (int i = 0; i < this.height.length - 1; i++) {
-			if (this.height[i] >= height) {
-				if (i != lastLevel) {
-					/* The zoom switched between two heights */
-					if (timeline != null) {
-						timeline.pause();
-					}
-					final int newLevel = i;
-					List<KeyValue> values = allPins.stream().flatMap(pin -> pin.setZoomLevel(newLevel).stream()).collect(Collectors.toList());
-
-					timeline = new Timeline(
-							new KeyFrame(
-									Duration.millis(500),
-									null,
-									e -> allPins.forEach(pin -> pin.zoomLevel = newLevel),
-									values));
-					timeline.playFromStart();
-
-					lastLevel = newLevel;
-				}
-				break;
-			}
-		}
+		// executeZoom.requestExecution();
+		byGroup.forEach(group -> group.updateAnimation());
 	}
 
 	public void shutDown() {
-		executor.shutdownNow();
-		try {
-			executor.awaitTermination(1, TimeUnit.MINUTES);
-		} catch (InterruptedException e) {
-			log.warn("Pin background thread did not finish", e);
-		}
+		// executor.shutdownNow();
+		// try {
+		// executor.awaitTermination(1, TimeUnit.MINUTES);
+		// } catch (InterruptedException e) {
+		// log.warn("Pin background thread did not finish", e);
+		// }
 	}
 
 	private class LimitedExecutionHandler {
@@ -298,30 +429,6 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 			} else {
 				queueDelayed.accept(this::execute);
 			}
-		}
-	}
-
-	private static final class DistanceItem {
-		private Vector2dc a, b;
-
-		private DistanceItem(Vector2dc a, Vector2dc b) {
-			this.a = a;
-			this.b = b;
-		}
-
-		@Override
-		public int hashCode() {
-			return ((a == null) ? 0 : a.hashCode()) ^ ((b == null) ? 0 : b.hashCode());
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			DistanceItem other = (DistanceItem) obj;
-			return (a == other.a && b == other.b) || (a == other.b && b == other.a);
 		}
 	}
 }

@@ -38,7 +38,9 @@ import de.piegames.blockmap.world.ChunkMetadata.ChunkGenerationStatus;
 import de.piegames.blockmap.world.WorldPins;
 import de.piegames.blockmap.world.WorldPins.VillagePin;
 import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
@@ -57,12 +59,14 @@ import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Translate;
+import javafx.util.Duration;
 
 public class Pin {
 
@@ -155,18 +159,26 @@ public class Pin {
 		}
 	}
 
-	private static Log				log	= LogFactory.getLog(Pin.class);
+	private static Log				log		= LogFactory.getLog(Pin.class);
+
+	/* Pin specific */
 
 	public final PinType			type;
 	protected final Vector2dc		position;
 	protected final DisplayViewport	viewport;
-	private Node					topGui, bottomGui;
-	private List<KeyValue>			animShow, animHide;
 
+	/* GUI specific */
+
+	private Node					topGui, bottomGui;
 	protected Button				button;
 	protected PopOver				info;
 
-	int								level, parentLevel, zoomLevel = -1;
+	/* Animation specific */
+
+	private List<KeyValue>			animShow, animHide;
+	private Timeline				timeline;
+	private boolean					added	= false, visible = false;
+	double							minHeight, maxHeight;
 
 	public Pin(Vector2dc position, PinType type, DisplayViewport viewport) {
 		this.type = Objects.requireNonNull(type);
@@ -222,14 +234,14 @@ public class Pin {
 		return info;
 	}
 
-	public List<KeyValue> getAnimShow() {
+	final List<KeyValue> getAnimShow() {
 		if (animShow == null)
 			return animShow = animationKeys(true);
 		else
 			return animShow;
 	}
 
-	public List<KeyValue> getAnimHide() {
+	final List<KeyValue> getAnimHide() {
 		if (animHide == null)
 			return animHide = animationKeys(false);
 		else
@@ -239,20 +251,40 @@ public class Pin {
 	protected List<KeyValue> animationKeys(boolean visible) {
 		return Collections.unmodifiableList(Arrays.asList(
 				new KeyValue(getTopGui().opacityProperty(), visible ? 1.0 : 0.0, Interpolator.EASE_BOTH),
-				new KeyValue(getTopGui().visibleProperty(), visible, Interpolator.DISCRETE)));
+				new KeyValue(getTopGui().visibleProperty(), visible, visible ? DISCRETE_INSTANT : Interpolator.DISCRETE)));
 	}
 
-	public boolean isVisible(int level) {
-		return level >= this.level && level < parentLevel;
-	}
+	void updateAnimation(double height, boolean added, Pane parent) {
+		boolean visible = added && height >= this.minHeight && height < maxHeight;
+		if (visible != this.visible || added != this.added) {
+			this.visible = visible;
 
-	public List<KeyValue> setZoomLevel(int level) {
-		boolean visible = isVisible(level);
-		if (visible != isVisible(zoomLevel) || zoomLevel == -1) {
-			zoomLevel = -1;
-			return visible ? getAnimShow() : getAnimHide();
-		} else
-			return Collections.emptyList();
+			if (!this.added && added) {
+				if (getBottomGui() != null)
+					parent.getChildren().add(getBottomGui());
+				if (getTopGui() != null)
+					parent.getChildren().add(getTopGui());
+				this.added = added;
+			}
+
+			if (timeline != null)
+				timeline.pause();
+			timeline = new Timeline(
+					new KeyFrame(
+							Duration.millis(500),
+							null,
+							e -> {
+								if (this.added && !added) {
+									if (getTopGui() != null)
+										parent.getChildren().remove(getTopGui());
+									if (getBottomGui() != null)
+										parent.getChildren().remove(getBottomGui());
+									this.added = added;
+								}
+							},
+							visible ? getAnimShow() : getAnimHide()));
+			timeline.playFromStart();
+		}
 	}
 
 	public static class ChunkPin extends Pin {
@@ -764,6 +796,8 @@ public class Pin {
 			pos.yProperty().bind(Bindings.createDoubleBinding(() -> variablePosition.get().y(), variablePosition));
 			stack.getTransforms().add(pos);
 		}
+		stack.setVisible(false);
+		stack.setOpacity(0.0);
 		return stack;
 	}
 
@@ -917,4 +951,21 @@ public class Pin {
 
 		return outline;
 	}
+
+	private static final double			EPSILON				= 1e-12;
+	/**
+	 * Modification of the {@link Interpolator#DISCRETE} interpolation. Instead of jumping to 1 at the end of the animation, this one does so at
+	 * the beginning.
+	 */
+	public static final Interpolator	DISCRETE_INSTANT	= new Interpolator() {
+																@Override
+																protected double curve(double t) {
+																	return (t < EPSILON) ? 0.0 : 1.0;
+																}
+
+																@Override
+																public String toString() {
+																	return "Interpolator.DISCRETE_INSTANT";
+																}
+															};
 }

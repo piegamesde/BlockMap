@@ -3,6 +3,7 @@ package de.piegames.blockmap.gui.decoration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -58,6 +59,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.WritableImage;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -342,6 +344,73 @@ public class Pin {
 
 	public static class MapPin extends Pin {
 
+		static final Color[] COLOR_IDS;
+
+		static {
+			/* Source: https://minecraft-de.gamepedia.com/Kartendaten#Liste_der_Farbwerte */
+			Color[] rawColors = new Color[] {
+					Color.TRANSPARENT,
+					Color.rgb(125, 176, 55), /* grass */
+					Color.rgb(244, 230, 161), /* sand */
+					Color.rgb(197, 197, 197), /* cobweb */
+					Color.rgb(252, 0, 0), /* lava */
+					Color.rgb(158, 158, 252), /* ice */
+					Color.rgb(165, 165, 165), /* iron */
+					Color.rgb(0, 123, 0), /* foliage */
+					Color.rgb(252, 252, 252), /* quartz */
+					Color.rgb(162, 166, 182), /* clay */
+					Color.rgb(149, 108, 76), /* dirt */
+					Color.rgb(111, 111, 111), /* stone */
+					Color.rgb(63, 63, 252), /* water */
+					Color.rgb(141, 118, 71), /* oak */
+					Color.rgb(252, 249, 242), /* white wool */
+					Color.rgb(213, 125, 50), /* orange wool */
+					Color.rgb(176, 75, 213), /* magenta wool */
+					Color.rgb(101, 151, 213), /* light blue wool */
+					Color.rgb(226, 226, 50), /* yellow wool */
+					Color.rgb(125, 202, 25), /* light green wool */
+					Color.rgb(239, 125, 163), /* pink wool */
+					Color.rgb(75, 75, 75), /* grey wool */
+					Color.rgb(151, 151, 151), /* light grey wool */
+					Color.rgb(75, 125, 151), /* turquoise wool */
+					Color.rgb(125, 62, 176), /* purple wool */
+					Color.rgb(50, 75, 176), /* blue wool */
+					Color.rgb(101, 75, 50), /* brown wool */
+					Color.rgb(101, 125, 50), /* green wool */
+					Color.rgb(151, 50, 50), /* red wool */
+					Color.rgb(25, 25, 25), /* black wool */
+					Color.rgb(247, 235, 76), /* gold */
+					Color.rgb(91, 216, 210), /* diamond */
+					Color.rgb(73, 129, 252), /* lapis lazuli */
+					Color.rgb(0, 214, 57), /* emerald */
+					Color.rgb(127, 85, 48), /* spruce */
+					Color.rgb(111, 2, 0), /* nether */
+					Color.rgb(209, 177, 161), /* white hardened clay */
+					Color.rgb(159, 82, 36), /* orange hardened clay */
+					Color.rgb(149, 87, 108), /* magenta hardened clay */
+					Color.rgb(112, 108, 138), /* light blue hardened clay */
+					Color.rgb(186, 133, 36), /* yellow hardened clay */
+					Color.rgb(103, 117, 53), /* light green hardened clay */
+					Color.rgb(160, 77, 78), /* pink hardened clay */
+					Color.rgb(57, 41, 35), /* grey hardened clay */
+					Color.rgb(135, 107, 98), /* light grey hardened clay */
+					Color.rgb(87, 92, 92), /* turquoise hardened clay */
+					Color.rgb(122, 73, 88), /* purple hardened clay */
+					Color.rgb(76, 62, 92), /* blue hardened clay */
+					Color.rgb(76, 50, 35), /* brown hardened clay */
+					Color.rgb(76, 82, 42), /* green hardened clay */
+					Color.rgb(142, 60, 46), /* red hardened clay */
+					Color.rgb(37, 22, 16),/* black hardened clay */
+			};
+			COLOR_IDS = new Color[rawColors.length * 4];
+			for (int i = 0; i < rawColors.length; i++) {
+				COLOR_IDS[4 * i + 0] = rawColors[i].deriveColor(0, 1, 180.0 / 255.0, 1);
+				COLOR_IDS[4 * i + 1] = rawColors[i].deriveColor(0, 1, 220.0 / 255.0, 1);
+				COLOR_IDS[4 * i + 2] = rawColors[i];
+				COLOR_IDS[4 * i + 3] = rawColors[i].deriveColor(0, 1, 135.0 / 255.0, 1);
+			}
+		}
+
 		protected List<de.piegames.blockmap.world.WorldPins.MapPin> maps;
 
 		public MapPin(Vector2d position, List<de.piegames.blockmap.world.WorldPins.MapPin> maps, DisplayViewport viewport) {
@@ -354,22 +423,28 @@ public class Pin {
 			PopOver info = super.initInfo();
 			GridPane content = new GridPane();
 
-			content.add(new Label("Map"), 0, 0, 2, 1);
-			content.add(new Separator(), 0, 1, 2, 1);
+			int rowCount = 0;
 
 			if (maps.size() > 1) {
-				content.add(new Label("Map count:"), 0, 2);
-				content.add(new Label(Integer.toString(maps.size())), 1, 2);
-
-				content.add(new Label("Scales:"), 0, 3);
-				content.add(new Label(maps.stream().map(m -> m.getScale()).map(scale -> "1:" + (1 << scale)).collect(Collectors.toSet()).toString()), 1, 3);
-			} else {
-				content.add(new Label("Scale:"), 0, 2);
-				content.add(new Label(maps.stream().map(m -> m.getScale()).map(scale -> "1:" + (1 << scale)).findAny().get().toString()), 1, 2);
+				content.add(new Label("Map count:"), 0, rowCount);
+				content.add(new Label(Integer.toString(maps.size())), 1, rowCount++);
 			}
 
-			// TODO maybe add the map's image?
+			for (de.piegames.blockmap.world.WorldPins.MapPin map : maps) {
+				BorderPane mapPane = new BorderPane();
+				mapPane.setLeft(new Label("Scale:"));
+				mapPane.setRight(new Label("1:" + (1 << map.getScale())));
 
+				if (map.getColors().isPresent()) {
+					byte[] data = map.getColors().get();
+					WritableImage image = new WritableImage(128, 128);
+					for (int x = 0; x < 128; x++)
+						for (int y = 0; y < 128; y++)
+							image.getPixelWriter().setColor(x, y, COLOR_IDS[0xFF & data[y << 7 | x]]);
+					mapPane.setBottom(new ImageView(image));
+				}
+				content.add(mapPane, 0, rowCount++, 1, 2);
+			}
 			info.setContentNode(content);
 			return info;
 		}

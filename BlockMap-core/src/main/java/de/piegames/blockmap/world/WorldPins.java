@@ -20,6 +20,7 @@ import org.joml.Vector3dc;
 import org.joml.Vector3i;
 import org.joml.Vector3ic;
 
+import com.flowpowered.nbt.ByteArrayTag;
 import com.flowpowered.nbt.ByteTag;
 import com.flowpowered.nbt.CompoundMap;
 import com.flowpowered.nbt.CompoundTag;
@@ -38,7 +39,7 @@ import de.piegames.blockmap.world.WorldPins.MapPin.BannerPin;
 /** Each world may be annotated with a set of pins, represented by instances of this class */
 public class WorldPins {
 
-	private static Log log = LogFactory.getLog(WorldPins.class);
+	private static Log			log		= LogFactory.getLog(WorldPins.class);
 
 	public static final Gson	GSON	= new GsonBuilder().create();
 
@@ -152,21 +153,23 @@ public class WorldPins {
 		byte						scale;
 
 		Optional<List<BannerPin>>	banners;
+		Optional<byte[]>			colors;
 
 		@SuppressWarnings("unused")
 		private MapPin() {
 			// Used by GSON
 		}
 
-		public MapPin(byte scale, Vector2ic position, MinecraftDimension dimension, List<BannerPin> banners) {
-			this(scale, position, dimension, Optional.ofNullable(banners));
+		public MapPin(byte scale, Vector2ic position, MinecraftDimension dimension, List<BannerPin> banners, byte[] colors) {
+			this(scale, position, dimension, Optional.ofNullable(banners), Optional.ofNullable(colors));
 		}
 
-		public MapPin(byte scale, Vector2ic position, MinecraftDimension dimension, Optional<List<BannerPin>> banners) {
+		public MapPin(byte scale, Vector2ic position, MinecraftDimension dimension, Optional<List<BannerPin>> banners, Optional<byte[]> colors) {
 			this.scale = scale;
 			this.position = position;
 			this.dimension = dimension;
 			this.banners = banners;
+			this.colors = colors;
 		}
 
 		public byte getScale() {
@@ -183,6 +186,10 @@ public class WorldPins {
 
 		public Optional<List<BannerPin>> getBanners() {
 			return banners;
+		}
+
+		public Optional<byte[]> getColors() {
+			return colors;
 		}
 
 		public static class BannerPin {
@@ -445,10 +452,14 @@ public class WorldPins {
 									((IntTag) pos.get("Z")).getValue()), color, name));
 						}
 					}
+					byte[] colors = null;
+					if (map.containsKey("colors"))
+						colors = ((ByteArrayTag) map.get("colors")).getValue();
+
 					int dimension = ((IntTag) map.get("dimension")).getValue();
 					if (filterDimension != null && dimension != filterDimension.index)
 						continue;
-					maps.add(new MapPin(scale, center, MinecraftDimension.byID(dimension), banners));
+					maps.add(new MapPin(scale, center, MinecraftDimension.byID(dimension), banners, colors));
 				} catch (RuntimeException | IOException e) {
 					log.warn("Could not access map " + p.getFileName(), e);
 				}

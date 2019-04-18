@@ -105,17 +105,35 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 
 	class PinRegion {
 
-		Vector2ic		position;
-		List<Pin>		pins		= new ArrayList<>();
-		List<PinGroup>	clusters	= new ArrayList<>();
-		PinRegion[]		neighbors;
-		boolean			valid		= false, loaded = false;
+		final Vector2ic			position;
+		List<Pin>				pins		= new ArrayList<>();
+		private List<PinGroup>	clusters	= new ArrayList<>();
+		PinRegion[]				neighbors;
+		private boolean			valid		= false, loaded = false;
 
 		PinRegion(Vector2ic position) {
 			this.position = Objects.requireNonNull(position);
 		}
 
-		void mergeGroups() {
+		void updateVisible() {
+			valid = false;
+			clusters.clear();
+			updatePins();
+		}
+
+		void load(Collection<Pin> dynamicPins) {
+			pins.addAll(dynamicPins);
+			loaded = true;
+			updatePins();
+		}
+
+		void unload() {
+			pins.clear();
+			loaded = false;
+			valid = false;
+		}
+
+		private void mergeGroups() {
 			if (valid && Arrays.stream(neighbors).allMatch(r -> r.valid)) {
 				/* Merge nearby clusters */
 				while (true) {
@@ -166,7 +184,7 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 		}
 
 		/** Cluster all visible pins in this region */
-		void updatePins() {
+		private void updatePins() {
 			if (!loaded)
 				return;
 			List<Pin> visiblePins = pins.stream().filter(p -> PinDecoration.this.visiblePins.contains(p.type)).collect(Collectors.toList());
@@ -312,13 +330,11 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 			}
 
 			added = true;
-			// Platform.runLater(this::updateAnimation);
 			updateAnimation();
 		}
 
 		public void remove() {
 			added = false;
-			// Platform.runLater(this::updateAnimation);
 			updateAnimation();
 		}
 
@@ -335,7 +351,6 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 	};
 
 	public void loadWorld(Collection<Vector2ic> regions, Collection<Pin> staticPins) {
-		// executor.execute(() -> {
 		this.staticPins = Objects.requireNonNull(staticPins);
 
 		byRegion = regions.stream().collect(Collectors.toMap(Function.identity(), PinRegion::new));
@@ -347,17 +362,12 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 					.collect(Collectors.toList())
 					.toArray(new PinRegion[0]);
 		reloadWorld();
-		// });
 	}
 
 	public void reloadWorld() {
-		// executor.execute(() -> {
 		byGroup.forEach(PinGroup::remove);
 		byGroup.clear();
-		byRegion.values().forEach(r -> {
-			r.pins.clear();
-			r.loaded = r.valid = false;
-		});
+		byRegion.values().forEach(PinRegion::unload);
 		for (Pin p : staticPins) {
 			Vector2i pos = new Vector2i((int) (p.position.x()) >> 9, (int) (p.position.y()) >> 9);
 			if (!byRegion.containsKey(pos))
@@ -365,43 +375,28 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 			else
 				byRegion.get(pos).pins.add(p);
 		}
-		// });
 	}
 
 	public void loadRegion(Vector2ic region, Collection<Pin> dynamicPins) {
-		// executor.execute(() -> {
-		if (byRegion.containsKey(region)) {
-			PinRegion r = byRegion.get(region);
-			r.pins.addAll(dynamicPins);
-			r.loaded = true;
-			r.updatePins();
-		} else
-			log.warn("Dynamic pins for region " + region + " are out of the world's boudns and will be ignored");
-		// });
+		if (byRegion.containsKey(region))
+			byRegion.get(region).load(dynamicPins);
+		else
+			log.warn("Dynamic pins for region " + region + " are out of the world's bounds and will be ignored");
 	}
 
 	private void updateVisible() {
-		// executor.execute(() -> {
 		byGroup.forEach(PinGroup::remove);
 		byGroup.clear();
-		byRegion.values().forEach(r -> r.valid = false);
-		byRegion.values().stream().filter(r -> r.loaded).forEach(PinRegion::updatePins);
-		// });
+		byRegion.values().forEach(PinRegion::updateVisible);
 	}
 
 	@Override
 	public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-		// executeZoom.requestExecution();
 		byGroup.forEach(group -> group.updateAnimation());
 	}
 
+	@Deprecated
 	public void shutDown() {
-		// executor.shutdownNow();
-		// try {
-		// executor.awaitTermination(1, TimeUnit.MINUTES);
-		// } catch (InterruptedException e) {
-		// log.warn("Pin background thread did not finish", e);
-		// }
 	}
 
 	private class LimitedExecutionHandler {

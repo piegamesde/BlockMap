@@ -691,7 +691,7 @@ public class Pin {
 					() -> 1 * Math.min(1 / viewport.scaleProperty.get(), 2),
 					viewport.scaleProperty);
 
-			return wrapGui(button, position, null, scale, viewport);
+			return wrapGui(button, position, scale, viewport);
 		}
 
 		@Override
@@ -795,64 +795,28 @@ public class Pin {
 					viewport));
 		}
 
-		metadataMap.values().stream().flatMap(m -> m.structures.entrySet().stream()).forEach(e -> {
-			PinType type = null;
-			// TODO refactor this into the pin type; this is ugly AF
-			switch (e.getKey()) {
-			case "Igloo":
-				type = PinType.STRUCTURE_IGLOO;
-				break;
-			case "Monument":
-				type = PinType.STRUCTURE_OCEAN_MONUMENT;
-				break;
-			case "Ocean_Ruin":
-				type = PinType.STRUCTURE_OCEAN_RUIN;
-				break;
-			case "Swamp_Hut":
-				type = PinType.STRUCTURE_WITCH_HUT;
-				break;
-			case "Desert_Pyramid":
-				type = PinType.STRUCTURE_PYRAMID;
-				break;
-			case "Jungle_Pyramid":
-				type = PinType.STRUCTURE_JUNGLE_TEMPLE;
-				break;
-			case "Mineshaft":
-				type = PinType.STRUCTURE_MINESHAFT;
-				break;
-			case "Buried_Treasure":
-				type = PinType.STRUCTURE_TREASURE;
-				break;
-			case "Shipwreck":
-				type = PinType.STRUCTURE_SHIPWRECK;
-				break;
-			case "Stronghold":
-				type = PinType.STRUCTURE_STRONGHOLD;
-				break;
-			case "Mansion":
-				type = PinType.STRUCTURE_MANSION;
-			case "Village":
-				/* Villages are handled separately, so ignore them */
-				break;
-			default:
-				log.warn("Could not find a pin type named " + e.getKey());
-			}
-			if (type != null) {
-				pins.add(new Pin(new Vector2d(e.getValue().x(), e.getValue().z()), type, viewport));
-			}
-		});
+		/*
+		 * Retrieve all structures from all chunks as <name, position> tuples. Map the name to the appropriate PinType through linear search. Create
+		 * a pin from it and add it to the list.
+		 */
+		pins.addAll(
+				metadataMap.values().stream()
+						.flatMap(m -> m.structures.entrySet().stream())
+						.flatMap(e -> StreamUtils.stream(PinType.STRUCTURE.getChildren().stream()
+								.filter(t -> t.toString().equals(e.getKey()))
+								.findAny()
+								.map(type -> new Pin(new Vector2d(e.getValue().x(), e.getValue().z()), type, viewport))))
+						.collect(Collectors.toList()));
 		return pins;
 	}
 
-	public static StackPane wrapGui(Node node, Vector2dc position, DisplayViewport viewport) {
-		return wrapGui(node, position, null, Bindings.createDoubleBinding(
+	static StackPane wrapGui(Node node, Vector2dc position, DisplayViewport viewport) {
+		return wrapGui(node, position, Bindings.createDoubleBinding(
 				() -> 2 * Math.min(1 / viewport.scaleProperty.get(), 1),
 				viewport.scaleProperty), viewport);
 	}
 
-	// TODO maybe remove variablePosition if not needed
-	public static StackPane wrapGui(Node node, Vector2dc basePosition, ObjectProperty<Vector2dc> variablePosition, DoubleBinding scale,
-			DisplayViewport viewport) {
+	static StackPane wrapGui(Node node, Vector2dc basePosition, DoubleBinding scale, DisplayViewport viewport) {
 		if (scale != null) {
 			node.scaleXProperty().bind(scale);
 			node.scaleYProperty().bind(scale);
@@ -865,12 +829,6 @@ public class Pin {
 		stack.getTransforms().add(center);
 		if (basePosition != null)
 			stack.getTransforms().add(new Translate(basePosition.x(), basePosition.y()));
-		if (variablePosition != null) {
-			Translate pos = new Translate();
-			pos.xProperty().bind(Bindings.createDoubleBinding(() -> variablePosition.get().x(), variablePosition));
-			pos.yProperty().bind(Bindings.createDoubleBinding(() -> variablePosition.get().y(), variablePosition));
-			stack.getTransforms().add(pos);
-		}
 		stack.setVisible(false);
 		stack.setOpacity(0.0);
 		return stack;

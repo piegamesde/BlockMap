@@ -46,7 +46,7 @@ import smile.clustering.linkage.Linkage;
 public class PinDecoration extends AnchorPane implements ChangeListener<Number> {
 
 	private static Log					log				= LogFactory.getLog(PinDecoration.class);
-	static final double					MAX_VISIBILITY	= 1000, MAX_MERGE = 500;
+	static final double					MAX_VISIBILITY	= 1300, MAX_MERGE = 500;
 
 	protected final DisplayViewport		viewport;
 
@@ -339,8 +339,14 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 		}
 
 		void updateAnimation() {
-			double height = 60 / viewport.scaleProperty.get();
-			pins.forEach(p -> p.updateAnimation(height, added, world));
+			double scale = viewport.scaleProperty.get();
+			double height;
+			/* If zoomed in to 35:1, set the height to zero to separate all pins even if they are really close. */
+			if (scale > 35)
+				height = 0;
+			else
+				height = 100 / scale;
+			pins.forEach(p -> p.updateAnimation(viewport.zoomProperty.get(), height, added, world));
 		}
 	}
 
@@ -387,7 +393,11 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 	private void updateVisible() {
 		byGroup.forEach(PinGroup::remove);
 		byGroup.clear();
-		byRegion.values().forEach(PinRegion::updateVisible);
+		int i = 0;
+		Timeline t = new Timeline();
+		for (PinRegion r : byRegion.values())
+			t.getKeyFrames().add(new KeyFrame(Duration.millis(1 * i++), e -> r.updateVisible()));
+		t.playFromStart();
 	}
 
 	@Override

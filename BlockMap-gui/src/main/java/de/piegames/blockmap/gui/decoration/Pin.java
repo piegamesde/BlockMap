@@ -256,7 +256,7 @@ public class Pin {
 				new KeyValue(getTopGui().visibleProperty(), visible, visible ? DISCRETE_INSTANT : Interpolator.DISCRETE)));
 	}
 
-	void updateAnimation(double height, boolean added, Pane parent) {
+	void updateAnimation(double zoom, double height, boolean added, Pane parent) {
 		boolean visible = added && height >= this.minHeight && height < maxHeight;
 		if (visible != this.visible || added != this.added) {
 			this.visible = visible;
@@ -287,6 +287,9 @@ public class Pin {
 							visible ? getAnimShow() : getAnimHide()));
 			timeline.playFromStart();
 		}
+		/* Use bottomGui instead of getBottomGui() here since we do not want to trigger an initialization here */
+		if (bottomGui != null)
+			bottomGui.setVisible(zoom > -3);
 	}
 
 	public static class ChunkPin extends Pin {

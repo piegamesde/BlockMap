@@ -14,6 +14,8 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.control.TreeItem?>
+<?import javafx.scene.control.CheckBoxTreeItem?>
 
 <BorderPane
 	maxHeight="0"
@@ -135,6 +137,13 @@
 									GridPane.columnIndex="0"
 									GridPane.columnSpan="2">
 								</CheckBox>
+								<CheckBox
+									text="Show pins"
+									fx:id="pinBox"
+									GridPane.rowIndex="3"
+									GridPane.columnIndex="0"
+									GridPane.columnSpan="2">
+								</CheckBox>
 							</children>
 							<columnConstraints>
 								<ColumnConstraints hgrow="ALWAYS" />
@@ -158,6 +167,7 @@
 							VBox.vgrow="ALWAYS">
 							<children>
 								<CheckTreeView
+									showRoot="false"
 									fx:id="pinView"
 									GridPane.rowIndex="0"
 									GridPane.columnIndex="0"

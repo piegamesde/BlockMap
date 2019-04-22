@@ -8,7 +8,6 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
@@ -39,7 +38,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.collections.ListChangeListener;
+import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.event.EventType;
 import javafx.fxml.FXML;
@@ -51,7 +50,6 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextInputDialog;
-import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
@@ -89,6 +87,8 @@ public class GuiController implements Initializable {
 	@FXML
 	private CheckBox								gridBox;
 	@FXML
+	private CheckBox								pinBox;
+	@FXML
 	private CheckTreeView<PinType>					pinView;
 
 	protected MapPane								pane;
@@ -115,7 +115,7 @@ public class GuiController implements Initializable {
 		pane.settingsLayers.add(pins);
 		pins.addEventFilter(EventType.ROOT, event -> pane.decorationLayers.forEach(l1 -> l1.fireEvent(event)));
 
-		{ // Status bar initialization
+		{ /* Status bar initialization */
 			statusBar.setSkin(new StatusBarSkin2(statusBar));
 			statusBar.progressProperty().bind(renderer.getProgress());
 			statusBar.setText(null);
@@ -164,41 +164,18 @@ public class GuiController implements Initializable {
 		});
 
 		{ /* Pin tree */
-			class Pocket<T> {
-				T elem;
-			}
-			Pocket<Function<PinType, CheckBoxTreeItem<PinType>>> convertHolder = new Pocket<>();
-			Function<PinType, CheckBoxTreeItem<PinType>> convert = (type) -> {
-				CheckBoxTreeItem<PinType> ret;
-				// TODO clean up
-				if (false)
-					ret = new CheckBoxTreeItem<>(type, new ImageView(type.image));
-				else
-					ret = new CheckBoxTreeItem<>(type);
-				ret.setExpanded(type.expandedByDefault);
-				ret.setSelected(type.selectedByDefault);
-				if (type.selectedByDefault)
-					pins.visiblePins.add(type);
-				ret.getChildren().addAll(type.getChildren().stream().map(p -> convertHolder.elem.apply(p)).collect(Collectors.toList()));
-				return ret;
-			};
-			convertHolder.elem = convert;
-			CheckBoxTreeItem<PinType> root = convert.apply(PinType.ANY_PIN);
-			pinView.setRoot(root);
+			initPinCheckboxes(PinType.ANY_PIN, null, pinView);
 			pinView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-
-			/* Terrible hack, but necessary depending on the layout. Do not use if possible */
-			// Platform.runLater(() -> {
-			// double rowHeight = pinView.lookupAll(".tree-cell").iterator().next().prefHeight(pinView.getWidth());
-			// pinView.prefHeightProperty().bind(pinView.expandedItemCountProperty().multiply(rowHeight).add(10));
-			// });
-
-			pinView.getCheckModel().getCheckedItems().addListener((ListChangeListener<TreeItem<PinType>>) e -> {
-				while (e.next()) {
-					pins.visiblePins.addAll(e.getAddedSubList().stream().map(t -> t.getValue()).collect(Collectors.toSet()));
-					pins.visiblePins.removeAll(e.getRemoved().stream().map(t -> t.getValue()).collect(Collectors.toSet()));
-				}
-			});
+			/* Map the set of selected tree items to pins.visiblePins */
+			pins.visiblePins.bind(Bindings.createObjectBinding(() -> pinBox.isSelected() ? pinView.getCheckModel().getCheckedItems().stream().map(t -> t
+					.getValue()).collect(Collectors.toCollection(FXCollections::observableSet)) : FXCollections.emptyObservableSet(), pinView.getCheckModel()
+							.getCheckedItems(), pinBox.selectedProperty()));
+			/*
+			 * Disable the pin view if either pins are disabled or settings are disabled (indicated through pinBox.disabledProperty, which is set in the
+			 * following code block).
+			 */
+			pinView.disableProperty().bind(Bindings.createBooleanBinding(() -> pinBox.isDisabled() || !pinBox.isSelected(), pinBox.selectedProperty(), pinBox
+					.disabledProperty()));
 		}
 
 		{
@@ -216,8 +193,10 @@ public class GuiController implements Initializable {
 				heightSlider.setDisable(disabled);
 				colorBox.setDisable(disabled);
 				shadingBox.setDisable(disabled);
-				pinView.setDisable(val == null);
+				pinBox.setDisable(val == null);
 				gridBox.setDisable(val == null);
+
+				renderer.repaint();
 			};
 			regionFolderProvider.addListener(regionFolderProviderListener);
 			/* Force listener update */
@@ -240,6 +219,39 @@ public class GuiController implements Initializable {
 			if (change.getValueAdded() != null)
 				GuiController.this.pins.loadRegion(change.getKey(), Pin.convert(change.getValueAdded(), renderer.viewport));
 		});
+	}
+
+	/**
+	 * Recursive pre-order traversal of the pin type hierarchy tree. Generated items are added automatically.
+	 *
+	 * @param type
+	 *            the current type to add
+	 * @param parent
+	 *            the parent tree item to add this one to. <code>null</code> if {@code type} is the root type, in this case the generated tree
+	 *            item will be used as root for the tree directly.
+	 * @param tree
+	 *            the tree containing the items
+	 */
+	private void initPinCheckboxes(PinType type, CheckBoxTreeItem<PinType> parent, CheckTreeView<PinType> tree) {
+		CheckBoxTreeItem<PinType> ret;
+		if (false)
+			ret = new CheckBoxTreeItem<>(type, new ImageView(type.image));
+		else
+			ret = new CheckBoxTreeItem<>(type);
+
+		if (parent == null)
+			tree.setRoot(ret);
+		else
+			parent.getChildren().add(ret);
+
+		for (PinType sub : type.getChildren())
+			initPinCheckboxes(sub, ret, tree);
+
+		ret.setExpanded(type.expandedByDefault);
+		if (type.selectedByDefault) {
+			pins.visiblePins.add(type);
+			tree.getCheckModel().check(ret);
+		}
 	}
 
 	@FXML

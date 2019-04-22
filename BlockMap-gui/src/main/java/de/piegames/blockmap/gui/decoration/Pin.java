@@ -45,7 +45,6 @@ import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
@@ -79,9 +78,9 @@ public class Pin {
 		public static final PinType		CHUNK_PIN					= new PinType("Chunk pins", ANY_PIN, false, false, "/tmp.png");
 		public static final PinType		CHUNK_UNFINISHED			= new PinType("Unfinished chunk", CHUNK_PIN, false, false,
 				"textures/overlays/pin_chunk_unfinished.png");
-		public static final PinType		CHUNK_FAILED				= new PinType("Corrupt chunk", CHUNK_PIN, false, false,
+		public static final PinType		CHUNK_FAILED				= new PinType("Corrupt chunk", CHUNK_PIN, true, false,
 				"textures/overlays/pin_chunk_corrupted.png");
-		public static final PinType		CHUNK_OLD					= new PinType("Old chunk", CHUNK_PIN, false, false,
+		public static final PinType		CHUNK_OLD					= new PinType("Old chunk", CHUNK_PIN, true, false,
 				"textures/overlays/pin_chunk_outdated.png");
 
 		public static final PinType		PLAYER						= new PinType("Player", ANY_PIN, true, false, "/tmp.png");
@@ -96,41 +95,41 @@ public class Pin {
 		public static final PinType		MAP_BANNER					= new PinType("Banner", MAP, true, false,
 				"textures/pins/banner.png");
 
-		public static final PinType		VILLAGE						= new PinType("Village", ANY_PIN, false, false, "/tmp.png");
-		public static final PinType		VILLAGE_CENTER				= new PinType("Center", VILLAGE, false, false,
+		public static final PinType		VILLAGE						= new PinType("Village", ANY_PIN, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_CENTER				= new PinType("Center", VILLAGE, true, false,
 				"textures/structures/village.png");
-		public static final PinType		VILLAGE_DOOR				= new PinType("House", VILLAGE, false, false,
+		public static final PinType		VILLAGE_DOOR				= new PinType("House", VILLAGE, true, false,
 				"textures/structures/house.png");
 
 		public static final PinType		WORLD_SPAWN					= new PinType("Spawnpoint", ANY_PIN, true, false,
 				"textures/pins/spawn_map.png");
 
 		public static final PinType		STRUCTURE					= new PinType("Structures", ANY_PIN, false, true, "/tmp.png");
-		public static final PinType		STRUCTURE_TREASURE			= new PinType("Treasure", STRUCTURE, false, false,
+		public static final PinType		STRUCTURE_TREASURE			= new PinType("Treasure", STRUCTURE, true, false,
 				"textures/structures/buried_treasure.png");
-		public static final PinType		STRUCTURE_PYRAMID			= new PinType("Pyramid", STRUCTURE, false, false,
+		public static final PinType		STRUCTURE_PYRAMID			= new PinType("Pyramid", STRUCTURE, true, false,
 				"textures/structures/desert_pyramid.png");
-		public static final PinType		STRUCTURE_END_CITY			= new PinType("End city", STRUCTURE, false, false,
+		public static final PinType		STRUCTURE_END_CITY			= new PinType("End city", STRUCTURE, true, false,
 				"textures/structures/end_city.png");
-		public static final PinType		STRUCTURE_FORTRESS			= new PinType("Fortress", STRUCTURE, false, false,
+		public static final PinType		STRUCTURE_FORTRESS			= new PinType("Fortress", STRUCTURE, true, false,
 				"textures/structures/fortress.png");
-		public static final PinType		STRUCTURE_IGLOO				= new PinType("Igloo", STRUCTURE, false, false,
+		public static final PinType		STRUCTURE_IGLOO				= new PinType("Igloo", STRUCTURE, true, false,
 				"textures/structures/igloo.png");
-		public static final PinType		STRUCTURE_JUNGLE_TEMPLE		= new PinType("Jungle temple", STRUCTURE, false, false,
+		public static final PinType		STRUCTURE_JUNGLE_TEMPLE		= new PinType("Jungle temple", STRUCTURE, true, false,
 				"textures/structures/jungle_pyramid.png");
-		public static final PinType		STRUCTURE_MANSION			= new PinType("Mansion", STRUCTURE, false, false,
+		public static final PinType		STRUCTURE_MANSION			= new PinType("Mansion", STRUCTURE, true, false,
 				"textures/structures/mansion.png");
 		public static final PinType		STRUCTURE_MINESHAFT			= new PinType("Mineshaft", STRUCTURE, false, false,
 				"textures/structures/mineshaft.png");
-		public static final PinType		STRUCTURE_OCEAN_MONUMENT	= new PinType("Ocean monument", STRUCTURE, false, false,
+		public static final PinType		STRUCTURE_OCEAN_MONUMENT	= new PinType("Ocean monument", STRUCTURE, true, false,
 				"textures/structures/monument.png");
-		public static final PinType		STRUCTURE_OCEAN_RUIN		= new PinType("Ocean ruin", STRUCTURE, false, false,
+		public static final PinType		STRUCTURE_OCEAN_RUIN		= new PinType("Ocean ruin", STRUCTURE, true, false,
 				"textures/structures/ocean_ruin.png");
 		public static final PinType		STRUCTURE_SHIPWRECK			= new PinType("Shipwreck", STRUCTURE, false, false,
 				"textures/structures/shipwreck.png");
-		public static final PinType		STRUCTURE_STRONGHOLD		= new PinType("Stronghold", STRUCTURE, false, false,
+		public static final PinType		STRUCTURE_STRONGHOLD		= new PinType("Stronghold", STRUCTURE, true, false,
 				"textures/structures/stronghold.png");
-		public static final PinType		STRUCTURE_WITCH_HUT			= new PinType("Witch hut", STRUCTURE, false, false,
+		public static final PinType		STRUCTURE_WITCH_HUT			= new PinType("Witch hut", STRUCTURE, true, false,
 				"textures/structures/swamp_hut.png");
 
 		protected final List<PinType>	children					= new ArrayList<>();
@@ -231,7 +230,10 @@ public class Pin {
 		info.setArrowLocation(ArrowLocation.BOTTOM_CENTER);
 		info.setAutoHide(true);
 		info.setHeaderAlwaysVisible(true);
-		info.setContentNode(new GridPane());
+		/* Workaround: If the PopOver it too thin, it will be placed a bit off. Bug report: https://github.com/controlsfx/controlsfx/issues/1095 */
+		Label content = new Label();
+		content.setPrefWidth(100);
+		info.setContentNode(content);
 		info.setTitle(type.name);
 		return info;
 	}
@@ -668,9 +670,34 @@ public class Pin {
 
 		@Override
 		protected Node initTopGui() {
+			/* If there are to many different pins, merge some */
+			Map<PinType, Long> pinCount = new HashMap<>(this.pinCount);
+			if (pinCount.size() > 4) {
+				/* Merge all structures */
+				List<PinType> structures = PinType.STRUCTURE.children.stream().filter(this.pinCount::containsKey).collect(Collectors.toList());
+				if (!structures.isEmpty()) {
+					pinCount.keySet().removeAll(structures);
+					pinCount.put(PinType.STRUCTURE, structures.stream().mapToLong(this.pinCount::get).sum());
+				}
+
+			}
+			if (pinCount.size() > 4 && pinCount.getOrDefault(PinType.VILLAGE_CENTER, 0L) > 0 && pinCount.getOrDefault(PinType.VILLAGE_DOOR, 0L) > 0) {
+				/* Merge village with doors */
+				pinCount.put(PinType.VILLAGE_CENTER, pinCount.get(PinType.VILLAGE_CENTER) + pinCount.get(PinType.VILLAGE_DOOR));
+				pinCount.remove(PinType.VILLAGE_DOOR);
+			}
+			if (pinCount.size() > 4 && pinCount.getOrDefault(PinType.MAP_POSITION, 0L) > 0 && pinCount.getOrDefault(PinType.MAP_BANNER, 0L) > 0) {
+				/* Merge map with banners */
+				pinCount.put(PinType.MAP_POSITION, pinCount.get(PinType.MAP_POSITION) + pinCount.get(PinType.MAP_BANNER));
+				pinCount.remove(PinType.MAP_BANNER);
+			}
+			if (pinCount.size() > 4 && pinCount.getOrDefault(PinType.PLAYER_POSITION, 0L) > 0 && pinCount.getOrDefault(PinType.PLAYER_SPAWN, 0L) > 0) {
+				/* Just remove them, showing more players than there are may be confusing */
+				pinCount.remove(PinType.PLAYER_SPAWN);
+			}
+
 			int columns = (int) Math.floor(Math.sqrt(pinCount.size()));
 			GridPane box = new GridPane();
-			box.setPadding(new Insets(5));
 			box.setStyle("-fx-background-color: transparent;");
 
 			/* Image for the pin's button */
@@ -679,8 +706,8 @@ public class Pin {
 				img.setSmooth(false);
 				img.setPreserveRatio(true);
 				Label label = new Label(String.format("%dx", e.getValue().getValue()), img);
-				label.setPadding(new Insets(5));
-				img.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> label.getFont().getSize() * 2, label.fontProperty()));
+				label.setStyle("-fx-font-size: 130%;");
+				img.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> label.getFont().getSize() * 1.5, label.fontProperty()));
 
 				GridPane.setMargin(label, new Insets(5));
 				box.add(label, (int) e.getIndex() % columns, (int) e.getIndex() / columns);
@@ -691,7 +718,7 @@ public class Pin {
 			button.setOnAction(mouseEvent -> getInfo().show(button));
 
 			DoubleBinding scale = Bindings.createDoubleBinding(
-					() -> 1 * Math.min(1 / viewport.scaleProperty.get(), 2),
+					() -> 1.0 * Math.min(1 / viewport.scaleProperty.get(), 4) * Math.pow(pinCount.size(), -0.3),
 					viewport.scaleProperty);
 
 			return wrapGui(button, position, scale, viewport);

@@ -305,6 +305,7 @@ public class Pin {
 			shape.setMouseTransparent(true);
 			shape.setCache(true);
 			shape.setCacheHint(CacheHint.SCALE);
+			shape.setViewOrder(1);
 			return shape;
 		}
 	}
@@ -462,6 +463,8 @@ public class Pin {
 			t.yProperty().bind(stack.heightProperty().multiply(-0.5));
 			stack.getTransforms().addAll(t, new Translate(position.x(), position.y()));
 			stack.setPickOnBounds(false);
+			stack.setMouseTransparent(true);
+			stack.setViewOrder(1);
 			return stack;
 		}
 	}
@@ -833,19 +836,21 @@ public class Pin {
 	}
 
 	static StackPane wrapGui(Node node, Vector2dc basePosition, DoubleBinding scale, DisplayViewport viewport) {
-		if (scale != null) {
-			node.scaleXProperty().bind(scale);
-			node.scaleYProperty().bind(scale);
-		}
-
 		StackPane stack = new StackPane(node);
 		Translate center = new Translate();
 		center.xProperty().bind(stack.widthProperty().multiply(-0.5));
 		center.yProperty().bind(stack.heightProperty().multiply(-0.5));
-		stack.getTransforms().add(center);
 		if (basePosition != null)
 			stack.getTransforms().add(new Translate(basePosition.x(), basePosition.y()));
+		if (scale != null) {
+			Scale scaleTransform = new Scale();
+			scaleTransform.xProperty().bind(scale);
+			scaleTransform.yProperty().bind(scale);
+			stack.getTransforms().add(scaleTransform);
+		}
+		stack.getTransforms().add(center);
 		stack.setVisible(false);
+		stack.setPickOnBounds(false);
 		stack.setOpacity(0.0);
 		return stack;
 	}

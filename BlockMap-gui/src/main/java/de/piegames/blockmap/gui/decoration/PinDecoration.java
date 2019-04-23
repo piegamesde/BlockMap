@@ -58,14 +58,8 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 	private Map<Vector2ic, PinRegion>	byRegion		= Collections.emptyMap();
 	private final List<PinGroup>		byGroup			= new ArrayList<>();
 
-	// private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat(
-	// "pin-background-thread-%d").build());
-	// private LimitedExecutionHandler executeUpdate = new LimitedExecutionHandler(this::updateVisible, (r) -> executor.schedule(r, 50,
-	// TimeUnit.MILLISECONDS));
 	private LimitedExecutionHandler		executeUpdate	= new LimitedExecutionHandler(this::updateVisible,
 			(r) -> new Timeline(new KeyFrame(Duration.millis(50), e -> r.run())).play());
-	// private LimitedExecutionHandler executeZoom = new LimitedExecutionHandler(this::updateZoomImpl,
-	// (r) -> new Timeline(new KeyFrame(Duration.millis(50), e -> r.run())).play());
 
 	public PinDecoration(DisplayViewport viewport) {
 		this.viewport = Objects.requireNonNull(viewport);
@@ -100,7 +94,6 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 		}
 
 		visiblePins.addListener((InvalidationListener) e -> executeUpdate.requestExecution());
-		// visiblePins.addListener((InvalidationListener) e -> updateVisible());
 	}
 
 	class PinRegion {

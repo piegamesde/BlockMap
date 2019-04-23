@@ -26,10 +26,6 @@ import org.joml.Vector2i;
 import org.joml.Vector2ic;
 import org.joml.Vector3dc;
 import org.joml.Vector3ic;
-import org.shanerx.mojang.Mojang;
-import org.shanerx.mojang.Mojang.ServiceStatus;
-import org.shanerx.mojang.Mojang.ServiceType;
-import org.shanerx.mojang.PlayerProfile;
 
 import com.codepoetics.protonpack.StreamUtils;
 
@@ -37,7 +33,9 @@ import de.piegames.blockmap.gui.DisplayViewport;
 import de.piegames.blockmap.world.ChunkMetadata;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkGenerationStatus;
 import de.piegames.blockmap.world.WorldPins;
-import de.piegames.blockmap.world.WorldPins.VillagePin;
+import de.saibotk.jmaw.ApiResponseException;
+import de.saibotk.jmaw.MojangAPI;
+import de.saibotk.jmaw.PlayerProfile;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -66,6 +64,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.transform.Scale;
 import javafx.scene.transform.Translate;
 import javafx.util.Duration;
 
@@ -238,27 +237,27 @@ public class Pin {
 		return info;
 	}
 
-	final List<KeyValue> getAnimShow() {
+	private final List<KeyValue> getAnimShow() {
 		if (animShow == null)
 			return animShow = animationKeys(true);
 		else
 			return animShow;
 	}
 
-	final List<KeyValue> getAnimHide() {
+	private final List<KeyValue> getAnimHide() {
 		if (animHide == null)
 			return animHide = animationKeys(false);
 		else
 			return animHide;
 	}
 
-	protected List<KeyValue> animationKeys(boolean visible) {
+	private final List<KeyValue> animationKeys(boolean visible) {
 		return Collections.unmodifiableList(Arrays.asList(
 				new KeyValue(getTopGui().opacityProperty(), visible ? 1.0 : 0.0, Interpolator.EASE_BOTH),
 				new KeyValue(getTopGui().visibleProperty(), visible, visible ? DISCRETE_INSTANT : Interpolator.DISCRETE)));
 	}
 
-	void updateAnimation(double zoom, double height, boolean added, Pane parent) {
+	final void updateAnimation(double zoom, double height, boolean added, Pane parent) {
 		boolean visible = added && height >= this.minHeight && height < maxHeight;
 		if (visible != this.visible || added != this.added) {
 			this.visible = visible;
@@ -294,7 +293,7 @@ public class Pin {
 			bottomGui.setVisible(zoom > -3);
 	}
 
-	public static class ChunkPin extends Pin {
+	private static class ChunkPin extends Pin {
 		public final List<Vector2ic>	chunkPositions;
 		public final Image				image;
 
@@ -323,7 +322,7 @@ public class Pin {
 		}
 	}
 
-	public static class UnfinishedChunkPin extends ChunkPin {
+	private static class UnfinishedChunkPin extends ChunkPin {
 
 		protected int[] chunkCount;
 
@@ -333,7 +332,7 @@ public class Pin {
 		}
 
 		@Override
-		public PopOver initInfo() {
+		protected PopOver initInfo() {
 			PopOver info = super.initInfo();
 
 			GridPane popContent = new GridPane();
@@ -347,7 +346,7 @@ public class Pin {
 		}
 	}
 
-	public static class MapPin extends Pin {
+	private static class MapPin extends Pin {
 
 		static final Color[] COLOR_IDS;
 
@@ -480,12 +479,12 @@ public class Pin {
 		}
 	}
 
-	public static class PlayerPin extends Pin {
+	private static class PlayerPin extends Pin {
 
-		protected de.piegames.blockmap.world.WorldPins.PlayerPin	player;
-		protected StringProperty									playerName	= new SimpleStringProperty("loading…");
+		protected WorldPins.PlayerPin	player;
+		protected StringProperty		playerName	= new SimpleStringProperty("loading…");
 
-		public PlayerPin(de.piegames.blockmap.world.WorldPins.PlayerPin player, DisplayViewport viewport) {
+		public PlayerPin(WorldPins.PlayerPin player, DisplayViewport viewport) {
 			super(new Vector2d(player.getPosition().x(), player.getPosition().z()), PinType.PLAYER_POSITION,
 					viewport);
 			this.player = player;
@@ -564,10 +563,10 @@ public class Pin {
 		}
 	}
 
-	public static class PlayerSpawnpointPin extends Pin {
-		protected de.piegames.blockmap.world.WorldPins.PlayerPin player;
+	private static class PlayerSpawnpointPin extends Pin {
+		protected WorldPins.PlayerPin player;
 
-		public PlayerSpawnpointPin(de.piegames.blockmap.world.WorldPins.PlayerPin player, DisplayViewport viewport) {
+		public PlayerSpawnpointPin(WorldPins.PlayerPin player, DisplayViewport viewport) {
 			super(new Vector2d(player.getSpawnpoint().get().x(), player.getSpawnpoint().get().z()), PinType.PLAYER_SPAWN, viewport);
 			this.player = Objects.requireNonNull(player);
 		}
@@ -598,11 +597,11 @@ public class Pin {
 		}
 	}
 
-	public static class _VillagePin extends Pin {
+	private static class VillagePin extends Pin {
 
-		protected VillagePin village;
+		protected WorldPins.VillagePin village;
 
-		public _VillagePin(VillagePin village, DisplayViewport viewport) {
+		public VillagePin(WorldPins.VillagePin village, DisplayViewport viewport) {
 			super(new Vector2d(village.getPosition().x(), village.getPosition().z()), PinType.VILLAGE_CENTER, viewport);
 			this.village = Objects.requireNonNull(village);
 		}
@@ -633,7 +632,7 @@ public class Pin {
 		}
 	}
 
-	public static final class WorldSpawnPin extends Pin {
+	private static final class WorldSpawnPin extends Pin {
 		protected Vector3ic spawn;
 
 		public WorldSpawnPin(Vector3ic spawn, DisplayViewport viewport) {
@@ -642,7 +641,7 @@ public class Pin {
 		}
 
 		@Override
-		public PopOver initInfo() {
+		protected PopOver initInfo() {
 			PopOver info = super.initInfo();
 			GridPane content = new GridPane();
 
@@ -657,7 +656,7 @@ public class Pin {
 		}
 	}
 
-	public static final class MergedPin extends Pin {
+	static final class MergedPin extends Pin {
 
 		final int					subCount;
 		final Map<PinType, Long>	pinCount;
@@ -748,16 +747,16 @@ public class Pin {
 		}
 	}
 
-	public static Set<Pin> convert(WorldPins pin, DisplayViewport viewport) {
+	public static Set<Pin> convertStatic(WorldPins pin, DisplayViewport viewport) {
 		Set<Pin> pins = new HashSet<>();
-		for (de.piegames.blockmap.world.WorldPins.PlayerPin player : pin.getPlayers().orElse(Collections.emptyList())) {
+		for (WorldPins.PlayerPin player : pin.getPlayers().orElse(Collections.emptyList())) {
 			pins.add(new PlayerPin(player, viewport));
 			if (player.getSpawnpoint().isPresent())
 				pins.add(new PlayerSpawnpointPin(player, viewport));
 		}
 
-		for (VillagePin village : pin.getVillages().orElse(Collections.emptyList())) {
-			pins.add(new _VillagePin(village, viewport));
+		for (WorldPins.VillagePin village : pin.getVillages().orElse(Collections.emptyList())) {
+			pins.add(new VillagePin(village, viewport));
 			for (Vector3ic door : village.getDoors().orElse(Collections.emptyList()))
 				pins.add(new Pin(new Vector2d(door.x(), door.z()), PinType.VILLAGE_DOOR, viewport));
 		}
@@ -780,7 +779,7 @@ public class Pin {
 		return pins;
 	}
 
-	public static List<Pin> convert(Map<Vector2ic, ChunkMetadata> metadataMap, DisplayViewport viewport) {
+	public static List<Pin> convertDynamic(Map<Vector2ic, ChunkMetadata> metadataMap, DisplayViewport viewport) {
 		List<Pin> pins = new ArrayList<>();
 		Set<Vector2ic> oldChunks = new HashSet<>(), failedChunks = new HashSet<>(), unfinishedChunks = new HashSet<>();
 		/* Map each generation status to the amount of chunks with this state */
@@ -1020,7 +1019,7 @@ public class Pin {
 	 * Modification of the {@link Interpolator#DISCRETE} interpolation. Instead of jumping to 1 at the end of the animation, this one does so at
 	 * the beginning.
 	 */
-	public static final Interpolator	DISCRETE_INSTANT	= new Interpolator() {
+	private static final Interpolator	DISCRETE_INSTANT	= new Interpolator() {
 																@Override
 																protected double curve(double t) {
 																	return (t < EPSILON) ? 0.0 : 1.0;

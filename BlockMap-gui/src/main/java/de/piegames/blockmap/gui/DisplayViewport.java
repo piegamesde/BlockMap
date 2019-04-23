@@ -57,8 +57,8 @@ public class DisplayViewport {
 	public final ObjectProperty<Vector2dc>			translationProperty	= new SimpleObjectProperty<>(new Vector2d());
 	private final ReadOnlyObjectWrapper<AABBd>		frustum				= new ReadOnlyObjectWrapper<>(new AABBd());
 	/**
-	 * The camera frustum of this viewport. It represents the area of the world visible to the current camera. Translating, zooming or resizing the map result
-	 * in an update of this object.
+	 * The camera frustum of this viewport. It represents the area of the world visible to the current camera. Translating, zooming or resizing
+	 * the map result in an update of this object. The z component of the object is always 0.
 	 */
 	public final ReadOnlyObjectProperty<AABBd>		frustumProperty		= frustum.getReadOnlyProperty();
 	protected Timeline								zoomTimeline;

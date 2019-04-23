@@ -40,7 +40,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
-import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -112,8 +111,7 @@ public class GuiController implements Initializable {
 		pane.decorationLayers.add(grid);
 		grid.visibleProperty().bind(gridBox.selectedProperty());
 		pins = new PinDecoration(renderer.viewport);
-		pane.settingsLayers.add(pins);
-		pins.addEventFilter(EventType.ROOT, event -> pane.decorationLayers.forEach(l1 -> l1.fireEvent(event)));
+		pane.pinLayers.add(pins);
 
 		{ /* Status bar initialization */
 			statusBar.setSkin(new StatusBarSkin2(statusBar));
@@ -206,7 +204,7 @@ public class GuiController implements Initializable {
 		renderer.regionFolder.bind(regionFolder);
 		renderer.regionFolder.addListener((observable, previous, val) -> {
 			if (val != null)
-				this.pins.loadWorld(val.listRegions(), val.getPins().map(pins -> Pin.convert(pins, renderer.viewport)).orElse(Collections.emptySet()));
+				this.pins.loadWorld(val.listRegions(), val.getPins().map(pins -> Pin.convertStatic(pins, renderer.viewport)).orElse(Collections.emptySet()));
 			else
 				this.pins.loadWorld(Collections.emptyList(), Collections.emptyList());
 		});
@@ -217,7 +215,7 @@ public class GuiController implements Initializable {
 			if (change.getValueRemoved() != null)
 				GuiController.this.pins.reloadWorld();
 			if (change.getValueAdded() != null)
-				GuiController.this.pins.loadRegion(change.getKey(), Pin.convert(change.getValueAdded(), renderer.viewport));
+				GuiController.this.pins.loadRegion(change.getKey(), Pin.convertDynamic(change.getValueAdded(), renderer.viewport));
 		});
 	}
 

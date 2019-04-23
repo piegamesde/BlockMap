@@ -231,11 +231,16 @@ public class GuiController implements Initializable {
 	 *            the tree containing the items
 	 */
 	private void initPinCheckboxes(PinType type, CheckBoxTreeItem<PinType> parent, CheckTreeView<PinType> tree) {
-		CheckBoxTreeItem<PinType> ret;
-		if (false)
-			ret = new CheckBoxTreeItem<>(type, new ImageView(type.image));
-		else
-			ret = new CheckBoxTreeItem<>(type);
+		ImageView image = new ImageView(type.image);
+		/*
+		 * The only way so set the size of an image relative to the text of the label is to bind its height to a font size. Since tree items don't
+		 * possess a fontProperty (it's hidden behind a cell factory implementation), we have to use the next best labeled node (pinBox in this
+		 * case). This will only work if we don't change any font sizes.
+		 */
+		image.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> pinBox.getFont().getSize() * 1.5, pinBox.fontProperty()));
+		image.setSmooth(true);
+		image.setPreserveRatio(true);
+		CheckBoxTreeItem<PinType> ret = new CheckBoxTreeItem<>(type, image);
 
 		if (parent == null)
 			tree.setRoot(ret);

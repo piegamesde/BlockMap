@@ -1,16 +1,25 @@
-apply plugin: 'application'
+plugins {
+    id 'application'
+    id 'com.github.johnrengelman.shadow'
+    id 'org.openjfx.javafxplugin' version '0.0.7'
+}
+
 mainClassName = "de.piegames.blockmap.standalone.CommandLineMain"
-apply plugin: 'com.github.johnrengelman.shadow'
+
+javafx {
+    version = "12"
+    modules = [ 'javafx.controls', 'javafx.fxml' ]
+}
 
 dependencies {
     implementation project(':BlockMap-gui')
     implementation project(':BlockMap-core')
 
-	implementation 'org.controlsfx:controlsfx:8.40.12'
+	implementation 'org.controlsfx:controlsfx:11.0.0'
 
 	implementation 'info.picocli:picocli:3.7.0'
 	//implementation 'info.picocli:picocli:3.3.0'
-	implementation 'org.apache.logging.log4j:log4j-core:2.11.1'
+	implementation 'org.apache.logging.log4j:log4j-core:2.11.2'
 }
 
 shadowJar.archiveName = "BlockMap-${version}.jar"

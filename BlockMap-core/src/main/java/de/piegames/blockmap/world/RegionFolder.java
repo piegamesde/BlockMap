@@ -26,10 +26,11 @@ import java.util.stream.Stream;
 
 import org.joml.Vector2i;
 import org.joml.Vector2ic;
+import org.joml.Vector3i;
+import org.joml.Vector3ic;
 
 import com.flowpowered.nbt.regionfile.RegionFile;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -41,6 +42,7 @@ import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.world.Region.BufferedRegion;
 import de.piegames.blockmap.world.Region.LocalSavedRegion;
 import de.piegames.blockmap.world.Region.SavedRegion;
+import io.gsonfire.GsonFireBuilder;
 
 /**
  * This class represents a mapping from region file positions in a world to {@link BufferedImage}s of that rendered region. How this is done
@@ -48,7 +50,12 @@ import de.piegames.blockmap.world.Region.SavedRegion;
  */
 public abstract class RegionFolder {
 
-	public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+	public static final Gson GSON = new GsonFireBuilder()
+			.registerTypeSelector(Vector2ic.class, e -> Vector2i.class)
+			.registerTypeSelector(Vector3ic.class, e -> Vector3i.class)
+			.createGsonBuilder()
+			.setPrettyPrinting()
+			.create();
 
 	/**
 	 * Lists all existing region file in this RegionFolder. If one of the returned positions is passed to {@link #render(Vector2ic)}, it must

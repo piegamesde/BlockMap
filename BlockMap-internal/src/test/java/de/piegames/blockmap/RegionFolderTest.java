@@ -19,6 +19,7 @@ import com.flowpowered.nbt.regionfile.RegionFile;
 
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RenderSettings;
+import de.piegames.blockmap.standalone.PostProcessing;
 import de.piegames.blockmap.world.Region.BufferedRegion;
 import de.piegames.blockmap.world.RegionFolder.CachedRegionFolder;
 import de.piegames.blockmap.world.RegionFolder.LocalRegionFolder;
@@ -88,6 +89,40 @@ public class RegionFolderTest {
 			assertNotNull(savedWorld2.render(v));
 			assertNotNull(savedWorld3.render(v));
 		}
+		assertTrue(rendered.isEmpty());
+	}
+
+	/**
+	 * Test for #15 ({@link https://github.com/Minecraft-Technik-Wiki/BlockMap/issues/15})
+	 * 
+	 * @throws IOException
+	 */
+	@Test
+	public void testCreateBigImage() throws IOException {
+		Queue<Vector2ic> rendered = new LinkedList<>();
+		RenderSettings settings = new RenderSettings();
+		settings.loadDefaultColors();
+		RegionRenderer renderer = new RegionRenderer(settings) {
+			@Override
+			public BufferedRegion render(Vector2ic regionPos, RegionFile file) {
+				rendered.add(regionPos);
+				return super.render(regionPos, file);
+			}
+		};
+
+		WorldRegionFolder localWorld = WorldRegionFolder.load(
+				Paths.get(URI.create(getClass().getResource("/BlockMapWorld/region").toString())),
+				renderer);
+
+		File out1 = folder.newFolder();
+		CachedRegionFolder cachedWorld = new CachedRegionFolder(localWorld, false, out1.toPath());
+		for (Vector2ic v : REGIONS) {
+			assertNotNull(cachedWorld.render(v));
+			assertFalse(rendered.isEmpty());
+			assertEquals(v, rendered.remove());
+		}
+
+		PostProcessing.createBigImage(cachedWorld.save(), out1.toPath(), settings);
 		assertTrue(rendered.isEmpty());
 	}
 }

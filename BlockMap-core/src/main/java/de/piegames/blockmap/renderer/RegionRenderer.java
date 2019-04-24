@@ -5,10 +5,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
@@ -41,9 +43,12 @@ import de.piegames.blockmap.world.Region.BufferedRegion;
  */
 public class RegionRenderer {
 
-	private static Log			log	= LogFactory.getLog(RegionRenderer.class);
+	private static Log			log						= LogFactory.getLog(RegionRenderer.class);
 
 	public final RenderSettings	settings;
+
+	/* Only keep track of this so that the respecting warning is only logged once. */
+	private Set<Block>			blocksWithMissingColor	= new HashSet<>();
 
 	public RegionRenderer(RenderSettings settings) {
 		this.settings = Objects.requireNonNull(settings);
@@ -245,7 +250,7 @@ public class RegionRenderer {
 								Block block = loadedSections[s][i];
 
 								Color currentColor = settings.blockColors.getBlockColor(block);
-								if (currentColor == Color.MISSING) // == is correct here
+								if (currentColor == Color.MISSING && blocksWithMissingColor.add(block)) // == is correct here
 									log.warn("Missing color for " + block);
 								if (settings.blockColors.isGrassBlock(block))
 									currentColor = Color.multiplyRGB(currentColor, settings.biomeColors.getGrassColor(biomes[i & 0xFF]));
@@ -320,15 +325,4 @@ public class RegionRenderer {
 				ret.add(BlockState.valueOf(entry.getKey(), ((StringTag) entry.getValue()).getValue()));
 		return ret;
 	}
-
-	// public static void printLong(long l) {
-	// System.out.println(convertLong(l));
-	// }
-	//
-	// public static String convertLong(long l) {
-	// String s = Long.toBinaryString(l);
-	// // Fancy way of zero padding :)
-	// s = "0000000000000000000000000000000000000000000000000000000000000000".substring(s.length()) + s;
-	// return s;
-	// }
 }

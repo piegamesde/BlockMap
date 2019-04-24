@@ -36,13 +36,18 @@ import com.google.gson.GsonBuilder;
 import de.piegames.blockmap.MinecraftDimension;
 import de.piegames.blockmap.world.WorldPins.MapPin.BannerPin;
 
-/** Each world may be annotated with a set of pins, represented by instances of this class */
+/**
+ * Each world may be annotated with a set of pins, represented by instances of this class. Actually, the pins will be generated from this
+ * information much later on in the GUI (or any third-party applications). This class is more an abstract representation of all information
+ * contained in a world that may be of interest for this purpose.
+ */
 public class WorldPins {
 
 	private static Log			log		= LogFactory.getLog(WorldPins.class);
 
 	public static final Gson	GSON	= new GsonBuilder().create();
 
+	/** This will be used in the future to keep track of old serialized files. */
 	int							version	= 0;
 	Optional<List<PlayerPin>>	players;
 	Optional<List<MapPin>>		maps;
@@ -334,29 +339,6 @@ public class WorldPins {
 			return spawnpoint;
 		}
 	}
-
-	// public static WorldPins filter(WorldPins loaded, Set<String> filter) {
-	// Map<String, Field> fields = listFields(loaded.getClass(), "");
-	// fields.keySet().removeIf(s -> {
-	// for (String f : filter)
-	// if (s.startsWith(f))
-	// return true;
-	// return false;
-	// });
-	// return null;
-	// }
-	//
-	// private static Map<String, Field> listFields(Class<?> c, String prefix) {
-	// Map<String, Field> ret = new HashMap<>();
-	// for (Field f : c.getDeclaredFields())
-	// if (f.isAnnotationPresent(Property.class)) {
-	// Property p = f.getAnnotation(Property.class);
-	// String name = prefix + f.getName();
-	// ret.put(name, f);
-	// ret.putAll(listFields(p.value(), name + "."));
-	// }
-	// return ret;
-	// }
 
 	@SuppressWarnings("unchecked")
 	public static WorldPins loadFromWorld(Path worldPath, MinecraftDimension filterDimension) {

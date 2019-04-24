@@ -7,6 +7,11 @@ import java.util.Objects;
 import org.joml.Vector2ic;
 import org.joml.Vector3ic;
 
+/**
+ * When rendering a chunk, in addition to the resulting image there is also some meta data being generated. This includes information about
+ * the chunk (generation status and contained structures) as well as about the render process (did it fail?). This will be used later on to
+ * create the so-called <i>dynamic pins</i> in the GUI, but may come in handy for other uses as well.
+ */
 public class ChunkMetadata {
 
 	/**
@@ -79,6 +84,10 @@ public class ChunkMetadata {
 	 * is {@link ChunkRenderState#RENDERED}.
 	 */
 	public final ChunkGenerationStatus	generationStatus;
+	/**
+	 * Map each structure type to its position. The position is the centroid of the bounding box. There is at most one structure of each type
+	 * per chunk.
+	 */
 	public final Map<String, Vector3ic>	structures;
 
 	public ChunkMetadata(Vector2ic position, ChunkRenderState renderState, ChunkGenerationStatus generationStatus) {

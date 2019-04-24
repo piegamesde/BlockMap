@@ -12,6 +12,7 @@ import javax.imageio.ImageIO;
 
 import org.joml.Vector2ic;
 
+/** Objects of this class represent a rendered Minecraft region. */
 public abstract class Region {
 	protected Vector2ic position;
 
@@ -23,13 +24,20 @@ public abstract class Region {
 		return position;
 	}
 
+	/** Retrieve the rendered image. The image may already be in memory or it might be loaded lazily from a resource location. */
 	public abstract BufferedImage getImage() throws IOException;
 
+	/**
+	 * Get the metadata for all existing chunks indexed by their location in world space. Does not need to contain an entry for every chunk in
+	 * the region. Must not contain entries for chunks outside of the region. Must not be <code>null</code>.
+	 * 
+	 * @see ChunkMetadata
+	 */
 	public abstract Map<? extends Vector2ic, ChunkMetadata> getChunkMetadata();
 
 	public static class BufferedRegion extends Region {
 
-		protected BufferedImage					image;
+		protected BufferedImage								image;
 		protected Map<? extends Vector2ic, ChunkMetadata>	metadata;
 
 		public BufferedRegion(Vector2ic position, BufferedImage image, Map<? extends Vector2ic, ChunkMetadata> metadata) {
@@ -56,7 +64,7 @@ public abstract class Region {
 
 	public static class SavedRegion extends Region {
 
-		protected URI							path;
+		protected URI										path;
 		protected Map<? extends Vector2ic, ChunkMetadata>	metadata;
 
 		public SavedRegion(Vector2ic position, URI path, Map<? extends Vector2ic, ChunkMetadata> metadata) {

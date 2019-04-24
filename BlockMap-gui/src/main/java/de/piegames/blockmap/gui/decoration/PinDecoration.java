@@ -399,10 +399,6 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 		byGroup.forEach(group -> group.updateAnimation());
 	}
 
-	@Deprecated
-	public void shutDown() {
-	}
-
 	private class LimitedExecutionHandler {
 		Runnable			execute;
 		Consumer<Runnable>	queueDelayed;

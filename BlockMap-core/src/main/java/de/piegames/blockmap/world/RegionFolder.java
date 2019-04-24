@@ -473,7 +473,7 @@ public abstract class RegionFolder {
 		}
 	}
 
-	public static class RegionHelper {
+	static class RegionHelper {
 		int					x, z;
 		String				image;
 		List<ChunkMetadata>	metadata;

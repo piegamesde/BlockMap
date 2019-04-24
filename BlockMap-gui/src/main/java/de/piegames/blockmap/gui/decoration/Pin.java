@@ -108,7 +108,7 @@ public class Pin {
 		public static final PinType		STRUCTURE_MANSION			= new PinType("Mansion", STRUCTURE, true, false, "textures/structures/mansion.png");
 		public static final PinType		STRUCTURE_MINESHAFT			= new PinType("Mineshaft", STRUCTURE, false, false, "textures/structures/mineshaft.png");
 		public static final PinType		STRUCTURE_OCEAN_MONUMENT	= new PinType("Ocean monument", STRUCTURE, true, false, "textures/structures/monument.png");
-		public static final PinType		STRUCTURE_OCEAN_RUIN		= new PinType("Ocean ruin", STRUCTURE, true, false, "textures/structures/ocean_ruin.png");
+		public static final PinType		STRUCTURE_OCEAN_RUIN		= new PinType("Ocean ruin", STRUCTURE, false, false, "textures/structures/ocean_ruin.png");
 		public static final PinType		STRUCTURE_SHIPWRECK			= new PinType("Shipwreck", STRUCTURE, false, false, "textures/structures/shipwreck.png");
 		public static final PinType		STRUCTURE_STRONGHOLD		= new PinType("Stronghold", STRUCTURE, true, false, "textures/structures/stronghold.png");
 		public static final PinType		STRUCTURE_WITCH_HUT			= new PinType("Witch hut", STRUCTURE, true, false, "textures/structures/swamp_hut.png");
@@ -140,6 +140,28 @@ public class Pin {
 		@Override
 		public String toString() {
 			return name;
+		}
+
+		/* Code to map structure names to their respective chunk pin */
+		static final Map<String, PinType> structureTypes;
+
+		static {
+			Map<String, PinType> map = new HashMap<>();
+			map.put("Buried_Treasure", STRUCTURE_TREASURE);
+			map.put("Desert_Pyramid", STRUCTURE_PYRAMID);
+			map.put("Igloo", STRUCTURE_IGLOO);
+			map.put("Jungle_Pyramid", STRUCTURE_JUNGLE_TEMPLE);
+			map.put("Mansion", STRUCTURE_MANSION);
+			map.put("Mineshaft", STRUCTURE_MINESHAFT);
+			map.put("Monument", STRUCTURE_OCEAN_MONUMENT);
+			map.put("Ocean_Ruin", STRUCTURE_OCEAN_RUIN);
+			map.put("Shipwreck", STRUCTURE_SHIPWRECK);
+			map.put("Stronghold", STRUCTURE_STRONGHOLD);
+			map.put("Swamp_Hut", STRUCTURE_WITCH_HUT);
+			map.put("EndCity", STRUCTURE_END_CITY);
+			map.put("Fortress", STRUCTURE_FORTRESS);
+			/* Don't add villages to the map since they are already handled as static pins. The structure information they provide is redundant. */
+			structureTypes = Collections.unmodifiableMap(map);
 		}
 	}
 
@@ -728,6 +750,7 @@ public class Pin {
 		}
 	}
 
+	/** Convert a {@link WorldPins} object containing information retrieved directly from the world to (static) pins. */
 	public static Set<Pin> convertStatic(WorldPins pin, DisplayViewport viewport) {
 		Set<Pin> pins = new HashSet<>();
 		for (WorldPins.PlayerPin player : pin.getPlayers().orElse(Collections.emptyList())) {
@@ -760,6 +783,7 @@ public class Pin {
 		return pins;
 	}
 
+	/** Convert the {@link ChunkMetadata} that was generated while rendering into (dynamic) pins. */
 	public static List<Pin> convertDynamic(Map<Vector2ic, ChunkMetadata> metadataMap, DisplayViewport viewport) {
 		List<Pin> pins = new ArrayList<>();
 		Set<Vector2ic> oldChunks = new HashSet<>(), failedChunks = new HashSet<>(), unfinishedChunks = new HashSet<>();
@@ -806,33 +830,35 @@ public class Pin {
 		}
 
 		/*
-		 * Retrieve all structures from all chunks as <name, position> tuples. Map the name to the appropriate PinType through linear search. Create
+		 * Retrieve all structures from all chunks as <name, position> tuples. Map the name to the appropriate PinType through lookup table. Create
 		 * a pin from it and add it to the list.
 		 */
-		pins.addAll(
-				metadataMap.values().stream()
-						.flatMap(m -> m.structures.entrySet().stream())
-						.flatMap(e -> StreamUtils.stream(PinType.STRUCTURE.getChildren().stream()
-								.filter(t -> t.toString().equals(e.getKey()))
-								.findAny()
-								.map(type -> new Pin(new Vector2d(e.getValue().x(), e.getValue().z()), type, viewport))))
-						.collect(Collectors.toList()));
+		pins.addAll(metadataMap.values().stream()
+				.flatMap(m -> m.structures.entrySet().stream())
+				.filter(e -> PinType.structureTypes.containsKey(e.getKey()))
+				.map(e -> new Pin(new Vector2d(e.getValue().x(), e.getValue().z()), PinType.structureTypes.get(e.getKey()), viewport))
+				.collect(Collectors.toList()));
 		return pins;
 	}
 
+	/** {@link #wrapGui(Node, Vector2dc, DoubleBinding, DisplayViewport)} with a default value for the scaling. */
 	static StackPane wrapGui(Node node, Vector2dc position, DisplayViewport viewport) {
 		return wrapGui(node, position, Bindings.createDoubleBinding(
 				() -> 2 * Math.min(1 / viewport.scaleProperty.get(), 1),
 				viewport.scaleProperty), viewport);
 	}
 
-	static StackPane wrapGui(Node node, Vector2dc basePosition, DoubleBinding scale, DisplayViewport viewport) {
+	/**
+	 * Wrap a given Node (e.g. a Pin button) in a {@link StackPane} to be placed on to the map. Applies a scaling function (used to scales it
+	 * relative to the current zoom factor) and translations (to keep it at a given world space position and centered).
+	 */
+	static StackPane wrapGui(Node node, Vector2dc position, DoubleBinding scale, DisplayViewport viewport) {
 		StackPane stack = new StackPane(node);
 		Translate center = new Translate();
 		center.xProperty().bind(stack.widthProperty().multiply(-0.5));
 		center.yProperty().bind(stack.heightProperty().multiply(-0.5));
-		if (basePosition != null)
-			stack.getTransforms().add(new Translate(basePosition.x(), basePosition.y()));
+		if (position != null)
+			stack.getTransforms().add(new Translate(position.x(), position.y()));
 		if (scale != null) {
 			Scale scaleTransform = new Scale();
 			scaleTransform.xProperty().bind(scale);
@@ -873,6 +899,28 @@ public class Pin {
 		return islands;
 	}
 
+	/**
+	 * This method takes in a set of four-connected chunk coordinates (as {@link #splitChunks(Set)} would output) and calculates its outline.
+	 * The outline is a set of vertices that when taken together as a polygon result in a shape exactly covering the input set. The input may
+	 * have concavities, but no enclaves.<br />
+	 * 
+	 * The algorithm starts by picking out a random point on the set. It then looks at the 2×2 coordinates next to it (where the current
+	 * position is at the bottom-right corner of that sample) and depending on which of these pixels are part of the input set the position will
+	 * be moved. This way, the algorithm will walk the outline of the set clock-wise and output a vertex at each direction change.
+	 * <ul>
+	 * <li>If all four pixels are set (which is mostly the case at the beginning and only at the beginning), move to the left.</li>
+	 * <li>If the left half is outside and the right half is inside of the set, we are at the left side of the set and move to the top.</li>
+	 * <li>Similarly, move to the right/bottom/left if the top/right/bottom half of the current sample is set.</li>
+	 * <li>Similar rules apply when the sample covers three or only one points of the input.</li>
+	 * <li>If two pixels are set, but they are placed diagonally to each other, <i>turn</i> right.</li>
+	 * <li>If the current direction is not equal to the last one, output a vertex.</li>
+	 * <li>If the current position is equal to the first discovered vertex of the polygon, terminate.</li>
+	 * </ul>
+	 * <br/>
+	 * The sample is stored in the four lowest bits of an integer. Each step's calculation is done in a switch-case over all 16 possible
+	 * samples. Then, the position is updated based on the current move direction and the sample is updated based on the new position. The
+	 * sample is updated using bit magic, so (except for the start) only two queries are made to the input set per move.
+	 */
 	private static List<Vector2ic> outlineSet(Set<Vector2ic> chunks) {
 		if (chunks.isEmpty())
 			return Collections.emptyList();

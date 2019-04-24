@@ -51,7 +51,6 @@ public class GuiMain extends Application {
 	@Override
 	public void stop() {
 		controller.renderer.shutDown();
-		controller.pins.shutDown();
 	}
 
 	public static void main(String... args) {

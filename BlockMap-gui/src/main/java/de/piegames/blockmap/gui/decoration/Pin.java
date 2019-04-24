@@ -45,7 +45,6 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.geometry.Insets;
 import javafx.scene.CacheHint;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -81,8 +80,6 @@ public class Pin {
 				"textures/overlays/pin_chunk_corrupted.png");
 		public static final PinType		CHUNK_OLD					= new PinType("Old chunk", CHUNK_PIN, true, false,
 				"textures/overlays/pin_chunk_outdated.png");
-		public static final PinType		CHUNK_CULLED				= new PinType("Cullde chunk", CHUNK_PIN, true, false,
-				"textures/overlays/pin_chunk_culled.png");
 
 		public static final PinType		PLAYER						= new PinType("Players", ANY_PIN, true, false, "textures/pins/player.png");
 		public static final PinType		PLAYER_POSITION				= new PinType("Player position", PLAYER, true, false, "textures/pins/player.png");
@@ -198,9 +195,9 @@ public class Pin {
 		ImageView img = new ImageView(type.image);
 		img.setSmooth(false);
 		button = new Button(null, img);
+		button.getStyleClass().add("pin");
 		img.setPreserveRatio(true);
 		button.setTooltip(new Tooltip(type.toString()));
-		button.setStyle("-fx-background-radius: 6em;");
 		img.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> button.getFont().getSize() * 2, button.fontProperty()));
 
 		button.setOnAction(mouseEvent -> getInfo().show(button));
@@ -218,7 +215,7 @@ public class Pin {
 		info.setHeaderAlwaysVisible(true);
 		/* Workaround: If the PopOver it too thin, it will be placed a bit off. Bug report: https://github.com/controlsfx/controlsfx/issues/1095 */
 		Label content = new Label();
-		content.setPrefWidth(100);
+		content.setPrefWidth(130);
 		info.setContentNode(content);
 		info.setTitle(type.name);
 		return info;
@@ -324,6 +321,7 @@ public class Pin {
 			PopOver info = super.initInfo();
 
 			GridPane popContent = new GridPane();
+			popContent.getStyleClass().add("grid");
 			info.setContentNode(popContent);
 
 			for (int i = 0; i < chunkCount.length; i++) {
@@ -414,6 +412,7 @@ public class Pin {
 		protected PopOver initInfo() {
 			PopOver info = super.initInfo();
 			GridPane content = new GridPane();
+			content.getStyleClass().add("grid");
 
 			int rowCount = 0;
 
@@ -503,9 +502,7 @@ public class Pin {
 		protected PopOver initInfo() {
 			PopOver info = super.initInfo();
 			GridPane content = new GridPane();
-
-			content.add(new Label("Player"), 0, 0, 2, 1);
-			content.add(new Separator(), 0, 1, 2, 1);
+			content.getStyleClass().add("grid");
 
 			content.add(new Label("Name:"), 0, 2);
 			Label playerName = new Label("loading...");
@@ -565,9 +562,7 @@ public class Pin {
 		protected PopOver initInfo() {
 			PopOver info = super.initInfo();
 			GridPane content = new GridPane();
-
-			content.add(new Label("Player Spawnpoint"), 0, 0, 2, 1);
-			content.add(new Separator(), 0, 1, 2, 1);
+			content.getStyleClass().add("grid");
 
 			content.add(new Label("Player position:"), 0, 2);
 
@@ -600,6 +595,7 @@ public class Pin {
 		protected PopOver initInfo() {
 			PopOver info = super.initInfo();
 			GridPane content = new GridPane();
+			content.getStyleClass().add("grid");
 
 			content.add(new Label("Village"), 0, 0, 1, 2);
 			content.add(new Separator(), 0, 1, 1, 2);
@@ -634,9 +630,7 @@ public class Pin {
 		protected PopOver initInfo() {
 			PopOver info = super.initInfo();
 			GridPane content = new GridPane();
-
-			content.add(new Label("Spawnpoint"), 0, 0, 2, 1);
-			content.add(new Separator(), 0, 1, 2, 1);
+			content.getStyleClass().add("grid");
 
 			content.add(new Label("Position:"), 0, 2);
 			content.add(new Label(spawn.toString()), 1, 2);
@@ -687,7 +681,7 @@ public class Pin {
 
 			int columns = (int) Math.floor(Math.sqrt(pinCount.size()));
 			GridPane box = new GridPane();
-			box.setStyle("-fx-background-color: transparent;");
+			box.getStyleClass().add("mergedpin-box");
 
 			/* Image for the pin's button */
 			StreamUtils.zipWithIndex(pinCount.entrySet().stream()).forEach(e -> {
@@ -695,15 +689,13 @@ public class Pin {
 				img.setSmooth(false);
 				img.setPreserveRatio(true);
 				Label label = new Label(String.format("%dx", e.getValue().getValue()), img);
-				label.setStyle("-fx-font-size: 130%;");
 				img.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> label.getFont().getSize() * 1.5, label.fontProperty()));
 
-				GridPane.setMargin(label, new Insets(5));
 				box.add(label, (int) e.getIndex() % columns, (int) e.getIndex() / columns);
 			});
 
 			button = new Button(null, box);
-			button.setStyle("-fx-background-radius: 6em;");
+			button.getStyleClass().add("pin");
 			button.setOnAction(mouseEvent -> getInfo().show(button));
 
 			DoubleBinding scale = Bindings.createDoubleBinding(
@@ -717,6 +709,7 @@ public class Pin {
 		protected PopOver initInfo() {
 			PopOver info = super.initInfo();
 			GridPane popContent = new GridPane();
+			popContent.getStyleClass().add("grid");
 
 			/* Image+Text for the popover */
 			StreamUtils.zipWithIndex(pinCount.entrySet().stream()).forEach(e -> {
@@ -728,8 +721,6 @@ public class Pin {
 				popContent.add(label1, 0, (int) e.getIndex());
 				Label label2 = new Label(String.format("%dx", e.getValue().getValue()));
 				popContent.add(label2, 1, (int) e.getIndex());
-				GridPane.setMargin(label1, new Insets(5));
-				GridPane.setMargin(label2, new Insets(5));
 			});
 
 			info.setContentNode(popContent);

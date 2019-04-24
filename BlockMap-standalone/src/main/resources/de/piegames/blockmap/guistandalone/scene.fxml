@@ -60,10 +60,13 @@
 		</MenuBar>
 	</top>
 	<left>
-		<HBox spacing="4">
+		<HBox
+			spacing="4"
+			id="left">
 			<children>
 				<VBox
 					spacing="10"
+					id="left-height"
 					alignment="CENTER"
 					HBox.hgrow="NEVER">
 					<children>
@@ -88,9 +91,7 @@
 				<!-- Split the GridPane into three ones combined by a vbox. This is because the content of the second one will change dynamically and it's difficult to add and remove rows from a grid pane. -->
 				<VBox spacing="6">
 					<children>
-						<GridPane
-							hgap="6"
-							vgap="3">
+						<GridPane id="left-settings">
 							<children>
 								<Label
 									text="Color pack:"
@@ -140,6 +141,7 @@
 								<CheckBox
 									text="Show pins"
 									fx:id="pinBox"
+									selected="true"
 									GridPane.rowIndex="3"
 									GridPane.columnIndex="0"
 									GridPane.columnSpan="2">
@@ -168,6 +170,7 @@
 							<children>
 								<CheckTreeView
 									showRoot="false"
+									id="pin-tree"
 									fx:id="pinView"
 									GridPane.rowIndex="0"
 									GridPane.columnIndex="0"

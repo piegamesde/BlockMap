@@ -66,6 +66,7 @@ public class PinDecoration extends AnchorPane implements ChangeListener<Number> 
 		this.viewport.scaleProperty.addListener(new WeakChangeListener<>(this));
 
 		world = new AnchorPane();
+		world.getStylesheets().add("/de/piegames/blockmap/gui/decoration/pins.css");
 		{
 			Scale s = new Scale();
 			s.xProperty().bind(viewport.scaleProperty);

@@ -68,7 +68,14 @@ public class BlockColorMap {
 	public static final class BlockColor {
 
 		public Color	color;
-		public boolean	isGrass, isFoliage, isWater, isTranslucent;
+		/** Tell if a given block has a grassy surface which should be tainted according to the biome the block stands in */
+		public boolean	isGrass;
+		/** Tell if a given block represents foliage and should be tainted according to the biome the block stands in */
+		public boolean	isFoliage;
+		/** Tell if a given block contains water and should be tainted according to the biome the block stands in */
+		public boolean	isWater;
+		/** Tell if a given block is letting light through and thus will not count to any height shading calculations */
+		public boolean	isTranslucent;
 
 		public BlockColor() {
 
@@ -95,6 +102,7 @@ public class BlockColorMap {
 	 * the two map forms if needed.
 	 */
 	protected Map<String, BlockColor>			blockSerialize;
+	protected Color								airColor;
 
 	@SuppressWarnings("unused")
 	private BlockColorMap() {
@@ -129,32 +137,20 @@ public class BlockColorMap {
 		blockSerialize = null;
 	}
 
-	public Color getBlockColor(Block block) {
-		return blockColors.getOrDefault(block, MISSING).color;
+	public BlockColor getBlockColor(Block block) {
+		return blockColors.getOrDefault(block, MISSING);
+	}
+
+	/** This is a common operation so avoid retrieving it from the map every time. */
+	public Color getAirColor() {
+		if (airColor == null)
+			return airColor = getBlockColor(Block.AIR).color;
+		else
+			return airColor;
 	}
 
 	public boolean hasBlockColor(Block block) {
 		return blockColors.containsKey(block);
-	}
-
-	/** Tell if a given block has a grassy surface which should be tainted according to the biome the block stands in */
-	public boolean isGrassBlock(Block block) {
-		return blockColors.getOrDefault(block, MISSING).isGrass;
-	}
-
-	/** Tell if a given block represents foliage and should be tainted according to the biome the block stands in */
-	public boolean isFoliageBlock(Block block) {
-		return blockColors.getOrDefault(block, MISSING).isFoliage;
-	}
-
-	/** Tell if a given block contains water and should be tainted according to the biome the block stands in */
-	public boolean isWaterBlock(Block block) {
-		return blockColors.getOrDefault(block, MISSING).isWater;
-	}
-
-	/** Tell if a given block is letting light through and thus will not count to any height shading calculations */
-	public boolean isTranslucentBlock(Block block) {
-		return blockColors.getOrDefault(block, MISSING).isTranslucent;
 	}
 
 	public static BlockColorMap load(Reader reader) {

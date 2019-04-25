@@ -30,6 +30,7 @@ import com.flowpowered.nbt.Tag;
 import com.flowpowered.nbt.regionfile.Chunk;
 import com.flowpowered.nbt.regionfile.RegionFile;
 
+import de.piegames.blockmap.color.BlockColorMap.BlockColor;
 import de.piegames.blockmap.color.Color;
 import de.piegames.blockmap.world.ChunkMetadata;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkGenerationStatus;
@@ -132,7 +133,7 @@ public class RegionRenderer {
 
 				/* Check chunk status */
 				ChunkGenerationStatus generationStatus = ChunkGenerationStatus.forName(((String) level.get("Status").getValue()));
-				if (generationStatus == ChunkGenerationStatus.EMPTY) {
+				if (generationStatus == ChunkGenerationStatus.EMPTY || generationStatus == null) {
 					metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.RENDERED, generationStatus));
 					continue;
 				}
@@ -237,7 +238,7 @@ public class RegionRenderer {
 							}
 							if (loadedSections[s] == null) {
 								// Sector is full of air
-								color.putColor(settings.blockColors.getBlockColor(Block.AIR), 16);
+								color.putColor(settings.blockColors.getAirColor(), 16);
 								continue;
 							}
 							for (int y = 15; y >= 0; y--) {
@@ -249,16 +250,17 @@ public class RegionRenderer {
 								int i = x | z << 4 | y << 8;
 								Block block = loadedSections[s][i];
 
-								Color currentColor = settings.blockColors.getBlockColor(block);
+								BlockColor colorData = settings.blockColors.getBlockColor(block);
+								Color currentColor = colorData.color;
 								if (currentColor == Color.MISSING && blocksWithMissingColor.add(block)) // == is correct here
 									log.warn("Missing color for " + block);
-								if (settings.blockColors.isGrassBlock(block))
+								if (colorData.isGrass)
 									currentColor = Color.multiplyRGB(currentColor, settings.biomeColors.getGrassColor(biomes[i & 0xFF]));
-								if (settings.blockColors.isFoliageBlock(block))
+								if (colorData.isFoliage)
 									currentColor = Color.multiplyRGB(currentColor, settings.biomeColors.getFoliageColor(biomes[i & 0xFF]));
-								if (settings.blockColors.isWaterBlock(block))
+								if (colorData.isWater)
 									currentColor = Color.multiplyRGB(currentColor, settings.biomeColors.getWaterColor(biomes[i & 0xFF]));
-								if (!settings.blockColors.isTranslucentBlock(block) && !heightSet) {
+								if (!colorData.isTranslucent && !heightSet) {
 									height[chunk.x << 4 | x | chunk.z << 13 | z << 9] = s << 4 | y;
 									heightSet = true;
 								}

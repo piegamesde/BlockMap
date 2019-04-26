@@ -1,19 +1,24 @@
 package de.piegames.blockmap.renderer;
 
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.joml.Vector2i;
 import org.joml.Vector2ic;
+import org.joml.Vector3i;
+import org.joml.Vector3ic;
 
 import com.flowpowered.nbt.CompoundMap;
 import com.flowpowered.nbt.CompoundTag;
@@ -25,7 +30,12 @@ import com.flowpowered.nbt.Tag;
 import com.flowpowered.nbt.regionfile.Chunk;
 import com.flowpowered.nbt.regionfile.RegionFile;
 
+import de.piegames.blockmap.color.BlockColorMap.BlockColor;
 import de.piegames.blockmap.color.Color;
+import de.piegames.blockmap.world.ChunkMetadata;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkGenerationStatus;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkRenderState;
+import de.piegames.blockmap.world.Region.BufferedRegion;
 
 /**
  * Use this class to transform a Minecraft region file into a top-down image view of it.
@@ -34,9 +44,12 @@ import de.piegames.blockmap.color.Color;
  */
 public class RegionRenderer {
 
-	private static Log			log	= LogFactory.getLog(RegionRenderer.class);
+	private static Log			log						= LogFactory.getLog(RegionRenderer.class);
 
 	public final RenderSettings	settings;
+
+	/* Only keep track of this so that the respecting warning is only logged once. */
+	private Set<Block>			blocksWithMissingColor	= new HashSet<>();
 
 	public RegionRenderer(RenderSettings settings) {
 		this.settings = Objects.requireNonNull(settings);
@@ -51,16 +64,17 @@ public class RegionRenderer {
 	 *            The position of the region file in region coordinates. Used to check if blocks are within the bounds of the area to render.
 	 * @return An array of colors representing the final image. The image is square and 512x512 wide. The array sorted in XZ order.
 	 */
-	public BufferedImage render(Vector2ic regionPos, RegionFile file) throws IOException {
+	public BufferedRegion render(Vector2ic regionPos, RegionFile file) {
 		log.info("Rendering region file " + regionPos.x() + " " + regionPos.y());
 		BufferedImage image = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
-		Color[] colors = renderRaw(regionPos, file);
+		Map<Vector2ic, ChunkMetadata> metadata = new HashMap<>();
+		Color[] colors = renderRaw(regionPos, file, metadata);
 		// image.setRGB(0, 0, 512, 512, colors, 0, 512);
 		for (int x = 0; x < 512; x++)
 			for (int z = 0; z < 512; z++)
 				if (colors[x | (z << 9)] != null)
 					image.setRGB(x, z, colors[x | (z << 9)].toRGB());
-		return image;
+		return new BufferedRegion(regionPos, image, metadata);
 	}
 
 	/**
@@ -75,7 +89,7 @@ public class RegionRenderer {
 	 * @see Color
 	 * @see RegionFile
 	 */
-	public Color[] renderRaw(Vector2ic regionPos, RegionFile file) throws IOException {
+	public Color[] renderRaw(Vector2ic regionPos, RegionFile file, Map<Vector2ic, ChunkMetadata> metadata) {
 		/* The final map of the chunk, 512*512 pixels, XZ */
 		Color[] map = new Color[512 * 512];
 		/* If nothing is set otherwise, the height map is set to the minimum height. */
@@ -87,11 +101,13 @@ public class RegionRenderer {
 		chunk: for (Chunk chunk : file) {
 			if (chunk == null)
 				continue;
+			int chunkX = ((regionPos.x() << 5) | chunk.x);
+			int chunkZ = ((regionPos.y() << 5) | chunk.z);
+			Vector2ic chunkPos = new Vector2i(chunkX, chunkZ);
 			try {
-				int chunkX = ((regionPos.x() << 5) | chunk.x);
-				int chunkZ = ((regionPos.y() << 5) | chunk.z);
 				if ((chunkX + 16 < settings.minX || chunkX > settings.maxX)
 						&& (chunkZ + 16 < settings.minZ || chunkZ > settings.maxZ)) {
+					metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.CULLED, null));
 					continue;
 				}
 
@@ -103,26 +119,40 @@ public class RegionRenderer {
 						int dataVersion = ((Integer) root.get("DataVersion").getValue());
 						if (dataVersion < 1519) {
 							log.warn("Skipping chunk because it is too old");
+							metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.TOO_OLD, null));
 							continue;
 						}
-						// throw new IllegalArgumentException("Only chunks saved in 1.13+ are supported. Please optimize your world in Minecraft before
-						// rendering. Maybe pre 1.13 worlds
-						// will be accepted again one day");
 					} else {
 						log.warn("Skipping chunk because it is way too old (pre 1.9)");
+						metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.TOO_OLD, null));
 						continue;
-						// throw new IllegalArgumentException(
-						// "Only chunks saved in 1.13+ are supported, this is pre 1.9!. Please optimize your world in Minecraft before rendering");
 					}
 				}
 
 				CompoundMap level = ((CompoundTag) root.get("Level")).getValue();
 
-				{// Check chunk status
-					String status = ((String) level.get("Status").getValue());
-					if (!status.equals("postprocessed") && !status.equals("fullchunk") && !status.equals("mobs_spawned")) {
-						log.debug("Skipping chunk because status is " + status);
-						continue;
+				/* Check chunk status */
+				ChunkGenerationStatus generationStatus = ChunkGenerationStatus.forName(((String) level.get("Status").getValue()));
+				if (generationStatus == ChunkGenerationStatus.EMPTY || generationStatus == null) {
+					metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.RENDERED, generationStatus));
+					continue;
+				}
+
+				Map<String, Vector3ic> structureCenters = new HashMap<>();
+				if (level.containsKey("Structures") && ((CompoundTag) level.get("Structures")).getValue().containsKey("Starts")) {// Load saved structures
+					CompoundMap structures = ((CompoundTag) ((CompoundTag) level.get("Structures")).getValue().get("Starts")).getValue();
+					for (Tag<?> structureTag : structures.values()) {
+						CompoundMap structure = ((CompoundTag) structureTag).getValue();
+						String id = ((StringTag) structure.get("id")).getValue();
+						if (!id.equals("INVALID")) {
+							int[] bb = ((IntArrayTag) structure.get("BB")).getValue();
+							Vector3i center = new Vector3i(bb[0], bb[1], bb[2]).add(bb[3], bb[4], bb[5]);
+							// JOML has no Vector3i#div function, why?
+							center.x /= 2;
+							center.y /= 2;
+							center.z /= 2;
+							structureCenters.put(id, center);
+						}
 					}
 				}
 
@@ -201,13 +231,14 @@ public class RegionRenderer {
 									log.warn("Failed to render chunk (" + chunk.x + ", " + chunk.z + ") section " + s
 											+ ". This is very likely because your chunk is corrupt. If possible, please verify it "
 											+ "manually before sending a bug report.", e);
+									metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.FAILED, generationStatus));
 									continue chunk;
 								}
 								lowestLoadedSection = s;
 							}
 							if (loadedSections[s] == null) {
 								// Sector is full of air
-								color.putColor(settings.blockColors.getBlockColor(Block.AIR), 16);
+								color.putColor(settings.blockColors.getAirColor(), 16);
 								continue;
 							}
 							for (int y = 15; y >= 0; y--) {
@@ -219,16 +250,17 @@ public class RegionRenderer {
 								int i = x | z << 4 | y << 8;
 								Block block = loadedSections[s][i];
 
-								Color currentColor = settings.blockColors.getBlockColor(block);
-								if (currentColor == Color.MISSING) // == is correct here
+								BlockColor colorData = settings.blockColors.getBlockColor(block);
+								Color currentColor = colorData.color;
+								if (currentColor == Color.MISSING && blocksWithMissingColor.add(block)) // == is correct here
 									log.warn("Missing color for " + block);
-								if (settings.blockColors.isGrassBlock(block))
+								if (colorData.isGrass)
 									currentColor = Color.multiplyRGB(currentColor, settings.biomeColors.getGrassColor(biomes[i & 0xFF]));
-								if (settings.blockColors.isFoliageBlock(block))
+								if (colorData.isFoliage)
 									currentColor = Color.multiplyRGB(currentColor, settings.biomeColors.getFoliageColor(biomes[i & 0xFF]));
-								if (settings.blockColors.isWaterBlock(block))
+								if (colorData.isWater)
 									currentColor = Color.multiplyRGB(currentColor, settings.biomeColors.getWaterColor(biomes[i & 0xFF]));
-								if (!settings.blockColors.isTranslucentBlock(block) && !heightSet) {
+								if (!colorData.isTranslucent && !heightSet) {
 									height[chunk.x << 4 | x | chunk.z << 13 | z << 9] = s << 4 | y;
 									heightSet = true;
 								}
@@ -240,9 +272,11 @@ public class RegionRenderer {
 						}
 						map[chunk.x << 4 | x | chunk.z << 13 | z << 9] = color.getFinal();
 					}
+				metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.RENDERED, generationStatus, structureCenters));
 			} catch (Exception e) {
 				log.warn("Failed to render chunk (" + chunk.x + ", " + chunk.z + ")", e);
-				throw e;
+				metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.FAILED, null));
+				continue;
 			}
 		}
 
@@ -293,15 +327,4 @@ public class RegionRenderer {
 				ret.add(BlockState.valueOf(entry.getKey(), ((StringTag) entry.getValue()).getValue()));
 		return ret;
 	}
-
-	// public static void printLong(long l) {
-	// System.out.println(convertLong(l));
-	// }
-	//
-	// public static String convertLong(long l) {
-	// String s = Long.toBinaryString(l);
-	// // Fancy way of zero padding :)
-	// s = "0000000000000000000000000000000000000000000000000000000000000000".substring(s.length()) + s;
-	// return s;
-	// }
 }

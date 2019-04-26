@@ -5,39 +5,58 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.controlsfx.control.CheckTreeView;
 import org.controlsfx.control.RangeSlider;
 import org.controlsfx.control.StatusBar;
+import org.joml.Vector2ic;
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import de.piegames.blockmap.DotMinecraft;
-import de.piegames.blockmap.RegionFolder;
 import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.gui.MapPane;
 import de.piegames.blockmap.gui.WorldRendererCanvas;
 import de.piegames.blockmap.gui.decoration.DragScrollDecoration;
 import de.piegames.blockmap.gui.decoration.GridDecoration;
+import de.piegames.blockmap.gui.decoration.Pin;
+import de.piegames.blockmap.gui.decoration.Pin.PinType;
+import de.piegames.blockmap.gui.decoration.PinDecoration;
 import de.piegames.blockmap.guistandalone.RegionFolderProvider.LocalFolderProvider;
 import de.piegames.blockmap.guistandalone.RegionFolderProvider.RemoteFolderProvider;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RegionShader;
 import de.piegames.blockmap.renderer.RenderSettings;
+import de.piegames.blockmap.world.ChunkMetadata;
+import de.piegames.blockmap.world.RegionFolder;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
+import javafx.collections.MapChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.CheckBoxTreeItem;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.GridPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 
@@ -64,16 +83,24 @@ public class GuiController implements Initializable {
 	@FXML
 	private RangeSlider								heightSlider;
 	@FXML
-	private HBox									regionSettings;
+	private GridPane								regionSettings;
 	@FXML
 	private ChoiceBox<String>						shadingBox;
 	@FXML
 	private ChoiceBox<String>						colorBox;
 	@FXML
 	private CheckBox								gridBox;
+	@FXML
+	private CheckBox								pinBox;
+	@FXML
+	private CheckTreeView<PinType>					pinView;
 
 	protected MapPane								pane;
 	protected ObjectProperty<Path>					currentPath				= new SimpleObjectProperty<>();
+	protected PinDecoration							pins;
+
+	protected ScheduledExecutorService				backgroundThread		= Executors.newSingleThreadScheduledExecutor(
+			new ThreadFactoryBuilder().setNameFormat("pin-background-thread-%d").build());
 
 	public GuiController() {
 	}
@@ -91,8 +118,10 @@ public class GuiController implements Initializable {
 		GridDecoration grid = new GridDecoration(renderer.viewport);
 		pane.decorationLayers.add(grid);
 		grid.visibleProperty().bind(gridBox.selectedProperty());
+		pins = new PinDecoration(renderer.viewport);
+		pane.pinLayers.add(pins);
 
-		{
+		{ /* Status bar initialization */
 			statusBar.setSkin(new StatusBarSkin2(statusBar));
 			statusBar.progressProperty().bind(renderer.getProgress());
 			statusBar.setText(null);
@@ -140,22 +169,101 @@ public class GuiController implements Initializable {
 			renderer.repaint();
 		});
 
-		regionFolderProvider.addListener((observable, previous, val) -> {
-			regionSettings.getChildren().clear();
-			if (val == null) {
-				regionFolder.unbind();
-				regionFolder.set(null);
-			} else {
-				regionFolder.bind(val.folderProperty());
-				regionSettings.getChildren().addAll(val.getGUI());
-			}
-			boolean disabled = val == null ? true : val.hideSettings();
-			heightSlider.setDisable(disabled);
-			colorBox.setDisable(disabled);
-			shadingBox.setDisable(disabled);
-		});
-		regionFolderProvider.set(null); /* Force listener update */
+		{ /* Pin tree */
+			initPinCheckboxes(PinType.ANY_PIN, null, pinView);
+			pinView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+			/* Map the set of selected tree items to pins.visiblePins */
+			pins.visiblePins.bind(Bindings.createObjectBinding(() -> pinBox.isSelected() ? pinView.getCheckModel().getCheckedItems().stream().map(t -> t
+					.getValue()).collect(Collectors.toCollection(FXCollections::observableSet)) : FXCollections.emptyObservableSet(), pinView.getCheckModel()
+							.getCheckedItems(), pinBox.selectedProperty()));
+			/*
+			 * Disable the pin view if either pins are disabled or settings are disabled (indicated through pinBox.disabledProperty, which is set in the
+			 * following code block).
+			 */
+			pinView.disableProperty().bind(Bindings.createBooleanBinding(() -> pinBox.isDisabled() || !pinBox.isSelected(), pinBox.selectedProperty(), pinBox
+					.disabledProperty()));
+		}
+
+		{
+			ChangeListener<? super RegionFolderProvider> regionFolderProviderListener = (observable, previous, val) -> {
+				regionSettings.getChildren().clear();
+				if (val == null) {
+					regionFolder.unbind();
+					regionFolder.set(null);
+				} else {
+					regionFolder.bind(val.folderProperty());
+					regionSettings.getChildren().addAll(val.getGUI());
+				}
+				regionSettings.setVisible(!regionSettings.getChildren().isEmpty());
+				boolean disabled = val == null ? true : val.hideSettings();
+				heightSlider.setDisable(disabled);
+				colorBox.setDisable(disabled);
+				shadingBox.setDisable(disabled);
+				pinBox.setDisable(val == null);
+				gridBox.setDisable(val == null);
+
+				renderer.repaint();
+			};
+			regionFolderProvider.addListener(regionFolderProviderListener);
+			/* Force listener update */
+			regionFolderProviderListener.changed(regionFolderProvider, null, null);
+		}
+
 		renderer.regionFolder.bind(regionFolder);
+		renderer.regionFolder.addListener((observable, previous, val) -> {
+			if (val != null)
+				this.pins.loadWorld(val.listRegions(), val.getPins().map(pins -> Pin.convertStatic(pins, backgroundThread, renderer.viewport)).orElse(
+						Collections.emptySet()));
+			else
+				this.pins.loadWorld(Collections.emptyList(), Collections.emptyList());
+		});
+		renderer.getChunkMetadata().addListener((MapChangeListener<Vector2ic, Map<Vector2ic, ChunkMetadata>>) change -> {
+			/*
+			 * This works because the only operations are clear() and additions. There are no put operations that overwrite a previously existing item.
+			 */
+			if (change.getValueRemoved() != null)
+				GuiController.this.pins.reloadWorld();
+			if (change.getValueAdded() != null)
+				GuiController.this.pins.loadRegion(change.getKey(), Pin.convertDynamic(change.getValueAdded(), renderer.viewport));
+		});
+	}
+
+	/**
+	 * Recursive pre-order traversal of the pin type hierarchy tree. Generated items are added automatically.
+	 *
+	 * @param type
+	 *            the current type to add
+	 * @param parent
+	 *            the parent tree item to add this one to. <code>null</code> if {@code type} is the root type, in this case the generated tree
+	 *            item will be used as root for the tree directly.
+	 * @param tree
+	 *            the tree containing the items
+	 */
+	private void initPinCheckboxes(PinType type, CheckBoxTreeItem<PinType> parent, CheckTreeView<PinType> tree) {
+		ImageView image = new ImageView(type.image);
+		/*
+		 * The only way so set the size of an image relative to the text of the label is to bind its height to a font size. Since tree items don't
+		 * possess a fontProperty (it's hidden behind a cell factory implementation), we have to use the next best labeled node (pinBox in this
+		 * case). This will only work if we don't change any font sizes.
+		 */
+		image.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> pinBox.getFont().getSize() * 1.5, pinBox.fontProperty()));
+		image.setSmooth(true);
+		image.setPreserveRatio(true);
+		CheckBoxTreeItem<PinType> ret = new CheckBoxTreeItem<>(type, image);
+
+		if (parent == null)
+			tree.setRoot(ret);
+		else
+			parent.getChildren().add(ret);
+
+		for (PinType sub : type.getChildren())
+			initPinCheckboxes(sub, ret, tree);
+
+		ret.setExpanded(type.expandedByDefault);
+		if (type.selectedByDefault) {
+			pins.visiblePins.add(type);
+			tree.getCheckModel().check(ret);
+		}
 	}
 
 	@FXML
@@ -223,5 +331,15 @@ public class GuiController implements Initializable {
 	@FXML
 	public void exit() {
 		Platform.exit();
+	}
+
+	public void shutDown() {
+		renderer.shutDown();
+		backgroundThread.shutdownNow();
+		try {
+			backgroundThread.awaitTermination(1, TimeUnit.MINUTES);
+		} catch (InterruptedException e) {
+			log.warn("Background thread did not finish", e);
+		}
 	}
 }

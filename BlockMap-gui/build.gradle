@@ -1,8 +1,19 @@
-apply plugin: 'java-library'
+plugins {
+    id 'java-library'
+    id 'org.openjfx.javafxplugin' version '0.0.7'
+}
+
+javafx {
+    version = "12"
+    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.swing' ]
+}
 
 dependencies {
     api project(':BlockMap-core')
 	// GUI dependencies
 	implementation 'org.mapdb:mapdb:3.0.7'
-	implementation 'org.controlsfx:controlsfx:8.40.12'
+	implementation 'org.controlsfx:controlsfx:11.0.0'
+	implementation group: 'com.github.haifengl', name: 'smile-core', version: '1.5.2'
+	implementation group: 'com.codepoetics', name: 'protonpack', version: '1.15'
+    implementation 'com.github.saibotk:JMAW:9d66dde803'
 }

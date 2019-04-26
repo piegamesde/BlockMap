@@ -241,7 +241,7 @@ public class RenderedMap {
 		if (get(0).containsValue(r))
 			regionsRendered++;
 		else
-			System.out.println("NOT FOUND");
+			System.out.println("[RenderedMap] NOT FOUND"); // TODO what is this
 	}
 
 	public float getProgress() {

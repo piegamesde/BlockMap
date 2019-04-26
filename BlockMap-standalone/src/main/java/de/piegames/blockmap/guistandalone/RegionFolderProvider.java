@@ -18,16 +18,19 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import de.piegames.blockmap.MinecraftDimension;
-import de.piegames.blockmap.RegionFolder;
-import de.piegames.blockmap.RegionFolder.SavedRegionFolder;
-import de.piegames.blockmap.RegionFolder.WorldRegionFolder;
 import de.piegames.blockmap.renderer.RegionRenderer;
+import de.piegames.blockmap.world.Region.LocalSavedRegion;
+import de.piegames.blockmap.world.Region.SavedRegion;
+import de.piegames.blockmap.world.RegionFolder;
+import de.piegames.blockmap.world.RegionFolder.SavedRegionFolder;
+import de.piegames.blockmap.world.RegionFolder.WorldRegionFolder;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.scene.Node;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
 
 public abstract class RegionFolderProvider {
@@ -128,7 +131,7 @@ public abstract class RegionFolderProvider {
 
 		protected abstract JsonElement load() throws IOException;
 
-		protected abstract SavedRegionFolder<T> load(String world);
+		protected abstract SavedRegionFolder<T, ?> load(String world);
 
 		@Override
 		public String getLocation() {
@@ -153,7 +156,7 @@ public abstract class RegionFolderProvider {
 		}
 
 		@Override
-		protected SavedRegionFolder<Path> load(String world) {
+		protected SavedRegionFolder<Path, LocalSavedRegion> load(String world) {
 			try {
 				return new RegionFolder.LocalRegionFolder(file, world);
 			} catch (IOException e) {
@@ -175,7 +178,7 @@ public abstract class RegionFolderProvider {
 		}
 
 		@Override
-		protected SavedRegionFolder<URI> load(String world) {
+		protected SavedRegionFolder<URI, SavedRegion> load(String world) {
 			try {
 				return new RegionFolder.RemoteRegionFolder(file, world);
 			} catch (IOException e) {
@@ -200,7 +203,7 @@ public abstract class RegionFolderProvider {
 			this.renderer = renderer;
 			available = new ArrayList<>(3);
 			for (MinecraftDimension d : MinecraftDimension.values())
-				if (Files.exists(d.resolve(worldPath)) && Files.isDirectory(d.resolve(worldPath)))
+				if (Files.exists(worldPath.resolve(d.getRegionPath())) && Files.isDirectory(worldPath.resolve(d.getRegionPath())))
 					available.add(d);
 			if (available.isEmpty())
 				throw new IllegalArgumentException("Not a vaild world folder");
@@ -223,7 +226,12 @@ public abstract class RegionFolderProvider {
 					return null;
 				}
 			});
-			gui.add(new Label("Dimension:"));
+			dimensionBox.setMaxWidth(Double.POSITIVE_INFINITY);
+
+			Label text = new Label("Dimension:");
+			GridPane.setColumnIndex(text, 0);
+			GridPane.setColumnIndex(dimensionBox, 1);
+			gui.add(text);
 			gui.add(dimensionBox);
 
 			reload();
@@ -237,7 +245,7 @@ public abstract class RegionFolderProvider {
 		@Override
 		public void reload() {
 			try {
-				folder.set(WorldRegionFolder.load(worldPath, dimensionBox.getValue(), renderer));
+				folder.set(WorldRegionFolder.load(worldPath, dimensionBox.getValue(), renderer, true));
 			} catch (IOException e) {
 				folder.set(null);
 				log.warn("Could not load world " + worldPath, e);

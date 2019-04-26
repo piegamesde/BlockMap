@@ -1,0 +1,24 @@
+/*-popover > .content > */
+.grid {
+	-fx-alignment: center;
+	-fx-hgap: 3;
+	-fx-vgap: 5;
+	-fx-padding: 5;
+}
+
+.popover .title .text {
+	-fx-label-padding: 0 20 0 20;
+}
+
+.pin {
+	-fx-background-radius: 6em;	
+}
+
+.mergedpin-box {
+	-fx-background-color: transparent;
+}
+
+.mergedpin-box .label {
+	-fx-font-size: 130%;
+	-fx-label-padding: 5px;
+}

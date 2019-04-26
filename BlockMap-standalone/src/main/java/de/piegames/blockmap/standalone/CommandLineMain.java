@@ -14,8 +14,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.joml.Vector2ic;
 
-import de.piegames.blockmap.RegionFolder.CachedRegionFolder;
-import de.piegames.blockmap.RegionFolder.WorldRegionFolder;
+import de.piegames.blockmap.MinecraftDimension;
 import de.piegames.blockmap.color.BiomeColorMap;
 import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.color.BlockColorMap.InternalColorMap;
@@ -23,6 +22,9 @@ import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RegionShader.DefaultShader;
 import de.piegames.blockmap.renderer.RenderSettings;
 import de.piegames.blockmap.standalone.CommandLineMain.CommandRender;
+import de.piegames.blockmap.world.WorldPins;
+import de.piegames.blockmap.world.RegionFolder.CachedRegionFolder;
+import de.piegames.blockmap.world.RegionFolder.WorldRegionFolder;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Help.Visibility;
@@ -67,7 +69,8 @@ public class CommandLineMain implements Runnable {
 		private Path				output;
 		@Parameters(index = "0",
 				paramLabel = "INPUT",
-				description = "Path to the world data. Normally, this should point to a 'region/' of a world.")
+				description = "Path to the world data. Normally, this should point to a 'region/' of a world. If --dimension is set, this must point to a "
+						+ "world folder instead (the one with the level.dat in it)")
 		private Path				input;
 		@Option(names = { "-c", "--color-map" },
 				paramLabel = "{DEFAULT|CAVES|NO_FOLIAGE|OCEAN_GROUND}",
@@ -80,6 +83,10 @@ public class CommandLineMain implements Runnable {
 				showDefaultValue = Visibility.ALWAYS,
 				defaultValue = "RELIEF")
 		private DefaultShader		shader;
+		@Option(names = { "-d", "--dim", "--dimension" },
+				paramLabel = "{OVERWORLD|NETHER|END}",
+				description = "The dimension of the world to render. If this is set, INPUT must point to a world folder instead of a region folder")
+		private MinecraftDimension	dimension;
 		@Option(names = "--custom-color-map", description = "Load a custom color map from the specified file. Overrides --color-map.")
 		private Path				customColorMap;
 		@Option(names = "--custom-biome-map", description = "Load a custom biome color map from the specified file.")
@@ -139,6 +146,9 @@ public class CommandLineMain implements Runnable {
 			settings.shader = shader.getShader();
 
 			RegionRenderer renderer = new RegionRenderer(settings);
+			Path input = this.input;
+			if (dimension != null)
+				input = input.resolve(dimension.getRegionPath());
 			log.debug("Input " + input.normalize().toAbsolutePath());
 			log.debug("Output: " + output.normalize().toAbsolutePath());
 			WorldRegionFolder world;
@@ -192,11 +202,21 @@ public class CommandLineMain implements Runnable {
 						+ "but if you want to be able to move this file and keep all images in place, use this option instead.")
 		private boolean	absolute;
 
+		@Option(names = { "-p", "--pins" }, description = "Load pin data from the world. This requires the use of the --dimension option")
+		private boolean	pins;
+
 		@Override
 		public void run() {
 			CachedRegionFolder rendered = parent.call();
 			if (rendered != null)
 				try {
+					if (pins) {
+						if (parent.dimension != null) {
+							WorldRegionFolder world = rendered.getWorldRegionFolder();
+							world.setPins(WorldPins.loadFromWorld(parent.input, parent.dimension));
+						} else
+							log.error("You must specify the --dimension option to load the pin information");
+					}
 					Path out = file;
 					if (out == null)
 						out = Paths.get("rendered.json");

@@ -5,23 +5,30 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.joml.Vector2dc;
+import org.joml.Vector2ic;
 import org.joml.Vector3d;
 
-import de.piegames.blockmap.RegionFolder;
 import de.piegames.blockmap.gui.RenderedRegion.RenderingState;
+import de.piegames.blockmap.world.ChunkMetadata;
+import de.piegames.blockmap.world.Region;
+import de.piegames.blockmap.world.RegionFolder;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyFloatProperty;
 import javafx.beans.property.ReadOnlyFloatWrapper;
+import javafx.beans.property.ReadOnlyMapProperty;
+import javafx.beans.property.ReadOnlyMapWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -30,19 +37,21 @@ import javafx.scene.paint.Color;
 
 public class WorldRendererCanvas extends Canvas implements Runnable {
 
-	public static final int						THREAD_COUNT	= 4;
+	public static final int									THREAD_COUNT	= 4;
 
-	protected RenderedMap						map;
+	protected RenderedMap									map;
 
-	protected ScheduledThreadPoolExecutor		executor;
-	protected final List<Future<?>>				submitted		= Collections.synchronizedList(new LinkedList<>());
+	protected ScheduledThreadPoolExecutor					executor;
+	protected final List<Future<?>>							submitted		= Collections.synchronizedList(new LinkedList<>());
 
-	protected GraphicsContext					gc				= getGraphicsContext2D();
+	protected GraphicsContext								gc				= getGraphicsContext2D();
 
-	public final DisplayViewport				viewport		= new DisplayViewport();
-	protected ReadOnlyObjectWrapper<String>		status			= new ReadOnlyObjectWrapper<String>();
-	protected ReadOnlyFloatWrapper				progress		= new ReadOnlyFloatWrapper();
-	public final ObjectProperty<RegionFolder>	regionFolder	= new SimpleObjectProperty<>();
+	public final DisplayViewport							viewport		= new DisplayViewport();
+	protected ReadOnlyObjectWrapper<String>					status			= new ReadOnlyObjectWrapper<String>();
+	protected ReadOnlyFloatWrapper							progress		= new ReadOnlyFloatWrapper();
+	protected ReadOnlyMapWrapper<Vector2ic, Map<Vector2ic, ChunkMetadata>>	chunkMetadata	= new ReadOnlyMapWrapper<>(FXCollections.observableHashMap());
+
+	public final ObjectProperty<RegionFolder>				regionFolder	= new SimpleObjectProperty<>();
 
 	public WorldRendererCanvas(RegionFolder regionFolder) {
 		this.regionFolder.set(regionFolder);
@@ -53,7 +62,7 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 
 		{// Executor
 			executor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(THREAD_COUNT);
-			map = new RenderedMap(executor);// Executors.newScheduledThreadPool(THREAD_COUNT / 2));
+			map = new RenderedMap(executor);
 			executor.scheduleAtFixedRate(() -> {
 				try {
 					// TODO execute more often if something changes and less often if not
@@ -79,6 +88,7 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 	}
 
 	public void invalidateTextures() {
+		chunkMetadata.clear();
 		map.invalidateAll();
 		for (int i = 0; i < THREAD_COUNT; i++)
 			executor.submit(this);
@@ -137,6 +147,10 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 		return progress.getReadOnlyProperty();
 	}
 
+	public ReadOnlyMapProperty<Vector2ic, Map<Vector2ic, ChunkMetadata>> getChunkMetadata() {
+		return chunkMetadata.getReadOnlyProperty();
+	}
+
 	@Override
 	public void run() {
 		RenderedRegion region = null;
@@ -151,7 +165,10 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 		try {
 			BufferedImage texture2 = null;
 			do {
-				texture2 = regionFolder.get().render(region.position);
+				Vector2ic position = region.position;
+				Region renderedRegion = regionFolder.get().render(position);
+				texture2 = renderedRegion.getImage();
+				Platform.runLater(() -> chunkMetadata.put(position, Collections.unmodifiableMap(renderedRegion.getChunkMetadata())));
 				// Re-render the texture if it has been invalidated ('REDRAW')
 			} while (region.valid.compareAndSet(RenderingState.REDRAW, RenderingState.DRAWING) && !Thread.interrupted());
 			map.updateCounter(region);

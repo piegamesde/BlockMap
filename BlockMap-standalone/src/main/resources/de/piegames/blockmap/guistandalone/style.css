@@ -1,0 +1,34 @@
+/* The complete left side */
+#left {
+}
+
+/* The pane with the slider for the height settings */
+#left-height {
+	-fx-padding: 5 0 5 3;
+}
+
+/* The settings combo- and checkboxes in a GridPane */
+#left-settings {
+	-fx-padding: 5 3 0 3;
+	-fx-hgap: 6;
+	-fx-vgap: 3;
+}
+
+
+/* 
+ * This is a workaround to create a gap between the checkbox tree item and its icon. Since apparently there is no other way
+ * to do this, use the working graphic-text-gap to create space and simply translate the image.
+ */
+
+#pin-tree .check-box {
+}
+#pin-tree .check-box .box {
+}
+#pin-tree .check-box .image-view {
+	-fx-translate-x: 5.0;
+}
+#pin-tree .check-box .box .mark {
+}
+#pin-tree .check-box-tree-cell {
+	-fx-graphic-text-gap: 10.0;
+}

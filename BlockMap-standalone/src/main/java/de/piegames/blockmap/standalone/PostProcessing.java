@@ -18,10 +18,10 @@ import org.apache.commons.logging.LogFactory;
 import org.joml.Vector2i;
 import org.joml.Vector2ic;
 
-import de.piegames.blockmap.RegionFolder;
-import de.piegames.blockmap.RegionFolder.SavedRegionFolder;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RenderSettings;
+import de.piegames.blockmap.world.RegionFolder;
+import de.piegames.blockmap.world.RegionFolder.LocalRegionFolder;
 
 /** This class contains a collection of methods that transform the rendered map into another, more accessible representation */
 public class PostProcessing {
@@ -31,7 +31,7 @@ public class PostProcessing {
 	private PostProcessing() {
 	}
 
-	public static void createTileHtml(SavedRegionFolder<Path> world, Path outputDir, RenderSettings settings) {
+	public static void createTileHtml(LocalRegionFolder world, Path outputDir, RenderSettings settings) {
 		log.info("Writing HTML tiles...");
 		if (world.listRegions().isEmpty()) {
 			log.warn("The world is empty, there is nothing to do!");
@@ -65,7 +65,7 @@ public class PostProcessing {
 			for (int z = minZ; z <= maxZ; z++) {
 				for (int x = minX; x <= maxX; x++) {
 					Vector2i pos = new Vector2i(x, z);
-					Path region = world.getPath(pos);
+					Path region = world.render(pos).getPath();
 					if (region != null) {
 						int top = (z - minZ) * 512, left = (x - minX) * 512;
 						String title = "Region " + x + ", " + z;
@@ -129,7 +129,7 @@ public class PostProcessing {
 		for (Vector2ic pos : world.listRegions()) {
 			BufferedImage region = null;
 			try {
-				region = world.render(pos);
+				region = world.render(pos).getImage();
 			} catch (IOException e) {
 				log.warn("Could not load image " + pos, e);
 				continue;

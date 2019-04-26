@@ -3,12 +3,10 @@ package de.piegames.blockmap.gui.decoration;
 import org.joml.Vector2d;
 import org.joml.Vector2dc;
 
-import com.sun.glass.ui.Application;
-import com.sun.glass.ui.Robot;
-
 import de.piegames.blockmap.gui.DisplayViewport;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
+import javafx.scene.robot.Robot;
 
 /**
  * This decoration provides basic drag and zoom support, where you can set the button used for dragging as well as zoom speed and direction.
@@ -16,10 +14,9 @@ import javafx.scene.layout.Region;
  * to the view frustum. This might be useful if you use manual zooming logic externally and still want to zoom around the mouse center as it
  * does normally.
  */
-@SuppressWarnings("restriction")
 public class DragScrollDecoration extends Region {
 
-	protected Robot robot = Application.GetApplication().createRobot();
+	protected Robot	robot	= new Robot();
 	protected int cooldown;
 
 	/** Creates an instance of this class that will drag with the right mouse button and a scroll factor of 1/10. */

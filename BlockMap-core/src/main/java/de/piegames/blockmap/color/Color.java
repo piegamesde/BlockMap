@@ -14,7 +14,7 @@ import com.google.gson.stream.JsonWriter;
  * 
  * @author piegames
  */
-public class Color {
+public final class Color {
 	/** JSON serialization adapter that minimizes the resulting string size without precision loss. */
 	public static final TypeAdapter<Color>	ADAPTER		= new TypeAdapter<Color>() {
 
@@ -103,15 +103,7 @@ public class Color {
 		if (getClass() != obj.getClass())
 			return false;
 		Color other = (Color) obj;
-		if (Float.floatToIntBits(a) != Float.floatToIntBits(other.a))
-			return false;
-		if (Float.floatToIntBits(b) != Float.floatToIntBits(other.b))
-			return false;
-		if (Float.floatToIntBits(g) != Float.floatToIntBits(other.g))
-			return false;
-		if (Float.floatToIntBits(r) != Float.floatToIntBits(other.r))
-			return false;
-		return true;
+		return a == other.a && b == other.b && g == other.g && r == other.r;
 	}
 
 	@Override

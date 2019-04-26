@@ -29,7 +29,8 @@ public class RegionRendererTest {
 		RenderSettings settings = new RenderSettings();
 		settings.loadDefaultColors();
 		RegionRenderer renderer = new RegionRenderer(settings);
-		BufferedImage image = renderer.render(new Vector2i(0, 0), new RegionFile(Paths.get(URI.create(getClass().getResource("/r.0.0.mca").toString()))));
+		BufferedImage image = renderer.render(new Vector2i(0, 0), new RegionFile(Paths.get(URI.create(getClass().getResource("/r.0.0.mca").toString()))))
+				.getImage();
 		ImageIO.write(image, "png", Files.newOutputStream(folder.newFile().toPath()));
 	}
 }

@@ -48,6 +48,7 @@ public class BlockColorMap {
 	public static final Gson		GSON	= new GsonFireBuilder()
 			.enableHooks(BlockColorMap.class)
 			.createGsonBuilder()
+			.serializeNulls()
 			.addSerializationExclusionStrategy(new ExclusionStrategy() {
 
 														@Override
@@ -102,7 +103,7 @@ public class BlockColorMap {
 	 * the two map forms if needed.
 	 */
 	protected Map<String, BlockColor>			blockSerialize;
-	protected Color								airColor;
+	protected transient Color					airColor;
 
 	@SuppressWarnings("unused")
 	private BlockColorMap() {

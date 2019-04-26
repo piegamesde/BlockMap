@@ -285,7 +285,7 @@ public class Generator {
 		for (Path p : OUTPUTS)
 			Files.createDirectories(p);
 
-		// new Generator().generateTestWorld();
+		// new Generator().generateBlockColors();
 		// if (true)
 		// return;
 		CommandLine cli = new CommandLine(new Generator());

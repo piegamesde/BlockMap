@@ -2,7 +2,7 @@ apply plugin: 'java-library'
 
 dependencies {
 	// Core dependencies
-	api 'com.github.piegamesde:nbt:5a9b4e9224'
+	api 'com.github.piegamesde:nbt:45b6231d4e'
 	api 'com.google.code.gson:gson:2.8.5'
     implementation 'io.gsonfire:gson-fire:1.8.3'
 	api 'commons-logging:commons-logging:1.2'

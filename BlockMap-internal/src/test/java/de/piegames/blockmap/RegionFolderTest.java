@@ -18,6 +18,7 @@ import org.junit.rules.TemporaryFolder;
 import com.flowpowered.nbt.regionfile.RegionFile;
 
 import de.piegames.blockmap.renderer.RegionRenderer;
+import de.piegames.blockmap.renderer.RegionRenderer_1_13;
 import de.piegames.blockmap.renderer.RenderSettings;
 import de.piegames.blockmap.standalone.PostProcessing;
 import de.piegames.blockmap.world.Region.BufferedRegion;
@@ -38,7 +39,7 @@ public class RegionFolderTest {
 		Queue<Vector2ic> rendered = new LinkedList<>();
 		RenderSettings settings = new RenderSettings();
 		settings.loadDefaultColors();
-		RegionRenderer renderer = new RegionRenderer(settings) {
+		RegionRenderer renderer = new RegionRenderer_1_13(settings) {
 			@Override
 			public BufferedRegion render(Vector2ic regionPos, RegionFile file) {
 				rendered.add(regionPos);
@@ -102,7 +103,7 @@ public class RegionFolderTest {
 		Queue<Vector2ic> rendered = new LinkedList<>();
 		RenderSettings settings = new RenderSettings();
 		settings.loadDefaultColors();
-		RegionRenderer renderer = new RegionRenderer(settings) {
+		RegionRenderer_1_13 renderer = new RegionRenderer_1_13(settings) {
 			@Override
 			public BufferedRegion render(Vector2ic regionPos, RegionFile file) {
 				rendered.add(regionPos);

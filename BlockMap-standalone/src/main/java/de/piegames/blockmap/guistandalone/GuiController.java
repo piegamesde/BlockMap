@@ -110,7 +110,7 @@ public class GuiController implements Initializable {
 		log.debug("Initializing GUI");
 		RenderSettings settings = new RenderSettings();
 		settings.loadDefaultColors();
-		regionRenderer = new RegionRenderer(settings);
+		regionRenderer = RegionRenderer.create(settings);
 
 		renderer = new WorldRendererCanvas(null);
 		root.setCenter(pane = new MapPane(renderer));

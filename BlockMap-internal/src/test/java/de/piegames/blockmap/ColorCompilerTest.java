@@ -55,7 +55,7 @@ public class ColorCompilerTest {
 		settings.blockColors = ColorCompiler.compileBlockColors(minecraftJarfile, Paths.get(getClass().getResource("/block-color-instructions.json").toURI()))
 				.get("default");
 		settings.biomeColors = ColorCompiler.compileBiomeColors(minecraftJarfile, Paths.get(getClass().getResource("/biome-color-instructions.json").toURI()));
-		RegionRenderer renderer = new RegionRenderer(settings);
+		RegionRenderer renderer = RegionRenderer.create(settings);
 		assertNoMissing(renderer.render(new Vector2i(-1, -1), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.-1.-1.mca").toURI())))
 				.getImage());
 		assertNoMissing(renderer.render(new Vector2i(-1, 0), new RegionFile(Paths.get(getClass().getResource("/Debug/region/r.-1.0.mca").toURI()))).getImage());

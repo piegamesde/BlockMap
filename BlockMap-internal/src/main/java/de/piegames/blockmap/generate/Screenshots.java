@@ -41,7 +41,7 @@ public class Screenshots {
 	public static void generateDemoRenders() throws IOException {
 		RenderSettings settings = new RenderSettings();
 		settings.loadDefaultColors();
-		RegionRenderer renderer = new RegionRenderer(settings);
+		RegionRenderer renderer = RegionRenderer.create(settings);
 		{ /* Color maps */
 			log.info("Generating color map screenshots");
 			settings.maxY = 50;
@@ -97,7 +97,7 @@ public class Screenshots {
 	public static void generateScreenshots() throws Exception {
 		RenderSettings settings = new RenderSettings();
 		settings.loadDefaultColors();
-		RegionRenderer renderer = new RegionRenderer(settings);
+		RegionRenderer renderer = RegionRenderer.create(settings);
 		Thread th = new Thread(() -> GuiMain.main());
 		th.start();
 		while (GuiMain.instance == null)

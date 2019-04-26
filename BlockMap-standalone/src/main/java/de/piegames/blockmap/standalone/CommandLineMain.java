@@ -22,9 +22,9 @@ import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RegionShader.DefaultShader;
 import de.piegames.blockmap.renderer.RenderSettings;
 import de.piegames.blockmap.standalone.CommandLineMain.CommandRender;
-import de.piegames.blockmap.world.WorldPins;
 import de.piegames.blockmap.world.RegionFolder.CachedRegionFolder;
 import de.piegames.blockmap.world.RegionFolder.WorldRegionFolder;
+import de.piegames.blockmap.world.WorldPins;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Help.Visibility;
@@ -40,7 +40,7 @@ import picocli.CommandLine.RunLast;
 		subcommands = { CommandRender.class, HelpCommand.class })
 public class CommandLineMain implements Runnable {
 
-	private static Log	log	= LogFactory.getLog(RegionRenderer.class);
+	private static Log	log	= LogFactory.getLog(CommandLineMain.class);
 
 	@Option(names = { "-V", "--version" },
 			versionHelp = true,
@@ -145,7 +145,7 @@ public class CommandLineMain implements Runnable {
 				}
 			settings.shader = shader.getShader();
 
-			RegionRenderer renderer = new RegionRenderer(settings);
+			RegionRenderer renderer = RegionRenderer.create(settings);
 			Path input = this.input;
 			if (dimension != null)
 				input = input.resolve(dimension.getRegionPath());
@@ -240,6 +240,7 @@ public class CommandLineMain implements Runnable {
 
 	@Override
 	public void run() {
+		// verbose = true;
 		runAll();
 		/*
 		 * Using generics will make sure the class is only loaded now and not before. Loading this class may cause to load JavaFX classes which

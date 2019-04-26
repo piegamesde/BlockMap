@@ -12,6 +12,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -36,6 +38,9 @@ import de.piegames.blockmap.world.WorldPins;
 import de.saibotk.jmaw.ApiResponseException;
 import de.saibotk.jmaw.MojangAPI;
 import de.saibotk.jmaw.PlayerProfile;
+import de.saibotk.jmaw.PlayerSkinTexture;
+import de.saibotk.jmaw.PlayerTexturesProperty;
+import de.saibotk.jmaw.TooManyRequestsException;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -490,33 +495,28 @@ public class Pin {
 		}
 	}
 
-	private static class PlayerPin extends Pin {
+	private static class PlayerPin extends Pin implements Runnable {
 
-		protected WorldPins.PlayerPin	player;
-		protected StringProperty		playerName	= new SimpleStringProperty("loading…");
+		/*
+		 * Cache the API object because even if the API itself is stateless, there is still some initialization (HTTP client, GSON type adapters)
+		 * done at the beginning.
+		 */
+		private static MojangAPI			api;
 
-		public PlayerPin(WorldPins.PlayerPin player, DisplayViewport viewport) {
-			super(new Vector2d(player.getPosition().x(), player.getPosition().z()), PinType.PLAYER_POSITION,
-					viewport);
+		protected WorldPins.PlayerPin		player;
+		protected StringProperty			playerName	= new SimpleStringProperty("loading…");
+		protected ScheduledExecutorService	backgroundThread;
+
+		public PlayerPin(WorldPins.PlayerPin player, ScheduledExecutorService backgroundThread, DisplayViewport viewport) {
+			super(new Vector2d(player.getPosition().x(), player.getPosition().z()), PinType.PLAYER_POSITION, viewport);
 			this.player = player;
+			this.backgroundThread = Objects.requireNonNull(backgroundThread);
 		}
 
 		@Override
 		protected Node initTopGui() {
 			Node node = super.initTopGui();
-
-			new Thread(() -> {
-				Optional<PlayerProfile> playerInfo = player.getUUID().flatMap(uuid -> getPlayerInfo(uuid));
-				if (playerInfo.isPresent()) {
-					Platform.runLater(() -> playerName.set(playerInfo.get().getUsername()));
-					playerInfo.get().getTextures().flatMap(textures -> textures.getSkin()).ifPresent(url -> {
-						Platform.runLater(() -> button.setGraphic(getSkin(url.toString())));
-					});
-				} else {
-					Platform.runLater(() -> playerName.set("(failed loading)"));
-				}
-			}).start();
-
+			backgroundThread.execute(this);
 			return node;
 		}
 
@@ -561,14 +561,29 @@ public class Pin {
 			return graphic;
 		}
 
-		private static Mojang mojang = new Mojang().connect();
-
-		private static Optional<PlayerProfile> getPlayerInfo(String uuid) {
-			if (mojang.getStatus(ServiceType.API_MOJANG_COM) == ServiceStatus.GREEN) {
-				return Optional.of(mojang.getPlayerProfile(uuid));
-			} else {
-				return Optional.empty();
-			}
+		@Override
+		public void run() {
+			/* This does not need to be thread safe */
+			if (api == null)
+				api = new MojangAPI();
+			Optional<PlayerProfile> playerInfo = player.getUUID().flatMap(uuid -> {
+				try {
+					return api.getPlayerProfile(uuid);
+				} catch (TooManyRequestsException e) {
+					log.warn("Too many requests, trying again later…");
+					backgroundThread.schedule(this, 61, TimeUnit.SECONDS);
+					return Optional.empty();
+				} catch (ApiResponseException e) {
+					log.warn("Could not load player profile for uuid <" + uuid + ">", e);
+					return Optional.empty();
+				}
+			});
+			Platform.runLater(() -> playerName.set(playerInfo.map(PlayerProfile::getUsername).orElse("(failed loading)")));
+			playerInfo.flatMap(PlayerProfile::getTexturesProperty)
+					.flatMap(PlayerTexturesProperty::getSkin)
+					.map(PlayerSkinTexture::getUrl)
+					.map(this::getSkin)
+					.ifPresent(image -> Platform.runLater(() -> button.setGraphic(image)));
 		}
 	}
 
@@ -751,10 +766,10 @@ public class Pin {
 	}
 
 	/** Convert a {@link WorldPins} object containing information retrieved directly from the world to (static) pins. */
-	public static Set<Pin> convertStatic(WorldPins pin, DisplayViewport viewport) {
+	public static Set<Pin> convertStatic(WorldPins pin, ScheduledExecutorService backgroundThread, DisplayViewport viewport) {
 		Set<Pin> pins = new HashSet<>();
 		for (WorldPins.PlayerPin player : pin.getPlayers().orElse(Collections.emptyList())) {
-			pins.add(new PlayerPin(player, viewport));
+			pins.add(new PlayerPin(player, backgroundThread, viewport));
 			if (player.getSpawnpoint().isPresent())
 				pins.add(new PlayerSpawnpointPin(player, viewport));
 		}

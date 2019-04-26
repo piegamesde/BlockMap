@@ -50,7 +50,7 @@ public class GuiMain extends Application {
 
 	@Override
 	public void stop() {
-		controller.renderer.shutDown();
+		controller.shutDown();
 	}
 
 	public static void main(String... args) {

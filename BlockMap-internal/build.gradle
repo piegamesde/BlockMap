@@ -27,7 +27,7 @@ task extractMinecraftData(type: JavaExec) {
 	classpath = sourceSets.main.runtimeClasspath
 	main = "de.piegames.blockmap.generate.Generator"
 	args = ['extractData']
-    inputs.dir "${project(":BlockMap-internal").sourceSets.main.java.srcDirs[1]}/server.jar"
+    inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[1]}/server.jar"
     outputs.dir "${buildDir}/generated-resources/BlockMap-internal/generated-resources-main/data/"
 }
 

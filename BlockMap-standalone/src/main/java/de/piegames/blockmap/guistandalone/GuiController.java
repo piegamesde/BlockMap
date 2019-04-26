@@ -8,6 +8,9 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
@@ -16,6 +19,8 @@ import org.controlsfx.control.CheckTreeView;
 import org.controlsfx.control.RangeSlider;
 import org.controlsfx.control.StatusBar;
 import org.joml.Vector2ic;
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import de.piegames.blockmap.DotMinecraft;
 import de.piegames.blockmap.color.BlockColorMap;
@@ -93,6 +98,9 @@ public class GuiController implements Initializable {
 	protected MapPane								pane;
 	protected ObjectProperty<Path>					currentPath				= new SimpleObjectProperty<>();
 	protected PinDecoration							pins;
+
+	protected ScheduledExecutorService				backgroundThread		= Executors.newSingleThreadScheduledExecutor(
+			new ThreadFactoryBuilder().setNameFormat("pin-background-thread-%d").build());
 
 	public GuiController() {
 	}
@@ -204,7 +212,8 @@ public class GuiController implements Initializable {
 		renderer.regionFolder.bind(regionFolder);
 		renderer.regionFolder.addListener((observable, previous, val) -> {
 			if (val != null)
-				this.pins.loadWorld(val.listRegions(), val.getPins().map(pins -> Pin.convertStatic(pins, renderer.viewport)).orElse(Collections.emptySet()));
+				this.pins.loadWorld(val.listRegions(), val.getPins().map(pins -> Pin.convertStatic(pins, backgroundThread, renderer.viewport)).orElse(
+						Collections.emptySet()));
 			else
 				this.pins.loadWorld(Collections.emptyList(), Collections.emptyList());
 		});
@@ -322,5 +331,15 @@ public class GuiController implements Initializable {
 	@FXML
 	public void exit() {
 		Platform.exit();
+	}
+
+	public void shutDown() {
+		renderer.shutDown();
+		backgroundThread.shutdownNow();
+		try {
+			backgroundThread.awaitTermination(1, TimeUnit.MINUTES);
+		} catch (InterruptedException e) {
+			log.warn("Background thread did not finish", e);
+		}
 	}
 }

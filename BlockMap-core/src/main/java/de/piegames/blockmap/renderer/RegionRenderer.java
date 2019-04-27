@@ -1,7 +1,7 @@
 package de.piegames.blockmap.renderer;
 
 import java.awt.image.BufferedImage;
-import java.util.EnumSet;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -57,11 +57,11 @@ public abstract class RegionRenderer {
 
 	protected abstract Color[] renderRaw(Vector2ic regionPos, RegionFile file, Map<Vector2ic, ChunkMetadata> metadata);
 
-	protected static EnumSet<BlockState> parseBlockState(CompoundTag properties) {
-		EnumSet<BlockState> ret = EnumSet.noneOf(BlockState.class);
+	protected static BitSet parseBlockState(CompoundTag properties, BlockState state) {
+		BitSet ret = new BitSet(state.getSize());
 		if (properties != null)
 			for (Entry<String, Tag<?>> entry : properties.getValue().entrySet())
-				ret.add(BlockState.valueOf(entry.getKey(), ((StringTag) entry.getValue()).getValue()));
+				ret.set(state.getProperty(entry.getKey(), ((StringTag) entry.getValue()).getValue()));
 		return ret;
 	}
 
@@ -69,6 +69,8 @@ public abstract class RegionRenderer {
 		switch (settings.version) {
 		case MC_1_13:
 			return new RegionRenderer_1_13(settings);
+		case MC_1_14:
+			return new RegionRenderer_1_14(settings);
 		default:
 			throw new UnsupportedOperationException("Did not find a RegionRenderer for version " + settings.version);
 		}

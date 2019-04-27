@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 import com.google.gson.stream.JsonReader;
 
 import de.piegames.blockmap.color.BiomeColorMap;
+import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.color.Color;
 
 /**
@@ -150,7 +151,7 @@ public interface RegionShader {
 		private static final Color[] colors;
 
 		static {
-			colors = Color.GSON.fromJson(new JsonReader(new InputStreamReader(
+			colors = BlockColorMap.GSON.fromJson(new JsonReader(new InputStreamReader(
 					HeightShader.class.getResourceAsStream("/heightmap.json"))), Color[].class);
 		}
 

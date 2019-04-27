@@ -37,11 +37,11 @@ import de.piegames.blockmap.world.ChunkMetadata.ChunkRenderState;
  * 
  * @author piegames
  */
-public class RegionRenderer_1_13 extends RegionRenderer {
+public class RegionRenderer_1_14 extends RegionRenderer {
 
-	private static Log log = LogFactory.getLog(RegionRenderer_1_13.class);
+	private static Log log = LogFactory.getLog(RegionRenderer_1_14.class);
 
-	public RegionRenderer_1_13(RenderSettings settings) {
+	public RegionRenderer_1_14(RenderSettings settings) {
 		super(settings);
 	}
 

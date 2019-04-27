@@ -3,9 +3,7 @@ package de.piegames.blockmap.generate;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -17,14 +15,8 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
@@ -33,15 +25,13 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.joml.Vector2i;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
-import de.piegames.blockmap.BlockStateHelper;
-import de.piegames.blockmap.BlockStateHelper.BlockStateHelperBlock;
-import de.piegames.blockmap.BlockStateHelper.BlockStateHelperState;
+import de.piegames.blockmap.MinecraftBlocks;
+import de.piegames.blockmap.MinecraftVersion;
 import de.piegames.blockmap.color.BiomeColorMap;
 import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.color.Color;
+import de.piegames.blockmap.generate.Downloader.VersionManifest;
+import de.piegames.blockmap.renderer.BlockState;
 import morlok8k.MinecraftLandGenerator.MinecraftLandGenerator;
 import morlok8k.MinecraftLandGenerator.Server;
 import morlok8k.MinecraftLandGenerator.World;
@@ -63,189 +53,80 @@ public class Generator {
 	static final Path			OUTPUT_CORE				= OUTPUT.resolve("BlockMap-core/generated-resources-main");
 	static final Path			OUTPUT_INTERNAL_MAIN	= OUTPUT.resolve("BlockMap-internal/generated-resources-main");
 	static final Path			OUTPUT_INTERNAL_TEST	= OUTPUT.resolve("BlockMap-internal/generated-resources-test");
+	static final Path			OUTPUT_INTERNAL_CACHE	= OUTPUT.resolve("BlockMap-internal/generated-resources-cache");
 	static final Path			OUTPUT_STANDALONE		= OUTPUT.resolve("BlockMap-standalone/generated-resources-main");
 	static final Path			OUTPUT_GUI				= OUTPUT.resolve("BlockMap-gui/generated-resources-main");
 	static final Path			OUTPUT_SCREENSHOTS		= Paths.get("../screenshots");
 	private static final Path[]	OUTPUTS					= { OUTPUT_CORE, OUTPUT_INTERNAL_MAIN, OUTPUT_INTERNAL_TEST, OUTPUT_STANDALONE, OUTPUT_GUI };
 
 	@Command
-	public void downloadFiles() throws IOException {
-		Downloader.downloadMinecraft();
-		Downloader.downloadLandGenerator();
+	public void generateData() throws Exception {
+		/* Download stuff */
+		VersionManifest manifest = Downloader.downloadManifest();
 
-		processResources();
-	}
+		for (MinecraftVersion version : MinecraftVersion.values()) {
 
-	@Command
-	public void extractData() throws Exception {
-		// Call the Minecraft data generator
-		FileUtils.deleteDirectory(OUTPUT_INTERNAL_MAIN.resolve("data").toFile());
-		try (URLClassLoader loader = new URLClassLoader(
-				new URL[] { Generator.class.getResource("/server.jar") },
-				Generator.class.getClassLoader())) {
-			Class<?> MinecraftMain = Class.forName("net.minecraft.data.Main", true, loader);
-			Method main = MinecraftMain.getDeclaredMethod("main", String[].class);
-			main.invoke(null, new Object[] { new String[] { "--reports", "--output=" + OUTPUT_INTERNAL_MAIN.resolve("data") } });
-		}
+			boolean needsUpdate = Downloader.downloadMinecraft(manifest, version);
 
-		processResources();
-	}
+			if (needsUpdate) {
+				/* Call the Minecraft data generator */
 
-	@Command
-	public void generateTestWorld() throws IOException, InterruptedException {
-		log.info("Generating test world");
+				log.info("Extracting Minecraft data");
+				Path output = OUTPUT_INTERNAL_TEST.resolve("data-" + version.fileSuffix);
+				FileUtils.deleteDirectory(output.toFile());
+				try (URLClassLoader loader = new URLClassLoader(
+						new URL[] { OUTPUT_INTERNAL_CACHE.resolve("server-" + version.fileSuffix + ".jar").toUri().toURL() },
+						Generator.class.getClassLoader())) {
+					Class<?> MinecraftMain = Class.forName("net.minecraft.data.Main", true, loader);
+					Method main = MinecraftMain.getDeclaredMethod("main", String[].class);
+					main.invoke(null, new Object[] { new String[] { "--reports", "--output=" + output } });
+				}
+			}
 
-		Path worldPath = OUTPUT_INTERNAL_MAIN.resolve("BlockMapWorld");
+			log.info("Generating BlockState information");
 
-		FileUtils.copyDirectory(new File(URI.create(Generator.class.getResource("/BlockMapWorld").toString())), worldPath
-				.toFile());
-		Path serverFolder = Files.createTempDirectory("generateTestWorldServer");
-		Path serverFile = serverFolder.resolve("server.jar");
-		Files.copy(Generator.class.getResourceAsStream("/server.jar"), serverFile);
-		Files.createSymbolicLink(serverFolder.resolve("world"), worldPath.toAbsolutePath());
+			MinecraftBlocks blocks = new MinecraftBlocks(OUTPUT_INTERNAL_TEST.resolve("data-" + version.fileSuffix + "/reports/blocks.json"));
 
-		Server server = new Server(serverFile, null);
-		World world = server.initWorld(Paths.get("world"), true);
+			BlockState states = blocks.generateStates();
+			try (BufferedWriter writer = Files.newBufferedWriter(OUTPUT_CORE.resolve("block-states-" + version.fileSuffix + ".json"))) {
+				BlockColorMap.GSON.toJson(states, writer);
+				writer.flush();
+			}
 
-		int SIZE = 256;// 256;
-		ArrayList<Vector2i> chunks = new ArrayList<>(SIZE * SIZE * 4);
-		for (int z = -SIZE; z < SIZE; z++)
-			for (int x = -SIZE; x < SIZE; x++)
-				chunks.add(new Vector2i(x, z));
-		MinecraftLandGenerator.forceloadChunks(server, world, chunks, Dimension.OVERWORLD, true, 64 * 64, false);
-		world.resetChanges();
-		server.resetChanges();
+			Path minecraftJarfile = OUTPUT_INTERNAL_CACHE.resolve("client-" + version.fileSuffix + ".jar");
 
-		processResources();
-	}
+			log.info("Generating block colors for version " + version);
 
-	@Command
-	public void generateBlockColors() throws IOException {
-		log.info("Generating block colors");
-		Path minecraftJarfile = Paths.get(URI.create(Generator.class.getResource("/client.jar").toString()));
+			for (Entry<String, BlockColorMap> map : ColorCompiler.compileBlockColors(minecraftJarfile,
+					Paths.get(URI.create(Generator.class.getResource("/block-color-instructions-" + version.fileSuffix + ".json").toString())), blocks, states)
+					.entrySet()) {
+				Path outputPath = OUTPUT_CORE.resolve("block-colors-" + map.getKey() + "-" + version.fileSuffix + ".json");
+				log.debug("Writing block-colors-" + map.getKey() + ".json to " + outputPath);
+				try (BufferedWriter writer = Files.newBufferedWriter(outputPath)) {
+					BlockColorMap.GSON.toJson(map.getValue(), writer);
+					writer.flush();
+				}
+			}
 
-		for (Entry<String, BlockColorMap> map : ColorCompiler.compileBlockColors(minecraftJarfile,
-				Paths.get(URI.create(Generator.class.getResource("/block-color-instructions.json").toString()))).entrySet()) {
-			log.info("Writing block-colors-" + map.getKey() + ".json to " + OUTPUT_CORE.resolve("block-colors-" + map.getKey() + ".json"));
-			try (BufferedWriter writer = Files.newBufferedWriter(OUTPUT_CORE.resolve("block-colors-" + map.getKey() + ".json"))) {
-				BlockColorMap.GSON.toJson(map.getValue(), writer);
+			log.info("Generating biome colors for version " + version);
+
+			BiomeColorMap map = ColorCompiler.compileBiomeColors(minecraftJarfile,
+					Paths.get(URI.create(Generator.class.getResource("/biome-color-instructions-" + version.fileSuffix + ".json").toString())));
+			try (BufferedWriter writer = Files.newBufferedWriter(OUTPUT_CORE.resolve("biome-colors-" + version.fileSuffix + ".json"))) {
+				BlockColorMap.GSON.toJson(map, writer);
 				writer.flush();
 			}
 		}
 
-		processResources();
-	}
+		{
+			log.info("Generating heightmap colors");
+			List<Color> colors = ColorCompiler.compileHeightMap(Paths.get(URI.create(Generator.class.getResource("/heightmap.png").toString())));
 
-	@Command
-	public void generateBiomeColors() throws IOException {
-		log.info("Generating biome colors");
-		Path minecraftJarfile = Paths.get(URI.create(Generator.class.getResource("/client.jar").toString()));
-
-		BiomeColorMap map = ColorCompiler.compileBiomeColors(minecraftJarfile,
-				Paths.get(URI.create(Generator.class.getResource("/biome-color-instructions.json").toString())));
-		try (BufferedWriter writer = Files.newBufferedWriter(OUTPUT_CORE.resolve("biome-colors.json"))) {
-			BlockColorMap.GSON.toJson(map, writer);
-			writer.flush();
-		}
-
-		processResources();
-	}
-
-	@Command
-	public void generateHeightmap() throws IOException {
-		log.info("Generating heightmap colors");
-		List<Color> colors = ColorCompiler.compileHeightMap(Paths.get(URI.create(Generator.class.getResource("/heightmap.png").toString())));
-
-		try (BufferedWriter writer = Files.newBufferedWriter(OUTPUT_CORE.resolve("heightmap.json"))) {
-			Color.GSON.toJson(colors, writer);
-			writer.flush();
-		}
-
-		processResources();
-	}
-
-	@Command
-	public void generateBlockStates() throws IOException {
-		log.info("Generating BlockState enum class");
-		Type type = new TypeToken<Map<String, BlockStateHelperBlock>>() {
-		}.getType();
-		Map<String, BlockStateHelperBlock> blocks = new Gson().fromJson(new InputStreamReader(Generator.class.getResourceAsStream("/data/reports/blocks.json")),
-				type);
-
-		Comparator<BlockStateHelper> c = Comparator.comparing(s -> s.name);
-
-		/* Map each block id to a set of possible block states */
-		Map<String, Set<BlockStateHelper>> statesByBlock = new HashMap<>();
-
-		for (Entry<String, BlockStateHelperBlock> e : blocks.entrySet()) {
-			if (!statesByBlock.containsKey(e.getKey()))
-				statesByBlock.put(e.getKey(), new HashSet<>());
-			Set<BlockStateHelper> states = statesByBlock.get(e.getKey());
-			for (BlockStateHelperState state : e.getValue().states) {
-				if (state.properties != null)
-					state.properties.forEach((k, v) -> states.add(new BlockStateHelper(k, v)));
+			try (BufferedWriter writer = Files.newBufferedWriter(OUTPUT_CORE.resolve("heightmap.json"))) {
+				BlockColorMap.GSON.toJson(colors, writer);
+				writer.flush();
 			}
 		}
-
-		/* Reverse map each block state to the blocks that are allowed to use it (maybe a BiMap would help?) */
-		Map<BlockStateHelper, Set<String>> blocksByState = new TreeMap<>(c.thenComparing(Comparator.comparing(s -> s.value)));
-		for (Entry<String, Set<BlockStateHelper>> e : statesByBlock.entrySet()) {
-			for (BlockStateHelper state : e.getValue()) {
-				if (blocksByState.containsKey(state)) {
-					blocksByState.get(state).add(e.getKey());
-				} else {
-					Set<String> allowed = new HashSet<>();
-					allowed.add(e.getKey());
-					blocksByState.put(state, allowed);
-				}
-			}
-		}
-
-		/* We can now start generating our actual enum code */
-		StringBuilder builder = new StringBuilder();
-		for (Entry<BlockStateHelper, Set<String>> e : blocksByState.entrySet()) {
-			String key = e.getKey().name;
-			String value = e.getKey().value;
-			builder.append('\t');
-			builder.append(key.toUpperCase());
-			builder.append("_");
-			builder.append(value.toUpperCase());
-			builder.append("(\"");
-			builder.append(key);
-			builder.append("\", \"");
-			builder.append(value);
-			builder.append("\"");
-			if (!e.getValue().isEmpty()) {
-				for (String s : e.getValue()) {
-					builder.append(", \"");
-					builder.append(s);
-					builder.append('"');
-				}
-			}
-			builder.append("),");
-			builder.append(System.getProperty("line.separator"));
-		}
-		/* Hardcode the map property of item frames since it does not show up in this list */
-		builder.append("\tMAP_TRUE(\"map\", \"true\"),");
-		builder.append(System.getProperty("line.separator"));
-		builder.append("\tMAP_FALSE(\"map\", \"false\");");
-
-		{ /* Load template file and replace original */
-			Path blockState = Paths.get("../BlockMap-core", "src/main/java", "de/piegames/blockmap", "renderer/BlockState.java");
-			List<String> file = Files.readAllLines(blockState);
-			int line = 0;
-			while (!file.get(line).contains("$REPLACE_START"))
-				line++;
-			line++;
-			while (!file.get(line).contains("$REPLACE_END"))
-				file.remove(line);
-			file.add(line, builder.toString());
-			Files.write(blockState, file);
-		}
-		// String original = new String(Files.readAllBytes(Paths.get(URI.create(Generator.class.getResource("/BlockState.txt").toString()))));
-		// original = original.replace("//$REPLACE_ME_HERE", builder.toString());
-		// Files.write(OUTPUT_CORE_SRC.resolve("de/piegames/blockmap/renderer/BlockState.java"), original.getBytes());
-		// Files.write(OUTPUT_OTHER.resolve("BlockState.java"), builder.toString().getBytes());
 
 		processResources();
 	}
@@ -266,6 +147,34 @@ public class Generator {
 	}
 
 	@Command
+	public void generateTestWorld() throws IOException, InterruptedException {
+		log.info("Generating test world");
+
+		Path worldPath = OUTPUT_INTERNAL_CACHE.resolve("BlockMapWorld");
+
+		FileUtils.copyDirectory(new File(URI.create(Generator.class.getResource("/BlockMapWorld").toString())), worldPath
+				.toFile());
+		Path serverFolder = Files.createTempDirectory("generateTestWorldServer");
+		Path serverFile = serverFolder.resolve("server.jar");
+		Files.copy(OUTPUT_INTERNAL_CACHE.resolve("/server-" + MinecraftVersion.LATEST.fileSuffix + ".jar"), serverFile);
+		Files.createSymbolicLink(serverFolder.resolve("world"), worldPath.toAbsolutePath());
+
+		Server server = new Server(serverFile, null);
+		World world = server.initWorld(Paths.get("world"), true);
+
+		int SIZE = 256;// 256;
+		ArrayList<Vector2i> chunks = new ArrayList<>(SIZE * SIZE * 4);
+		for (int z = -SIZE; z < SIZE; z++)
+			for (int x = -SIZE; x < SIZE; x++)
+				chunks.add(new Vector2i(x, z));
+		MinecraftLandGenerator.forceloadChunks(server, world, chunks, Dimension.OVERWORLD, true, 64 * 64, false);
+		world.resetChanges();
+		server.resetChanges();
+
+		processResources();
+	}
+
+	@Command
 	public void generateScreenshots() throws Exception {
 		log.info("Generating screenshots");
 		Screenshots.generateDemoRenders();
@@ -282,12 +191,14 @@ public class Generator {
 		log.debug("Local resources path: " + Generator.class.getResource("/"));
 
 		Files.createDirectories(OUTPUT);
+		Files.createDirectories(OUTPUT_INTERNAL_CACHE);
+		Files.createDirectories(OUTPUT_SCREENSHOTS);
 		for (Path p : OUTPUTS)
 			Files.createDirectories(p);
 
-		// new Generator().generateBlockColors();
-		// if (true)
-		// return;
+		if (args.length == 0)
+			args = new String[] { "generateData" };
+
 		CommandLine cli = new CommandLine(new Generator());
 		for (String s : args)
 			cli.parseWithHandler(new CommandLine.RunLast(), s.split(";"));

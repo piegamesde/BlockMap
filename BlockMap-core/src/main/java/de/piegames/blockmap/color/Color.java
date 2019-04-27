@@ -2,8 +2,6 @@ package de.piegames.blockmap.color;
 
 import java.io.IOException;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
@@ -40,7 +38,6 @@ public final class Color {
 																return color;
 															}
 														};
-	public static final Gson				GSON		= new GsonBuilder().registerTypeAdapter(Color.class, ADAPTER).setPrettyPrinting().create();
 
 	/** The default fallback color for missing things. It is a pure and eye-hurting pink color */
 	public static final Color				MISSING		= new Color(1f, 1f, 0f, 1f);

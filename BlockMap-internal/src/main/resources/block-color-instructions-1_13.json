@@ -155,7 +155,7 @@
             "daylight_detector,inverted=true,power=*": "daylight_detector_inverted_top.png",
             
             "dead_${coral}_coral,waterlogged=*": "dead_${coral}_coral.png",
-            "dead_${coral}_coral_block,waterlogged=*": "dead_${coral}_coral_block.png",
+            "dead_${coral}_coral_block": "dead_${coral}_coral_block.png",
             "dead_${coral}_coral_fan,waterlogged=*": "dead_${coral}_coral_fan.png",
             "dead_${coral}_coral_wall_fan,facing=*,waterlogged=*": "dead_${coral}_coral_fan.png",
             
@@ -244,7 +244,6 @@
             "iron_trapdoor,open=false,half=*,facing=*,waterlogged=*,powered=*": "iron_trapdoor.png",
             "iron_trapdoor,open=true,half=*,facing=*,waterlogged=*,powered=*": ["transparent"],
             
-            "item_frame,map=*": ["transparent"],
             "jack_o_lantern,facing=*": "pumpkin_top.png",
             "jukebox,has_record=*": "jukebox_top.png",
             
@@ -490,7 +489,7 @@
             "grass": ["transparent", "translucent=true"],
             "tall_grass,half=*": ["transparent", "translucent=true"],
             "${flower}": ["transparent", "translucent=true"],
-            "${tallflower}": ["transparent", "translucent=true"],
+            "${tallflower},half=*": ["transparent", "translucent=true"],
             "brown_mushroom": ["transparent", "translucent=true"],
             "brown_mushroom_block,north=*,south=*,east=*,west=*,up=*,down=*": ["transparent", "translucent=true"],
             "red_mushroom": ["transparent", "translucent=true"],

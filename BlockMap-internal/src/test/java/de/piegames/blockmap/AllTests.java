@@ -5,8 +5,7 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-		BlockStateTest.class,
-		ColorCompilerTest.class,
+		ColorMapTest.class,
 		RegionRendererTest.class,
 		RegionFolderTest.class,
 		CommandLineTest.class

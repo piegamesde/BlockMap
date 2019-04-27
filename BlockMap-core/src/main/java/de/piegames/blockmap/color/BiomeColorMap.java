@@ -9,6 +9,8 @@ import java.util.Objects;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import de.piegames.blockmap.MinecraftVersion;
+
 /**
  * Represents a mapping from biome IDs to their actual color.
  * 
@@ -77,7 +79,7 @@ public class BiomeColorMap {
 		return GSON.fromJson(reader, BiomeColorMap.class);
 	}
 
-	public static BiomeColorMap loadDefault() {
-		return load(new InputStreamReader(BiomeColorMap.class.getResourceAsStream("/biome-colors.json")));
+	public static BiomeColorMap loadDefault(MinecraftVersion version) {
+		return load(new InputStreamReader(BiomeColorMap.class.getResourceAsStream("/biome-colors-" + version.fileSuffix + ".json")));
 	}
 }

@@ -159,7 +159,8 @@ public class GuiController implements Initializable {
 
 		colorBox.valueProperty().addListener((observer, old, value) -> {
 			settings.blockColors = BlockColorMap
-					.loadInternal(new String[] { "default", "caves", "foliage", "water" }[colorBox.getSelectionModel().getSelectedIndex()]);
+					.loadInternal(new String[] { "default", "caves", "foliage", "water" }[colorBox.getSelectionModel().getSelectedIndex()],
+							settings.version);
 			renderer.invalidateTextures();
 			renderer.repaint();
 		});

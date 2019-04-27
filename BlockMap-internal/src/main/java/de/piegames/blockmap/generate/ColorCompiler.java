@@ -25,11 +25,13 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 
+import de.piegames.blockmap.MinecraftBlocks;
 import de.piegames.blockmap.color.BiomeColorMap;
 import de.piegames.blockmap.color.BiomeColorMap.BiomeColor;
 import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.color.Color;
-import de.piegames.blockmap.generate.ColorMapHelper.ColorMapEntry;
+import de.piegames.blockmap.generate.ColorMapBuilder.ColorInstruction;
+import de.piegames.blockmap.renderer.BlockState;
 
 public class ColorCompiler {
 
@@ -39,20 +41,21 @@ public class ColorCompiler {
 	 * Takes in a path to the Minecraft jar file and the path to the json file with the color instructions and compiles all color maps specified
 	 * in it.
 	 */
-	public static Map<String, BlockColorMap> compileBlockColors(Path minecraftJar, Path colorInstructions) throws IOException {
+	public static Map<String, BlockColorMap> compileBlockColors(Path minecraftJar, Path colorInstructions, MinecraftBlocks minecraftBlocks, BlockState states)
+			throws IOException {
 		log.info("Compiling " + colorInstructions.toAbsolutePath() + " to color maps");
 		log.debug("Minecraft jar: " + minecraftJar.toAbsolutePath());
 
 		FileSystem jarFile = FileSystems.newFileSystem(minecraftJar, null);
 
 		Map<String, BlockColorMap> colorMaps = new HashMap<>();
-		Map<String, ColorMapHelper> colorMapHelpers = new HashMap<>();
+		Map<String, ColorMapBuilder> colorMapHelpers = new HashMap<>();
 
 		/* Parse the whole json file and expand all wildcards and placeholders as well as color map inheritance. */
 		try (JsonReader reader = new JsonReader(Files.newBufferedReader(colorInstructions))) {
 			JsonObject root = new JsonParser().parse(reader).getAsJsonObject();
 			for (Entry<String, JsonElement> map : root.entrySet()) {
-				ColorMapHelper colorMap = new ColorMapHelper();
+				ColorMapBuilder colorMap = new ColorMapBuilder(minecraftBlocks, states);
 				log.info("Compiling color map " + map.getKey());
 
 				JsonObject data = map.getValue().getAsJsonObject();
@@ -86,8 +89,8 @@ public class ColorCompiler {
 							for (JsonElement s : e.getValue().getAsJsonArray())
 								colorInfo.add(s.getAsString());
 						}
-						log.debug("Adding block " + e.getKey() + " " + colorInfo);
-						colorMap.addBlock(new ColorMapEntry(e.getKey(), colorInfo));
+						// log.debug("Adding block " + e.getKey() + " " + colorInfo);
+						colorMap.addBlock(new ColorInstruction(e.getKey(), colorInfo));
 					}
 				}
 				colorMapHelpers.put(map.getKey(), colorMap);

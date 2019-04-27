@@ -14,7 +14,7 @@ public class RenderSettings {
 	public int				minZ	= Integer.MIN_VALUE;
 	public int				maxZ	= Integer.MAX_VALUE;
 
-	public MinecraftVersion	version	= MinecraftVersion.MC_1_13;
+	public MinecraftVersion	version	= MinecraftVersion.LATEST;
 	public BlockColorMap	blockColors;
 	public BiomeColorMap	biomeColors;
 	public RegionShader		shader	= new ReliefShader();
@@ -23,7 +23,7 @@ public class RenderSettings {
 	}
 
 	public void loadDefaultColors() {
-		blockColors = BlockColorMap.loadDefault();
-		biomeColors = BiomeColorMap.loadDefault();
+		blockColors = BlockColorMap.loadDefault(version);
+		biomeColors = BiomeColorMap.loadDefault(version);
 	}
 }

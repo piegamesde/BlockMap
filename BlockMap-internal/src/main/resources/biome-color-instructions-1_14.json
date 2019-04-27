@@ -1,0 +1,440 @@
+{
+	"0": {
+		"waterColor": "0xFF0064E4",
+		"rainfall": "0.5",
+		"temperature": "0.5",
+		"biomeColor":  { "r":0, "g":0, "b":112 } 
+	},
+	"1": {
+		"waterColor": "0xFF00A0D4",
+		"rainfall": "0.4",
+		"temperature": "0.8",
+		"biomeColor": { "r":141, "g":179, "b":96 }
+	},
+	"2": {
+		"waterColor": "0xFF00A0D4",
+		"rainfall": "0.0",
+		"temperature": "2.0",
+		"biomeColor":  { "r":250, "g":148, "b":24 }
+	},
+	"3": {
+		"waterColor": "0xFF0028F4",
+		"rainfall": "0.3",
+		"temperature": "0.2",
+		"biomeColor": { "r":96, "g":96, "b":96 }
+	},
+	"4": {
+		"waterColor": "0xFF0098D6",
+		"rainfall": "0.8",
+		"temperature": "0.7",
+		"biomeColor": { "r":5, "g":102, "b":33 }
+	},
+	"5": {
+		"waterColor": "0xFF000EFB",
+		"rainfall": "0.8",
+		"temperature": "0.25",
+		"biomeColor": { "r":11, "g":102, "b":89 }
+	},
+	"6": {
+		"waterColor": "0xFF5663AF",
+		"rainfall": "0.9",
+		"temperature": "0.8",
+		"biomeColor": { "r":7, "g":249, "b":178 }
+	},
+	"7": {
+		"waterColor": "0xFF0064E4",
+		"rainfall": "0.5",
+		"temperature": "0.5",
+		"biomeColor": { "r":0, "g":0, "b":255 }
+	},
+	"8": {
+		"waterColor": "16777215",
+		"rainfall": "0.0",
+		"temperature": "2.0",
+		"biomeColor": { "r":255, "g":0, "b":0 }
+	},
+	"9": {
+		"waterColor": "16777215",
+		"rainfall": "0.5",
+		"temperature": "0.5",
+		"biomeColor": { "r":128, "g":128, "b":255 }
+	},
+	"10": {
+		"waterColor": "0xFF000EFB",
+		"rainfall": "0.5",
+		"temperature": "0.0",
+		"biomeColor": { "r":112, "g":112, "b":214 }
+	},
+	"11": {
+		"waterColor": "0xFF000EFB",
+		"rainfall": "0.5",
+		"temperature": "0.0",
+		"biomeColor": { "r":160, "g":160, "b":255 }
+	},
+	"12": {
+		"waterColor": "0xFF000EFB",
+		"rainfall": "0.5",
+		"temperature": "0.0",
+		"biomeColor":  { "r":255, "g":255, "b":255 }
+	},
+	"13": {
+		"waterColor": "0xFF000EFB",
+		"rainfall": "0.5",
+		"temperature": "0.0",
+		"biomeColor": { "r":160, "g":160, "b":160 }
+	},
+	"14": {
+		"waterColor": "0xFF00CEC8",
+		"rainfall": "1.0",
+		"temperature": "0.9",
+		"biomeColor": { "r":255, "g":0, "b":255 }
+	},
+	"15": {
+		"waterColor": "0xFF00CEC8",
+		"rainfall": "1.0",
+		"temperature": "0.9",
+		"biomeColor": { "r":160, "g":0, "b":255 }
+	},
+	"16": {
+		"waterColor": "0xFF0064E4",
+		"rainfall": "0.4",
+		"temperature": "0.8",
+		"biomeColor": { "r":250, "g":222, "b":85 }
+	},
+	"17": {
+		"waterColor": "0xFF00A0D4",
+		"rainfall": "0.0",
+		"temperature": "2.0",
+		"biomeColor": { "r":210, "g":95, "b":18 }
+	},
+	"18": {
+		"waterColor": "0xFF0098D6",
+		"rainfall": "0.8",
+		"temperature": "0.7",
+		"biomeColor": { "r":34, "g":85, "b":28 }
+	},
+	"19": {
+		"waterColor": "0xFF000EFB",
+		"rainfall": "0.8",
+		"temperature": "0.25",
+		"biomeColor": { "r":22, "g":57, "b":51 }
+	},
+	"20": {
+		"waterColor": "0xFF0028F4",
+		"rainfall": "0.3",
+		"temperature": "0.2",
+		"biomeColor": { "r":114, "g":120, "b":154 }
+	},
+	"21": {
+		"waterColor": "0xFF00DCC4",
+		"rainfall": "0.9",
+		"temperature": "0.95",
+		"biomeColor": { "r":83, "g":123, "b":9 }
+	},
+	"22": {
+		"waterColor": "0xFF00DCC4",
+		"rainfall": "0.9",
+		"temperature": "0.95",
+		"biomeColor": { "r":44, "g":66, "b":5 }
+	},
+	"23": {
+		"waterColor": "0xFF00DCC4",
+		"rainfall": "0.8",
+		"temperature": "0.95",
+		"biomeColor": { "r":98, "g":139, "b":23 }
+	},
+	"24": {
+		"waterColor": "0xFF040075",
+		"rainfall": "0.5",
+		"temperature": "0.5",
+		"biomeColor": { "r":0, "g":0, "b":48 }
+	},
+	"25": {
+		"waterColor": "0xFF0064E4",
+		"rainfall": "0.3",
+		"temperature": "0.2",
+		"biomeColor": { "r":162, "g":162, "b":132 }
+	},
+	"26": {
+		"waterColor": "0xFF0064E4",
+		"rainfall": "0.3",
+		"temperature": "0.05",
+		"biomeColor": { "r":250, "g":240, "b":192 }
+	},
+	"27": {
+		"waterColor": "0xFF2B39B2",
+		"rainfall": "0.6",
+		"temperature": "0.6",
+		"biomeColor": { "r":48, "g":116, "b":68 }
+	},
+	"28": {
+		"waterColor": "0xFF2B39B2",
+		"rainfall": "0.6",
+		"temperature": "0.6",
+		"biomeColor": { "r":31, "g":95, "b":50 }
+	},
+	"29": {
+		"waterColor": "0xFF0064E4",
+		"rainfall": "0.8",
+		"temperature": "0.7",
+		"biomeColor": { "r":64, "g":81, "b":26 }
+	},
+	"30": {
+		"waterColor": "0xFF000EFB",
+		"rainfall": "0.4",
+		"temperature": "-0.5",
+		"biomeColor": { "r":49, "g":85, "b":74 }
+	},
+	"31": {
+		"waterColor": "0xFF000EFB",
+		"rainfall": "0.4",
+		"temperature": "-0.5",
+		"biomeColor": { "r":36, "g":63, "b":54 }
+	},
+	"32": {
+		"waterColor": "0xFF000EFB",
+		"rainfall": "0.8",
+		"temperature": "0.3",
+		"biomeColor": { "r":89, "g":102, "b":81 }
+	},
+	"33": {
+		"waterColor": "0xFF000EFB",
+		"rainfall": "0.8",
+		"temperature": "0.3",
+		"biomeColor": { "r":69, "g":79, "b":62 }
+	},
+	"34": {
+		"waterColor": "0xFF0028F4",
+		"rainfall": "0.3",
+		"temperature": "0.2",
+		"biomeColor": { "r":80, "g":112, "b":80 }
+	},
+	"35": {
+		"waterColor": "0xFF0064E4",
+		"rainfall": "0.0",
+		"temperature": "1.2",
+		"biomeColor": { "r":189, "g":178, "b":95 }
+	},
+	"36": {
+		"waterColor": "0xFF0064E4",
+		"rainfall": "0.0",
+		"temperature": "1.0",
+		"biomeColor": { "r":167, "g":157, "b":100 }
+	},
+	"37": {
+		"waterColor": "0xFF000EFB",
+		"rainfall": "0.0",
+		"temperature": "2.0",
+		"biomeColor": { "r":217, "g":69, "b":21 }
+	},
+	"38": {
+		"waterColor": "0xFF000EFB",
+		"rainfall": "0.0",
+		"temperature": "2.0",
+		"biomeColor": { "r":176, "g":151, "b":101 }
+	},
+	"39": {
+		"waterColor": "0xFF000EFB",
+		"rainfall": "0.0",
+		"temperature": "2.0",
+		"biomeColor": { "r":202, "g":140, "b":101 }
+	},
+	"40": {
+		"waterColor": "0xFF0064E4",
+		"rainfall": "0.0",
+		"temperature": "0.5",
+        "biomeColor": { "r":128, "g":128, "b":255 }
+	},
+	"41": {
+		"waterColor": "0xFF0064E4",
+		"rainfall": "0.0",
+		"temperature": "0.5",
+        "biomeColor": { "r":128, "g":128, "b":255 }
+	},
+	"42": {
+		"waterColor": "0xFF0064E4",
+		"rainfall": "0.0",
+		"temperature": "0.5",
+        "biomeColor": { "r":128, "g":128, "b":255 }
+	},
+	"43": {
+		"waterColor": "0xFF0064E4",
+		"rainfall": "0.0",
+		"temperature": "0.5",
+        "biomeColor": { "r":128, "g":128, "b":255 }
+	},
+	"44": {
+		"waterColor": "0xFF0064E4",
+		"rainfall": "0.0",
+		"temperature": "0.5",
+        "biomeColor": { "r":0, "g":0, "b":172 }
+	},
+	"45": {
+		"waterColor": "0xFF0064E4",
+		"rainfall": "0.0",
+		"temperature": "0.5",
+        "biomeColor": { "r":0, "g":0, "b":144 }
+	},
+	"46": {
+		"waterColor": "0xFF0064E4",
+		"rainfall": "0.0",
+		"temperature": "0.5",
+        "biomeColor": { "r":32, "g":32, "b":112 }
+	},
+	"47": {
+		"waterColor": "0xFF0064E4",
+		"rainfall": "0.0",
+		"temperature": "0.5",
+        "biomeColor": { "r":0, "g":0, "b":80 }
+	},
+	"48": {
+		"waterColor": "0xFF0064E4",
+		"rainfall": "0.0",
+		"temperature": "0.5",
+        "biomeColor": { "r":0, "g":0, "b":64 }
+	},
+	"49": {
+		"waterColor": "0xFF0064E4",
+		"rainfall": "0.0",
+		"temperature": "0.5",
+        "biomeColor": { "r":32, "g":32, "b":56 }
+	},
+	"50": {
+		"waterColor": "0xFF0064E4",
+		"rainfall": "0.0",
+		"temperature": "0.5",
+        "biomeColor": { "r":64, "g":64, "b":144 }
+	},
+	"127": {
+		"waterColor": "0xFF0064E4",
+		"rainfall": "0.5",
+		"temperature": "0.5",
+		"biomeColor": { "r":0, "g":0, "b":0 }
+	},
+	"129": {
+		"waterColor": "16777215",
+		"rainfall": "0.4",
+		"temperature": "0.8",
+		"biomeColor": { "r":181, "g":219, "b":136 }
+	},
+	"130": {
+		"waterColor": "16777215",
+		"rainfall": "0.0",
+		"temperature": "2.0",
+		"biomeColor": { "r":255, "g":188, "b":64 }
+	},
+	"131": {
+		"waterColor": "16777215",
+		"rainfall": "0.3",
+		"temperature": "0.2",
+		"biomeColor": { "r":136, "g":136, "b":136 }
+	},
+	"132": {
+		"waterColor": "16777215",
+		"rainfall": "0.8",
+		"temperature": "0.7",
+		"biomeColor": { "r":45, "g":142, "b":73 }
+	},
+	"133": {
+		"waterColor": "16777215",
+		"rainfall": "0.8",
+		"temperature": "0.25",
+		"biomeColor": { "r":51, "g":142, "b":129 }
+	},
+	"134": {
+		"waterColor": "14745518",
+		"rainfall": "0.9",
+		"temperature": "0.8",
+		"biomeColor": { "r":47, "g":255, "b":218 }
+	},
+	"140": {
+		"waterColor": "16777215",
+		"rainfall": "0.5",
+		"temperature": "0.0",
+		"biomeColor": { "r":180, "g":220, "b":220 }
+	},
+	"149": {
+		"waterColor": "16777215",
+		"rainfall": "0.9",
+		"temperature": "0.95",
+		"biomeColor": { "r":123, "g":163, "b":49 }
+	},
+	"151": {
+		"waterColor": "16777215",
+		"rainfall": "0.8",
+		"temperature": "0.95",
+		"biomeColor": { "r":138, "g":179, "b":63 }
+	},
+	"155": {
+		"waterColor": "16777215",
+		"rainfall": "0.6",
+		"temperature": "0.6",
+		"biomeColor": { "r":88, "g":156, "b":108 }
+	},
+	"156": {
+		"waterColor": "16777215",
+		"rainfall": "0.6",
+		"temperature": "0.6",
+		"biomeColor": { "r":71, "g":135, "b":90 }
+	},
+	"157": {
+		"waterColor": "16777215",
+		"rainfall": "0.8",
+		"temperature": "0.7",
+		"biomeColor": { "r":104, "g":121, "b":66 }
+	},
+	"158": {
+		"waterColor": "16777215",
+		"rainfall": "0.4",
+		"temperature": "-0.5",
+		"biomeColor": { "r":89, "g":125, "b":114 }
+	},
+	"160": {
+		"waterColor": "16777215",
+		"rainfall": "0.8",
+		"temperature": "0.25",
+		"biomeColor": { "r":129, "g":142, "b":121 }
+	},
+	"161": {
+		"waterColor": "16777215",
+		"rainfall": "0.8",
+		"temperature": "0.25",
+		"biomeColor": { "r":109, "g":119, "b":102 } 
+	},
+	"162": {
+		"waterColor": "16777215",
+		"rainfall": "0.3",
+		"temperature": "0.2",
+		"biomeColor": { "r":120, "g":152, "b":120 }
+	},
+	"163": {
+		"waterColor": "16777215",
+		"rainfall": "0.0",
+		"temperature": "1.1",
+		"biomeColor": { "r":229, "g":218, "b":135 }
+	},
+	"164": {
+		"waterColor": "16777215",
+		"rainfall": "0.0",
+		"temperature": "1.0",
+		"biomeColor": { "r":207, "g":197, "b":140 }
+	},
+	"165": {
+		"waterColor": "16777215",
+		"rainfall": "0.0",
+		"temperature": "2.0",
+		"biomeColor": { "r":255, "g":109, "b":61 }
+	},
+	"166": {
+		"waterColor": "16777215",
+		"rainfall": "0.0",
+		"temperature": "2.0",
+		"biomeColor": { "r":216, "g":191, "b":141 }
+	},
+	"167": {
+		"waterColor": "16777215",
+		"rainfall": "0.0",
+		"temperature": "2.0",
+		"biomeColor": { "r":242, "g":180, "b":141 }
+	}
+}

@@ -126,7 +126,7 @@ public class CommandLineMain implements Runnable {
 			settings.minZ = minZ;
 			settings.maxZ = maxZ;
 			if (customColorMap == null)
-				settings.blockColors = colorMap.getColorMap();
+				settings.blockColors = colorMap.getColorMap(settings.version);
 			else
 				try (Reader r = Files.newBufferedReader(customColorMap)) {
 					settings.blockColors = BlockColorMap.load(r);
@@ -135,7 +135,7 @@ public class CommandLineMain implements Runnable {
 					return null;
 				}
 			if (customBiomeMap == null)
-				settings.biomeColors = BiomeColorMap.loadDefault();
+				settings.biomeColors = BiomeColorMap.loadDefault(settings.version);
 			else
 				try (Reader r = Files.newBufferedReader(customBiomeMap)) {
 					settings.biomeColors = BiomeColorMap.load(r);

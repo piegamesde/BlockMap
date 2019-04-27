@@ -8,57 +8,20 @@ javafx {
     modules = [ 'javafx.graphics', 'javafx.fxml', 'javafx.swing' ]
 }
 
-
-task downloadFiles(type: JavaExec) {
-	group 'Generation'
-	description 'Download required files that are not in the repository for technical or legal reasons (e.g. the minecraft server jar)'
+task generateData(type: JavaExec) {
 	classpath = sourceSets.main.runtimeClasspath
 	main = "de.piegames.blockmap.generate.Generator"
-	args = ['downloadFiles']
-    inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[0]}/1.13.2.json"
-    outputs.files "${buildDir}/generated-resources/BlockMap-internal/generated-resources-main/client.jar", 
-    			"${buildDir}/generated-resources/BlockMap-internal/generated-resources-main/server.jar"
-}
-
-task extractMinecraftData(type: JavaExec) {
-	dependsOn 'downloadFiles'
-	group 'Generation'
-	description 'Extract blocks.json (containing information about all blocks and block states) from the server jar using its data generator'
-	classpath = sourceSets.main.runtimeClasspath
-	main = "de.piegames.blockmap.generate.Generator"
-	args = ['extractData']
-    inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[1]}/server.jar"
-    outputs.dir "${buildDir}/generated-resources/BlockMap-internal/generated-resources-main/data/"
+	args = ['generateData']
 }
 
 task generateSources(type: JavaExec) {
-	dependsOn 'extractMinecraftData'
-	group 'Generation'
 	description 'Generate all enum values from BlockState.java and the version sources'
 	classpath = sourceSets.main.runtimeClasspath
 	main = "de.piegames.blockmap.generate.Generator"
-	args = ["generateVersion;${project.version}", 'generateBlockStates']
-    //inputs.dir "${project(":BlockMap-internal").sourceSets.main.java.srcDirs[0]}/de/piegames/blockmap/generate/"
-    //inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[1]}"
-    //outputs.dir "${buildDir}/generated-resources/other/"
-}
-
-task generateData(type: JavaExec) {
-	dependsOn 'downloadFiles'
-	group 'Generation'
-	description 'Generate color maps and other files using the Minecraft resource pack (in client.jar) and compile it to a less abstract form'
-	classpath = sourceSets.main.runtimeClasspath
-	main = "de.piegames.blockmap.generate.Generator"
-	args = ['generateBlockColors', 'generateBiomeColors', 'generateHeightmap']
-    //inputs.dir "${project(":BlockMap-internal").sourceSets.main.java.srcDirs[0]}/de/piegames/blockmap/generate/"
-    //inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[0]}/block-color-instructions.json"
-    //inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[0]}/biome-color-instructions.json"
-    //inputs.file "${project(":BlockMap-internal").sourceSets.main.resources.srcDirs[0]}/heightmap.png"
-    //outputs.dir "${buildDir}/generated-resources/BlockMap-core/generated-resources-main/"
+	args = ["generateVersion;${project.version}"]
 }
 
 task generateScreenshots(type: JavaExec) {
-	//dependsOn 'generateData'
 	group 'Generation'
 	description 'Automatically render certain files and create screenshots from the GUI to show off on Twitter. Takes a really long time to process because a large demo world is generated first.'
 	classpath = sourceSets.main.runtimeClasspath
@@ -77,6 +40,7 @@ dependencies {
 	implementation 'com.google.guava:guava:27.1-jre'
 	implementation 'info.picocli:picocli:3.7.0'
 	implementation 'com.github.Sommerlilie:MinecraftLandGenerator:a627245fc3'
+	implementation group: 'com.codepoetics', name: 'protonpack', version: '1.15'
 
 	/* This is not an actual dependency, but some biome color data has been copied from there so it will show up in the credits list */
 	// Currently broken because it does not compile on jitpack

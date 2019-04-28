@@ -73,6 +73,7 @@ public class ColorMapBuilder {
 			Block block = e.getKey();
 			Queue<String> colorInfo = new LinkedList<>(e.getValue());
 
+			// log.debug("Compiling block " + block + " with texture " + colorInfo);
 			BlockColor color = new BlockColor();
 			color.color = ColorCompiler.compileTexture(block.toString(), colorInfo, jarFile);
 			for (String remainingProperty : colorInfo) {

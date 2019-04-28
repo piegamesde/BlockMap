@@ -111,7 +111,7 @@ public class ColorMapTest {
 		assertTrue("The following states should be removed from the color map: " + tooMuch, tooMuch.isEmpty());
 	}
 
-	/** The debug world contains every single block and block state that exists in the game, so let's test it */
+	/** The debug world contains every single block and block state that exists in the game, so let's test it. */
 	@Test
 	public void testDebugWorld() throws IOException, URISyntaxException, InterruptedException {
 		Set<Block> missing = new HashSet<>();

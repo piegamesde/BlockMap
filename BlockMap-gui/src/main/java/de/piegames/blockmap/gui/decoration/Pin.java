@@ -105,6 +105,32 @@ public class Pin {
 		public static final PinType		VILLAGE_CENTER				= new PinType("Village center", VILLAGE, true, false, "textures/structures/village.png");
 		public static final PinType		VILLAGE_DOOR				= new PinType("Village house", VILLAGE, true, false, "textures/structures/house.png");
 
+		public static final PinType 	VILLAGE_HOME				= new PinType("Village home", VILLAGE, true, false, "");
+		public static final PinType		VILLAGE_LEATHERWORKER		= new PinType("Leatherworker", VILLAGE, true, false, "");
+		public static final PinType		VILLAGE_FARMER				= new PinType("Farmer", VILLAGE, true, false, "");
+		public static final PinType 	VILLAGE_TOOLSMITH			= new PinType("Toolsmith", VILLAGE, true, false, "");
+		public static final PinType 	VILLAGE_ARMORER				= new PinType("Armorer", VILLAGE, true, false, "");
+		public static final PinType		VILLAGE_SHEPHERD			= new PinType("Shepherd", VILLAGE, true, false, "");
+		public static final PinType		VILLAGE_MASON				= new PinType("Mason", VILLAGE, true, false, "");
+		public static final PinType		VILLAGE_CLERIC				= new PinType("Cleric", VILLAGE, true, false, "");
+		public static final PinType		VILLAGE_MEETING				= new PinType("Meetingpoint", VILLAGE, true, false, "");
+
+		//TODO please make this beautiful, please.
+		public static final Map<String, PinType> VILLAGE_MAPPING;
+		static
+		{
+			VILLAGE_MAPPING = new HashMap<>();
+			VILLAGE_MAPPING.put("minecraft:home", VILLAGE_HOME);
+			VILLAGE_MAPPING.put("minecraft:leatherworker", VILLAGE_LEATHERWORKER);
+			VILLAGE_MAPPING.put("minecraft:farmer", VILLAGE_FARMER);
+			VILLAGE_MAPPING.put("minecraft:toolsmith", VILLAGE_TOOLSMITH);
+			VILLAGE_MAPPING.put("minecraft:armorer", VILLAGE_ARMORER);
+			VILLAGE_MAPPING.put("minecraft:shepherd", VILLAGE_SHEPHERD);
+			VILLAGE_MAPPING.put("minecraft:mason", VILLAGE_MASON);
+			VILLAGE_MAPPING.put("minecraft:cleric", VILLAGE_CLERIC);
+			VILLAGE_MAPPING.put("minecraft:meeting", VILLAGE_MEETING);
+		}
+
 		public static final PinType		WORLD_SPAWN					= new PinType("Spawnpoint", ANY_PIN, true, false, "textures/pins/spawn_map.png");
 
 		public static final PinType		STRUCTURE					= new PinType("Structures", ANY_PIN, false, true, "textures/pins/structures.png");
@@ -668,7 +694,7 @@ public class Pin {
 			return info;
 		}
 	}
-
+	/*
 	private static class VillagePin extends Pin {
 
 		protected WorldPins.VillagePin village;
@@ -699,6 +725,38 @@ public class Pin {
 				content.add(new Label("Door count: "), 0, 4);
 				content.add(new Label(String.valueOf(village.getDoors().get().size())), 1, 4);
 			}
+
+			info.setContentNode(content);
+			return info;
+		}
+	}
+	*/
+
+	private static class VillageObjectPin extends Pin
+	{
+		protected WorldPins.VillageObjectPin villageObjectPin;
+
+		public VillageObjectPin(WorldPins.VillageObjectPin villageObjectPin, DisplayViewport viewport)
+		{
+			super(new Vector2d(villageObjectPin.getPosition().x(), villageObjectPin.getPosition().z()), PinType.VILLAGE_MAPPING.get(villageObjectPin.getType()), viewport);
+			this.villageObjectPin = Objects.requireNonNull(villageObjectPin);
+		}
+
+		@Override
+		protected PopOver initInfo()
+		{
+			PopOver info = super.initInfo();
+			GridPane content = new GridPane();
+			content.getStyleClass().add("grid");
+
+			content.add(new Label("Villageobject"), 0, 0, 1, 2);
+			content.add(new Separator(), 0, 1, 1, 2);
+
+			content.add(new Label("Free tickets: "), 0, 2);
+			content.add(new Label(String.valueOf(villageObjectPin.getFreeTickets())), 1, 2);
+
+			content.add(new Label("Type: "), 0, 3);
+			content.add(new Label(villageObjectPin.getType()), 1, 3);
 
 			info.setContentNode(content);
 			return info;
@@ -824,11 +882,14 @@ public class Pin {
 				pins.add(new PlayerSpawnpointPin(player, viewport));
 		}
 
+		/*
+		// TODO find way to replace door-pin-adding with job-pins
 		for (WorldPins.VillagePin village : pin.getVillages().orElse(Collections.emptyList())) {
 			pins.add(new VillagePin(village, viewport));
 			for (Vector3ic door : village.getDoors().orElse(Collections.emptyList()))
 				pins.add(new Pin(new Vector2d(door.x(), door.z()), PinType.VILLAGE_DOOR, viewport));
 		}
+		*/
 
 		/* Cluster maps at identical position to merge their pins. */
 		pins.addAll(pin.getMaps().map(List::stream).orElse(Stream.empty())

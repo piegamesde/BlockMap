@@ -252,6 +252,7 @@ public class RegionRenderer_1_14 extends RegionRenderer {
 						}
 						map[chunk.x << 4 | x | chunk.z << 13 | z << 9] = color.getFinal();
 					}
+
 				metadata.put(chunkPos, new ChunkMetadata(chunkPos, ChunkRenderState.RENDERED, generationStatus, structureCenters));
 			} catch (Exception e) {
 				log.warn("Failed to render chunk (" + chunk.x + ", " + chunk.z + ")", e);

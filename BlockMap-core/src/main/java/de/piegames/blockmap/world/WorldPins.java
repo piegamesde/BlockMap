@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import com.flowpowered.nbt.regionfile.Chunk;
+import com.flowpowered.nbt.regionfile.RegionFile;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.joml.Vector2d;
@@ -48,30 +50,30 @@ public class WorldPins {
 	public static final Gson	GSON	= new GsonBuilder().create();
 
 	/** This will be used in the future to keep track of old serialized files. */
-	int							version	= 0;
-	Optional<List<PlayerPin>>	players;
-	Optional<List<MapPin>>		maps;
-	Optional<List<VillagePin>>	villages;
-	Optional<List<ChunkPin>>	slimeChunks, loadedChunks;
-	Optional<BorderPin>			barrier;
-	Optional<WorldSpawnPin>		worldSpawn;
+	int									version	= 0;
+	Optional<List<PlayerPin>>			players;
+	Optional<List<MapPin>>				maps;
+	Optional<List<VillageObjectPin>>	villageObjects;
+	Optional<List<ChunkPin>>			slimeChunks, loadedChunks;
+	Optional<BorderPin>					barrier;
+	Optional<WorldSpawnPin>				worldSpawn;
 
 	@SuppressWarnings("unused")
 	private WorldPins() {
 		// Used by GSON
 	}
 
-	public WorldPins(List<PlayerPin> players, List<MapPin> maps, List<VillagePin> villages, List<ChunkPin> slimeChunks,
+	public WorldPins(List<PlayerPin> players, List<MapPin> maps, List<VillageObjectPin> villageObjects, List<ChunkPin> slimeChunks,
 			List<ChunkPin> loadedChunks, BorderPin barrier, WorldSpawnPin worldSpawn) {
-		this(Optional.ofNullable(players), Optional.ofNullable(maps), Optional.ofNullable(villages), Optional.ofNullable(slimeChunks), Optional.ofNullable(
+		this(Optional.ofNullable(players), Optional.ofNullable(maps), Optional.ofNullable(villageObjects), Optional.ofNullable(slimeChunks), Optional.ofNullable(
 				loadedChunks), Optional.ofNullable(barrier), Optional.ofNullable(worldSpawn));
 	}
 
-	public WorldPins(Optional<List<PlayerPin>> players, Optional<List<MapPin>> maps, Optional<List<VillagePin>> villages, Optional<List<ChunkPin>> slimeChunks,
+	public WorldPins(Optional<List<PlayerPin>> players, Optional<List<MapPin>> maps, Optional<List<VillageObjectPin>> villageObjects, Optional<List<ChunkPin>> slimeChunks,
 			Optional<List<ChunkPin>> loadedChunks, Optional<BorderPin> barrier, Optional<WorldSpawnPin> worldSpawn) {
 		this.players = players;
 		this.maps = maps;
-		this.villages = villages;
+		this.villageObjects = villageObjects;
 		this.slimeChunks = slimeChunks;
 		this.loadedChunks = loadedChunks;
 		this.barrier = barrier;
@@ -86,8 +88,8 @@ public class WorldPins {
 		return maps;
 	}
 
-	public Optional<List<VillagePin>> getVillages() {
-		return villages;
+	public Optional<List<VillageObjectPin>> getVillages() {
+		return villageObjects;
 	}
 
 	public Optional<List<ChunkPin>> getSlimeChunks() {
@@ -231,6 +233,7 @@ public class WorldPins {
 		}
 	}
 
+	/*
 	public static class VillagePin {
 		Vector3ic					position;
 		MinecraftDimension			dimension;
@@ -280,6 +283,33 @@ public class WorldPins {
 
 		public Optional<List<Vector3ic>> getDoors() {
 			return doors;
+		}
+	}
+	*/
+
+	public static class VillageObjectPin
+	{
+		Vector3ic position;
+		int freeTickets;
+		String type;
+
+		public VillageObjectPin(Vector3ic position, int freeTickets, String type)
+		{
+			this.position = position;
+			this.freeTickets = freeTickets;
+			this.type = type;
+		}
+
+		public Vector3ic getPosition() {
+			return position;
+		}
+
+		public int getFreeTickets() {
+			return freeTickets;
+		}
+
+		public String getType() {
+			return type;
 		}
 	}
 
@@ -373,6 +403,8 @@ public class WorldPins {
 		} catch (IOException e) {
 			log.warn("Could not access player data", e);
 		}
+
+		/*
 		List<VillagePin> villages = new ArrayList<>();
 		// Villages
 		for (MinecraftDimension dimension : MinecraftDimension.values()) {
@@ -407,6 +439,48 @@ public class WorldPins {
 				log.warn("Could not access village data", e);
 			}
 		}
+		*/
+
+		// Village 2.0
+		ArrayList<VillageObjectPin> villageObjects = new ArrayList<>();
+		try (DirectoryStream<Path> d = Files.newDirectoryStream(worldPath.resolve("poi")))
+		{
+			for(Path p : d)
+			{
+				if(!p.endsWith(".mca"))
+					continue;
+
+				RegionFile file = new RegionFile(p);
+
+				for(int i : file.listChunks())
+				{
+					Chunk chuck = file.loadChunk(i);
+					CompoundTag sections = (CompoundTag) chuck.readTag().getValue().get("Sections");
+					CompoundTag zero	 = (CompoundTag) sections.getValue().get("0");
+
+					if(((Byte) zero.getValue().get("Valid").getValue()) != 1) {
+						log.warn("Found invalid records during Village load in reagionfile " + file.getPath().toString() + " in chunk " + i);
+						continue;
+					}
+
+					ListTag<CompoundTag> records = (ListTag<CompoundTag>) zero.getValue().get("Records");
+					for(CompoundTag j : records.getValue())
+					{
+						int freeTickets = (Integer) j.getValue().get("free_tickets").getValue();
+						String type = (String) j.getValue().get("type").getValue();
+						int[] pos = (int[]) j.getValue().get("pos").getValue();
+						Vector3ic position = new Vector3i(pos[0], pos[1], pos[2]);
+
+						villageObjects.add(new VillageObjectPin(position, freeTickets, type));
+					}
+				}
+			}
+		}
+		catch (IOException e)
+		{
+			log.warn("Could not access village data", e);
+		}
+
 		List<MapPin> maps = new ArrayList<>();
 		// Maps
 		try (DirectoryStream<Path> d = Files.newDirectoryStream(worldPath.resolve("data"))) {
@@ -468,6 +542,6 @@ public class WorldPins {
 		} catch (IOException e) {
 			log.warn("Could not access level data", e);
 		}
-		return new WorldPins(players, maps, villages, null, null, barrier, worldSpawn);
+		return new WorldPins(players, maps, villageObjects, null, null, barrier, worldSpawn);
 	}
 }

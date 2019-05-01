@@ -115,6 +115,16 @@ public class Pin {
 		public static final PinType		VILLAGE_CLERIC				= new PinType("Cleric", VILLAGE, true, false, "/tmp.png");
 		public static final PinType		VILLAGE_MEETING				= new PinType("Meetingpoint", VILLAGE, true, false, "/tmp.png");
 
+		public static final PinType 	VILLAGE_HOME				= new PinType("Village home", VILLAGE, true, false, "");
+		public static final PinType		VILLAGE_LEATHERWORKER		= new PinType("Leatherworker", VILLAGE, true, false, "");
+		public static final PinType		VILLAGE_FARMER				= new PinType("Farmer", VILLAGE, true, false, "");
+		public static final PinType 	VILLAGE_TOOLSMITH			= new PinType("Toolsmith", VILLAGE, true, false, "");
+		public static final PinType 	VILLAGE_ARMORER				= new PinType("Armorer", VILLAGE, true, false, "");
+		public static final PinType		VILLAGE_SHEPHERD			= new PinType("Shepherd", VILLAGE, true, false, "");
+		public static final PinType		VILLAGE_MASON				= new PinType("Mason", VILLAGE, true, false, "");
+		public static final PinType		VILLAGE_CLERIC				= new PinType("Cleric", VILLAGE, true, false, "");
+		public static final PinType		VILLAGE_MEETING				= new PinType("Meetingpoint", VILLAGE, true, false, "");
+
 		//TODO please make this beautiful, please.
 		public static final Map<String, PinType> VILLAGE_MAPPING;
 		static

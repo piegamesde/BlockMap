@@ -101,19 +101,19 @@ public class Pin {
 		public static final PinType		MAP_POSITION				= new PinType("Map position", MAP, true, false, "textures/pins/map.png");
 		public static final PinType		MAP_BANNER					= new PinType("Map banner", MAP, true, false, "textures/pins/banner.png");
 
-		public static final PinType		VILLAGE						= new PinType("Villages", ANY_PIN, true, false, "textures/structures/village.png");
-		public static final PinType		VILLAGE_CENTER				= new PinType("Village center", VILLAGE, true, false, "textures/structures/village.png");
-		public static final PinType		VILLAGE_DOOR				= new PinType("Village house", VILLAGE, true, false, "textures/structures/house.png");
 
-		public static final PinType 	VILLAGE_HOME				= new PinType("Village home", VILLAGE, true, false, "");
-		public static final PinType		VILLAGE_LEATHERWORKER		= new PinType("Leatherworker", VILLAGE, true, false, "");
-		public static final PinType		VILLAGE_FARMER				= new PinType("Farmer", VILLAGE, true, false, "");
-		public static final PinType 	VILLAGE_TOOLSMITH			= new PinType("Toolsmith", VILLAGE, true, false, "");
-		public static final PinType 	VILLAGE_ARMORER				= new PinType("Armorer", VILLAGE, true, false, "");
-		public static final PinType		VILLAGE_SHEPHERD			= new PinType("Shepherd", VILLAGE, true, false, "");
-		public static final PinType		VILLAGE_MASON				= new PinType("Mason", VILLAGE, true, false, "");
-		public static final PinType		VILLAGE_CLERIC				= new PinType("Cleric", VILLAGE, true, false, "");
-		public static final PinType		VILLAGE_MEETING				= new PinType("Meetingpoint", VILLAGE, true, false, "");
+		public static final PinType		VILLAGE						= new PinType("Villages", ANY_PIN, true, false, "textures/structures/village.png");
+		// public static final PinType		VILLAGE_CENTER				= new PinType("Village center", VILLAGE, true, false, "textures/structures/village.png");
+		// public static final PinType		VILLAGE_DOOR				= new PinType("Village house", VILLAGE, true, false, "textures/structures/house.png");
+		public static final PinType 	VILLAGE_HOME				= new PinType("Village home", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_LEATHERWORKER		= new PinType("Leatherworker", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_FARMER				= new PinType("Farmer", VILLAGE, true, false, "/tmp.png");
+		public static final PinType 	VILLAGE_TOOLSMITH			= new PinType("Toolsmith", VILLAGE, true, false, "/tmp.png");
+		public static final PinType 	VILLAGE_ARMORER				= new PinType("Armorer", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_SHEPHERD			= new PinType("Shepherd", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_MASON				= new PinType("Mason", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_CLERIC				= new PinType("Cleric", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_MEETING				= new PinType("Meetingpoint", VILLAGE, true, false, "/tmp.png");
 
 		//TODO please make this beautiful, please.
 		public static final Map<String, PinType> VILLAGE_MAPPING;
@@ -755,8 +755,7 @@ public class Pin {
 			content.add(new Label("Free tickets: "), 0, 2);
 			content.add(new Label(String.valueOf(villageObjectPin.getFreeTickets())), 1, 2);
 
-			content.add(new Label("Type: "), 0, 3);
-			content.add(new Label(villageObjectPin.getType()), 1, 3);
+			content.add(new Label(type.name), 0, 3);
 
 			info.setContentNode(content);
 			return info;
@@ -809,11 +808,35 @@ public class Pin {
 				}
 
 			}
+			/*
 			if (pinCount.size() > 4 && pinCount.getOrDefault(PinType.VILLAGE_CENTER, 0L) > 0 && pinCount.getOrDefault(PinType.VILLAGE_DOOR, 0L) > 0) {
-				/* Merge village with doors */
+				/* Merge village with doors
 				pinCount.put(PinType.VILLAGE_CENTER, pinCount.get(PinType.VILLAGE_CENTER) + pinCount.get(PinType.VILLAGE_DOOR));
 				pinCount.remove(PinType.VILLAGE_DOOR);
 			}
+			*/
+			// TODO Make this beautiful too. Just do it.
+			if(pinCount.size() > 4 	&& pinCount.getOrDefault(PinType.VILLAGE_HOME, 0L) > 0
+									&& pinCount.getOrDefault(PinType.VILLAGE_LEATHERWORKER, 0L) > 0
+									&& pinCount.getOrDefault(PinType.VILLAGE_FARMER, 0L) > 0
+									&& pinCount.getOrDefault(PinType.VILLAGE_TOOLSMITH, 0L) > 0
+									&& pinCount.getOrDefault(PinType.VILLAGE_ARMORER, 0L) > 0
+									&& pinCount.getOrDefault(PinType.VILLAGE_SHEPHERD, 0L) > 0
+									&& pinCount.getOrDefault(PinType.VILLAGE_MASON, 0L) > 0
+									&& pinCount.getOrDefault(PinType.VILLAGE_CLERIC, 0L) > 0
+									&& pinCount.getOrDefault(PinType.VILLAGE_MEETING, 0L) > 0)
+			{
+				pinCount.put(PinType.VILLAGE, pinCount.getOrDefault(PinType.VILLAGE_HOME, 0L)
+					+ pinCount.getOrDefault(PinType.VILLAGE_LEATHERWORKER, 0L)
+					+ pinCount.getOrDefault(PinType.VILLAGE_FARMER, 0L)
+					+ pinCount.getOrDefault(PinType.VILLAGE_TOOLSMITH, 0L)
+					+ pinCount.getOrDefault(PinType.VILLAGE_ARMORER, 0L)
+					+ pinCount.getOrDefault(PinType.VILLAGE_SHEPHERD, 0L)
+					+ pinCount.getOrDefault(PinType.VILLAGE_MASON, 0L)
+					+ pinCount.getOrDefault(PinType.VILLAGE_CLERIC, 0L)
+					+ pinCount.getOrDefault(PinType.VILLAGE_MEETING, 0L));
+			}
+
 			if (pinCount.size() > 4 && pinCount.getOrDefault(PinType.MAP_POSITION, 0L) > 0 && pinCount.getOrDefault(PinType.MAP_BANNER, 0L) > 0) {
 				/* Merge map with banners */
 				pinCount.put(PinType.MAP_POSITION, pinCount.get(PinType.MAP_POSITION) + pinCount.get(PinType.MAP_BANNER));

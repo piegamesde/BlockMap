@@ -93,7 +93,11 @@ public class MinecraftBlocks {
 
 		public static class State {
 			public int					id;
-			public Map<String, String>	properties;
+			private Map<String, String>	properties;
+
+			public Map<String, String> getProperties() {
+				return properties == null ? Collections.emptyMap() : properties;
+			}
 		}
 	}
 }

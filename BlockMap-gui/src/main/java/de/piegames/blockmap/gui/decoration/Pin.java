@@ -34,6 +34,11 @@ import com.codepoetics.protonpack.StreamUtils;
 import de.piegames.blockmap.gui.DisplayViewport;
 import de.piegames.blockmap.world.ChunkMetadata;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkGenerationStatus;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataCulled;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataFailed;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataRendered;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataVersion;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataVisitor;
 import de.piegames.blockmap.world.WorldPins;
 import de.saibotk.jmaw.ApiResponseException;
 import de.saibotk.jmaw.MojangAPI;
@@ -805,21 +810,33 @@ public class Pin {
 		/* Map each generation status to the amount of chunks with this state */
 		int[] unfinishedCount = new int[ChunkGenerationStatus.values().length];
 		for (ChunkMetadata metadata : metadataMap.values()) {
-			switch (metadata.renderState) {
-			case RENDERED:
-				if (metadata.generationStatus != null && metadata.generationStatus != ChunkGenerationStatus.POSTPROCESSED)
-					unfinishedChunks.add(metadata.position);
-				unfinishedCount[metadata.generationStatus.ordinal()]++;
-				break;
-			case FAILED:
-				failedChunks.add(metadata.position);
-				break;
-			case TOO_OLD:
-				oldChunks.add(metadata.position);
-				break;
-			default:
-				break;
-			}
+			metadata.visit(new ChunkMetadataVisitor<Void>() {
+
+				@Override
+				public Void rendered(ChunkMetadataRendered metadata) {
+					if (metadata.generationStatus != null && metadata.generationStatus != ChunkGenerationStatus.POSTPROCESSED)
+						unfinishedChunks.add(metadata.position);
+					unfinishedCount[metadata.generationStatus.ordinal()]++;
+					return null;
+				}
+
+				@Override
+				public Void failed(ChunkMetadataFailed metadata) {
+					failedChunks.add(metadata.position);
+					return null;
+				}
+
+				@Override
+				public Void culled(ChunkMetadataCulled metadata) {
+					return null;
+				}
+
+				@Override
+				public Void version(ChunkMetadataVersion metadata) {
+					oldChunks.add(metadata.position);
+					return null;
+				}
+			});
 		}
 
 		for (Set<Vector2ic> chunks : splitChunks(unfinishedChunks)) {
@@ -832,7 +849,7 @@ public class Pin {
 		for (Set<Vector2ic> chunks : splitChunks(failedChunks)) {
 			Vector2dc center = chunks.stream().map(v -> new Vector2d(v.x() * 16.0 + 8, v.y() * 16.0 + 8)).collect(Vector2d::new, Vector2d::add,
 					Vector2d::add).mul(1.0 / chunks.size());
-			pins.add(new ChunkPin(PinType.CHUNK_UNFINISHED, center, outlineSet(chunks),
+			pins.add(new ChunkPin(PinType.CHUNK_FAILED, center, outlineSet(chunks),
 					new Image(Pin.class.getResource("textures/overlays/chunk_corrupted.png").toString(), 64, 64, true, false),
 					viewport));
 		}
@@ -849,6 +866,8 @@ public class Pin {
 		 * a pin from it and add it to the list.
 		 */
 		pins.addAll(metadataMap.values().stream()
+				.filter(m -> m instanceof ChunkMetadataRendered)
+				.map(m -> (ChunkMetadataRendered) m)
 				.flatMap(m -> m.structures.entrySet().stream())
 				.filter(e -> PinType.structureTypes.containsKey(e.getKey()))
 				.map(e -> new Pin(new Vector2d(e.getValue().x(), e.getValue().z()), PinType.structureTypes.get(e.getKey()), viewport))

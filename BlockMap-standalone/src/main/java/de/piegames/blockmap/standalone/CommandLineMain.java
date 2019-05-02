@@ -1,9 +1,7 @@
 package de.piegames.blockmap.standalone;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Callable;
@@ -16,7 +14,6 @@ import org.joml.Vector2ic;
 
 import de.piegames.blockmap.MinecraftDimension;
 import de.piegames.blockmap.color.BiomeColorMap;
-import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.color.BlockColorMap.InternalColorMap;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RegionShader.DefaultShader;
@@ -87,10 +84,10 @@ public class CommandLineMain implements Runnable {
 				paramLabel = "{OVERWORLD|NETHER|END}",
 				description = "The dimension of the world to render. If this is set, INPUT must point to a world folder instead of a region folder")
 		private MinecraftDimension	dimension;
-		@Option(names = "--custom-color-map", description = "Load a custom color map from the specified file. Overrides --color-map.")
-		private Path				customColorMap;
-		@Option(names = "--custom-biome-map", description = "Load a custom biome color map from the specified file.")
-		private Path				customBiomeMap;
+		// @Option(names = "--custom-color-map", description = "Load a custom color map from the specified file. Overrides --color-map.")
+		// private Path customColorMap;
+		// @Option(names = "--custom-biome-map", description = "Load a custom biome color map from the specified file.")
+		// private Path customBiomeMap;
 
 		@Option(names = { "--min-Y", "--min-height" }, description = "Don't draw blocks lower than this height.", defaultValue = "0")
 		private int					minY;
@@ -125,27 +122,27 @@ public class CommandLineMain implements Runnable {
 			settings.maxY = maxY;
 			settings.minZ = minZ;
 			settings.maxZ = maxZ;
-			if (customColorMap == null)
-				settings.blockColors = colorMap.getColorMap(settings.version);
-			else
-				try (Reader r = Files.newBufferedReader(customColorMap)) {
-					settings.blockColors = BlockColorMap.load(r);
-				} catch (IOException e) {
-					log.error("Could not load custom block color map", e);
-					return null;
-				}
-			if (customBiomeMap == null)
-				settings.biomeColors = BiomeColorMap.loadDefault(settings.version);
-			else
-				try (Reader r = Files.newBufferedReader(customBiomeMap)) {
-					settings.biomeColors = BiomeColorMap.load(r);
-				} catch (IOException e) {
-					log.error("Could not load custom block color map", e);
-					return null;
-				}
+			// if (customColorMap == null)
+			settings.blockColors = colorMap.getColorMap();
+			// else
+			// try (Reader r = Files.newBufferedReader(customColorMap)) {
+			// settings.blockColors = BlockColorMap.load(r);
+			// } catch (IOException e) {
+			// log.error("Could not load custom block color map", e);
+			// return null;
+			// }
+			// if (customBiomeMap == null)
+			settings.biomeColors = BiomeColorMap.loadDefault();
+			// else
+			// try (Reader r = Files.newBufferedReader(customBiomeMap)) {
+			// settings.biomeColors = BiomeColorMap.load(r);
+			// } catch (IOException e) {
+			// log.error("Could not load custom biome color map", e);
+			// return null;
+			// }
 			settings.shader = shader.getShader();
 
-			RegionRenderer renderer = RegionRenderer.create(settings);
+			RegionRenderer renderer = new RegionRenderer(settings);
 			Path input = this.input;
 			if (dimension != null)
 				input = input.resolve(dimension.getRegionPath());

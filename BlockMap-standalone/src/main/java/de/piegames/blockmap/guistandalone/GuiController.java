@@ -23,7 +23,7 @@ import org.joml.Vector2ic;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import de.piegames.blockmap.DotMinecraft;
-import de.piegames.blockmap.color.BlockColorMap;
+import de.piegames.blockmap.color.BlockColorMap.InternalColorMap;
 import de.piegames.blockmap.gui.MapPane;
 import de.piegames.blockmap.gui.WorldRendererCanvas;
 import de.piegames.blockmap.gui.decoration.DragScrollDecoration;
@@ -110,7 +110,7 @@ public class GuiController implements Initializable {
 		log.debug("Initializing GUI");
 		RenderSettings settings = new RenderSettings();
 		settings.loadDefaultColors();
-		regionRenderer = RegionRenderer.create(settings);
+		regionRenderer = new RegionRenderer(settings);
 
 		renderer = new WorldRendererCanvas(null);
 		root.setCenter(pane = new MapPane(renderer));
@@ -158,9 +158,7 @@ public class GuiController implements Initializable {
 		heightSlider.highValueChangingProperty().addListener(heightListener);
 
 		colorBox.valueProperty().addListener((observer, old, value) -> {
-			settings.blockColors = BlockColorMap
-					.loadInternal(new String[] { "default", "caves", "foliage", "water" }[colorBox.getSelectionModel().getSelectedIndex()],
-							settings.version);
+			settings.blockColors = InternalColorMap.values()[colorBox.getSelectionModel().getSelectedIndex()].getColorMap();
 			renderer.invalidateTextures();
 			renderer.repaint();
 		});

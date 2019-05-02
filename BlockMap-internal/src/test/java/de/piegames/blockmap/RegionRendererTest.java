@@ -16,7 +16,7 @@ import org.junit.rules.TemporaryFolder;
 
 import com.flowpowered.nbt.regionfile.RegionFile;
 
-import de.piegames.blockmap.renderer.RegionRenderer_1_13;
+import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RenderSettings;
 
 public class RegionRendererTest {
@@ -28,7 +28,7 @@ public class RegionRendererTest {
 	public void simpleTest1() throws IOException, URISyntaxException, InterruptedException {
 		RenderSettings settings = new RenderSettings();
 		settings.loadDefaultColors();
-		RegionRenderer_1_13 renderer = new RegionRenderer_1_13(settings);
+		RegionRenderer renderer = new RegionRenderer(settings);
 		BufferedImage image = renderer.render(new Vector2i(0, 0), new RegionFile(Paths.get(URI.create(getClass().getResource("/r.0.0.mca").toString()))))
 				.getImage();
 		ImageIO.write(image, "png", Files.newOutputStream(folder.newFile().toPath()));

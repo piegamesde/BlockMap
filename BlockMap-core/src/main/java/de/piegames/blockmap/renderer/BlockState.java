@@ -1,7 +1,9 @@
 package de.piegames.blockmap.renderer;
 
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 
 public class BlockState {
@@ -19,6 +21,13 @@ public class BlockState {
 
 	public int getProperty(String key, String value) {
 		return states.getOrDefault(key, Collections.emptyMap()).get(value);
+	}
+
+	public BitSet getState(Map<String, String> properties) {
+		BitSet state = new BitSet(states.size());
+		for (Entry<String, String> entry : properties.entrySet())
+			state.set(getProperty(entry.getKey(), entry.getValue()));
+		return state;
 	}
 
 	public int getSize() {

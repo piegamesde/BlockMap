@@ -125,7 +125,7 @@ public class RegionRenderer {
 					metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "This chunk was written from Minecraft <1.13, which is not supported",
 							dataVersion));
 					continue;
-				} else if (dataVersion < MinecraftVersion.MC_1_13.maxVersion) {
+				} else if (dataVersion <= MinecraftVersion.MC_1_13.maxVersion) {
 					metadata.put(chunkPos, renderer13.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
 				} else if (dataVersion >= MinecraftVersion.MC_1_14.minVersion && dataVersion < MinecraftVersion.MC_1_14.maxVersion) {
 					metadata.put(chunkPos, renderer14.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));

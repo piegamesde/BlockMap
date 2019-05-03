@@ -2,6 +2,7 @@ package de.piegames.blockmap.gui.decoration;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,6 +32,7 @@ import org.joml.Vector3ic;
 
 import com.codepoetics.protonpack.StreamUtils;
 
+import de.piegames.blockmap.MinecraftVersion;
 import de.piegames.blockmap.gui.DisplayViewport;
 import de.piegames.blockmap.world.ChunkMetadata;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkGenerationStatus;
@@ -343,8 +345,9 @@ public class Pin {
 
 		protected int[] chunkCount;
 
-		public UnfinishedChunkPin(Vector2dc centerPos, List<Vector2ic> chunkPositions, int[] chunkCount, Image image, DisplayViewport viewport) {
-			super(PinType.CHUNK_UNFINISHED, centerPos, chunkPositions, image, viewport);
+		public UnfinishedChunkPin(Vector2dc centerPos, List<Vector2ic> chunkPositions, int[] chunkCount, DisplayViewport viewport) {
+			super(PinType.CHUNK_UNFINISHED, centerPos, chunkPositions, new Image(Pin.class.getResource("textures/overlays/chunk_unfinished.png").toString(), 64,
+					64, true, false), viewport);
 			this.chunkCount = Objects.requireNonNull(chunkCount);
 		}
 
@@ -359,6 +362,47 @@ public class Pin {
 			for (int i = 0; i < chunkCount.length; i++) {
 				popContent.add(new Label(ChunkGenerationStatus.values()[i].name().toLowerCase() + ":"), 0, i);
 				popContent.add(new Label(chunkCount[i] + " chunks"), 1, i);
+			}
+			return info;
+		}
+	}
+
+	private static class OldChunkPin extends ChunkPin {
+
+		protected Collection<ChunkMetadataVersion> chunks;
+
+		public OldChunkPin(Vector2dc centerPos, List<Vector2ic> chunkPositions, Collection<ChunkMetadataVersion> chunks, DisplayViewport viewport) {
+			super(PinType.CHUNK_OLD, centerPos, chunkPositions, new Image(Pin.class.getResource("textures/overlays/chunk_outdated.png").toString(), 64, 64,
+					true, false), viewport);
+			System.out.println(chunks);
+			this.chunks = chunks;
+		}
+
+		@Override
+		protected PopOver initInfo() {
+			PopOver info = super.initInfo();
+
+			GridPane popContent = new GridPane();
+			popContent.getStyleClass().add("grid");
+			info.setContentNode(popContent);
+
+			popContent.add(new Label("Found version(s):"), 0, 0);
+			popContent.add(new Label(
+					chunks.stream().map(c -> c.version).distinct().sorted().map(String::valueOf).collect(Collectors.joining(", ", "{", "}"))), 1, 0);
+			popContent.add(new Label("Unsupported for reason(s):"), 0, 1);
+			popContent.add(new Label(
+					chunks.stream().map(c -> c.message).distinct().sorted().map(String::valueOf).collect(Collectors.joining(", ", "{", "}"))), 1, 1);
+			popContent.add(new Separator(), 0, 2, 2, 1);
+			popContent.add(new Label("Supported versions:"), 0, 3);
+			popContent.add(new Label("Name:"), 1, 3);
+			int row = 4;
+			for (MinecraftVersion supported : MinecraftVersion.values()) {
+				if (supported.maxVersion == Integer.MAX_VALUE)
+					popContent.add(new Label(supported.minVersion + "+"), 0, row);
+				else
+					popContent.add(new Label(supported.minVersion + "-" + supported.maxVersion), 0, row);
+
+				popContent.add(new Label(supported.versionName), 1, row++);
 			}
 			return info;
 		}
@@ -806,7 +850,9 @@ public class Pin {
 	/** Convert the {@link ChunkMetadata} that was generated while rendering into (dynamic) pins. */
 	public static List<Pin> convertDynamic(Map<Vector2ic, ChunkMetadata> metadataMap, DisplayViewport viewport) {
 		List<Pin> pins = new ArrayList<>();
-		Set<Vector2ic> oldChunks = new HashSet<>(), failedChunks = new HashSet<>(), unfinishedChunks = new HashSet<>();
+		Set<Vector2ic> unfinishedChunks = new HashSet<>();
+		Map<Vector2ic, ChunkMetadataVersion> oldChunks = new HashMap<>();
+		Map<Vector2ic, ChunkMetadataFailed> failedChunks = new HashMap<>();
 		/* Map each generation status to the amount of chunks with this state */
 		int[] unfinishedCount = new int[ChunkGenerationStatus.values().length];
 		for (ChunkMetadata metadata : metadataMap.values()) {
@@ -822,7 +868,7 @@ public class Pin {
 
 				@Override
 				public Void failed(ChunkMetadataFailed metadata) {
-					failedChunks.add(metadata.position);
+					failedChunks.put(metadata.position, metadata);
 					return null;
 				}
 
@@ -833,7 +879,7 @@ public class Pin {
 
 				@Override
 				public Void version(ChunkMetadataVersion metadata) {
-					oldChunks.add(metadata.position);
+					oldChunks.put(metadata.position, metadata);
 					return null;
 				}
 			});
@@ -842,23 +888,19 @@ public class Pin {
 		for (Set<Vector2ic> chunks : splitChunks(unfinishedChunks)) {
 			Vector2dc center = chunks.stream().map(v -> new Vector2d(v.x() * 16.0 + 8, v.y() * 16.0 + 8)).collect(Vector2d::new, Vector2d::add,
 					Vector2d::add).mul(1.0 / chunks.size());
-			pins.add(new UnfinishedChunkPin(center, outlineSet(chunks), unfinishedCount,
-					new Image(Pin.class.getResource("textures/overlays/chunk_unfinished.png").toString(), 64, 64, true, false),
-					viewport));
+			pins.add(new UnfinishedChunkPin(center, outlineSet(chunks), unfinishedCount, viewport));
 		}
-		for (Set<Vector2ic> chunks : splitChunks(failedChunks)) {
+		for (Set<Vector2ic> chunks : splitChunks(failedChunks.keySet())) {
 			Vector2dc center = chunks.stream().map(v -> new Vector2d(v.x() * 16.0 + 8, v.y() * 16.0 + 8)).collect(Vector2d::new, Vector2d::add,
 					Vector2d::add).mul(1.0 / chunks.size());
 			pins.add(new ChunkPin(PinType.CHUNK_FAILED, center, outlineSet(chunks),
 					new Image(Pin.class.getResource("textures/overlays/chunk_corrupted.png").toString(), 64, 64, true, false),
 					viewport));
 		}
-		for (Set<Vector2ic> chunks : splitChunks(oldChunks)) {
-			Vector2dc center = chunks.stream().map(v -> new Vector2d(v.x() * 16.0 + 8, v.y() * 16.0 + 8)).collect(Vector2d::new, Vector2d::add,
+		for (Map<Vector2ic, ChunkMetadataVersion> chunks : splitChunks(oldChunks)) {
+			Vector2dc center = chunks.keySet().stream().map(v -> new Vector2d(v.x() * 16.0 + 8, v.y() * 16.0 + 8)).collect(Vector2d::new, Vector2d::add,
 					Vector2d::add).mul(1.0 / chunks.size());
-			pins.add(new ChunkPin(PinType.CHUNK_UNFINISHED, center, outlineSet(chunks),
-					new Image(Pin.class.getResource("textures/overlays/chunk_outdated.png").toString(), 64, 64, true, false),
-					viewport));
+			pins.add(new OldChunkPin(center, outlineSet(chunks.keySet()), chunks.values(), viewport));
 		}
 
 		/*
@@ -907,7 +949,7 @@ public class Pin {
 	}
 
 	/**
-	 * Takes in a set of chunk positions, identifies all connected subsets and calculates the outline of each one.
+	 * Takes in a set of chunk positions and identifies all connected subsets.
 	 * 
 	 * @param chunks
 	 *            A set of chunk positions. This will be emptied during the calculation.
@@ -927,6 +969,38 @@ public class Pin {
 						todo.add(neighbor);
 				}
 				done.add(current);
+			}
+			islands.add(done);
+		}
+		return islands;
+	}
+
+	/**
+	 * Takes in a map of chunk positions and identifies all connected subsets.
+	 * 
+	 * @param chunks
+	 *            A map of chunk positions. This will be emptied during the calculation.
+	 */
+	private static <T> List<Map<Vector2ic, T>> splitChunks(Map<Vector2ic, T> chunks) {
+		List<Map<Vector2ic, T>> islands = new ArrayList<>();
+		while (!chunks.isEmpty()) {
+			Map<Vector2ic, T> done = new HashMap<>();
+			Queue<Vector2ic> todo = new LinkedList<>();
+			Queue<T> todoV = new LinkedList<>();
+			todo.add(chunks.entrySet().iterator().next().getKey());
+			todoV.add(chunks.entrySet().iterator().next().getValue());
+			chunks.remove(todo.element());
+			while (!todo.isEmpty()) {
+				Vector2ic current = todo.remove();
+				T val = todoV.remove();
+				for (Vector2i neighbor : new Vector2i[] { new Vector2i(-1, 0), new Vector2i(1, 0), new Vector2i(0, -1), new Vector2i(0, 1) }) {
+					neighbor.add(current);
+					if (chunks.containsKey(neighbor)) {
+						todoV.add(chunks.remove(neighbor));
+						todo.add(neighbor);
+					}
+				}
+				done.put(current, val);
 			}
 			islands.add(done);
 		}

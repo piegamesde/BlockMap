@@ -76,9 +76,9 @@ public class Pin {
 
 	public static class PinType {
 		public static final PinType		MERGED_PIN					= new PinType("Merged pin", null, false, false, "/tmp.png");
-		public static final PinType		ANY_PIN						= new PinType("Show pins", null, false, true, "/tmp.png");
+		public static final PinType		ANY_PIN						= new PinType("Show pins", null, false, true, "textures/pins/pins.png");
 
-		public static final PinType		CHUNK_PIN					= new PinType("Chunks", ANY_PIN, false, false, "/tmp.png");
+		public static final PinType		CHUNK_PIN					= new PinType("Chunks", ANY_PIN, false, false, "textures/overlays/pin_chunks.png");
 		public static final PinType		CHUNK_UNFINISHED			= new PinType("Unfinished chunk", CHUNK_PIN, false, false,
 				"textures/overlays/pin_chunk_unfinished.png");
 		public static final PinType		CHUNK_FAILED				= new PinType("Corrupt chunk", CHUNK_PIN, true, false,
@@ -100,7 +100,7 @@ public class Pin {
 
 		public static final PinType		WORLD_SPAWN					= new PinType("Spawnpoint", ANY_PIN, true, false, "textures/pins/spawn_map.png");
 
-		public static final PinType		STRUCTURE					= new PinType("Structures", ANY_PIN, false, true, "/tmp.png");
+		public static final PinType		STRUCTURE					= new PinType("Structures", ANY_PIN, false, true, "textures/pins/structures.png");
 		public static final PinType		STRUCTURE_TREASURE			= new PinType("Treasure", STRUCTURE, true, false,
 				"textures/structures/buried_treasure.png");
 		public static final PinType		STRUCTURE_PYRAMID			= new PinType("Pyramid", STRUCTURE, true, false, "textures/structures/desert_pyramid.png");

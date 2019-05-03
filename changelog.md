@@ -1,5 +1,16 @@
 # Changelog
 
+## Version 1.3.0
+## Changes
+- Added Pins
+	- They contain information about the world and the render process (did it fail?)
+	- Save them together with your rendered world
+	- Display them in the GUI
+- Redesigned GUI layout
+- Little performance improvements
+- Updated to Java 11
+- Updated libraries
+
 ## Version 1.2
 ### Changes
 - Reworked the `RegionFolder` API. It remains not being great, but at least now with more features

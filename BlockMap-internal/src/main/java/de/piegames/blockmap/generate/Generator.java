@@ -268,6 +268,8 @@ public class Generator {
 	@Command
 	public void generateScreenshots() throws Exception {
 		log.info("Generating screenshots");
+		// TODO remove and place somewhere else
+		Files.createDirectories(Generator.OUTPUT_SCREENSHOTS);
 		Screenshots.generateDemoRenders();
 		Screenshots.generateScreenshots();
 		processResources();

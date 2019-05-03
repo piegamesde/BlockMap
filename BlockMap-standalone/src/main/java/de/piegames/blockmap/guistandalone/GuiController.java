@@ -169,6 +169,13 @@ public class GuiController implements Initializable {
 			renderer.repaint();
 		});
 
+		// { /* Pin checkbox icon */
+		// ImageView image = new ImageView(PinType.ANY_PIN.image);
+		// image.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> pinBox.getFont().getSize() * 1.0, pinBox.fontProperty()));
+		// image.setSmooth(true);
+		// image.setPreserveRatio(true);
+		// pinBox.setGraphic(image);
+		// }
 		{ /* Pin tree */
 			initPinCheckboxes(PinType.ANY_PIN, null, pinView);
 			pinView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);

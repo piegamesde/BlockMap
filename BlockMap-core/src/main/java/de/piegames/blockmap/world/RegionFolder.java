@@ -39,6 +39,7 @@ import com.google.gson.stream.JsonWriter;
 
 import de.piegames.blockmap.MinecraftDimension;
 import de.piegames.blockmap.renderer.RegionRenderer;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkRenderState;
 import de.piegames.blockmap.world.Region.BufferedRegion;
 import de.piegames.blockmap.world.Region.LocalSavedRegion;
 import de.piegames.blockmap.world.Region.SavedRegion;
@@ -51,8 +52,10 @@ import io.gsonfire.GsonFireBuilder;
 public abstract class RegionFolder {
 
 	public static final Gson GSON = new GsonFireBuilder()
+			.enableExposeMethodResult()
 			.registerTypeSelector(Vector2ic.class, e -> Vector2i.class)
 			.registerTypeSelector(Vector3ic.class, e -> Vector3i.class)
+			.registerTypeSelector(ChunkMetadata.class, e -> ChunkRenderState.valueOf(e.getAsJsonObject().getAsJsonPrimitive("renderState").getAsString()).clazz)
 			.createGsonBuilder()
 			.setPrettyPrinting()
 			.create();

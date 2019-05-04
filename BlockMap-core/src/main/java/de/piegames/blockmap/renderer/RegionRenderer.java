@@ -1,36 +1,42 @@
 package de.piegames.blockmap.renderer;
 
 import java.awt.image.BufferedImage;
-import java.util.BitSet;
+import java.io.IOException;
+import java.nio.channels.ClosedByInterruptException;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.joml.Vector2i;
 import org.joml.Vector2ic;
 
+import com.flowpowered.nbt.CompoundMap;
 import com.flowpowered.nbt.CompoundTag;
-import com.flowpowered.nbt.StringTag;
-import com.flowpowered.nbt.Tag;
+import com.flowpowered.nbt.regionfile.Chunk;
 import com.flowpowered.nbt.regionfile.RegionFile;
 
+import de.piegames.blockmap.MinecraftVersion;
 import de.piegames.blockmap.color.Color;
 import de.piegames.blockmap.world.ChunkMetadata;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataCulled;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataFailed;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataVersion;
 import de.piegames.blockmap.world.Region.BufferedRegion;
 
-public abstract class RegionRenderer {
+public class RegionRenderer {
 
-	private static Log			log						= LogFactory.getLog(RegionRenderer.class);
+	private static Log			log	= LogFactory.getLog(RegionRenderer.class);
 
 	public final RenderSettings	settings;
-	protected Set<Block>		blocksWithMissingColor	= new HashSet<>();
+	private final ChunkRenderer	renderer13, renderer14;
 
 	public RegionRenderer(RenderSettings settings) {
 		this.settings = Objects.requireNonNull(settings);
+		renderer13 = new ChunkRenderer_1_13(settings);
+		renderer14 = new ChunkRenderer_1_14(settings);
 	}
 
 	/**
@@ -55,24 +61,85 @@ public abstract class RegionRenderer {
 		return new BufferedRegion(regionPos, image, metadata);
 	}
 
-	protected abstract Color[] renderRaw(Vector2ic regionPos, RegionFile file, Map<Vector2ic, ChunkMetadata> metadata);
+	/**
+	 * Render a given {@link RegionFile} to an image, represented as color array.
+	 * 
+	 * @param file
+	 *            The file to render. Should not be {@code null}
+	 * @param regionPos
+	 *            The position of the region file in region coordinates. Used to check if blocks are within the bounds of the area to render.
+	 * @return An array of colors representing the final image. The image is square and 512x512 wide. The array sorted in XZ order.
+	 * @see #render(Vector2ic, RegionFile)
+	 * @see Color
+	 * @see RegionFile
+	 */
+	protected Color[] renderRaw(Vector2ic regionPos, RegionFile file, Map<Vector2ic, ChunkMetadata> metadata) {
+		/* The final map of the chunk, 512*512 pixels, XZ */
+		Color[] map = new Color[512 * 512];
+		/* If nothing is set otherwise, the height map is set to the minimum height. */
+		int[] height = new int[512 * 512];
+		int[] regionBiomes = new int[512 * 512];
+		Arrays.fill(height, settings.minY);
+		Arrays.fill(regionBiomes, -1);
 
-	protected static BitSet parseBlockState(CompoundTag properties, BlockState state) {
-		BitSet ret = new BitSet(state.getSize());
-		if (properties != null)
-			for (Entry<String, Tag<?>> entry : properties.getValue().entrySet())
-				ret.set(state.getProperty(entry.getKey(), ((StringTag) entry.getValue()).getValue()));
-		return ret;
-	}
+		for (int chunkIndex : file.listChunks()) {
+			Chunk chunk = null;
+			try {
+				chunk = file.loadChunk(chunkIndex);
+			} catch (ClosedByInterruptException e) {
+				log.info("Got interrupted while rendering, stopping");
+				break;
+			} catch (IOException e) {
+				int x = chunkIndex & 0xF, z = chunkIndex >> 4;
+				log.warn("Failed to load chunk (" + x + ", " + z + ")", e);
+				Vector2ic chunkPos = new Vector2i(((regionPos.x() << 5) | x), ((regionPos.y() << 5) | z));
+				metadata.put(chunkPos, new ChunkMetadataFailed(chunkPos, e));
+				continue;
+			}
+			int chunkX = ((regionPos.x() << 5) | chunk.x);
+			int chunkZ = ((regionPos.y() << 5) | chunk.z);
+			Vector2ic chunkPosRegion = new Vector2i(chunk.x, chunk.z);
+			Vector2ic chunkPos = new Vector2i(chunkX, chunkZ);
 
-	public static RegionRenderer create(RenderSettings settings) {
-		switch (settings.version) {
-		case MC_1_13:
-			return new RegionRenderer_1_13(settings);
-		case MC_1_14:
-			return new RegionRenderer_1_14(settings);
-		default:
-			throw new UnsupportedOperationException("Did not find a RegionRenderer for version " + settings.version);
+			if ((chunkX + 16 < settings.minX || chunkX > settings.maxX)
+					&& (chunkZ + 16 < settings.minZ || chunkZ > settings.maxZ)) {
+				metadata.put(chunkPos, new ChunkMetadataCulled(chunkPos));
+				continue;
+			}
+
+			CompoundMap root;
+			try {
+				root = chunk.readTag().getValue();
+			} catch (IOException e) {
+				log.warn("Failed to load chunk " + chunkPosRegion, e);
+				metadata.put(chunkPos, new ChunkMetadataFailed(chunkPos, e));
+				continue;
+			}
+			CompoundMap level = ((CompoundTag) root.get("Level")).getValue();
+
+			/* Check data version */
+			if (root.containsKey("DataVersion")) {
+				int dataVersion = ((Integer) root.get("DataVersion").getValue());
+				if (dataVersion < MinecraftVersion.MC_1_13.minVersion) {
+					log.warn("Skipping chunk because it is too old");
+					metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "This chunk was written from Minecraft <1.13, which is not supported",
+							dataVersion));
+					continue;
+				} else if (dataVersion < MinecraftVersion.MC_1_13.maxVersion) {
+					metadata.put(chunkPos, renderer13.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
+				} else if (dataVersion >= MinecraftVersion.MC_1_14.minVersion && dataVersion < MinecraftVersion.MC_1_14.maxVersion) {
+					metadata.put(chunkPos, renderer14.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
+				} else {
+					metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "Could not find a chunk rendering engine for this version", dataVersion));
+				}
+			} else {
+				log.warn("Skipping chunk because it is way too old (pre 1.9)");
+				metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "This chunk was written from Minecraft <1.9, which is not supported", 0));
+				continue;
+			}
+
 		}
+		settings.shader.shade(map, height, regionBiomes, settings.biomeColors);
+		return map;
 	}
 }

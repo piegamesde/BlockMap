@@ -10,7 +10,7 @@ public enum MinecraftVersion {
 	MC_1_13("1_13", 1519, 1631, "1.13.2"),
 	MC_1_14("1_14", 1901, Integer.MAX_VALUE, "1.14");
 
-	public static final MinecraftVersion	LATEST	= MC_1_13;
+	public static final MinecraftVersion	LATEST	= MC_1_14;
 
 	public final int						minVersion, maxVersion;
 	public final String						fileSuffix, versionName;

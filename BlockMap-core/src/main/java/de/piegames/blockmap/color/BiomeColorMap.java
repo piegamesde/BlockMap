@@ -2,14 +2,11 @@ package de.piegames.blockmap.color;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
-import de.piegames.blockmap.MinecraftVersion;
 
 /**
  * Represents a mapping from biome IDs to their actual color.
@@ -23,7 +20,14 @@ public class BiomeColorMap {
 
 	/** Holds all distinct colors a biome has: its water color, grass color, foliage color and universal color. */
 	public static class BiomeColor {
-		public Color waterColor, grassColor, foliageColor, biomeColor;
+		/** The water color in that biome. */
+		public Color	waterColor;
+		/** The grass color in that biome. */
+		public Color	grassColor;
+		/** The foliage color in that biome. */
+		public Color	foliageColor;
+		/** This color does not actually exist in Minecraft. It is used to represent a biome on a map and not to just tint a block's texture. */
+		public Color	biomeColor;
 
 		public BiomeColor() {
 
@@ -44,42 +48,19 @@ public class BiomeColorMap {
 		// For deserialization purposes
 	}
 
+	public BiomeColor getBiomeColor(int biome) {
+		return biomeColors.getOrDefault(biome, MISSING);
+	}
+
 	public BiomeColorMap(Map<Integer, BiomeColor> biomeColors) {
 		this.biomeColors = Objects.requireNonNull(biomeColors);
-	}
-
-	@Deprecated
-	public BiomeColorMap(Map<Integer, Color> waterColor, Map<Integer, Color> grassColor, Map<Integer, Color> foliageColor, Map<Integer, Color> biomeColor) {
-		biomeColors = new HashMap<>();
-		for (int i : waterColor.keySet())
-			biomeColors.put(i, new BiomeColor(waterColor.get(i), grassColor.get(i), foliageColor.get(i), biomeColor.get(i)));
-	}
-
-	/** Returns the water color in that biome. */
-	public Color getWaterColor(int biome) {
-		return biomeColors.getOrDefault(biome, MISSING).waterColor;
-	}
-
-	/** Returns the grass color in that biome. */
-	public Color getGrassColor(int biome) {
-		return biomeColors.getOrDefault(biome, MISSING).grassColor;
-	}
-
-	/** Returns the foliage color in that biome. */
-	public Color getFoliageColor(int biome) {
-		return biomeColors.getOrDefault(biome, MISSING).foliageColor;
-	}
-
-	/** This color does not actually exist in Minecraft. It is used to represent a biome on a map and not to just tint a block's texture. */
-	public Color getBiomeColor(int biome) {
-		return biomeColors.getOrDefault(biome, MISSING).biomeColor;
 	}
 
 	public static BiomeColorMap load(Reader reader) {
 		return GSON.fromJson(reader, BiomeColorMap.class);
 	}
 
-	public static BiomeColorMap loadDefault(MinecraftVersion version) {
-		return load(new InputStreamReader(BiomeColorMap.class.getResourceAsStream("/biome-colors-" + version.fileSuffix + ".json")));
+	public static BiomeColorMap loadDefault() {
+		return load(new InputStreamReader(BiomeColorMap.class.getResourceAsStream("/biome-colors.json")));
 	}
 }

@@ -5,7 +5,6 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.IOException;
 
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -15,14 +14,6 @@ import de.piegames.blockmap.standalone.PostProcessing;
 import de.piegames.blockmap.world.RegionFolder;
 
 public class CommandLineTest {
-
-	// /** Save out since we'll override it later on */
-	// private static PrintStream out = System.out;
-
-	@BeforeClass
-	public static void testWorldExists() {
-		assertNotNull("Please run regenerate to generate testing data", CommandLineTest.class.getResource("/BlockMapWorld"));
-	}
 
 	@Rule
 	public TemporaryFolder folder = new TemporaryFolder();
@@ -34,21 +25,26 @@ public class CommandLineTest {
 	 */
 	@Test
 	public void test() throws IOException {
-		File out1 = folder.newFolder();
+		for (MinecraftVersion version : MinecraftVersion.values()) {
+			File out1 = folder.newFolder();
+			String path = "./src/test/resources/Debug-" + version.fileSuffix + "/region/";
+			CommandLineMain.main("-v", "-V");
+			CommandLineMain.main("render", "-o=" + out1 + "", path);
+			CommandLineMain.main("render", "--create-tile-html", "--lazy", "-o=" + out1 + "", path);
+			CommandLineMain.main("render", "--create-big-image", "-o=" + out1 + "", "--shader=RELIEF", "--color-map=OCEAN_GROUND", path);
+		}
 		File out2 = folder.newFolder();
 
-		CommandLineMain.main("-v", "-V");
-		CommandLineMain.main("render", "-o=" + out1 + "", "./src/test/resources/Debug/region/");
-		CommandLineMain.main("render", "--create-tile-html", "--lazy", "-o=" + out1 + "", "./src/test/resources/Debug/region/");
-		CommandLineMain.main("render", "--create-big-image", "-o=" + out1 + "", "--shader=RELIEF", "--color-map=OCEAN_GROUND",
-				"./src/test/resources/Debug/region/");
-
-		CommandLineMain.main("-v", "render", "-o=" + out2 + "", "./src/main/resources/BlockMapWorld/region/");
-		CommandLineMain.main("-v", "render", "--create-tile-html", "--lazy", "-o=" + out2 + "/", "./src/main/resources/BlockMapWorld/region/");
-		CommandLineMain.main("-v", "render", "--create-big-image", "-o=" + out2 + "", "--shader=RELIEF", "--color-map=OCEAN_GROUND",
+		CommandLineMain.main("-v", "render", "-o=" + out2 + "", "--min-X=-1024", "--max-X=1024", "--min-Z=-1024", "--max-Z=1024",
+				"./src/main/resources/BlockMapWorld/region/");
+		CommandLineMain.main("-v", "render", "--create-tile-html", "--lazy", "-o=" + out2 + "/", "--min-X=-1024", "--max-X=1024", "--min-Z=-1024",
+				"--max-Z=1024", "./src/main/resources/BlockMapWorld/region/");
+		CommandLineMain.main("-v", "render", "--create-big-image", "-o=" + out2 + "", "--shader=RELIEF", "--color-map=OCEAN_GROUND", "--min-X=-1024",
+				"--max-X=1024", "--min-Z=-1024", "--max-Z=1024",
 				"./src/main/resources/BlockMapWorld/region/");
 
-		CommandLineMain.main("-v", "render", "--create-tile-html", "--lazy", "-o=" + out2 + "/", "./src/main/resources/BlockMapWorld/",
+		CommandLineMain.main("-v", "render", "--create-tile-html", "--lazy", "-o=" + out2 + "/", "./src/main/resources/BlockMapWorld/", "--min-X=-1024",
+				"--max-X=1024", "--min-Z=-1024", "--max-Z=1024",
 				"--dimension=OVERWORLD", "save", "--world-name=testworld", "-p");
 	}
 
@@ -71,34 +67,4 @@ public class CommandLineTest {
 		for (int i = -1000; i < 1000; i++)
 			assertEquals("Value " + i + " failed", i >= -1 && i < 1, PostProcessing.inBounds(i, -4, 3));
 	}
-
-	// private void testBounds(int minX, int maxX, int minZ, int maxZ, int renderedFiles, int skippedFiles, int minPixelX, int maxPixelX, int
-	// minPixelZ,
-	// int maxPixelZ) throws IOException {
-	// try {
-	// File out1 = folder.newFolder();
-	// /* Record the log to a byte buffer */
-	// ByteArrayOutputStream out = new ByteArrayOutputStream();
-	// System.setOut(new PrintStream(out));
-	// CommandLineMain.main("-v",
-	// "render",
-	// "-o=" + out1 + "",
-	// "./src/main/resources/BlockMapWorld/region/",
-	// "--minX=" + minX,
-	// "--maxX=" + maxX,
-	// "--minZ=" + minZ,
-	// "--maxZ=" + maxZ,
-	// "--create-big-image",
-	// "--create-tile-html");
-	// out.close();
-	// /* Read the byte buffer and parse it and check if the messages were correct */
-	// BufferedReader in = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(out.toByteArray())));
-	// for (String line = in.readLine(); line != null; line = in.readLine()) {
-	//
-	// }
-	// in.close();
-	// } finally {
-	// System.setOut(out);
-	// }
-	// }
 }

@@ -107,15 +107,20 @@ public class Generator {
 					writer.flush();
 				}
 			}
+		}
 
-			log.info("Generating biome colors for version " + version);
+		{
+			/* Until now, biomes never had any backwards-incompatible changes, so simple use latest version for all */
+			log.info("Generating biome colors");
 
+			Path minecraftJarfile = OUTPUT_INTERNAL_CACHE.resolve("client-" + MinecraftVersion.LATEST.fileSuffix + ".jar");
 			BiomeColorMap map = ColorCompiler.compileBiomeColors(minecraftJarfile,
-					Paths.get(URI.create(Generator.class.getResource("/biome-color-instructions-" + version.fileSuffix + ".json").toString())));
-			try (BufferedWriter writer = Files.newBufferedWriter(OUTPUT_CORE.resolve("biome-colors-" + version.fileSuffix + ".json"))) {
+					Paths.get(URI.create(Generator.class.getResource("/biome-color-instructions.json").toString())));
+			try (BufferedWriter writer = Files.newBufferedWriter(OUTPUT_CORE.resolve("biome-colors.json"))) {
 				BlockColorMap.GSON.toJson(map, writer);
 				writer.flush();
 			}
+
 		}
 
 		{

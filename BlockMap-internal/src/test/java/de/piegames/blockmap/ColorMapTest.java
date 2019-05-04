@@ -13,10 +13,12 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.joml.Vector2i;
@@ -33,6 +35,9 @@ import de.piegames.blockmap.color.BiomeColorMap;
 import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.color.BlockColorMap.BlockColor;
 import de.piegames.blockmap.color.BlockColorMap.InternalColorMap;
+import de.piegames.blockmap.color.BlockColorMap.NormalStateColors;
+import de.piegames.blockmap.color.BlockColorMap.SingleStateColors;
+import de.piegames.blockmap.color.BlockColorMap.StateColors;
 import de.piegames.blockmap.renderer.Block;
 import de.piegames.blockmap.renderer.BlockState;
 import de.piegames.blockmap.renderer.RegionRenderer;
@@ -62,13 +67,13 @@ public class ColorMapTest {
 	public void load() throws IOException {
 		blocks = new MinecraftBlocks(Paths.get(URI.create(getClass().getResource("/data-" + version.fileSuffix + "/reports/blocks.json").toString())));
 		states = blocks.generateStates();
-		map = colorMap.getColorMap(version);
+		map = colorMap.getColorMap().get(version);
 	}
 
 	/** Test that all blocks (an no more) are covered by the color map */
 	@Test
 	public void testBlockNames() {
-		Map<String, Map<BitSet, BlockColor>> colors = map.getBlockColors();
+		Map<String, StateColors> colors = map.getBlockColors();
 		Set<String> tmp = new HashSet<>(colors.keySet());
 		tmp.removeAll(blocks.states.keySet());
 		assertEquals("Some blocks should be removed", Collections.emptySet(), tmp);
@@ -83,8 +88,13 @@ public class ColorMapTest {
 	public void testBlockStates() {
 		BitSet allBits = new BitSet(states.getSize());
 		allBits.set(0, states.getSize());
-		Map<String, Map<BitSet, BlockColor>> colors = map.getBlockColors();
-		colors.values().stream().flatMap(m -> m.keySet().stream()).forEach(allBits::andNot);
+		Map<String, StateColors> colors = map.getBlockColors();
+		colors.entrySet().stream().flatMap(e -> {
+			if (e.getValue() instanceof SingleStateColors)
+				return blocks.states.get(e.getKey()).states.stream().map(MinecraftBlocks.Block.State::getProperties).map(states::getState);
+			else
+				return ((NormalStateColors) e.getValue()).getColors().keySet().stream();
+		}).forEach(allBits::andNot);
 		assertTrue("Colors missing for states: " + allBits, allBits.isEmpty());
 	}
 
@@ -92,12 +102,19 @@ public class ColorMapTest {
 	@Test
 	public void testDetailed() {
 		List<Block> missing = new ArrayList<>();
-		Map<String, Map<BitSet, BlockColor>> colors = map.getBlockColors();
+		Map<String, Map<BitSet, BlockColor>> colors = map.getBlockColors().entrySet().stream()
+				.collect(Collectors.toMap(Map.Entry::getKey, e -> {
+					if (e.getValue() instanceof SingleStateColors)
+						return blocks.states.get(e.getKey()).states.stream().map(MinecraftBlocks.Block.State::getProperties).map(states::getState).collect(
+								Collectors.toMap(Function
+										.identity(), e.getValue()::getColor));
+					else
+						return ((NormalStateColors) e.getValue()).getColors();
+				}));
 		for (Map.Entry<String, MinecraftBlocks.Block> block : blocks.states.entrySet()) {
 			for (MinecraftBlocks.Block.State state : block.getValue().states) {
 				BitSet compiledState = new BitSet(states.getSize());
-				if (state.properties != null)
-					state.properties.entrySet().forEach(e -> compiledState.set(states.getProperty(e.getKey(), e.getValue())));
+				state.getProperties().entrySet().forEach(e -> compiledState.set(states.getProperty(e.getKey(), e.getValue())));
 				if (!colors.containsKey(block.getKey()) || colors.get(block.getKey()).remove(compiledState) == null)
 					missing.add(new Block(block.getKey(), compiledState));
 			}
@@ -114,20 +131,20 @@ public class ColorMapTest {
 	/** The debug world contains every single block and block state that exists in the game, so let's test it. */
 	@Test
 	public void testDebugWorld() throws IOException, URISyntaxException, InterruptedException {
-		Set<Block> missing = new HashSet<>();
+		Set<Block> missingBlocks = new HashSet<>();
 		RenderSettings settings = new RenderSettings();
-		settings.version = version;
 		settings.shader = RegionShader.DefaultShader.FLAT.getShader();
-		settings.blockColors = new BlockColorMap(map.getBlockColors()) {
+		settings.blockColors = new HashMap<>();
+		settings.blockColors.put(version, new BlockColorMap(map.getBlockColors()) {
 			@Override
 			public BlockColor getBlockColor(String blockName, BitSet blockState) {
 				if (!super.hasBlockColor(blockName, blockState))
-					missing.add(new Block(blockName, blockState));
+					missingBlocks.add(new Block(blockName, blockState));
 				return super.getBlockColor(blockName, blockState);
 			}
-		};
-		settings.biomeColors = BiomeColorMap.loadDefault(version);
-		RegionRenderer renderer = RegionRenderer.create(settings);
+		});
+		settings.biomeColors = BiomeColorMap.loadDefault();
+		RegionRenderer renderer = new RegionRenderer(settings);
 		String pathPrefix = "/Debug-" + version.fileSuffix + "/region/r.";
 		assertNoMissing(renderer.render(new Vector2i(-1, -1), new RegionFile(Paths.get(getClass().getResource(pathPrefix + "-1.-1.mca").toURI()))).getImage());
 		assertNoMissing(renderer.render(new Vector2i(-1, 0), new RegionFile(Paths.get(getClass().getResource(pathPrefix + "-1.0.mca").toURI()))).getImage());
@@ -140,7 +157,7 @@ public class ColorMapTest {
 		assertNoMissing(renderer.render(new Vector2i(1, 1), new RegionFile(Paths.get(getClass().getResource(pathPrefix + "1.1.mca").toURI()))).getImage());
 
 		/* Filter out some false positives: Minecraft does not always store the waterlogged property for some reason (performance? bug?) */
-		missing.removeIf(block -> {
+		missingBlocks.removeIf(block -> {
 			int i1 = states.getProperty("waterlogged", "true");
 			int i2 = states.getProperty("waterlogged", "false");
 			boolean hasWater = block.state.get(i1) || block.state.get(i2);
@@ -152,7 +169,7 @@ public class ColorMapTest {
 			return !hasWater && (map.hasBlockColor(block.name, withWater) || map.hasBlockColor(block.name, withoutWater));
 		});
 		/* Same thing, but for TNT */
-		missing.removeIf(block -> {
+		missingBlocks.removeIf(block -> {
 			int i1 = states.getProperty("unstable", "true");
 			int i2 = states.getProperty("unstable", "false");
 			boolean hasWater = block.state.get(i1) || block.state.get(i2);
@@ -163,7 +180,7 @@ public class ColorMapTest {
 			/* If the block has no unstable property, but would be in the color map if it had one, remove it from the error list. */
 			return !hasWater && (map.hasBlockColor(block.name, withWater) || map.hasBlockColor(block.name, withoutWater));
 		});
-		assertTrue("Some blocks were missing during rendering: " + missing, missing.isEmpty());
+		assertTrue("Some blocks were missing during rendering: " + missingBlocks, missingBlocks.isEmpty());
 	}
 
 	/** Assert there are no "missing color" pixels in that image */

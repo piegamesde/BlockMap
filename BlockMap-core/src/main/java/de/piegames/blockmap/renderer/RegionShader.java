@@ -141,7 +141,7 @@ public interface RegionShader {
 		public void shade(Color[] map, int[] height, int[] biome, BiomeColorMap biomeColors) {
 			for (int i = 0; i < 512 * 512; i++)
 				if (biome[i] != -1)
-					map[i] = biomeColors.getBiomeColor(biome[i] & 0xFF);
+					map[i] = biomeColors.getBiomeColor(biome[i] & 0xFF).biomeColor;
 		}
 	}
 

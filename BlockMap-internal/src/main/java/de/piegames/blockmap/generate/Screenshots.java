@@ -24,7 +24,6 @@ import org.joml.Vector2i;
 
 import com.flowpowered.nbt.regionfile.RegionFile;
 
-import de.piegames.blockmap.MinecraftVersion;
 import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.guistandalone.GuiMain;
 import de.piegames.blockmap.guistandalone.RegionFolderProvider.WorldRegionFolderProvider;
@@ -42,7 +41,7 @@ public class Screenshots {
 	public static void generateDemoRenders() throws IOException {
 		RenderSettings settings = new RenderSettings();
 		settings.loadDefaultColors();
-		RegionRenderer renderer = RegionRenderer.create(settings);
+		RegionRenderer renderer = new RegionRenderer(settings);
 		{ /* Color maps */
 			log.info("Generating color map screenshots");
 			settings.maxY = 50;
@@ -98,7 +97,7 @@ public class Screenshots {
 	public static void generateScreenshots() throws Exception {
 		RenderSettings settings = new RenderSettings();
 		settings.loadDefaultColors();
-		RegionRenderer renderer = RegionRenderer.create(settings);
+		RegionRenderer renderer = new RegionRenderer(settings);
 		Thread th = new Thread(() -> GuiMain.main());
 		th.start();
 		while (GuiMain.instance == null)
@@ -216,7 +215,7 @@ public class Screenshots {
 		RegionFile file = new RegionFile(Paths.get(URI.create(Generator.class.getResource("/BlockMapWorld/region/r." + toRender.x + "." + toRender.y
 				+ ".mca")
 				.toString())));
-		settings.blockColors = colors.getColorMap(MinecraftVersion.MC_1_13);
+		settings.blockColors = colors.getColorMap();
 		return renderer.render(toRender, file).getImage();
 	}
 

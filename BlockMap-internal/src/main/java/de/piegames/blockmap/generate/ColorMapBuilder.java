@@ -3,6 +3,7 @@ package de.piegames.blockmap.generate;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -102,8 +103,25 @@ public class ColorMapBuilder {
 			blockColors.computeIfAbsent(block.name, k -> new HashMap<>());
 			blockColors.get(block.name).put(block.state, color);
 		}
+		Map<String, BlockColorMap.StateColors> map = blockColors.entrySet().stream()
+				.filter(e -> e.getValue().values().stream().distinct().count() <= 1)
+				.filter(e -> isAllStates(e.getKey(), e.getValue().keySet()))
+				.collect(Collectors.toMap(e -> e.getKey(), e -> new BlockColorMap.SingleStateColors(e.getValue().values().iterator().next())));
+		map.putAll(blockColors.entrySet().stream()
+				.filter(e -> !map.containsKey(e.getKey()))
+				.collect(Collectors.toMap(e -> e.getKey(), e -> new BlockColorMap.NormalStateColors(e.getValue()))));
+		return new BlockColorMap(map);
+	}
 
-		return new BlockColorMap(blockColors);
+	private boolean isAllStates(String blockName, Collection<BitSet> states) {
+		MinecraftBlocks.Block block = minecraftBlocks.states.get(blockName);
+		for (MinecraftBlocks.Block.State state : block.states) {
+			BitSet compiledState = new BitSet(this.states.getSize());
+			state.getProperties().entrySet().forEach(e -> compiledState.set(this.states.getProperty(e.getKey(), e.getValue())));
+			if (!states.contains(compiledState))
+				return false;
+		}
+		return true;
 	}
 
 	/**

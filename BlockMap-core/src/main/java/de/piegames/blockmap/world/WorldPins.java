@@ -449,17 +449,12 @@ public class WorldPins {
 		ArrayList<VillageObjectPin> villageObjects = new ArrayList<>();
 		try (DirectoryStream<Path> d = Files.newDirectoryStream(worldPath.resolve("poi")))
 		{
-			// TODO clean debug stuff
-
 			for(Path p : d)
 			{
-				log.info("Path to file: " + p.toAbsolutePath().toString());
-
-				if(!p.toString().endsWith(".mca"))
+				if(!p.endsWith(".mca"))
 					continue;
 
 				RegionFile file = new RegionFile(p);
-				log.info("amount of chunks: " + file.listChunks().size());
 
 				for(int i : file.listChunks())
 				{
@@ -473,17 +468,12 @@ public class WorldPins {
 					}
 
 					ListTag<CompoundTag> records = (ListTag<CompoundTag>) zero.getValue().get("Records");
-					log.info("Length of record-list:" + records.getValue().size());
 					for(CompoundTag j : records.getValue())
 					{
 						int freeTickets = (Integer) j.getValue().get("free_tickets").getValue();
 						String type = (String) j.getValue().get("type").getValue();
 						int[] pos = (int[]) j.getValue().get("pos").getValue();
 						Vector3ic position = new Vector3i(pos[0], pos[1], pos[2]);
-
-						log.info("Type: " + type);
-						log.info("Free ticket: " + freeTickets);
-						log.info("Position: " + pos.toString());
 
 						villageObjects.add(new VillageObjectPin(position, freeTickets, type));
 					}

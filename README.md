@@ -69,6 +69,10 @@ The task `beforeCommit` will clean and regenerate all resources and run all the 
 
 All screenshots (see them below) are generated automatically through the gradle task `generateScreenshots`. This way, they are always up to date with the latest version. Be aware that this task needs to generate a fairly large Minecraft world first and then render it, which takes both time and space and will cause gradle to slow down a lot.
 
+**Notice — run from Gradle:**
+
+There is a bug in JavaFX that currently prevents the `run` task to work, so as a workaround use `./gradlew run2` for now.
+
 ## Gallery
 
 ![Four rendered region files, each with one with a different color map](screenshots/screenshot-1.png "All existing color maps")

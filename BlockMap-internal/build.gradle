@@ -5,7 +5,7 @@ plugins {
 
 javafx {
     version = "12"
-    modules = [ 'javafx.graphics', 'javafx.fxml', 'javafx.swing' ]
+    modules = [ 'javafx.controls', 'javafx.graphics', 'javafx.fxml', 'javafx.swing' ]
 }
 
 task generateData(type: JavaExec) {

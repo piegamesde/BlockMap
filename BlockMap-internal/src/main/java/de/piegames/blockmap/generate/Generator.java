@@ -161,7 +161,7 @@ public class Generator {
 				.toFile());
 		Path serverFolder = Files.createTempDirectory("generateTestWorldServer");
 		Path serverFile = serverFolder.resolve("server.jar");
-		Files.copy(OUTPUT_INTERNAL_CACHE.resolve("/server-" + MinecraftVersion.LATEST.fileSuffix + ".jar"), serverFile);
+		Files.copy(OUTPUT_INTERNAL_CACHE.resolve("server-" + MinecraftVersion.LATEST.fileSuffix + ".jar"), serverFile);
 		Files.createSymbolicLink(serverFolder.resolve("world"), worldPath.toAbsolutePath());
 
 		Server server = new Server(serverFile, null);

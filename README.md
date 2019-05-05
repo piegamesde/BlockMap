@@ -78,4 +78,5 @@ There is a bug in JavaFX that currently prevents the `run` task to work, so as a
 ![Four rendered region files, each with one with a different color map](screenshots/screenshot-1.png "All existing color maps")
 ![Four rendered region files, each one with a different shader](screenshots/screenshot-2.png "All existing shaders")
 ![Screenshot from the GUI](screenshots/screenshot-3.png "Screenshot from the GUI")
-![Gif of the GUI zooming out in a large world](screenshots/screenshot-4.gif "Works with very large worlds")
+![Screenshot showing different Minecraft structures as pins on the map](screenshots/screenshot-4.png "Wohoo! Pins!")
+![Gif of the GUI zooming out in a large world](screenshots/screenshot-0.gif "Works with very large worlds")

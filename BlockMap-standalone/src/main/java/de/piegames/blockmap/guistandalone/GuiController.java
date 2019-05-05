@@ -6,6 +6,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.concurrent.Executors;
@@ -54,6 +55,7 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
@@ -93,11 +95,12 @@ public class GuiController implements Initializable {
 	@FXML
 	private CheckBox								pinBox;
 	@FXML
-	private CheckTreeView<PinType>					pinView;
+	public CheckTreeView<PinType>					pinView;
+	public Map<PinType, TreeItem<PinType>>			checkedPins				= new HashMap<>();
 
 	protected MapPane								pane;
 	protected ObjectProperty<Path>					currentPath				= new SimpleObjectProperty<>();
-	protected PinDecoration							pins;
+	public PinDecoration							pins;
 
 	protected ScheduledExecutorService				backgroundThread		= Executors.newSingleThreadScheduledExecutor(
 			new ThreadFactoryBuilder().setNameFormat("pin-background-thread-%d").build());
@@ -168,13 +171,13 @@ public class GuiController implements Initializable {
 			renderer.repaint();
 		});
 
-		// { /* Pin checkbox icon */
-		// ImageView image = new ImageView(PinType.ANY_PIN.image);
-		// image.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> pinBox.getFont().getSize() * 1.0, pinBox.fontProperty()));
-		// image.setSmooth(true);
-		// image.setPreserveRatio(true);
-		// pinBox.setGraphic(image);
-		// }
+		{ /* Pin checkbox icon */
+			ImageView image = new ImageView(PinType.ANY_PIN.image);
+			image.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> pinBox.getFont().getSize() * 1.5, pinBox.fontProperty()));
+			image.setSmooth(true);
+			image.setPreserveRatio(true);
+			pinBox.setGraphic(image);
+		}
 		{ /* Pin tree */
 			initPinCheckboxes(PinType.ANY_PIN, null, pinView);
 			pinView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
@@ -270,6 +273,7 @@ public class GuiController implements Initializable {
 			pins.visiblePins.add(type);
 			tree.getCheckModel().check(ret);
 		}
+		checkedPins.put(type, ret);
 	}
 
 	@FXML

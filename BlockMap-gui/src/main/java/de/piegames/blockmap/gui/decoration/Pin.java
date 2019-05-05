@@ -15,6 +15,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -35,7 +36,6 @@ import com.codepoetics.protonpack.StreamUtils;
 import de.piegames.blockmap.MinecraftVersion;
 import de.piegames.blockmap.gui.DisplayViewport;
 import de.piegames.blockmap.world.ChunkMetadata;
-import de.piegames.blockmap.world.ChunkMetadata.ChunkGenerationStatus;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataCulled;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataFailed;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataRendered;
@@ -343,12 +343,12 @@ public class Pin {
 
 	private static class UnfinishedChunkPin extends ChunkPin {
 
-		protected int[] chunkCount;
+		protected List<String> chunkGeneration;
 
-		public UnfinishedChunkPin(Vector2dc centerPos, List<Vector2ic> chunkPositions, int[] chunkCount, DisplayViewport viewport) {
+		public UnfinishedChunkPin(Vector2dc centerPos, List<Vector2ic> chunkPositions, List<String> chunkGeneration, DisplayViewport viewport) {
 			super(PinType.CHUNK_UNFINISHED, centerPos, chunkPositions, new Image(Pin.class.getResource("textures/overlays/chunk_unfinished.png").toString(), 64,
 					64, true, false), viewport);
-			this.chunkCount = Objects.requireNonNull(chunkCount);
+			this.chunkGeneration = Objects.requireNonNull(chunkGeneration);
 		}
 
 		@Override
@@ -359,10 +359,11 @@ public class Pin {
 			popContent.getStyleClass().add("grid");
 			info.setContentNode(popContent);
 
-			for (int i = 0; i < chunkCount.length; i++) {
-				popContent.add(new Label(ChunkGenerationStatus.values()[i].name().toLowerCase() + ":"), 0, i);
-				popContent.add(new Label(chunkCount[i] + " chunks"), 1, i);
-			}
+			StreamUtils.zipWithIndex(chunkGeneration.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting())).entrySet().stream())
+					.forEach(index -> {
+						popContent.add(new Label(index.getValue().getKey() + ":"), 0, (int) index.getIndex());
+						popContent.add(new Label(index.getValue().getValue() + " chunks"), 1, (int) index.getIndex());
+					});
 			return info;
 		}
 	}
@@ -851,18 +852,18 @@ public class Pin {
 	public static List<Pin> convertDynamic(Map<Vector2ic, ChunkMetadata> metadataMap, DisplayViewport viewport) {
 		List<Pin> pins = new ArrayList<>();
 		Set<Vector2ic> unfinishedChunks = new HashSet<>();
+		List<String> chunkGeneration = new ArrayList<>();
 		Map<Vector2ic, ChunkMetadataVersion> oldChunks = new HashMap<>();
 		Map<Vector2ic, ChunkMetadataFailed> failedChunks = new HashMap<>();
-		/* Map each generation status to the amount of chunks with this state */
-		int[] unfinishedCount = new int[ChunkGenerationStatus.values().length];
 		for (ChunkMetadata metadata : metadataMap.values()) {
 			metadata.visit(new ChunkMetadataVisitor<Void>() {
 
 				@Override
 				public Void rendered(ChunkMetadataRendered metadata) {
-					if (metadata.generationStatus != null && metadata.generationStatus != ChunkGenerationStatus.POSTPROCESSED)
+					if (!ChunkMetadataRendered.STATUS_FINISHED.contains(metadata.generationStatus)) {
 						unfinishedChunks.add(metadata.position);
-					unfinishedCount[metadata.generationStatus.ordinal()]++;
+						chunkGeneration.add(metadata.generationStatus);
+					}
 					return null;
 				}
 
@@ -888,7 +889,7 @@ public class Pin {
 		for (Set<Vector2ic> chunks : splitChunks(unfinishedChunks)) {
 			Vector2dc center = chunks.stream().map(v -> new Vector2d(v.x() * 16.0 + 8, v.y() * 16.0 + 8)).collect(Vector2d::new, Vector2d::add,
 					Vector2d::add).mul(1.0 / chunks.size());
-			pins.add(new UnfinishedChunkPin(center, outlineSet(chunks), unfinishedCount, viewport));
+			pins.add(new UnfinishedChunkPin(center, outlineSet(chunks), chunkGeneration, viewport));
 		}
 		for (Set<Vector2ic> chunks : splitChunks(failedChunks.keySet())) {
 			Vector2dc center = chunks.stream().map(v -> new Vector2d(v.x() * 16.0 + 8, v.y() * 16.0 + 8)).collect(Vector2d::new, Vector2d::add,

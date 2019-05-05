@@ -29,7 +29,6 @@ import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.color.BlockColorMap.BlockColor;
 import de.piegames.blockmap.color.Color;
 import de.piegames.blockmap.world.ChunkMetadata;
-import de.piegames.blockmap.world.ChunkMetadata.ChunkGenerationStatus;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataFailed;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataRendered;
 
@@ -52,12 +51,12 @@ class ChunkRenderer_1_14 extends ChunkRenderer {
 
 		try {
 			/* Check chunk status */
-			ChunkGenerationStatus generationStatus = ChunkGenerationStatus.forName(((String) level.get("Status").getValue()));
+			String generationStatus = ((String) level.get("Status").getValue());
 			if (generationStatus == null) {
 				log.warn("Could not parse generation status: " + level.get("Status").getValue());
-				generationStatus = ChunkGenerationStatus.EMPTY;
+				generationStatus = "empty";
 			}
-			if (generationStatus == ChunkGenerationStatus.EMPTY)
+			if (ChunkMetadataRendered.STATUS_EMPTY.contains(generationStatus))
 				return new ChunkMetadataRendered(chunkPosWorld, generationStatus);
 
 			Map<String, Vector3ic> structureCenters = new HashMap<>();

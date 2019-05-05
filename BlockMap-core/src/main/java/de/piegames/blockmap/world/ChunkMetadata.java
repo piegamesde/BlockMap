@@ -3,6 +3,9 @@ package de.piegames.blockmap.world;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.joml.Vector2ic;
 import org.joml.Vector3ic;
@@ -36,59 +39,6 @@ public abstract class ChunkMetadata {
 		}
 	}
 
-	public static enum ChunkGenerationStatus {
-		EMPTY,
-		BASE,
-		CARVED,
-		LIQUID_CARVED,
-		DECORATED,
-		LIGHTED,
-		MOBS_SPAWNED,
-		FINALIZED,
-		FULLCHUNK,
-		POSTPROCESSED;
-
-		/**
-		 * Get an enum instance from its name
-		 * 
-		 * @param name
-		 *            The name of the chunk's status, as used in Minecraft saves
-		 * @return The corresponding enum value, oder {@code null} if the given string doesn't match
-		 */
-		public static ChunkGenerationStatus forName(String name) {
-			/* Thanks Mojang for simply renaming the values */
-			switch (name) {
-			case "empty":
-				return EMPTY;
-			case "base":
-				return BASE;
-			case "carvers":
-			case "carved":
-				return CARVED;
-			case "liquid_carvers":
-			case "liquid_carved":
-				return LIQUID_CARVED;
-			case "decorated":
-				return DECORATED;
-			case "light":
-			case "lighted":
-				return LIGHTED;
-			case "mobs_spawned":
-				return MOBS_SPAWNED;
-			case "finalized":
-				return FINALIZED;
-			case "full":
-			case "fullchunk":
-				return FULLCHUNK;
-			case "features": // ?
-			case "postprocessed":
-				return POSTPROCESSED;
-			default:
-				return null;
-			}
-		}
-	}
-
 	public static interface ChunkMetadataVisitor<T> {
 		public T rendered(ChunkMetadataRendered metadata);
 
@@ -100,11 +50,14 @@ public abstract class ChunkMetadata {
 	}
 
 	public static class ChunkMetadataRendered extends ChunkMetadata {
+		/** If the generation status is one of these, the chunk is empty and should be skipped directly */
+		public static final Set<String>		STATUS_EMPTY	= Collections.singleton("empty");
 		/**
-		 * May be {@code null} if the chunk didn't get loaded enough to retrieve this information. Must not be {@code null} if {@link #renderState}
-		 * is {@link ChunkRenderState#RENDERED}.
+		 * If the generation status is one of these, the chunk has been generated far enough for it to be fully rendered. There are multiple values
+		 * because of Minecraft version changes.
 		 */
-		public final ChunkGenerationStatus	generationStatus;
+		public static final Set<String>		STATUS_FINISHED	= Stream.of("full", "postprocessed").collect(Collectors.toUnmodifiableSet());
+		public final String					generationStatus;
 
 		/**
 		 * Map each structure type to its position. The position is the centroid of the bounding box. There is at most one structure of each type
@@ -112,13 +65,13 @@ public abstract class ChunkMetadata {
 		 */
 		public final Map<String, Vector3ic>	structures;
 
-		public ChunkMetadataRendered(Vector2ic position, ChunkGenerationStatus generationStatus) {
+		public ChunkMetadataRendered(Vector2ic position, String generationStatus) {
 			this(position, generationStatus, Collections.emptyMap());
 		}
 
-		public ChunkMetadataRendered(Vector2ic position, ChunkGenerationStatus generationStatus, Map<String, Vector3ic> structures) {
+		public ChunkMetadataRendered(Vector2ic position, String generationStatus, Map<String, Vector3ic> structures) {
 			super(position);
-			this.generationStatus = generationStatus;
+			this.generationStatus = Objects.requireNonNull(generationStatus);
 			this.structures = Collections.unmodifiableMap(structures);
 		}
 

@@ -797,33 +797,17 @@ public class Pin {
 				}
 
 			}
-			/*
-			if (pinCount.size() > 4 && pinCount.getOrDefault(PinType.VILLAGE_CENTER, 0L) > 0 && pinCount.getOrDefault(PinType.VILLAGE_DOOR, 0L) > 0) {
-				/* Merge village with doors
-				pinCount.put(PinType.VILLAGE_CENTER, pinCount.get(PinType.VILLAGE_CENTER) + pinCount.get(PinType.VILLAGE_DOOR));
-				pinCount.remove(PinType.VILLAGE_DOOR);
-			}
-			*/
-			// TODO Make this beautiful too. Just do it.
-			if(pinCount.size() > 4 	&& pinCount.getOrDefault(PinType.VILLAGE_HOME, 0L) > 0
-									&& pinCount.getOrDefault(PinType.VILLAGE_LEATHERWORKER, 0L) > 0
-									&& pinCount.getOrDefault(PinType.VILLAGE_FARMER, 0L) > 0
-									&& pinCount.getOrDefault(PinType.VILLAGE_TOOLSMITH, 0L) > 0
-									&& pinCount.getOrDefault(PinType.VILLAGE_ARMORER, 0L) > 0
-									&& pinCount.getOrDefault(PinType.VILLAGE_SHEPHERD, 0L) > 0
-									&& pinCount.getOrDefault(PinType.VILLAGE_MASON, 0L) > 0
-									&& pinCount.getOrDefault(PinType.VILLAGE_CLERIC, 0L) > 0
-									&& pinCount.getOrDefault(PinType.VILLAGE_MEETING, 0L) > 0)
+
+			if(pinCount.size() > 4)
 			{
-				pinCount.put(PinType.VILLAGE, pinCount.getOrDefault(PinType.VILLAGE_HOME, 0L)
-					+ pinCount.getOrDefault(PinType.VILLAGE_LEATHERWORKER, 0L)
-					+ pinCount.getOrDefault(PinType.VILLAGE_FARMER, 0L)
-					+ pinCount.getOrDefault(PinType.VILLAGE_TOOLSMITH, 0L)
-					+ pinCount.getOrDefault(PinType.VILLAGE_ARMORER, 0L)
-					+ pinCount.getOrDefault(PinType.VILLAGE_SHEPHERD, 0L)
-					+ pinCount.getOrDefault(PinType.VILLAGE_MASON, 0L)
-					+ pinCount.getOrDefault(PinType.VILLAGE_CLERIC, 0L)
-					+ pinCount.getOrDefault(PinType.VILLAGE_MEETING, 0L));
+				for(PinType pin : PinType.VILLAGE_MAPPING.values())
+				{
+					if(pinCount.getOrDefault(pin, 0L) > 0)
+					{
+						pinCount.put(PinType.VILLAGE, pinCount.getOrDefault(PinType.VILLAGE, 0L) + pinCount.get(pin));
+						pinCount.remove(pin);
+					}
+				}
 			}
 
 			if (pinCount.size() > 4 && pinCount.getOrDefault(PinType.MAP_POSITION, 0L) > 0 && pinCount.getOrDefault(PinType.MAP_BANNER, 0L) > 0) {

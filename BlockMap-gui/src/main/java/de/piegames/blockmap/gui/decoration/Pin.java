@@ -128,7 +128,6 @@ public class Pin {
 		public static final PinType		VILLAGE_CARTOGRAPHER		= new PinType("Cartographer", VILLAGE, true, false, "/tmp.png");
 		public static final PinType		VILLAGE_LIBRARIAN			= new PinType("Librarian", VILLAGE, true, false, "/tmp.png");
 
-		//TODO please make this beautiful, please.
 		public static final Map<String, PinType> VILLAGE_MAPPING;
 		static
 		{
@@ -798,15 +797,13 @@ public class Pin {
 
 			}
 
-			if(pinCount.size() > 4)
+			if(pinCount.size() > 4 && (PinType.VILLAGE_MAPPING.values().stream().filter(x -> pinCount.getOrDefault(x, 0L) > 0).count() > 1))
 			{
-				for(PinType pin : PinType.VILLAGE_MAPPING.values())
+				List<PinType> villageObjects = PinType.VILLAGE.children.stream().filter(this.pinCount::containsKey).collect(Collectors.toList());
+				if(!villageObjects.isEmpty())
 				{
-					if(pinCount.getOrDefault(pin, 0L) > 0)
-					{
-						pinCount.put(PinType.VILLAGE, pinCount.getOrDefault(PinType.VILLAGE, 0L) + pinCount.get(pin));
-						pinCount.remove(pin);
-					}
+					pinCount.keySet().removeAll(villageObjects);
+					pinCount.put(PinType.VILLAGE, villageObjects.stream().mapToLong(this.pinCount::get).sum());
 				}
 			}
 
@@ -877,15 +874,6 @@ public class Pin {
 			if (player.getSpawnpoint().isPresent())
 				pins.add(new PlayerSpawnpointPin(player, viewport));
 		}
-
-		/*
-		// TODO find way to replace door-pin-adding with job-pins
-		for (WorldPins.VillagePin village : pin.getVillages().orElse(Collections.emptyList())) {
-			pins.add(new VillagePin(village, viewport));
-			for (Vector3ic door : village.getDoors().orElse(Collections.emptyList()))
-				pins.add(new Pin(new Vector2d(door.x(), door.z()), PinType.VILLAGE_DOOR, viewport));
-		}
-		*/
 		for(WorldPins.VillageObjectPin villageObject : pin.getVillageObjects().orElse(Collections.emptyList()))
 		{
 			try {

@@ -237,60 +237,6 @@ public class WorldPins {
 		}
 	}
 
-	/*
-	public static class VillagePin {
-		Vector3ic					position;
-		MinecraftDimension			dimension;
-
-		Optional<Integer>			radius, population, golems;
-		Optional<List<Vector3ic>>	doors;
-
-		@SuppressWarnings("unused")
-		private VillagePin() {
-			// Used by GSON
-		}
-
-		public VillagePin(Vector3ic position, MinecraftDimension dimension, Integer radius, Integer population, Integer golems,
-				List<Vector3ic> doors) {
-			this(position, dimension, Optional.ofNullable(radius), Optional.ofNullable(population), Optional.ofNullable(golems), Optional.ofNullable(doors));
-		}
-
-		public VillagePin(Vector3ic position, MinecraftDimension dimension, Optional<Integer> radius, Optional<Integer> population, Optional<Integer> golems,
-				Optional<List<Vector3ic>> doors) {
-			this.position = position;
-			this.dimension = dimension;
-			this.radius = radius;
-			this.population = population;
-			this.golems = golems;
-			this.doors = doors;
-		}
-
-		public Vector3ic getPosition() {
-			return position;
-		}
-
-		public MinecraftDimension getDimension() {
-			return dimension;
-		}
-
-		public Optional<Integer> getRadius() {
-			return radius;
-		}
-
-		public Optional<Integer> getPopulation() {
-			return population;
-		}
-
-		public Optional<Integer> getGolems() {
-			return golems;
-		}
-
-		public Optional<List<Vector3ic>> getDoors() {
-			return doors;
-		}
-	}
-	*/
-
 	public static class VillageObjectPin
 	{
 		Vector3ic position;
@@ -408,50 +354,13 @@ public class WorldPins {
 			log.warn("Could not access player data", e);
 		}
 
-		/*
-		List<VillagePin> villages = new ArrayList<>();
-		// Villages
-		for (MinecraftDimension dimension : MinecraftDimension.values()) {
-			if (filterDimension != null && dimension != filterDimension)
-				continue;
-			try (NBTInputStream in = new NBTInputStream(Files.newInputStream(worldPath.resolve(dimension.villagePath)), NBTInputStream.GZIP_COMPRESSION)) {
-				// TODO check data version
-				CompoundMap villageMap = (CompoundMap) ((CompoundMap) in.readTag().getValue()).get("data").getValue();
-				villageMap.entrySet().forEach(System.out::println);
-				for (CompoundTag village : ((ListTag<CompoundTag>) villageMap.get("Villages")).getValue()) {
-					CompoundMap map = village.getValue();
-					// map.entrySet().forEach(System.out::println);
-					Vector3i posVec = new Vector3i(
-							((IntTag) map.get("CX")).getValue(),
-							((IntTag) map.get("CY")).getValue(),
-							((IntTag) map.get("CZ")).getValue());
-					int population = ((IntTag) map.get("PopSize")).getValue();
-					int radius = ((IntTag) map.get("Radius")).getValue();
-					int golems = ((IntTag) map.get("Golems")).getValue();
-					List<Vector3ic> doors = new ArrayList<>();
-					for (CompoundTag door : ((ListTag<CompoundTag>) map.get("Doors")).getValue()) {
-						CompoundMap doorMap = door.getValue();
-						doors.add(new Vector3i(
-								((IntTag) doorMap.get("X")).getValue(),
-								((IntTag) doorMap.get("Y")).getValue(),
-								((IntTag) doorMap.get("Z")).getValue()));
-					}
-
-					villages.add(new VillagePin(posVec, dimension, radius, population, golems, doors));
-				}
-			} catch (IOException e) {
-				log.warn("Could not access village data", e);
-			}
-		}
-		*/
-
 		// Village 2.0
 		ArrayList<VillageObjectPin> villageObjects = new ArrayList<>();
 		try (DirectoryStream<Path> d = Files.newDirectoryStream(worldPath.resolve("poi")))
 		{
 			for(Path p : d)
 			{
-				if(!p.endsWith(".mca"))
+				if(!p.toString().endsWith(".mca"))
 					continue;
 
 				RegionFile file = new RegionFile(p);

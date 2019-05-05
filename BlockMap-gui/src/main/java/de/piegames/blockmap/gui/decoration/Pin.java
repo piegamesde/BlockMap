@@ -103,42 +103,55 @@ public class Pin {
 
 
 		public static final PinType		VILLAGE						= new PinType("Villages", ANY_PIN, true, false, "textures/structures/village.png");
-		// public static final PinType		VILLAGE_CENTER				= new PinType("Village center", VILLAGE, true, false, "textures/structures/village.png");
-		// public static final PinType		VILLAGE_DOOR				= new PinType("Village house", VILLAGE, true, false, "textures/structures/house.png");
+
+		// Village structure
 		public static final PinType 	VILLAGE_HOME				= new PinType("Village home", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_MEETING				= new PinType("Meetingpoint", VILLAGE, true, false, "/tmp.png");
+
+		// Village crafting
 		public static final PinType		VILLAGE_LEATHERWORKER		= new PinType("Leatherworker", VILLAGE, true, false, "/tmp.png");
-		public static final PinType		VILLAGE_FARMER				= new PinType("Farmer", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_MASON				= new PinType("Mason", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_FLETCHER			= new PinType("Fletcher", VILLAGE, true, false, "/tmp.png");
+
+		// Ironworks
 		public static final PinType 	VILLAGE_TOOLSMITH			= new PinType("Toolsmith", VILLAGE, true, false, "/tmp.png");
 		public static final PinType		VILLAGE_WEAPONSMITH			= new PinType("Weaponsmith", VILLAGE, true, false, "/tmp.png");
 		public static final PinType 	VILLAGE_ARMORER				= new PinType("Armorer", VILLAGE, true, false, "/tmp.png");
+
+		// Food
+		public static final PinType		VILLAGE_FARMER				= new PinType("Farmer", VILLAGE, true, false, "/tmp.png");
 		public static final PinType		VILLAGE_SHEPHERD			= new PinType("Shepherd", VILLAGE, true, false, "/tmp.png");
-		public static final PinType		VILLAGE_MASON				= new PinType("Mason", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_BUTCHER				= new PinType("Butcher", VILLAGE, true, false, "/tmp.png");
+
+		// Intellectual
 		public static final PinType		VILLAGE_CLERIC				= new PinType("Cleric", VILLAGE, true, false, "/tmp.png");
-		public static final PinType		VILLAGE_FLETCHER			= new PinType("Fletcher", VILLAGE, true, false, "/tmp.png");
 		public static final PinType		VILLAGE_CARTOGRAPHER		= new PinType("Cartographer", VILLAGE, true, false, "/tmp.png");
 		public static final PinType		VILLAGE_LIBRARIAN			= new PinType("Librarian", VILLAGE, true, false, "/tmp.png");
-		public static final PinType		VILLAGE_BUTCHER				= new PinType("Butcher", VILLAGE, true, false, "/tmp.png");
-		public static final PinType		VILLAGE_MEETING				= new PinType("Meetingpoint", VILLAGE, true, false, "/tmp.png");
 
 		//TODO please make this beautiful, please.
 		public static final Map<String, PinType> VILLAGE_MAPPING;
 		static
 		{
 			VILLAGE_MAPPING = new HashMap<>();
+
 			VILLAGE_MAPPING.put("minecraft:home", VILLAGE_HOME);
+			VILLAGE_MAPPING.put("minecraft:meeting", VILLAGE_MEETING);
+
 			VILLAGE_MAPPING.put("minecraft:leatherworker", VILLAGE_LEATHERWORKER);
-			VILLAGE_MAPPING.put("minecraft:farmer", VILLAGE_FARMER);
+			VILLAGE_MAPPING.put("minecraft:mason", VILLAGE_MASON);
+			VILLAGE_MAPPING.put("minecraft:fletcher", VILLAGE_FLETCHER);
+
 			VILLAGE_MAPPING.put("minecraft:toolsmith", VILLAGE_TOOLSMITH);
 			VILLAGE_MAPPING.put("minecraft:weaponsmith", VILLAGE_WEAPONSMITH);
 			VILLAGE_MAPPING.put("minecraft:armorer", VILLAGE_ARMORER);
+
+			VILLAGE_MAPPING.put("minecraft:farmer", VILLAGE_FARMER);
 			VILLAGE_MAPPING.put("minecraft:shepherd", VILLAGE_SHEPHERD);
-			VILLAGE_MAPPING.put("minecraft:mason", VILLAGE_MASON);
+			VILLAGE_MAPPING.put("minecraft:butcher", VILLAGE_BUTCHER);
+
 			VILLAGE_MAPPING.put("minecraft:cleric", VILLAGE_CLERIC);
-			VILLAGE_MAPPING.put("minecraft:fletcher", VILLAGE_FLETCHER);
 			VILLAGE_MAPPING.put("minecraft:cartographer", VILLAGE_CARTOGRAPHER);
 			VILLAGE_MAPPING.put("minecraft:librarian", VILLAGE_LIBRARIAN);
-			VILLAGE_MAPPING.put("minecraft:butcher", VILLAGE_BUTCHER);
-			VILLAGE_MAPPING.put("minecraft:meeting", VILLAGE_MEETING);
 		}
 
 		public static final PinType		WORLD_SPAWN					= new PinType("Spawnpoint", ANY_PIN, true, false, "textures/pins/spawn_map.png");
@@ -704,43 +717,6 @@ public class Pin {
 			return info;
 		}
 	}
-	/*
-	private static class VillagePin extends Pin {
-
-		protected WorldPins.VillagePin village;
-
-		public VillagePin(WorldPins.VillagePin village, DisplayViewport viewport) {
-			super(new Vector2d(village.getPosition().x(), village.getPosition().z()), PinType.VILLAGE_CENTER, viewport);
-			this.village = Objects.requireNonNull(village);
-		}
-
-		@Override
-		protected PopOver initInfo() {
-			PopOver info = super.initInfo();
-			GridPane content = new GridPane();
-			content.getStyleClass().add("grid");
-
-			content.add(new Label("Village"), 0, 0, 1, 2);
-			content.add(new Separator(), 0, 1, 1, 2);
-
-			if (village.getRadius().isPresent()) {
-				content.add(new Label("Radius: "), 0, 2);
-				content.add(new Label(village.getRadius().get().toString()), 1, 2);
-			}
-			if (village.getGolems().isPresent()) {
-				content.add(new Label("Golem count: "), 0, 3);
-				content.add(new Label(village.getGolems().get().toString()), 1, 3);
-			}
-			if (village.getDoors().isPresent()) {
-				content.add(new Label("Door count: "), 0, 4);
-				content.add(new Label(String.valueOf(village.getDoors().get().size())), 1, 4);
-			}
-
-			info.setContentNode(content);
-			return info;
-		}
-	}
-	*/
 
 	private static class VillageObjectPin extends Pin
 	{
@@ -759,13 +735,16 @@ public class Pin {
 			GridPane content = new GridPane();
 			content.getStyleClass().add("grid");
 
-			content.add(new Label("Villageobject"), 0, 0, 1, 2);
-			content.add(new Separator(), 0, 1, 1, 2);
+			content.add(new Label("Villageobject"), 0, 0, 1, 1);
+			content.add(new Separator(), 0, 1, 1, 1);
 
-			content.add(new Label("Free tickets: "), 0, 2);
-			content.add(new Label(String.valueOf(villageObjectPin.getFreeTickets())), 1, 2);
+			content.add(new Label("Position: "), 0, 2, 1, 2);
+			content.add(new Label(villageObjectPin.getPosition().toString()), 1, 2, 2, 2);
 
-			content.add(new Label(type.name), 0, 3);
+			content.add(new Label("Free tickets: "), 0, 4);
+			content.add(new Label(String.valueOf(villageObjectPin.getFreeTickets())), 1, 4);
+
+			content.add(new Label(type.name), 0, 5);
 
 			info.setContentNode(content);
 			return info;

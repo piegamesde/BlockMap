@@ -109,10 +109,15 @@ public class Pin {
 		public static final PinType		VILLAGE_LEATHERWORKER		= new PinType("Leatherworker", VILLAGE, true, false, "/tmp.png");
 		public static final PinType		VILLAGE_FARMER				= new PinType("Farmer", VILLAGE, true, false, "/tmp.png");
 		public static final PinType 	VILLAGE_TOOLSMITH			= new PinType("Toolsmith", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_WEAPONSMITH			= new PinType("Weaponsmith", VILLAGE, true, false, "/tmp.png");
 		public static final PinType 	VILLAGE_ARMORER				= new PinType("Armorer", VILLAGE, true, false, "/tmp.png");
 		public static final PinType		VILLAGE_SHEPHERD			= new PinType("Shepherd", VILLAGE, true, false, "/tmp.png");
 		public static final PinType		VILLAGE_MASON				= new PinType("Mason", VILLAGE, true, false, "/tmp.png");
 		public static final PinType		VILLAGE_CLERIC				= new PinType("Cleric", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_FLETCHER			= new PinType("Fletcher", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_CARTOGRAPHER		= new PinType("Cartographer", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_LIBRARIAN			= new PinType("Librarian", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_BUTCHER				= new PinType("Butcher", VILLAGE, true, false, "/tmp.png");
 		public static final PinType		VILLAGE_MEETING				= new PinType("Meetingpoint", VILLAGE, true, false, "/tmp.png");
 
 		//TODO please make this beautiful, please.
@@ -124,10 +129,15 @@ public class Pin {
 			VILLAGE_MAPPING.put("minecraft:leatherworker", VILLAGE_LEATHERWORKER);
 			VILLAGE_MAPPING.put("minecraft:farmer", VILLAGE_FARMER);
 			VILLAGE_MAPPING.put("minecraft:toolsmith", VILLAGE_TOOLSMITH);
+			VILLAGE_MAPPING.put("minecraft:weaponsmith", VILLAGE_WEAPONSMITH);
 			VILLAGE_MAPPING.put("minecraft:armorer", VILLAGE_ARMORER);
 			VILLAGE_MAPPING.put("minecraft:shepherd", VILLAGE_SHEPHERD);
 			VILLAGE_MAPPING.put("minecraft:mason", VILLAGE_MASON);
 			VILLAGE_MAPPING.put("minecraft:cleric", VILLAGE_CLERIC);
+			VILLAGE_MAPPING.put("minecraft:fletcher", VILLAGE_FLETCHER);
+			VILLAGE_MAPPING.put("minecraft:cartographer", VILLAGE_CARTOGRAPHER);
+			VILLAGE_MAPPING.put("minecraft:librarian", VILLAGE_LIBRARIAN);
+			VILLAGE_MAPPING.put("minecraft:butcher", VILLAGE_BUTCHER);
 			VILLAGE_MAPPING.put("minecraft:meeting", VILLAGE_MEETING);
 		}
 
@@ -738,8 +748,8 @@ public class Pin {
 
 		public VillageObjectPin(WorldPins.VillageObjectPin villageObjectPin, DisplayViewport viewport)
 		{
-			super(new Vector2d(villageObjectPin.getPosition().x(), villageObjectPin.getPosition().z()), PinType.VILLAGE_MAPPING.get(villageObjectPin.getType()), viewport);
-			this.villageObjectPin = Objects.requireNonNull(villageObjectPin);
+				super(new Vector2d(villageObjectPin.getPosition().x(), villageObjectPin.getPosition().z()), PinType.VILLAGE_MAPPING.get(villageObjectPin.getType()), viewport);
+				this.villageObjectPin = Objects.requireNonNull(villageObjectPin);
 		}
 
 		@Override
@@ -913,6 +923,17 @@ public class Pin {
 				pins.add(new Pin(new Vector2d(door.x(), door.z()), PinType.VILLAGE_DOOR, viewport));
 		}
 		*/
+		for(WorldPins.VillageObjectPin villageObject : pin.getVillageObjects().orElse(Collections.emptyList()))
+		{
+			try {
+				pins.add(new VillageObjectPin(villageObject, viewport));
+			}
+			catch(NullPointerException e)
+			{
+				log.warn("Nullpointer. Type: " + villageObject.getType());
+				throw e;
+			}
+		}
 
 		/* Cluster maps at identical position to merge their pins. */
 		pins.addAll(pin.getMaps().map(List::stream).orElse(Stream.empty())

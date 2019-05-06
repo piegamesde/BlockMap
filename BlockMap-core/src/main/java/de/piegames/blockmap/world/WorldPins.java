@@ -6,9 +6,11 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import com.flowpowered.nbt.*;
 import com.flowpowered.nbt.regionfile.Chunk;
 import com.flowpowered.nbt.regionfile.RegionFile;
 import org.apache.commons.logging.Log;
@@ -22,15 +24,6 @@ import org.joml.Vector3dc;
 import org.joml.Vector3i;
 import org.joml.Vector3ic;
 
-import com.flowpowered.nbt.ByteArrayTag;
-import com.flowpowered.nbt.ByteTag;
-import com.flowpowered.nbt.CompoundMap;
-import com.flowpowered.nbt.CompoundTag;
-import com.flowpowered.nbt.DoubleTag;
-import com.flowpowered.nbt.IntTag;
-import com.flowpowered.nbt.ListTag;
-import com.flowpowered.nbt.LongTag;
-import com.flowpowered.nbt.StringTag;
 import com.flowpowered.nbt.stream.NBTInputStream;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -367,21 +360,27 @@ public class WorldPins {
 
 				for(int i : file.listChunks())
 				{
-					Chunk chuck = file.loadChunk(i);
-					CompoundTag sections = (CompoundTag) chuck.readTag().getValue().get("Sections");
-					CompoundTag zero	 = (CompoundTag) sections.getValue().get("0");
+					Optional<CompoundTag> zero = file.loadChunk(i).readTag()
+							.getAsCompoundTag("Sections")
+							.flatMap(x -> x.getAsCompoundTag("0"));
 
-					if(((Byte) zero.getValue().get("Valid").getValue()) != 1) {
-						log.warn("Found invalid records during Village load in reagionfile " + file.getPath().toString() + " in chunk " + i);
+					if(zero.flatMap(x -> x.getAsByteTag("Valid")).get().getValue() != 1)
+					{
+						log.warn("Found invalid records during village loading in region file " + file.getPath().toString() + " in chunk " + i);
 						continue;
 					}
 
-					ListTag<CompoundTag> records = (ListTag<CompoundTag>) zero.getValue().get("Records");
-					for(CompoundTag j : records.getValue())
+					List<CompoundTag> records = zero.flatMap(x -> x.getAsListTag("Records"))
+						.flatMap(ListTag::getAsCompoundTagList)
+						.map(Tag::getValue)
+						.orElse(Collections.emptyList());
+
+					for(CompoundTag j : records)
 					{
-						int freeTickets = (Integer) j.getValue().get("free_tickets").getValue();
-						String type = (String) j.getValue().get("type").getValue();
-						int[] pos = (int[]) j.getValue().get("pos").getValue();
+						int freeTickets = j.getAsIntTag("free_tickets").map(Tag::getValue).orElse(-1);
+						String type = j.getAsStringTag("type").map(Tag::getValue).orElse("<unknown>");
+						int[] pos = j.getAsIntArrayTag("pos").map(Tag::getValue).orElse(new int[]{0, 0, 0,});
+
 						Vector3ic position = new Vector3i(pos[0], pos[1], pos[2]);
 
 						villageObjects.add(new VillageObjectPin(position, freeTickets, type));

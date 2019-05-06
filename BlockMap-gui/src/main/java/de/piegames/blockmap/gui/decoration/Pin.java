@@ -101,9 +101,57 @@ public class Pin {
 		public static final PinType		MAP_POSITION				= new PinType("Map position", MAP, true, false, "textures/pins/map.png");
 		public static final PinType		MAP_BANNER					= new PinType("Map banner", MAP, true, false, "textures/pins/banner.png");
 
+
 		public static final PinType		VILLAGE						= new PinType("Villages", ANY_PIN, true, false, "textures/structures/village.png");
-		public static final PinType		VILLAGE_CENTER				= new PinType("Village center", VILLAGE, true, false, "textures/structures/village.png");
-		public static final PinType		VILLAGE_DOOR				= new PinType("Village house", VILLAGE, true, false, "textures/structures/house.png");
+
+		// Village structure
+		public static final PinType 	VILLAGE_HOME				= new PinType("Village home", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_MEETING				= new PinType("Meetingpoint", VILLAGE, true, false, "/tmp.png");
+
+		// Village crafting
+		public static final PinType		VILLAGE_LEATHERWORKER		= new PinType("Leatherworker", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_MASON				= new PinType("Mason", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_FLETCHER			= new PinType("Fletcher", VILLAGE, true, false, "/tmp.png");
+
+		// Ironworks
+		public static final PinType 	VILLAGE_TOOLSMITH			= new PinType("Toolsmith", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_WEAPONSMITH			= new PinType("Weaponsmith", VILLAGE, true, false, "/tmp.png");
+		public static final PinType 	VILLAGE_ARMORER				= new PinType("Armorer", VILLAGE, true, false, "/tmp.png");
+
+		// Food
+		public static final PinType		VILLAGE_FARMER				= new PinType("Farmer", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_SHEPHERD			= new PinType("Shepherd", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_BUTCHER				= new PinType("Butcher", VILLAGE, true, false, "/tmp.png");
+
+		// Intellectual
+		public static final PinType		VILLAGE_CLERIC				= new PinType("Cleric", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_CARTOGRAPHER		= new PinType("Cartographer", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_LIBRARIAN			= new PinType("Librarian", VILLAGE, true, false, "/tmp.png");
+
+		public static final Map<String, PinType> VILLAGE_MAPPING;
+		static
+		{
+			VILLAGE_MAPPING = new HashMap<>();
+
+			VILLAGE_MAPPING.put("minecraft:home", VILLAGE_HOME);
+			VILLAGE_MAPPING.put("minecraft:meeting", VILLAGE_MEETING);
+
+			VILLAGE_MAPPING.put("minecraft:leatherworker", VILLAGE_LEATHERWORKER);
+			VILLAGE_MAPPING.put("minecraft:mason", VILLAGE_MASON);
+			VILLAGE_MAPPING.put("minecraft:fletcher", VILLAGE_FLETCHER);
+
+			VILLAGE_MAPPING.put("minecraft:toolsmith", VILLAGE_TOOLSMITH);
+			VILLAGE_MAPPING.put("minecraft:weaponsmith", VILLAGE_WEAPONSMITH);
+			VILLAGE_MAPPING.put("minecraft:armorer", VILLAGE_ARMORER);
+
+			VILLAGE_MAPPING.put("minecraft:farmer", VILLAGE_FARMER);
+			VILLAGE_MAPPING.put("minecraft:shepherd", VILLAGE_SHEPHERD);
+			VILLAGE_MAPPING.put("minecraft:butcher", VILLAGE_BUTCHER);
+
+			VILLAGE_MAPPING.put("minecraft:cleric", VILLAGE_CLERIC);
+			VILLAGE_MAPPING.put("minecraft:cartographer", VILLAGE_CARTOGRAPHER);
+			VILLAGE_MAPPING.put("minecraft:librarian", VILLAGE_LIBRARIAN);
+		}
 
 		public static final PinType		WORLD_SPAWN					= new PinType("Spawnpoint", ANY_PIN, true, false, "textures/pins/spawn_map.png");
 
@@ -669,36 +717,33 @@ public class Pin {
 		}
 	}
 
-	private static class VillagePin extends Pin {
+	private static class VillageObjectPin extends Pin
+	{
+		protected WorldPins.VillageObjectPin villageObjectPin;
 
-		protected WorldPins.VillagePin village;
-
-		public VillagePin(WorldPins.VillagePin village, DisplayViewport viewport) {
-			super(new Vector2d(village.getPosition().x(), village.getPosition().z()), PinType.VILLAGE_CENTER, viewport);
-			this.village = Objects.requireNonNull(village);
+		public VillageObjectPin(WorldPins.VillageObjectPin villageObjectPin, DisplayViewport viewport)
+		{
+				super(new Vector2d(villageObjectPin.getPosition().x(), villageObjectPin.getPosition().z()), PinType.VILLAGE_MAPPING.get(villageObjectPin.getType()), viewport);
+				this.villageObjectPin = Objects.requireNonNull(villageObjectPin);
 		}
 
 		@Override
-		protected PopOver initInfo() {
+		protected PopOver initInfo()
+		{
 			PopOver info = super.initInfo();
 			GridPane content = new GridPane();
 			content.getStyleClass().add("grid");
 
-			content.add(new Label("Village"), 0, 0, 1, 2);
-			content.add(new Separator(), 0, 1, 1, 2);
+			content.add(new Label("Villageobject"), 0, 0, 1, 1);
+			content.add(new Separator(), 0, 1, 1, 1);
 
-			if (village.getRadius().isPresent()) {
-				content.add(new Label("Radius: "), 0, 2);
-				content.add(new Label(village.getRadius().get().toString()), 1, 2);
-			}
-			if (village.getGolems().isPresent()) {
-				content.add(new Label("Golem count: "), 0, 3);
-				content.add(new Label(village.getGolems().get().toString()), 1, 3);
-			}
-			if (village.getDoors().isPresent()) {
-				content.add(new Label("Door count: "), 0, 4);
-				content.add(new Label(String.valueOf(village.getDoors().get().size())), 1, 4);
-			}
+			content.add(new Label("Position: "), 0, 2, 1, 2);
+			content.add(new Label(villageObjectPin.getPosition().toString()), 1, 2, 2, 2);
+
+			content.add(new Label("Free tickets: "), 0, 4);
+			content.add(new Label(String.valueOf(villageObjectPin.getFreeTickets())), 1, 4);
+
+			content.add(new Label(type.name), 0, 5);
 
 			info.setContentNode(content);
 			return info;
@@ -751,11 +796,17 @@ public class Pin {
 				}
 
 			}
-			if (pinCount.size() > 4 && pinCount.getOrDefault(PinType.VILLAGE_CENTER, 0L) > 0 && pinCount.getOrDefault(PinType.VILLAGE_DOOR, 0L) > 0) {
-				/* Merge village with doors */
-				pinCount.put(PinType.VILLAGE_CENTER, pinCount.get(PinType.VILLAGE_CENTER) + pinCount.get(PinType.VILLAGE_DOOR));
-				pinCount.remove(PinType.VILLAGE_DOOR);
+
+			if(pinCount.size() > 4 && (PinType.VILLAGE_MAPPING.values().stream().filter(x -> pinCount.getOrDefault(x, 0L) > 0).count() > 1))
+			{
+				List<PinType> villageObjects = PinType.VILLAGE.children.stream().filter(this.pinCount::containsKey).collect(Collectors.toList());
+				if(!villageObjects.isEmpty())
+				{
+					pinCount.keySet().removeAll(villageObjects);
+					pinCount.put(PinType.VILLAGE, villageObjects.stream().mapToLong(this.pinCount::get).sum());
+				}
 			}
+
 			if (pinCount.size() > 4 && pinCount.getOrDefault(PinType.MAP_POSITION, 0L) > 0 && pinCount.getOrDefault(PinType.MAP_BANNER, 0L) > 0) {
 				/* Merge map with banners */
 				pinCount.put(PinType.MAP_POSITION, pinCount.get(PinType.MAP_POSITION) + pinCount.get(PinType.MAP_BANNER));
@@ -823,11 +874,16 @@ public class Pin {
 			if (player.getSpawnpoint().isPresent())
 				pins.add(new PlayerSpawnpointPin(player, viewport));
 		}
-
-		for (WorldPins.VillagePin village : pin.getVillages().orElse(Collections.emptyList())) {
-			pins.add(new VillagePin(village, viewport));
-			for (Vector3ic door : village.getDoors().orElse(Collections.emptyList()))
-				pins.add(new Pin(new Vector2d(door.x(), door.z()), PinType.VILLAGE_DOOR, viewport));
+		for(WorldPins.VillageObjectPin villageObject : pin.getVillageObjects().orElse(Collections.emptyList()))
+		{
+			try {
+				pins.add(new VillageObjectPin(villageObject, viewport));
+			}
+			catch(NullPointerException e)
+			{
+				log.warn("Nullpointer. Type: " + villageObject.getType());
+				throw e;
+			}
 		}
 
 		/* Cluster maps at identical position to merge their pins. */

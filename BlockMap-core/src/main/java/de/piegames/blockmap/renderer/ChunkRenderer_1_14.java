@@ -8,19 +8,13 @@ import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.flowpowered.nbt.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.joml.Vector2ic;
 import org.joml.Vector3i;
 import org.joml.Vector3ic;
 
-import com.flowpowered.nbt.CompoundMap;
-import com.flowpowered.nbt.CompoundTag;
-import com.flowpowered.nbt.IntArrayTag;
-import com.flowpowered.nbt.ListTag;
-import com.flowpowered.nbt.LongArrayTag;
-import com.flowpowered.nbt.StringTag;
-import com.flowpowered.nbt.Tag;
 import com.flowpowered.nbt.regionfile.Chunk;
 
 import de.piegames.blockmap.MinecraftVersion;
@@ -90,7 +84,7 @@ class ChunkRenderer_1_14 extends ChunkRenderer {
 			// Get the list of all sections and map them to their y coordinate using streams
 			@SuppressWarnings("unchecked")
 			Map<Byte, CompoundMap> sections = ((ListTag<CompoundTag>) level.getOrDefault("Sections",
-					new ListTag<>("sections", CompoundTag.class, Collections.emptyList()))).getValue().stream()
+					new ListTag<>("sections", TagType.TAG_COMPOUND, Collections.emptyList()))).getValue().stream()
 							.collect(Collectors.toMap(s -> (Byte) s.getValue().get("Y").getValue(), s -> s.getValue()));
 
 			/*

@@ -6,13 +6,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.flowpowered.nbt.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.joml.Vector2ic;
 import org.joml.Vector3i;
 import org.joml.Vector3ic;
 
+import com.flowpowered.nbt.CompoundMap;
+import com.flowpowered.nbt.CompoundTag;
+import com.flowpowered.nbt.IntArrayTag;
+import com.flowpowered.nbt.ListTag;
+import com.flowpowered.nbt.LongArrayTag;
+import com.flowpowered.nbt.StringTag;
+import com.flowpowered.nbt.Tag;
+import com.flowpowered.nbt.TagType;
 import com.flowpowered.nbt.regionfile.Chunk;
 
 import de.piegames.blockmap.MinecraftVersion;
@@ -36,22 +43,24 @@ public class ChunkRenderer_1_13 extends ChunkRenderer {
 	}
 
 	@Override
-	ChunkMetadata renderChunk(Vector2ic chunkPosRegion, Vector2ic chunkPosWorld, CompoundMap level, Color[] map, int[] height, int[] regionBiomes) {
+	ChunkMetadata renderChunk(Vector2ic chunkPosRegion, Vector2ic chunkPosWorld, CompoundTag level, Color[] map, int[] height, int[] regionBiomes) {
 		blockColors = settings.blockColors.get(version);
 
 		try {
 			/* Check chunk status */
-			String generationStatus = ((String) level.get("Status").getValue());
+			String generationStatus = ((String) level.getValue().get("Status").getValue());
 			if (generationStatus == null) {
-				log.warn("Could not parse generation status: " + level.get("Status").getValue());
+				log.warn("Could not parse generation status: " + level.getValue().get("Status").getValue());
 				generationStatus = "empty";
 			}
 			if (ChunkMetadataRendered.STATUS_EMPTY.contains(generationStatus))
 				return new ChunkMetadataRendered(chunkPosWorld, generationStatus);
 
 			Map<String, Vector3ic> structureCenters = new HashMap<>();
-			if (level.containsKey("Structures") && ((CompoundTag) level.get("Structures")).getValue().containsKey("Starts")) {// Load saved structures
-				CompoundMap structures = ((CompoundTag) ((CompoundTag) level.get("Structures")).getValue().get("Starts")).getValue();
+			if (level.getValue().containsKey("Structures") && ((CompoundTag) level.getValue().get("Structures")).getValue().containsKey("Starts")) {// Load
+																																					// saved
+																																					// structures
+				CompoundMap structures = ((CompoundTag) ((CompoundTag) level.getValue().get("Structures")).getValue().get("Starts")).getValue();
 				for (Tag<?> structureTag : structures.values()) {
 					CompoundMap structure = ((CompoundTag) structureTag).getValue();
 					String id = ((StringTag) structure.get("id")).getValue();
@@ -67,7 +76,7 @@ public class ChunkRenderer_1_13 extends ChunkRenderer {
 				}
 			}
 
-			int[] biomes = ((IntArrayTag) level.get("Biomes")).getValue();
+			int[] biomes = ((IntArrayTag) level.getValue().get("Biomes")).getValue();
 
 			/*
 			 * The height of the lowest section that has already been loaded. Section are loaded lazily from top to bottom and this value gets decreased
@@ -79,7 +88,7 @@ public class ChunkRenderer_1_13 extends ChunkRenderer {
 
 			// Get the list of all sections and map them to their y coordinate using streams
 			@SuppressWarnings("unchecked")
-			Map<Byte, CompoundMap> sections = ((ListTag<CompoundTag>) level.getOrDefault("Sections",
+			Map<Byte, CompoundMap> sections = ((ListTag<CompoundTag>) level.getValue().getOrDefault("Sections",
 					new ListTag<>("sections", TagType.TAG_COMPOUND, Collections.emptyList()))).getValue().stream()
 							.collect(Collectors.toMap(s -> (Byte) s.getValue().get("Y").getValue(), s -> s.getValue()));
 

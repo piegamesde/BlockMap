@@ -7,14 +7,15 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.joml.Vector2i;
 import org.joml.Vector2ic;
 
-import com.flowpowered.nbt.CompoundMap;
 import com.flowpowered.nbt.CompoundTag;
+import com.flowpowered.nbt.Tag;
 import com.flowpowered.nbt.regionfile.Chunk;
 import com.flowpowered.nbt.regionfile.RegionFile;
 
@@ -107,37 +108,36 @@ public class RegionRenderer {
 				continue;
 			}
 
-			CompoundMap root;
+			CompoundTag root;
 			try {
-				root = chunk.readTag().getValue();
+				root = chunk.readTag();
 			} catch (IOException e) {
 				log.warn("Failed to load chunk " + chunkPosRegion, e);
 				metadata.put(chunkPos, new ChunkMetadataFailed(chunkPos, e));
 				continue;
 			}
-			CompoundMap level = ((CompoundTag) root.get("Level")).getValue();
+			CompoundTag level = root.getAsCompoundTag("Level").get();
 
 			/* Check data version */
-			if (root.containsKey("DataVersion")) {
-				int dataVersion = ((Integer) root.get("DataVersion").getValue());
-				if (dataVersion < MinecraftVersion.MC_1_13.minVersion) {
+			Optional<Integer> dataVersion = root.getAsIntTag("DataVersion").map(Tag::getValue);
+			if (dataVersion.isPresent()) {
+				int version = dataVersion.get();
+				if (version < MinecraftVersion.MC_1_13.minVersion) {
 					log.warn("Skipping chunk because it is too old");
-					metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "This chunk was written from Minecraft <1.13, which is not supported",
-							dataVersion));
+					metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "This chunk was written from Minecraft <1.13, which is not supported", version));
 					continue;
-				} else if (dataVersion <= MinecraftVersion.MC_1_13.maxVersion) {
+				} else if (version <= MinecraftVersion.MC_1_13.maxVersion) {
 					metadata.put(chunkPos, renderer13.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
-				} else if (dataVersion >= MinecraftVersion.MC_1_14.minVersion && dataVersion < MinecraftVersion.MC_1_14.maxVersion) {
+				} else if (version >= MinecraftVersion.MC_1_14.minVersion && version < MinecraftVersion.MC_1_14.maxVersion) {
 					metadata.put(chunkPos, renderer14.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
 				} else {
-					metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "Could not find a chunk rendering engine for this version", dataVersion));
+					metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "Could not find a chunk rendering engine for this version", version));
 				}
 			} else {
 				log.warn("Skipping chunk because it is way too old (pre 1.9)");
 				metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "This chunk was written from Minecraft <1.9, which is not supported", 0));
 				continue;
 			}
-
 		}
 		settings.shader.shade(map, height, regionBiomes, settings.biomeColors);
 		return map;

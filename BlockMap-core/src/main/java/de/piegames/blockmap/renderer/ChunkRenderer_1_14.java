@@ -1,6 +1,7 @@
 package de.piegames.blockmap.renderer;
 
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -8,13 +9,17 @@ import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import com.flowpowered.nbt.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.joml.Vector2ic;
 import org.joml.Vector3i;
 import org.joml.Vector3ic;
 
+import com.flowpowered.nbt.CompoundMap;
+import com.flowpowered.nbt.CompoundTag;
+import com.flowpowered.nbt.ListTag;
+import com.flowpowered.nbt.LongArrayTag;
+import com.flowpowered.nbt.Tag;
 import com.flowpowered.nbt.regionfile.Chunk;
 
 import de.piegames.blockmap.MinecraftVersion;
@@ -40,38 +45,37 @@ class ChunkRenderer_1_14 extends ChunkRenderer {
 	}
 
 	@Override
-	ChunkMetadata renderChunk(Vector2ic chunkPosRegion, Vector2ic chunkPosWorld, CompoundMap level, Color[] map, int[] height, int[] regionBiomes) {
+	ChunkMetadata renderChunk(Vector2ic chunkPosRegion, Vector2ic chunkPosWorld, CompoundTag level, Color[] map, int[] height, int[] regionBiomes) {
 		blockColors = settings.blockColors.get(version);
 
 		try {
 			/* Check chunk status */
-			String generationStatus = ((String) level.get("Status").getValue());
-			if (generationStatus == null) {
-				log.warn("Could not parse generation status: " + level.get("Status").getValue());
-				generationStatus = "empty";
-			}
+			String generationStatus = level.getAsStringTag("Status").map(Tag::getValue).orElse("empty");
 			if (ChunkMetadataRendered.STATUS_EMPTY.contains(generationStatus))
 				return new ChunkMetadataRendered(chunkPosWorld, generationStatus);
 
+			/* Load saved structures */
 			Map<String, Vector3ic> structureCenters = new HashMap<>();
-			if (level.containsKey("Structures") && ((CompoundTag) level.get("Structures")).getValue().containsKey("Starts")) {// Load saved structures
-				CompoundMap structures = ((CompoundTag) ((CompoundTag) level.get("Structures")).getValue().get("Starts")).getValue();
-				for (Tag<?> structureTag : structures.values()) {
-					CompoundMap structure = ((CompoundTag) structureTag).getValue();
-					String id = ((StringTag) structure.get("id")).getValue();
-					if (!id.equals("INVALID")) {
-						int[] bb = ((IntArrayTag) structure.get("BB")).getValue();
-						Vector3i center = new Vector3i(bb[0], bb[1], bb[2]).add(bb[3], bb[4], bb[5]);
-						// JOML has no Vector3i#div function, why?
-						center.x /= 2;
-						center.y /= 2;
-						center.z /= 2;
-						structureCenters.put(id, center);
-					}
-				}
-			}
+			level.getAsCompoundTag("Structures")
+					.flatMap(t -> t.getAsCompoundTag("Starts"))
+					.map(t -> t.getValue().values())
+					.orElse(Collections.emptyList())
+					.stream()
+					.map(Tag::getAsCompoundTag)
+					.forEach(structure -> {
+						String id = structure.flatMap(t -> t.getAsStringTag("id")).map(Tag::getValue).orElse("INVALID");
+						if (!id.equals("INVALID")) {
+							int[] bb = structure.flatMap(t -> t.getAsIntArrayTag("BB")).map(Tag::getValue).get();
+							Vector3i center = new Vector3i(bb[0], bb[1], bb[2]).add(bb[3], bb[4], bb[5]);
+							// JOML has no Vector3i#div function, why?
+							center.x /= 2;
+							center.y /= 2;
+							center.z /= 2;
+							structureCenters.put(id, center);
+						}
+					});
 
-			int[] biomes = ((IntArrayTag) level.get("Biomes")).getValue();
+			int[] biomes = level.getAsIntArrayTag("Biomes").map(Tag::getValue).orElse(new int[256]);
 
 			/*
 			 * The height of the lowest section that has already been loaded. Section are loaded lazily from top to bottom and this value gets decreased
@@ -81,11 +85,13 @@ class ChunkRenderer_1_14 extends ChunkRenderer {
 			/* Null entries indicate a section full of air */
 			BlockColor[][] loadedSections = new BlockColor[16][];
 
-			// Get the list of all sections and map them to their y coordinate using streams
-			@SuppressWarnings("unchecked")
-			Map<Byte, CompoundMap> sections = ((ListTag<CompoundTag>) level.getOrDefault("Sections",
-					new ListTag<>("sections", TagType.TAG_COMPOUND, Collections.emptyList()))).getValue().stream()
-							.collect(Collectors.toMap(s -> (Byte) s.getValue().get("Y").getValue(), s -> s.getValue()));
+			/* Get the list of all sections and map them to their y coordinate using streams */
+			Map<Byte, CompoundMap> sections = level.getAsListTag("Sections")
+					.flatMap(ListTag::getAsCompoundTagList)
+					.map(Tag::getValue)
+					.orElse(Collections.emptyList())
+					.stream()
+					.collect(Collectors.toMap(section -> section.getAsByteTag("Y").map(Tag::getValue).get(), Tag::getValue));
 
 			/*
 			 * Save the final color of this pixel. It starts with transparent and will be modified over time through overlay operations. The last color
@@ -207,21 +213,22 @@ class ChunkRenderer_1_14 extends ChunkRenderer {
 		if (section == null || !section.containsKey("Palette"))
 			return null;
 
-		// Parse palette
-		@SuppressWarnings("unchecked")
-		List<BlockColor> palette = ((ListTag<CompoundTag>) section.get("Palette"))
-				.getValue()
+		/* Parse palette */
+		List<BlockColor> palette = section.get("Palette")
+				.getAsListTag()
+				.flatMap(ListTag::getAsCompoundTagList)
+				.map(Tag::getValue)
 				.stream()
-				.map(tag -> tag.getValue())
+				.flatMap(Collection::stream)
 				.map(map -> blockColors.getBlockColor(
-						((StringTag) map.get("Name")).getValue(),
+						map.getAsStringTag("Name").map(Tag::getValue).get(),
 						new Supplier<BitSet>() {
 							BitSet memoize;
 
 							@Override
 							public BitSet get() {
 								return memoize == null
-										? memoize = parseBlockState((CompoundTag) map.get("Properties"), version.getBlockStates())
+										? memoize = parseBlockState(map.getAsCompoundTag("Properties").get(), version.getBlockStates())
 										: memoize;
 							}
 						}))

@@ -5,7 +5,6 @@ import java.util.Map.Entry;
 
 import org.joml.Vector2ic;
 
-import com.flowpowered.nbt.CompoundMap;
 import com.flowpowered.nbt.CompoundTag;
 import com.flowpowered.nbt.StringTag;
 import com.flowpowered.nbt.Tag;
@@ -26,7 +25,7 @@ abstract class ChunkRenderer {
 		this.settings = settings;
 	}
 
-	abstract ChunkMetadata renderChunk(Vector2ic chunkPosRegion, Vector2ic chunkPosWorld, CompoundMap level, Color[] map, int[] height, int[] regionBiomes);
+	abstract ChunkMetadata renderChunk(Vector2ic chunkPosRegion, Vector2ic chunkPosWorld, CompoundTag level, Color[] map, int[] height, int[] regionBiomes);
 
 	protected static BitSet parseBlockState(CompoundTag properties, BlockState state) {
 		BitSet ret = new BitSet(state.getSize());

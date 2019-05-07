@@ -128,31 +128,6 @@ public class Pin {
 		public static final PinType		VILLAGE_CARTOGRAPHER		= new PinType("Cartographer", VILLAGE, true, false, "/tmp.png");
 		public static final PinType		VILLAGE_LIBRARIAN			= new PinType("Librarian", VILLAGE, true, false, "/tmp.png");
 
-		public static final Map<String, PinType> VILLAGE_MAPPING;
-		static
-		{
-			VILLAGE_MAPPING = new HashMap<>();
-
-			VILLAGE_MAPPING.put("minecraft:home", VILLAGE_HOME);
-			VILLAGE_MAPPING.put("minecraft:meeting", VILLAGE_MEETING);
-
-			VILLAGE_MAPPING.put("minecraft:leatherworker", VILLAGE_LEATHERWORKER);
-			VILLAGE_MAPPING.put("minecraft:mason", VILLAGE_MASON);
-			VILLAGE_MAPPING.put("minecraft:fletcher", VILLAGE_FLETCHER);
-
-			VILLAGE_MAPPING.put("minecraft:toolsmith", VILLAGE_TOOLSMITH);
-			VILLAGE_MAPPING.put("minecraft:weaponsmith", VILLAGE_WEAPONSMITH);
-			VILLAGE_MAPPING.put("minecraft:armorer", VILLAGE_ARMORER);
-
-			VILLAGE_MAPPING.put("minecraft:farmer", VILLAGE_FARMER);
-			VILLAGE_MAPPING.put("minecraft:shepherd", VILLAGE_SHEPHERD);
-			VILLAGE_MAPPING.put("minecraft:butcher", VILLAGE_BUTCHER);
-
-			VILLAGE_MAPPING.put("minecraft:cleric", VILLAGE_CLERIC);
-			VILLAGE_MAPPING.put("minecraft:cartographer", VILLAGE_CARTOGRAPHER);
-			VILLAGE_MAPPING.put("minecraft:librarian", VILLAGE_LIBRARIAN);
-		}
-
 		public static final PinType		WORLD_SPAWN					= new PinType("Spawnpoint", ANY_PIN, true, false, "textures/pins/spawn_map.png");
 
 		public static final PinType		STRUCTURE					= new PinType("Structures", ANY_PIN, false, true, "textures/pins/structures.png");
@@ -203,25 +178,51 @@ public class Pin {
 		}
 
 		/* Code to map structure names to their respective chunk pin */
-		static final Map<String, PinType> structureTypes;
+		static final Map<String, PinType>	STRUCTURE_TYPES;
+		static final Map<String, PinType>	VILLAGE_MAPPING;
 
 		static {
-			Map<String, PinType> map = new HashMap<>();
-			map.put("Buried_Treasure", STRUCTURE_TREASURE);
-			map.put("Desert_Pyramid", STRUCTURE_PYRAMID);
-			map.put("Igloo", STRUCTURE_IGLOO);
-			map.put("Jungle_Pyramid", STRUCTURE_JUNGLE_TEMPLE);
-			map.put("Mansion", STRUCTURE_MANSION);
-			map.put("Mineshaft", STRUCTURE_MINESHAFT);
-			map.put("Monument", STRUCTURE_OCEAN_MONUMENT);
-			map.put("Ocean_Ruin", STRUCTURE_OCEAN_RUIN);
-			map.put("Shipwreck", STRUCTURE_SHIPWRECK);
-			map.put("Stronghold", STRUCTURE_STRONGHOLD);
-			map.put("Swamp_Hut", STRUCTURE_WITCH_HUT);
-			map.put("EndCity", STRUCTURE_END_CITY);
-			map.put("Fortress", STRUCTURE_FORTRESS);
-			/* Don't add villages to the map since they are already handled as static pins. The structure information they provide is redundant. */
-			structureTypes = Collections.unmodifiableMap(map);
+			Map<String, PinType> structureTypes = new HashMap<>();
+			structureTypes.put("Buried_Treasure", STRUCTURE_TREASURE);
+			structureTypes.put("Desert_Pyramid", STRUCTURE_PYRAMID);
+			structureTypes.put("Igloo", STRUCTURE_IGLOO);
+			structureTypes.put("Jungle_Pyramid", STRUCTURE_JUNGLE_TEMPLE);
+			structureTypes.put("Mansion", STRUCTURE_MANSION);
+			structureTypes.put("Mineshaft", STRUCTURE_MINESHAFT);
+			structureTypes.put("Monument", STRUCTURE_OCEAN_MONUMENT);
+			structureTypes.put("Ocean_Ruin", STRUCTURE_OCEAN_RUIN);
+			structureTypes.put("Shipwreck", STRUCTURE_SHIPWRECK);
+			structureTypes.put("Stronghold", STRUCTURE_STRONGHOLD);
+			structureTypes.put("Swamp_Hut", STRUCTURE_WITCH_HUT);
+			structureTypes.put("EndCity", STRUCTURE_END_CITY);
+			structureTypes.put("Fortress", STRUCTURE_FORTRESS);
+			// TODO test, create STRUCTURE_VILLAGE pin?
+			structureTypes.put("Village", VILLAGE);
+			// /* Don't add villages to the map since they are already handled as static pins. The structure information they provide is redundant. */
+			STRUCTURE_TYPES = Collections.unmodifiableMap(structureTypes);
+
+			Map<String, PinType> villageMapping = new HashMap<>();
+
+			villageMapping.put("minecraft:home", VILLAGE_HOME);
+			villageMapping.put("minecraft:meeting", VILLAGE_MEETING);
+
+			villageMapping.put("minecraft:leatherworker", VILLAGE_LEATHERWORKER);
+			villageMapping.put("minecraft:mason", VILLAGE_MASON);
+			villageMapping.put("minecraft:fletcher", VILLAGE_FLETCHER);
+
+			villageMapping.put("minecraft:toolsmith", VILLAGE_TOOLSMITH);
+			villageMapping.put("minecraft:weaponsmith", VILLAGE_WEAPONSMITH);
+			villageMapping.put("minecraft:armorer", VILLAGE_ARMORER);
+
+			villageMapping.put("minecraft:farmer", VILLAGE_FARMER);
+			villageMapping.put("minecraft:shepherd", VILLAGE_SHEPHERD);
+			villageMapping.put("minecraft:butcher", VILLAGE_BUTCHER);
+
+			villageMapping.put("minecraft:cleric", VILLAGE_CLERIC);
+			villageMapping.put("minecraft:cartographer", VILLAGE_CARTOGRAPHER);
+			villageMapping.put("minecraft:librarian", VILLAGE_LIBRARIAN);
+
+			VILLAGE_MAPPING = Collections.unmodifiableMap(villageMapping);
 		}
 	}
 
@@ -723,7 +724,8 @@ public class Pin {
 
 		public VillageObjectPin(WorldPins.VillageObjectPin villageObjectPin, DisplayViewport viewport)
 		{
-				super(new Vector2d(villageObjectPin.getPosition().x(), villageObjectPin.getPosition().z()), PinType.VILLAGE_MAPPING.get(villageObjectPin.getType()), viewport);
+			super(new Vector2d(villageObjectPin.getPosition().x(), villageObjectPin.getPosition().z()), PinType.VILLAGE_MAPPING.get(villageObjectPin.getType()),
+					viewport);
 				this.villageObjectPin = Objects.requireNonNull(villageObjectPin);
 		}
 
@@ -797,7 +799,7 @@ public class Pin {
 
 			}
 
-			if(pinCount.size() > 4 && (PinType.VILLAGE_MAPPING.values().stream().filter(x -> pinCount.getOrDefault(x, 0L) > 0).count() > 1))
+			if (pinCount.size() > 4 && (PinType.VILLAGE_MAPPING.values().stream().filter(x -> pinCount.getOrDefault(x, 0L) > 0).count() > 1))
 			{
 				List<PinType> villageObjects = PinType.VILLAGE.children.stream().filter(this.pinCount::containsKey).collect(Collectors.toList());
 				if(!villageObjects.isEmpty())
@@ -968,8 +970,8 @@ public class Pin {
 				.filter(m -> m instanceof ChunkMetadataRendered)
 				.map(m -> (ChunkMetadataRendered) m)
 				.flatMap(m -> m.structures.entrySet().stream())
-				.filter(e -> PinType.structureTypes.containsKey(e.getKey()))
-				.map(e -> new Pin(new Vector2d(e.getValue().x(), e.getValue().z()), PinType.structureTypes.get(e.getKey()), viewport))
+				.filter(e -> PinType.STRUCTURE_TYPES.containsKey(e.getKey()))
+				.map(e -> new Pin(new Vector2d(e.getValue().x(), e.getValue().z()), PinType.STRUCTURE_TYPES.get(e.getKey()), viewport))
 				.collect(Collectors.toList()));
 		return pins;
 	}

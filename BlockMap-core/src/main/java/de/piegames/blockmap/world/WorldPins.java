@@ -6,13 +6,11 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import com.flowpowered.nbt.*;
-import com.flowpowered.nbt.regionfile.Chunk;
-import com.flowpowered.nbt.regionfile.RegionFile;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.joml.Vector2d;
@@ -24,6 +22,17 @@ import org.joml.Vector3dc;
 import org.joml.Vector3i;
 import org.joml.Vector3ic;
 
+import com.flowpowered.nbt.ByteArrayTag;
+import com.flowpowered.nbt.ByteTag;
+import com.flowpowered.nbt.CompoundMap;
+import com.flowpowered.nbt.CompoundTag;
+import com.flowpowered.nbt.DoubleTag;
+import com.flowpowered.nbt.IntTag;
+import com.flowpowered.nbt.ListTag;
+import com.flowpowered.nbt.LongTag;
+import com.flowpowered.nbt.StringTag;
+import com.flowpowered.nbt.Tag;
+import com.flowpowered.nbt.regionfile.RegionFile;
 import com.flowpowered.nbt.stream.NBTInputStream;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -38,9 +47,9 @@ import de.piegames.blockmap.world.WorldPins.MapPin.BannerPin;
  */
 public class WorldPins {
 
-	private static Log			log		= LogFactory.getLog(WorldPins.class);
+	private static Log					log		= LogFactory.getLog(WorldPins.class);
 
-	public static final Gson	GSON	= new GsonBuilder().create();
+	public static final Gson			GSON	= new GsonBuilder().create();
 
 	/** This will be used in the future to keep track of old serialized files. */
 	int									version	= 0;
@@ -58,11 +67,13 @@ public class WorldPins {
 
 	public WorldPins(List<PlayerPin> players, List<MapPin> maps, List<VillageObjectPin> villageObjects, List<ChunkPin> slimeChunks,
 			List<ChunkPin> loadedChunks, BorderPin barrier, WorldSpawnPin worldSpawn) {
-		this(Optional.ofNullable(players), Optional.ofNullable(maps), Optional.ofNullable(villageObjects), Optional.ofNullable(slimeChunks), Optional.ofNullable(
-				loadedChunks), Optional.ofNullable(barrier), Optional.ofNullable(worldSpawn));
+		this(Optional.ofNullable(players), Optional.ofNullable(maps), Optional.ofNullable(villageObjects), Optional.ofNullable(slimeChunks), Optional
+				.ofNullable(
+						loadedChunks), Optional.ofNullable(barrier), Optional.ofNullable(worldSpawn));
 	}
 
-	public WorldPins(Optional<List<PlayerPin>> players, Optional<List<MapPin>> maps, Optional<List<VillageObjectPin>> villageObjects, Optional<List<ChunkPin>> slimeChunks,
+	public WorldPins(Optional<List<PlayerPin>> players, Optional<List<MapPin>> maps, Optional<List<VillageObjectPin>> villageObjects,
+			Optional<List<ChunkPin>> slimeChunks,
 			Optional<List<ChunkPin>> loadedChunks, Optional<BorderPin> barrier, Optional<WorldSpawnPin> worldSpawn) {
 		this.players = players;
 		this.maps = maps;
@@ -230,14 +241,12 @@ public class WorldPins {
 		}
 	}
 
-	public static class VillageObjectPin
-	{
-		Vector3ic position;
-		int freeTickets;
-		String type;
+	public static class VillageObjectPin {
+		Vector3ic	position;
+		int			freeTickets;
+		String		type;
 
-		public VillageObjectPin(Vector3ic position, int freeTickets, String type)
-		{
+		public VillageObjectPin(Vector3ic position, int freeTickets, String type) {
 			this.position = position;
 			this.freeTickets = freeTickets;
 			this.type = type;
@@ -349,47 +358,43 @@ public class WorldPins {
 
 		// Village 2.0
 		ArrayList<VillageObjectPin> villageObjects = new ArrayList<>();
-		try (DirectoryStream<Path> d = Files.newDirectoryStream(worldPath.resolve("poi")))
-		{
-			for(Path p : d)
-			{
-				if(!p.toString().endsWith(".mca"))
+		try (DirectoryStream<Path> d = Files.newDirectoryStream(worldPath.resolve("poi"))) {
+			for (Path p : d) {
+				if (!p.toString().endsWith(".mca"))
 					continue;
 
-				RegionFile file = new RegionFile(p);
+				try (RegionFile file = new RegionFile(p);) {
+					for (int i : file.listChunks()) {
+						for (CompoundTag section : (Iterable<CompoundTag>) file.loadChunk(i)
+								.readTag().getAsCompoundTag("Sections")
+								.map(tag -> tag.getValue().values())
+								.stream().flatMap(Collection::stream)
+								.map(t -> (CompoundTag) t)::iterator) {
 
-				for(int i : file.listChunks())
-				{
-					Optional<CompoundTag> zero = file.loadChunk(i).readTag()
-							.getAsCompoundTag("Sections")
-							.flatMap(x -> x.getAsCompoundTag("0"));
+							if (section.getByteValue("Valid").orElse((byte) 0) != 1) {
+								log.warn("Found invalid records during village loading in region file " + file.getPath().toString() + " in chunk " + i);
+								continue;
+							}
 
-					if(zero.flatMap(x -> x.getAsByteTag("Valid")).get().getValue() != 1)
-					{
-						log.warn("Found invalid records during village loading in region file " + file.getPath().toString() + " in chunk " + i);
-						continue;
-					}
+							List<CompoundTag> records = section.getAsListTag("Records")
+									.flatMap(ListTag::getAsCompoundTagList)
+									.map(Tag::getValue)
+									.orElse(Collections.emptyList());
 
-					List<CompoundTag> records = zero.flatMap(x -> x.getAsListTag("Records"))
-						.flatMap(ListTag::getAsCompoundTagList)
-						.map(Tag::getValue)
-						.orElse(Collections.emptyList());
+							for (CompoundTag j : records) {
+								int freeTickets = j.getIntValue("free_tickets").orElse(-1);
+								String type = j.getStringValue("type").orElse("<unknown>");
+								int[] pos = j.getIntArrayValue("pos").orElse(new int[] { 0, 0, 0, });
 
-					for(CompoundTag j : records)
-					{
-						int freeTickets = j.getAsIntTag("free_tickets").map(Tag::getValue).orElse(-1);
-						String type = j.getAsStringTag("type").map(Tag::getValue).orElse("<unknown>");
-						int[] pos = j.getAsIntArrayTag("pos").map(Tag::getValue).orElse(new int[]{0, 0, 0,});
+								Vector3ic position = new Vector3i(pos[0], pos[1], pos[2]);
 
-						Vector3ic position = new Vector3i(pos[0], pos[1], pos[2]);
-
-						villageObjects.add(new VillageObjectPin(position, freeTickets, type));
+								villageObjects.add(new VillageObjectPin(position, freeTickets, type));
+							}
+						}
 					}
 				}
 			}
-		}
-		catch (IOException e)
-		{
+		} catch (IOException | RuntimeException e) {
 			log.warn("Could not access village data", e);
 		}
 

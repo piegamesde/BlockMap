@@ -101,11 +101,10 @@ public class Pin {
 		public static final PinType		MAP_POSITION				= new PinType("Map position", MAP, true, false, "textures/pins/map.png");
 		public static final PinType		MAP_BANNER					= new PinType("Map banner", MAP, true, false, "textures/pins/banner.png");
 
-
 		public static final PinType		VILLAGE						= new PinType("Villages", ANY_PIN, true, false, "textures/structures/village.png");
 
 		// Village structure
-		public static final PinType 	VILLAGE_HOME				= new PinType("Village home", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_HOME				= new PinType("Village home", VILLAGE, true, false, "/tmp.png");
 		public static final PinType		VILLAGE_MEETING				= new PinType("Meetingpoint", VILLAGE, true, false, "/tmp.png");
 
 		// Village crafting
@@ -114,14 +113,15 @@ public class Pin {
 		public static final PinType		VILLAGE_FLETCHER			= new PinType("Fletcher", VILLAGE, true, false, "/tmp.png");
 
 		// Ironworks
-		public static final PinType 	VILLAGE_TOOLSMITH			= new PinType("Toolsmith", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_TOOLSMITH			= new PinType("Toolsmith", VILLAGE, true, false, "/tmp.png");
 		public static final PinType		VILLAGE_WEAPONSMITH			= new PinType("Weaponsmith", VILLAGE, true, false, "/tmp.png");
-		public static final PinType 	VILLAGE_ARMORER				= new PinType("Armorer", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_ARMORER				= new PinType("Armorer", VILLAGE, true, false, "/tmp.png");
 
 		// Food
 		public static final PinType		VILLAGE_FARMER				= new PinType("Farmer", VILLAGE, true, false, "/tmp.png");
 		public static final PinType		VILLAGE_SHEPHERD			= new PinType("Shepherd", VILLAGE, true, false, "/tmp.png");
 		public static final PinType		VILLAGE_BUTCHER				= new PinType("Butcher", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_FISHERMAN			= new PinType("Fisherman,", VILLAGE, true, false, "/tmp.png");
 
 		// Intellectual
 		public static final PinType		VILLAGE_CLERIC				= new PinType("Cleric", VILLAGE, true, false, "/tmp.png");
@@ -217,6 +217,7 @@ public class Pin {
 			villageMapping.put("minecraft:farmer", VILLAGE_FARMER);
 			villageMapping.put("minecraft:shepherd", VILLAGE_SHEPHERD);
 			villageMapping.put("minecraft:butcher", VILLAGE_BUTCHER);
+			villageMapping.put("minecraft:fisherman", VILLAGE_FISHERMAN);
 
 			villageMapping.put("minecraft:cleric", VILLAGE_CLERIC);
 			villageMapping.put("minecraft:cartographer", VILLAGE_CARTOGRAPHER);
@@ -718,20 +719,17 @@ public class Pin {
 		}
 	}
 
-	private static class VillageObjectPin extends Pin
-	{
+	private static class VillageObjectPin extends Pin {
 		protected WorldPins.VillageObjectPin villageObjectPin;
 
-		public VillageObjectPin(WorldPins.VillageObjectPin villageObjectPin, DisplayViewport viewport)
-		{
+		public VillageObjectPin(WorldPins.VillageObjectPin villageObjectPin, DisplayViewport viewport) {
 			super(new Vector2d(villageObjectPin.getPosition().x(), villageObjectPin.getPosition().z()), PinType.VILLAGE_MAPPING.get(villageObjectPin.getType()),
 					viewport);
-				this.villageObjectPin = Objects.requireNonNull(villageObjectPin);
+			this.villageObjectPin = Objects.requireNonNull(villageObjectPin);
 		}
 
 		@Override
-		protected PopOver initInfo()
-		{
+		protected PopOver initInfo() {
 			PopOver info = super.initInfo();
 			GridPane content = new GridPane();
 			content.getStyleClass().add("grid");
@@ -799,11 +797,9 @@ public class Pin {
 
 			}
 
-			if (pinCount.size() > 4 && (PinType.VILLAGE_MAPPING.values().stream().filter(x -> pinCount.getOrDefault(x, 0L) > 0).count() > 1))
-			{
+			if (pinCount.size() > 4 && (PinType.VILLAGE_MAPPING.values().stream().filter(x -> pinCount.getOrDefault(x, 0L) > 0).count() > 1)) {
 				List<PinType> villageObjects = PinType.VILLAGE.children.stream().filter(this.pinCount::containsKey).collect(Collectors.toList());
-				if(!villageObjects.isEmpty())
-				{
+				if (!villageObjects.isEmpty()) {
 					pinCount.keySet().removeAll(villageObjects);
 					pinCount.put(PinType.VILLAGE, villageObjects.stream().mapToLong(this.pinCount::get).sum());
 				}
@@ -876,13 +872,10 @@ public class Pin {
 			if (player.getSpawnpoint().isPresent())
 				pins.add(new PlayerSpawnpointPin(player, viewport));
 		}
-		for(WorldPins.VillageObjectPin villageObject : pin.getVillageObjects().orElse(Collections.emptyList()))
-		{
+		for (WorldPins.VillageObjectPin villageObject : pin.getVillageObjects().orElse(Collections.emptyList())) {
 			try {
 				pins.add(new VillageObjectPin(villageObject, viewport));
-			}
-			catch(NullPointerException e)
-			{
+			} catch (NullPointerException e) {
 				log.warn("Nullpointer. Type: " + villageObject.getType());
 				throw e;
 			}

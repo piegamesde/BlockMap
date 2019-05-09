@@ -46,7 +46,7 @@ dependencies {
 	implementation 'commons-io:commons-io:2.6'
 	implementation 'com.google.guava:guava:27.1-jre'
 	implementation 'info.picocli:picocli:3.7.0'
-	implementation 'com.github.Sommerlilie:MinecraftLandGenerator:a627245fc3'
+	implementation 'com.github.Minecraft-Technik-Wiki:MinecraftLandGenerator:2.0.0'
 	implementation group: 'com.codepoetics', name: 'protonpack', version: '1.15'
 
 	/* This is not an actual dependency, but some biome color data has been copied from there so it will show up in the credits list */

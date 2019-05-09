@@ -2,7 +2,6 @@ package de.piegames.blockmap.renderer;
 
 import java.util.BitSet;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,16 +55,16 @@ class ChunkRenderer_1_14 extends ChunkRenderer {
 
 			/* Load saved structures */
 			Map<String, Vector3ic> structureCenters = new HashMap<>();
+
 			level.getAsCompoundTag("Structures")
 					.flatMap(t -> t.getAsCompoundTag("Starts"))
-					.map(t -> t.getValue().values())
-					.orElse(Collections.emptyList())
 					.stream()
+					.flatMap(tag -> tag.getValue().values().stream())
 					.map(Tag::getAsCompoundTag)
 					.forEach(structure -> {
-						String id = structure.flatMap(t -> t.getAsStringTag("id")).map(Tag::getValue).orElse("INVALID");
+						String id = structure.flatMap(t -> t.getStringValue("id")).orElse("INVALID");
 						if (!id.equals("INVALID")) {
-							int[] bb = structure.flatMap(t -> t.getAsIntArrayTag("BB")).map(Tag::getValue).get();
+							int[] bb = structure.flatMap(t -> t.getIntArrayValue("BB")).get();
 							Vector3i center = new Vector3i(bb[0], bb[1], bb[2]).add(bb[3], bb[4], bb[5]);
 							// JOML has no Vector3i#div function, why?
 							center.x /= 2;
@@ -75,7 +74,7 @@ class ChunkRenderer_1_14 extends ChunkRenderer {
 						}
 					});
 
-			int[] biomes = level.getAsIntArrayTag("Biomes").map(Tag::getValue).orElse(new int[256]);
+			int[] biomes = level.getIntArrayValue("Biomes").orElse(new int[256]);
 
 			/*
 			 * The height of the lowest section that has already been loaded. Section are loaded lazily from top to bottom and this value gets decreased
@@ -88,10 +87,9 @@ class ChunkRenderer_1_14 extends ChunkRenderer {
 			/* Get the list of all sections and map them to their y coordinate using streams */
 			Map<Byte, CompoundMap> sections = level.getAsListTag("Sections")
 					.flatMap(ListTag::getAsCompoundTagList)
-					.map(Tag::getValue)
-					.orElse(Collections.emptyList())
-					.stream()
-					.collect(Collectors.toMap(section -> section.getAsByteTag("Y").map(Tag::getValue).get(), Tag::getValue));
+					.map(ListTag::getValue)
+					.stream().flatMap(Collection::stream)
+					.collect(Collectors.toMap(section -> section.getByteValue("Y").get(), Tag::getValue));
 
 			/*
 			 * Save the final color of this pixel. It starts with transparent and will be modified over time through overlay operations. The last color
@@ -218,10 +216,9 @@ class ChunkRenderer_1_14 extends ChunkRenderer {
 				.getAsListTag()
 				.flatMap(ListTag::getAsCompoundTagList)
 				.map(Tag::getValue)
-				.stream()
-				.flatMap(Collection::stream)
+				.stream().flatMap(Collection::stream)
 				.map(map -> blockColors.getBlockColor(
-						map.getAsStringTag("Name").map(Tag::getValue).get(),
+						map.getStringValue("Name").get(),
 						new Supplier<BitSet>() {
 							BitSet memoize;
 
@@ -252,5 +249,4 @@ class ChunkRenderer_1_14 extends ChunkRenderer {
 		}
 		return ret;
 	}
-
 }

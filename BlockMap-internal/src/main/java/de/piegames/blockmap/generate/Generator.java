@@ -32,10 +32,10 @@ import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.color.Color;
 import de.piegames.blockmap.generate.Downloader.VersionManifest;
 import de.piegames.blockmap.renderer.BlockState;
-import morlok8k.MinecraftLandGenerator.MinecraftLandGenerator;
-import morlok8k.MinecraftLandGenerator.Server;
-import morlok8k.MinecraftLandGenerator.World;
-import morlok8k.MinecraftLandGenerator.World.Dimension;
+import de.piegames.mlg.MinecraftLandGenerator;
+import de.piegames.mlg.Server;
+import de.piegames.mlg.World;
+import de.piegames.mlg.World.Dimension;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 

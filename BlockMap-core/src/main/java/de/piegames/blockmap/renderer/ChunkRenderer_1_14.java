@@ -74,7 +74,10 @@ class ChunkRenderer_1_14 extends ChunkRenderer {
 						}
 					});
 
-			int[] biomes = level.getIntArrayValue("Biomes").orElse(new int[256]);
+			int[] biomes = level.getIntArrayValue("Biomes")
+					/* For some curious reason, Minecraft sometimes saves the biomes as empty array. 'cause, why not? */
+					.filter(b -> b.length > 0)
+					.orElse(new int[256]);
 
 			/*
 			 * The height of the lowest section that has already been loaded. Section are loaded lazily from top to bottom and this value gets decreased

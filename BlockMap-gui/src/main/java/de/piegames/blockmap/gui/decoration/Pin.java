@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.control.PopOver.ArrowLocation;
+import org.controlsfx.dialog.ExceptionDialog;
 import org.joml.AABBd;
 import org.joml.Vector2d;
 import org.joml.Vector2dc;
@@ -93,15 +94,15 @@ public class Pin {
 		public static final PinType		CHUNK_OLD					= new PinType("Old chunk", CHUNK_PIN, true, false,
 				"textures/overlays/pin_chunk_outdated.png");
 
-		public static final PinType		PLAYER						= new PinType("Players", ANY_PIN, true, false, "textures/pins/player.png");
+		public static final PinType		PLAYER						= new PinType("Player", ANY_PIN, true, false, "textures/pins/player.png");
 		public static final PinType		PLAYER_POSITION				= new PinType("Player position", PLAYER, true, false, "textures/pins/player.png");
 		public static final PinType		PLAYER_SPAWN				= new PinType("Player spawnpoint", PLAYER, true, false, "textures/pins/spawn_player.png");
 
-		public static final PinType		MAP							= new PinType("Maps", ANY_PIN, true, false, "textures/pins/map.png");
+		public static final PinType		MAP							= new PinType("Map", ANY_PIN, true, false, "textures/pins/map.png");
 		public static final PinType		MAP_POSITION				= new PinType("Map position", MAP, true, false, "textures/pins/map.png");
 		public static final PinType		MAP_BANNER					= new PinType("Map banner", MAP, true, false, "textures/pins/banner.png");
 
-		public static final PinType		VILLAGE						= new PinType("Villages", ANY_PIN, true, false, "textures/structures/village.png");
+		public static final PinType		VILLAGE						= new PinType("Village", ANY_PIN, true, false, "textures/structures/village.png");
 
 		// Village structure
 		public static final PinType		VILLAGE_HOME				= new PinType("Village home", VILLAGE, true, false, "/tmp.png");
@@ -147,6 +148,7 @@ public class Pin {
 		public static final PinType		STRUCTURE_SHIPWRECK			= new PinType("Shipwreck", STRUCTURE, false, false, "textures/structures/shipwreck.png");
 		public static final PinType		STRUCTURE_STRONGHOLD		= new PinType("Stronghold", STRUCTURE, true, false, "textures/structures/stronghold.png");
 		public static final PinType		STRUCTURE_WITCH_HUT			= new PinType("Witch hut", STRUCTURE, true, false, "textures/structures/swamp_hut.png");
+		public static final PinType		STRUCTURE_OUTPOST			= new PinType("Pillager outpost", STRUCTURE, true, false, "/tmp.png");
 
 		protected final List<PinType>	children					= new ArrayList<>();
 		private final String			name;
@@ -183,6 +185,7 @@ public class Pin {
 
 		static {
 			Map<String, PinType> structureTypes = new HashMap<>();
+			/* Minecraft 1.13 */
 			structureTypes.put("Buried_Treasure", STRUCTURE_TREASURE);
 			structureTypes.put("Desert_Pyramid", STRUCTURE_PYRAMID);
 			structureTypes.put("Igloo", STRUCTURE_IGLOO);
@@ -196,9 +199,23 @@ public class Pin {
 			structureTypes.put("Swamp_Hut", STRUCTURE_WITCH_HUT);
 			structureTypes.put("EndCity", STRUCTURE_END_CITY);
 			structureTypes.put("Fortress", STRUCTURE_FORTRESS);
-			// TODO test, create STRUCTURE_VILLAGE pin?
 			structureTypes.put("Village", VILLAGE);
-			// /* Don't add villages to the map since they are already handled as static pins. The structure information they provide is redundant. */
+			/* Minecraft 1.14 */
+			structureTypes.put("minecraft:buried_treasure", STRUCTURE_TREASURE);
+			structureTypes.put("minecraft:desert_pyramid", STRUCTURE_PYRAMID);
+			structureTypes.put("minecraft:igloo", STRUCTURE_IGLOO);
+			structureTypes.put("minecraft:jungle_pyramid", STRUCTURE_JUNGLE_TEMPLE);
+			structureTypes.put("minecraft:mansion", STRUCTURE_MANSION);
+			structureTypes.put("minecraft:mineshaft", STRUCTURE_MINESHAFT);
+			structureTypes.put("minecraft:monument", STRUCTURE_OCEAN_MONUMENT);
+			structureTypes.put("minecraft:ocean_ruin", STRUCTURE_OCEAN_RUIN);
+			structureTypes.put("minecraft:shipwreck", STRUCTURE_SHIPWRECK);
+			structureTypes.put("minecraft:stronghold", STRUCTURE_STRONGHOLD);
+			structureTypes.put("minecraft:swamp_hut", STRUCTURE_WITCH_HUT);
+			structureTypes.put("minecraft:end_city", STRUCTURE_END_CITY);
+			structureTypes.put("minecraft:fortress", STRUCTURE_FORTRESS);
+			structureTypes.put("minecraft:pillager_outpost", STRUCTURE_OUTPOST);
+			structureTypes.put("minecraft:village", VILLAGE);
 			STRUCTURE_TYPES = Collections.unmodifiableMap(structureTypes);
 
 			Map<String, PinType> villageMapping = new HashMap<>();
@@ -425,7 +442,6 @@ public class Pin {
 		public OldChunkPin(Vector2dc centerPos, List<Vector2ic> chunkPositions, Collection<ChunkMetadataVersion> chunks, DisplayViewport viewport) {
 			super(PinType.CHUNK_OLD, centerPos, chunkPositions, new Image(Pin.class.getResource("textures/overlays/chunk_outdated.png").toString(), 64, 64,
 					true, false), viewport);
-			System.out.println(chunks);
 			this.chunks = chunks;
 		}
 
@@ -455,6 +471,42 @@ public class Pin {
 
 				popContent.add(new Label(supported.versionName), 1, row++);
 			}
+			return info;
+		}
+	}
+
+	private static class FailedChunkPin extends ChunkPin {
+
+		protected Collection<ChunkMetadataFailed> chunks;
+
+		public FailedChunkPin(Vector2dc centerPos, List<Vector2ic> chunkPositions, Collection<ChunkMetadataFailed> chunks, DisplayViewport viewport) {
+			super(PinType.CHUNK_FAILED, centerPos, chunkPositions, new Image(Pin.class.getResource("textures/overlays/chunk_corrupted.png").toString(), 64, 64,
+					true, false), viewport);
+			this.chunks = Objects.requireNonNull(chunks);
+		}
+
+		@Override
+		protected PopOver initInfo() {
+			PopOver info = super.initInfo();
+
+			GridPane popContent = new GridPane();
+			popContent.getStyleClass().add("grid");
+			info.setContentNode(popContent);
+
+			StreamUtils.zipWithIndex(chunks.stream()
+					.map(e -> e.error).collect(Collectors.groupingBy(Exception::toString)).entrySet().stream())
+					.forEach(index -> {
+						Exception e = index.getValue().getValue().get(0);
+						popContent.add(new Label(e.getClass().getSimpleName()), 0, (int) index.getIndex());
+						popContent.add(new Label("×" + index.getValue().getValue().size()), 1, (int) index.getIndex());
+						Button button = new Button("Show trace…");
+						button.setOnAction(__ -> {
+							ExceptionDialog d = new ExceptionDialog(e);
+							d.setHeaderText(e.toString());
+							d.showAndWait();
+						});
+						popContent.add(button, 2, (int) index.getIndex());
+					});
 			return info;
 		}
 	}
@@ -734,9 +786,6 @@ public class Pin {
 			GridPane content = new GridPane();
 			content.getStyleClass().add("grid");
 
-			content.add(new Label("Villageobject"), 0, 0, 1, 1);
-			content.add(new Separator(), 0, 1, 1, 1);
-
 			content.add(new Label("Position: "), 0, 2, 1, 2);
 			content.add(new Label(villageObjectPin.getPosition().toString()), 1, 2, 2, 2);
 
@@ -787,6 +836,16 @@ public class Pin {
 		protected Node initTopGui() {
 			/* If there are to many different pins, merge some */
 			Map<PinType, Long> pinCount = new HashMap<>(this.pinCount);
+
+			if (pinCount.size() > 4 && (PinType.VILLAGE_MAPPING.values().stream().filter(x -> pinCount.getOrDefault(x, 0L) > 0).count() > 1)) {
+				/* Merge village pins to one */
+				List<PinType> villageObjects = PinType.VILLAGE.children.stream().filter(this.pinCount::containsKey).collect(Collectors.toList());
+				if (!villageObjects.isEmpty()) {
+					pinCount.keySet().removeAll(villageObjects);
+					pinCount.put(PinType.VILLAGE, villageObjects.stream().mapToLong(this.pinCount::get).sum());
+				}
+			}
+
 			if (pinCount.size() > 4) {
 				/* Merge all structures */
 				List<PinType> structures = PinType.STRUCTURE.children.stream().filter(this.pinCount::containsKey).collect(Collectors.toList());
@@ -795,14 +854,6 @@ public class Pin {
 					pinCount.put(PinType.STRUCTURE, structures.stream().mapToLong(this.pinCount::get).sum());
 				}
 
-			}
-
-			if (pinCount.size() > 4 && (PinType.VILLAGE_MAPPING.values().stream().filter(x -> pinCount.getOrDefault(x, 0L) > 0).count() > 1)) {
-				List<PinType> villageObjects = PinType.VILLAGE.children.stream().filter(this.pinCount::containsKey).collect(Collectors.toList());
-				if (!villageObjects.isEmpty()) {
-					pinCount.keySet().removeAll(villageObjects);
-					pinCount.put(PinType.VILLAGE, villageObjects.stream().mapToLong(this.pinCount::get).sum());
-				}
 			}
 
 			if (pinCount.size() > 4 && pinCount.getOrDefault(PinType.MAP_POSITION, 0L) > 0 && pinCount.getOrDefault(PinType.MAP_BANNER, 0L) > 0) {
@@ -942,12 +993,10 @@ public class Pin {
 					Vector2d::add).mul(1.0 / chunks.size());
 			pins.add(new UnfinishedChunkPin(center, outlineSet(chunks), chunkGeneration, viewport));
 		}
-		for (Set<Vector2ic> chunks : splitChunks(failedChunks.keySet())) {
-			Vector2dc center = chunks.stream().map(v -> new Vector2d(v.x() * 16.0 + 8, v.y() * 16.0 + 8)).collect(Vector2d::new, Vector2d::add,
+		for (Map<Vector2ic, ChunkMetadataFailed> chunks : splitChunks(failedChunks)) {
+			Vector2dc center = chunks.keySet().stream().map(v -> new Vector2d(v.x() * 16.0 + 8, v.y() * 16.0 + 8)).collect(Vector2d::new, Vector2d::add,
 					Vector2d::add).mul(1.0 / chunks.size());
-			pins.add(new ChunkPin(PinType.CHUNK_FAILED, center, outlineSet(chunks),
-					new Image(Pin.class.getResource("textures/overlays/chunk_corrupted.png").toString(), 64, 64, true, false),
-					viewport));
+			pins.add(new FailedChunkPin(center, outlineSet(chunks.keySet()), chunks.values(), viewport));
 		}
 		for (Map<Vector2ic, ChunkMetadataVersion> chunks : splitChunks(oldChunks)) {
 			Vector2dc center = chunks.keySet().stream().map(v -> new Vector2d(v.x() * 16.0 + 8, v.y() * 16.0 + 8)).collect(Vector2d::new, Vector2d::add,
@@ -963,7 +1012,14 @@ public class Pin {
 				.filter(m -> m instanceof ChunkMetadataRendered)
 				.map(m -> (ChunkMetadataRendered) m)
 				.flatMap(m -> m.structures.entrySet().stream())
-				.filter(e -> PinType.STRUCTURE_TYPES.containsKey(e.getKey()))
+				.filter(e -> {
+					if (PinType.STRUCTURE_TYPES.containsKey(e.getKey()))
+						return true;
+					else {
+						log.warn("Could not parse structure id " + e.getKey());
+						return false;
+					}
+				})
 				.map(e -> new Pin(new Vector2d(e.getValue().x(), e.getValue().z()), PinType.STRUCTURE_TYPES.get(e.getKey()), viewport))
 				.collect(Collectors.toList()));
 		return pins;

@@ -16,6 +16,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.control.TreeItem?>
 <?import javafx.scene.control.CheckBoxTreeItem?>
+<?import javafx.scene.input.KeyCodeCombination?>
 
 <BorderPane
 	maxHeight="0"
@@ -33,7 +34,17 @@
 					<items>
 						<MenuItem
 							text="Load world..."
-							onAction="#browseFolder" />
+							onAction="#browseFolder">
+							<accelerator>
+								<KeyCodeCombination
+									code="O"
+									alt="UP"
+									control="DOWN"
+									meta="UP"
+									shift="UP"
+									shortcut="UP" />
+							</accelerator>
+						</MenuItem>
 						<MenuItem
 							text="Load rendered world..."
 							onAction="#browseFile" />
@@ -42,19 +53,40 @@
 							onAction="#loadRemote" />
 						<MenuItem
 							text="Reload"
-							onAction="#reloadWorld" />
+							onAction="#reloadWorld">
+							<accelerator>
+								<KeyCodeCombination
+									code="R"
+									alt="UP"
+									control="DOWN"
+									meta="UP"
+									shift="UP"
+									shortcut="UP" />
+							</accelerator>
+						</MenuItem>
 						<MenuItem
 							text="Unload"
 							onAction="#unload" />
 						<MenuItem
 							text="Exit"
-							onAction="#exit" />
+							onAction="#exit">
+							<accelerator>
+								<KeyCodeCombination
+									code="Q"
+									alt="UP"
+									control="DOWN"
+									meta="UP"
+									shift="UP"
+									shortcut="UP" />
+							</accelerator>
+						</MenuItem>
 					</items>
 				</Menu>
 				<Menu text="_Help">
 					<items>
-						<MenuItem text="About" 
-						onAction="#showAbout"/>
+						<MenuItem
+							text="About"
+							onAction="#showAbout" />
 					</items>
 				</Menu>
 			</menus>

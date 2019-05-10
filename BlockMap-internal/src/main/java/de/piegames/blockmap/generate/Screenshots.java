@@ -25,6 +25,7 @@ import org.joml.Vector2i;
 import com.flowpowered.nbt.regionfile.RegionFile;
 
 import de.piegames.blockmap.color.BlockColorMap;
+import de.piegames.blockmap.gui.decoration.Pin.PinType;
 import de.piegames.blockmap.guistandalone.GuiMain;
 import de.piegames.blockmap.guistandalone.RegionFolderProvider.WorldRegionFolderProvider;
 import de.piegames.blockmap.renderer.RegionRenderer;
@@ -112,8 +113,7 @@ public class Screenshots {
 						GuiMain.instance.stage.hide();
 						GuiMain.instance.stage.show();
 						GuiMain.instance.controller.load(
-								new WorldRegionFolderProvider(
-										Paths.get(URI.create(Generator.class.getResource("/BlockMapWorld/").toString())), renderer) {
+								new WorldRegionFolderProvider(Generator.OUTPUT_INTERNAL_CACHE.resolve("BlockMapWorld"), renderer) {
 									/** Override this method to hide the file structure of the local system from the screenshots */
 									@Override
 									public String getLocation() {
@@ -133,7 +133,7 @@ public class Screenshots {
 						return true;
 					},
 					() -> {
-						log.info("Taking single screenshot");
+						log.info("Taking screenshot 1");
 						WritableImage img = GuiMain.instance.stage.getScene().snapshot(null);
 						try (OutputStream out = Files.newOutputStream(Generator.OUTPUT_SCREENSHOTS.resolve("screenshot-3.png"))) {
 							ImageIO.write(SwingFXUtils.fromFXImage(img, null), "png", out);
@@ -141,16 +141,63 @@ public class Screenshots {
 							log.error(e);
 						}
 						return true;
+					},
+					() -> {
+						/* Show all pins visible by default plus all structures */
+						GuiMain.instance.controller.pinView.getCheckModel().check(GuiMain.instance.controller.checkedPins.get(PinType.STRUCTURE_MINESHAFT));
+						GuiMain.instance.controller.pinView.getCheckModel().check(GuiMain.instance.controller.checkedPins.get(PinType.STRUCTURE_OCEAN_RUIN));
+						GuiMain.instance.controller.pinView.getCheckModel().check(GuiMain.instance.controller.checkedPins.get(PinType.STRUCTURE_SHIPWRECK));
+						GuiMain.instance.controller.renderer.viewport.translationProperty.set(new Vector2d(1024, -1200));
+						GuiMain.instance.controller.renderer.viewport.zoomProperty.set(-1);
+						GuiMain.instance.controller.renderer.repaint();
+						return true;
+					},
+					() -> {
+						Thread.sleep(5000);
+						GuiMain.instance.controller.renderer.repaint();
+						return true;
+					},
+					() -> {
+						Thread.sleep(5000);
+						GuiMain.instance.controller.renderer.repaint();
+						return true;
+					},
+					() -> {
+						Thread.sleep(5000);
+						GuiMain.instance.controller.renderer.repaint();
+						return true;
+					},
+					() -> {
+						log.info("Taking screenshot 2");
+						WritableImage img = GuiMain.instance.stage.getScene().snapshot(null);
+						try (OutputStream out = Files.newOutputStream(Generator.OUTPUT_SCREENSHOTS.resolve("screenshot-4.png"))) {
+							ImageIO.write(SwingFXUtils.fromFXImage(img, null), "png", out);
+						} catch (IOException e) {
+							log.error(e);
+						}
+						GuiMain.instance.controller.pinView.getCheckModel().clearCheck(GuiMain.instance.controller.checkedPins.get(
+								PinType.STRUCTURE_MINESHAFT));
+						GuiMain.instance.controller.pinView.getCheckModel().clearCheck(GuiMain.instance.controller.checkedPins.get(
+								PinType.STRUCTURE_OCEAN_RUIN));
+						GuiMain.instance.controller.pinView.getCheckModel().clearCheck(GuiMain.instance.controller.checkedPins.get(
+								PinType.STRUCTURE_SHIPWRECK));
+						return true;
 					}));
 		}
+
 		{/* zoom gif */
 			log.info("Rendering animated zoom gif");
 			List<Callable<Boolean>> tasks = new ArrayList<>();
 			List<BufferedImage> screenshots = new ArrayList<>();
 			tasks.add(() -> {
+				GuiMain.instance.controller.renderer.viewport.zoomProperty.set(0);
+				GuiMain.instance.controller.renderer.viewport.translationProperty.set(new Vector2d(512, -512));
 				GuiMain.instance.controller.renderer.viewport.mousePosProperty.set(new Vector2d(640, 360));
 				GuiMain.instance.controller.renderer.viewport.zoomProperty.set(7);
 				GuiMain.instance.controller.renderer.repaint();
+				return true;
+			});
+			tasks.add(() -> {
 				Thread.sleep(5000);
 				GuiMain.instance.controller.renderer.repaint();
 				return true;
@@ -159,6 +206,9 @@ public class Screenshots {
 				GuiMain.instance.controller.renderer.viewport.mousePosProperty.set(new Vector2d(640, 360));
 				GuiMain.instance.controller.renderer.viewport.zoomProperty.set(-7);
 				GuiMain.instance.controller.renderer.repaint();
+				return true;
+			});
+			tasks.add(() -> {
 				Thread.sleep(5000);
 				GuiMain.instance.controller.renderer.repaint();
 				return true;
@@ -186,7 +236,7 @@ public class Screenshots {
 
 			log.debug("Writing final gif to disk");
 			GifSequenceWriter writer = new GifSequenceWriter(
-					new FileImageOutputStream(Generator.OUTPUT_SCREENSHOTS.resolve("screenshot-4.gif").toFile()),
+					new FileImageOutputStream(Generator.OUTPUT_SCREENSHOTS.resolve("screenshot-0.gif").toFile()),
 					BufferedImage.TYPE_INT_ARGB, 350, true);
 			try {
 				for (BufferedImage i : screenshots)

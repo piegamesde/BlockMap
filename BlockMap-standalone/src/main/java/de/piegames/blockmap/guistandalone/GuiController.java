@@ -6,6 +6,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.concurrent.Executors;
@@ -18,12 +19,13 @@ import org.apache.commons.logging.LogFactory;
 import org.controlsfx.control.CheckTreeView;
 import org.controlsfx.control.RangeSlider;
 import org.controlsfx.control.StatusBar;
+import org.controlsfx.dialog.ExceptionDialog;
 import org.joml.Vector2ic;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import de.piegames.blockmap.DotMinecraft;
-import de.piegames.blockmap.color.BlockColorMap;
+import de.piegames.blockmap.color.BlockColorMap.InternalColorMap;
 import de.piegames.blockmap.gui.MapPane;
 import de.piegames.blockmap.gui.WorldRendererCanvas;
 import de.piegames.blockmap.gui.decoration.DragScrollDecoration;
@@ -33,6 +35,7 @@ import de.piegames.blockmap.gui.decoration.Pin.PinType;
 import de.piegames.blockmap.gui.decoration.PinDecoration;
 import de.piegames.blockmap.guistandalone.RegionFolderProvider.LocalFolderProvider;
 import de.piegames.blockmap.guistandalone.RegionFolderProvider.RemoteFolderProvider;
+import de.piegames.blockmap.guistandalone.about.AboutDialog;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RegionShader;
 import de.piegames.blockmap.renderer.RenderSettings;
@@ -54,6 +57,7 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
@@ -93,11 +97,12 @@ public class GuiController implements Initializable {
 	@FXML
 	private CheckBox								pinBox;
 	@FXML
-	private CheckTreeView<PinType>					pinView;
+	public CheckTreeView<PinType>					pinView;
+	public Map<PinType, TreeItem<PinType>>			checkedPins				= new HashMap<>();
 
 	protected MapPane								pane;
 	protected ObjectProperty<Path>					currentPath				= new SimpleObjectProperty<>();
-	protected PinDecoration							pins;
+	public PinDecoration							pins;
 
 	protected ScheduledExecutorService				backgroundThread		= Executors.newSingleThreadScheduledExecutor(
 			new ThreadFactoryBuilder().setNameFormat("pin-background-thread-%d").build());
@@ -158,8 +163,7 @@ public class GuiController implements Initializable {
 		heightSlider.highValueChangingProperty().addListener(heightListener);
 
 		colorBox.valueProperty().addListener((observer, old, value) -> {
-			settings.blockColors = BlockColorMap
-					.loadInternal(new String[] { "default", "caves", "foliage", "water" }[colorBox.getSelectionModel().getSelectedIndex()]);
+			settings.blockColors = InternalColorMap.values()[colorBox.getSelectionModel().getSelectedIndex()].getColorMap();
 			renderer.invalidateTextures();
 			renderer.repaint();
 		});
@@ -169,13 +173,13 @@ public class GuiController implements Initializable {
 			renderer.repaint();
 		});
 
-		// { /* Pin checkbox icon */
-		// ImageView image = new ImageView(PinType.ANY_PIN.image);
-		// image.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> pinBox.getFont().getSize() * 1.0, pinBox.fontProperty()));
-		// image.setSmooth(true);
-		// image.setPreserveRatio(true);
-		// pinBox.setGraphic(image);
-		// }
+		{ /* Pin checkbox icon */
+			ImageView image = new ImageView(PinType.ANY_PIN.image);
+			image.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> pinBox.getFont().getSize() * 1.5, pinBox.fontProperty()));
+			image.setSmooth(true);
+			image.setPreserveRatio(true);
+			pinBox.setGraphic(image);
+		}
 		{ /* Pin tree */
 			initPinCheckboxes(PinType.ANY_PIN, null, pinView);
 			pinView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
@@ -271,6 +275,7 @@ public class GuiController implements Initializable {
 			pins.visiblePins.add(type);
 			tree.getCheckModel().check(ret);
 		}
+		checkedPins.put(type, ret);
 	}
 
 	@FXML
@@ -338,6 +343,19 @@ public class GuiController implements Initializable {
 	@FXML
 	public void exit() {
 		Platform.exit();
+	}
+
+	@FXML
+	public void showAbout() {
+		try {
+			new AboutDialog().showAndWait();
+		} catch (Exception e) {
+			log.error("Could not show 'about' dialog, please file a bug report", e);
+			ExceptionDialog d = new ExceptionDialog(e);
+			d.setTitle("Could not load dialog");
+			d.setHeaderText("Please file a bug report");
+			d.showAndWait();
+		}
 	}
 
 	public void shutDown() {

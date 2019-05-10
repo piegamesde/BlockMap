@@ -2,8 +2,6 @@ package de.piegames.blockmap.color;
 
 import java.io.IOException;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
@@ -21,26 +19,31 @@ public final class Color {
 															@Override
 															public void write(JsonWriter out, Color color) throws IOException {
 																out.beginArray();
-																out.value(Float.floatToIntBits(color.a));
-																out.value(Float.floatToIntBits(color.r));
-																out.value(Float.floatToIntBits(color.g));
-																out.value(Float.floatToIntBits(color.b));
+																if (color.a != 0) {
+																	out.value(Float.floatToIntBits(color.a));
+																	out.value(Float.floatToIntBits(color.r));
+																	out.value(Float.floatToIntBits(color.g));
+																	out.value(Float.floatToIntBits(color.b));
+																}
 																out.endArray();
 															}
 
 															@Override
 															public Color read(JsonReader in) throws IOException {
 																in.beginArray();
-																Color color = new Color(
-																		Float.intBitsToFloat(in.nextInt()),
-																		Float.intBitsToFloat(in.nextInt()),
-																		Float.intBitsToFloat(in.nextInt()),
-																		Float.intBitsToFloat(in.nextInt()));
+																Color color;
+																if (in.hasNext())
+																	color = new Color(
+																			Float.intBitsToFloat(in.nextInt()),
+																			Float.intBitsToFloat(in.nextInt()),
+																			Float.intBitsToFloat(in.nextInt()),
+																			Float.intBitsToFloat(in.nextInt()));
+																else
+																	color = new Color(0, 0, 0, 0);
 																in.endArray();
 																return color;
 															}
 														};
-	public static final Gson				GSON		= new GsonBuilder().registerTypeAdapter(Color.class, ADAPTER).setPrettyPrinting().create();
 
 	/** The default fallback color for missing things. It is a pure and eye-hurting pink color */
 	public static final Color				MISSING		= new Color(1f, 1f, 0f, 1f);
@@ -102,7 +105,10 @@ public final class Color {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Color other = (Color) obj;
+		return equals((Color) obj);
+	}
+
+	public boolean equals(Color other) {
 		return a == other.a && b == other.b && g == other.g && r == other.r;
 	}
 

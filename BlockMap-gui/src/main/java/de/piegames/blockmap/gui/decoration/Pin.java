@@ -2,6 +2,7 @@ package de.piegames.blockmap.gui.decoration;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,6 +15,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.control.PopOver.ArrowLocation;
+import org.controlsfx.dialog.ExceptionDialog;
 import org.joml.AABBd;
 import org.joml.Vector2d;
 import org.joml.Vector2dc;
@@ -31,9 +34,14 @@ import org.joml.Vector3ic;
 
 import com.codepoetics.protonpack.StreamUtils;
 
+import de.piegames.blockmap.MinecraftVersion;
 import de.piegames.blockmap.gui.DisplayViewport;
 import de.piegames.blockmap.world.ChunkMetadata;
-import de.piegames.blockmap.world.ChunkMetadata.ChunkGenerationStatus;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataCulled;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataFailed;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataRendered;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataVersion;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataVisitor;
 import de.piegames.blockmap.world.WorldPins;
 import de.saibotk.jmaw.ApiResponseException;
 import de.saibotk.jmaw.MojangAPI;
@@ -86,17 +94,40 @@ public class Pin {
 		public static final PinType		CHUNK_OLD					= new PinType("Old chunk", CHUNK_PIN, true, false,
 				"textures/overlays/pin_chunk_outdated.png");
 
-		public static final PinType		PLAYER						= new PinType("Players", ANY_PIN, true, false, "textures/pins/player.png");
+		public static final PinType		PLAYER						= new PinType("Player", ANY_PIN, true, false, "textures/pins/player.png");
 		public static final PinType		PLAYER_POSITION				= new PinType("Player position", PLAYER, true, false, "textures/pins/player.png");
 		public static final PinType		PLAYER_SPAWN				= new PinType("Player spawnpoint", PLAYER, true, false, "textures/pins/spawn_player.png");
 
-		public static final PinType		MAP							= new PinType("Maps", ANY_PIN, true, false, "textures/pins/map.png");
+		public static final PinType		MAP							= new PinType("Map", ANY_PIN, true, false, "textures/pins/map.png");
 		public static final PinType		MAP_POSITION				= new PinType("Map position", MAP, true, false, "textures/pins/map.png");
 		public static final PinType		MAP_BANNER					= new PinType("Map banner", MAP, true, false, "textures/pins/banner.png");
 
-		public static final PinType		VILLAGE						= new PinType("Villages", ANY_PIN, true, false, "textures/structures/village.png");
-		public static final PinType		VILLAGE_CENTER				= new PinType("Village center", VILLAGE, true, false, "textures/structures/village.png");
-		public static final PinType		VILLAGE_DOOR				= new PinType("Village house", VILLAGE, true, false, "textures/structures/house.png");
+		public static final PinType		VILLAGE						= new PinType("Village", ANY_PIN, true, false, "textures/structures/village.png");
+
+		// Village structure
+		public static final PinType		VILLAGE_HOME				= new PinType("Village home", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_MEETING				= new PinType("Meetingpoint", VILLAGE, true, false, "/tmp.png");
+
+		// Village crafting
+		public static final PinType		VILLAGE_LEATHERWORKER		= new PinType("Leatherworker", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_MASON				= new PinType("Mason", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_FLETCHER			= new PinType("Fletcher", VILLAGE, true, false, "/tmp.png");
+
+		// Ironworks
+		public static final PinType		VILLAGE_TOOLSMITH			= new PinType("Toolsmith", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_WEAPONSMITH			= new PinType("Weaponsmith", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_ARMORER				= new PinType("Armorer", VILLAGE, true, false, "/tmp.png");
+
+		// Food
+		public static final PinType		VILLAGE_FARMER				= new PinType("Farmer", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_SHEPHERD			= new PinType("Shepherd", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_BUTCHER				= new PinType("Butcher", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_FISHERMAN			= new PinType("Fisherman,", VILLAGE, true, false, "/tmp.png");
+
+		// Intellectual
+		public static final PinType		VILLAGE_CLERIC				= new PinType("Cleric", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_CARTOGRAPHER		= new PinType("Cartographer", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_LIBRARIAN			= new PinType("Librarian", VILLAGE, true, false, "/tmp.png");
 
 		public static final PinType		WORLD_SPAWN					= new PinType("Spawnpoint", ANY_PIN, true, false, "textures/pins/spawn_map.png");
 
@@ -117,6 +148,7 @@ public class Pin {
 		public static final PinType		STRUCTURE_SHIPWRECK			= new PinType("Shipwreck", STRUCTURE, false, false, "textures/structures/shipwreck.png");
 		public static final PinType		STRUCTURE_STRONGHOLD		= new PinType("Stronghold", STRUCTURE, true, false, "textures/structures/stronghold.png");
 		public static final PinType		STRUCTURE_WITCH_HUT			= new PinType("Witch hut", STRUCTURE, true, false, "textures/structures/swamp_hut.png");
+		public static final PinType		STRUCTURE_OUTPOST			= new PinType("Pillager outpost", STRUCTURE, true, false, "/tmp.png");
 
 		protected final List<PinType>	children					= new ArrayList<>();
 		private final String			name;
@@ -148,25 +180,67 @@ public class Pin {
 		}
 
 		/* Code to map structure names to their respective chunk pin */
-		static final Map<String, PinType> structureTypes;
+		static final Map<String, PinType>	STRUCTURE_TYPES;
+		static final Map<String, PinType>	VILLAGE_MAPPING;
 
 		static {
-			Map<String, PinType> map = new HashMap<>();
-			map.put("Buried_Treasure", STRUCTURE_TREASURE);
-			map.put("Desert_Pyramid", STRUCTURE_PYRAMID);
-			map.put("Igloo", STRUCTURE_IGLOO);
-			map.put("Jungle_Pyramid", STRUCTURE_JUNGLE_TEMPLE);
-			map.put("Mansion", STRUCTURE_MANSION);
-			map.put("Mineshaft", STRUCTURE_MINESHAFT);
-			map.put("Monument", STRUCTURE_OCEAN_MONUMENT);
-			map.put("Ocean_Ruin", STRUCTURE_OCEAN_RUIN);
-			map.put("Shipwreck", STRUCTURE_SHIPWRECK);
-			map.put("Stronghold", STRUCTURE_STRONGHOLD);
-			map.put("Swamp_Hut", STRUCTURE_WITCH_HUT);
-			map.put("EndCity", STRUCTURE_END_CITY);
-			map.put("Fortress", STRUCTURE_FORTRESS);
-			/* Don't add villages to the map since they are already handled as static pins. The structure information they provide is redundant. */
-			structureTypes = Collections.unmodifiableMap(map);
+			Map<String, PinType> structureTypes = new HashMap<>();
+			/* Minecraft 1.13 */
+			structureTypes.put("Buried_Treasure", STRUCTURE_TREASURE);
+			structureTypes.put("Desert_Pyramid", STRUCTURE_PYRAMID);
+			structureTypes.put("Igloo", STRUCTURE_IGLOO);
+			structureTypes.put("Jungle_Pyramid", STRUCTURE_JUNGLE_TEMPLE);
+			structureTypes.put("Mansion", STRUCTURE_MANSION);
+			structureTypes.put("Mineshaft", STRUCTURE_MINESHAFT);
+			structureTypes.put("Monument", STRUCTURE_OCEAN_MONUMENT);
+			structureTypes.put("Ocean_Ruin", STRUCTURE_OCEAN_RUIN);
+			structureTypes.put("Shipwreck", STRUCTURE_SHIPWRECK);
+			structureTypes.put("Stronghold", STRUCTURE_STRONGHOLD);
+			structureTypes.put("Swamp_Hut", STRUCTURE_WITCH_HUT);
+			structureTypes.put("EndCity", STRUCTURE_END_CITY);
+			structureTypes.put("Fortress", STRUCTURE_FORTRESS);
+			structureTypes.put("Village", VILLAGE);
+			/* Minecraft 1.14 */
+			structureTypes.put("minecraft:buried_treasure", STRUCTURE_TREASURE);
+			structureTypes.put("minecraft:desert_pyramid", STRUCTURE_PYRAMID);
+			structureTypes.put("minecraft:igloo", STRUCTURE_IGLOO);
+			structureTypes.put("minecraft:jungle_pyramid", STRUCTURE_JUNGLE_TEMPLE);
+			structureTypes.put("minecraft:mansion", STRUCTURE_MANSION);
+			structureTypes.put("minecraft:mineshaft", STRUCTURE_MINESHAFT);
+			structureTypes.put("minecraft:monument", STRUCTURE_OCEAN_MONUMENT);
+			structureTypes.put("minecraft:ocean_ruin", STRUCTURE_OCEAN_RUIN);
+			structureTypes.put("minecraft:shipwreck", STRUCTURE_SHIPWRECK);
+			structureTypes.put("minecraft:stronghold", STRUCTURE_STRONGHOLD);
+			structureTypes.put("minecraft:swamp_hut", STRUCTURE_WITCH_HUT);
+			structureTypes.put("minecraft:end_city", STRUCTURE_END_CITY);
+			structureTypes.put("minecraft:fortress", STRUCTURE_FORTRESS);
+			structureTypes.put("minecraft:pillager_outpost", STRUCTURE_OUTPOST);
+			structureTypes.put("minecraft:village", VILLAGE);
+			STRUCTURE_TYPES = Collections.unmodifiableMap(structureTypes);
+
+			Map<String, PinType> villageMapping = new HashMap<>();
+
+			villageMapping.put("minecraft:home", VILLAGE_HOME);
+			villageMapping.put("minecraft:meeting", VILLAGE_MEETING);
+
+			villageMapping.put("minecraft:leatherworker", VILLAGE_LEATHERWORKER);
+			villageMapping.put("minecraft:mason", VILLAGE_MASON);
+			villageMapping.put("minecraft:fletcher", VILLAGE_FLETCHER);
+
+			villageMapping.put("minecraft:toolsmith", VILLAGE_TOOLSMITH);
+			villageMapping.put("minecraft:weaponsmith", VILLAGE_WEAPONSMITH);
+			villageMapping.put("minecraft:armorer", VILLAGE_ARMORER);
+
+			villageMapping.put("minecraft:farmer", VILLAGE_FARMER);
+			villageMapping.put("minecraft:shepherd", VILLAGE_SHEPHERD);
+			villageMapping.put("minecraft:butcher", VILLAGE_BUTCHER);
+			villageMapping.put("minecraft:fisherman", VILLAGE_FISHERMAN);
+
+			villageMapping.put("minecraft:cleric", VILLAGE_CLERIC);
+			villageMapping.put("minecraft:cartographer", VILLAGE_CARTOGRAPHER);
+			villageMapping.put("minecraft:librarian", VILLAGE_LIBRARIAN);
+
+			VILLAGE_MAPPING = Collections.unmodifiableMap(villageMapping);
 		}
 	}
 
@@ -336,11 +410,12 @@ public class Pin {
 
 	private static class UnfinishedChunkPin extends ChunkPin {
 
-		protected int[] chunkCount;
+		protected List<String> chunkGeneration;
 
-		public UnfinishedChunkPin(Vector2dc centerPos, List<Vector2ic> chunkPositions, int[] chunkCount, Image image, DisplayViewport viewport) {
-			super(PinType.CHUNK_UNFINISHED, centerPos, chunkPositions, image, viewport);
-			this.chunkCount = Objects.requireNonNull(chunkCount);
+		public UnfinishedChunkPin(Vector2dc centerPos, List<Vector2ic> chunkPositions, List<String> chunkGeneration, DisplayViewport viewport) {
+			super(PinType.CHUNK_UNFINISHED, centerPos, chunkPositions, new Image(Pin.class.getResource("textures/overlays/chunk_unfinished.png").toString(), 64,
+					64, true, false), viewport);
+			this.chunkGeneration = Objects.requireNonNull(chunkGeneration);
 		}
 
 		@Override
@@ -351,10 +426,87 @@ public class Pin {
 			popContent.getStyleClass().add("grid");
 			info.setContentNode(popContent);
 
-			for (int i = 0; i < chunkCount.length; i++) {
-				popContent.add(new Label(ChunkGenerationStatus.values()[i].name().toLowerCase() + ":"), 0, i);
-				popContent.add(new Label(chunkCount[i] + " chunks"), 1, i);
+			StreamUtils.zipWithIndex(chunkGeneration.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting())).entrySet().stream())
+					.forEach(index -> {
+						popContent.add(new Label(index.getValue().getKey() + ":"), 0, (int) index.getIndex());
+						popContent.add(new Label(index.getValue().getValue() + " chunks"), 1, (int) index.getIndex());
+					});
+			return info;
+		}
+	}
+
+	private static class OldChunkPin extends ChunkPin {
+
+		protected Collection<ChunkMetadataVersion> chunks;
+
+		public OldChunkPin(Vector2dc centerPos, List<Vector2ic> chunkPositions, Collection<ChunkMetadataVersion> chunks, DisplayViewport viewport) {
+			super(PinType.CHUNK_OLD, centerPos, chunkPositions, new Image(Pin.class.getResource("textures/overlays/chunk_outdated.png").toString(), 64, 64,
+					true, false), viewport);
+			this.chunks = chunks;
+		}
+
+		@Override
+		protected PopOver initInfo() {
+			PopOver info = super.initInfo();
+
+			GridPane popContent = new GridPane();
+			popContent.getStyleClass().add("grid");
+			info.setContentNode(popContent);
+
+			popContent.add(new Label("Found version(s):"), 0, 0);
+			popContent.add(new Label(
+					chunks.stream().map(c -> c.version).distinct().sorted().map(String::valueOf).collect(Collectors.joining(", ", "{", "}"))), 1, 0);
+			popContent.add(new Label("Unsupported for reason(s):"), 0, 1);
+			popContent.add(new Label(
+					chunks.stream().map(c -> c.message).distinct().sorted().map(String::valueOf).collect(Collectors.joining(", ", "{", "}"))), 1, 1);
+			popContent.add(new Separator(), 0, 2, 2, 1);
+			popContent.add(new Label("Supported versions:"), 0, 3);
+			popContent.add(new Label("Name:"), 1, 3);
+			int row = 4;
+			for (MinecraftVersion supported : MinecraftVersion.values()) {
+				if (supported.maxVersion == Integer.MAX_VALUE)
+					popContent.add(new Label(supported.minVersion + "+"), 0, row);
+				else
+					popContent.add(new Label(supported.minVersion + "-" + supported.maxVersion), 0, row);
+
+				popContent.add(new Label(supported.versionName), 1, row++);
 			}
+			return info;
+		}
+	}
+
+	private static class FailedChunkPin extends ChunkPin {
+
+		protected Collection<ChunkMetadataFailed> chunks;
+
+		public FailedChunkPin(Vector2dc centerPos, List<Vector2ic> chunkPositions, Collection<ChunkMetadataFailed> chunks, DisplayViewport viewport) {
+			super(PinType.CHUNK_FAILED, centerPos, chunkPositions, new Image(Pin.class.getResource("textures/overlays/chunk_corrupted.png").toString(), 64, 64,
+					true, false), viewport);
+			this.chunks = Objects.requireNonNull(chunks);
+		}
+
+		@Override
+		protected PopOver initInfo() {
+			PopOver info = super.initInfo();
+
+			GridPane popContent = new GridPane();
+			popContent.getStyleClass().add("grid");
+			info.setContentNode(popContent);
+
+			StreamUtils.zipWithIndex(chunks.stream()
+					.map(e -> e.error).collect(Collectors.groupingBy(Exception::toString)).entrySet().stream())
+					.forEach(index -> {
+						Exception e = index.getValue().getValue().get(0);
+						popContent.add(new Label(e.getClass().getSimpleName()), 0, (int) index.getIndex());
+						popContent.add(new Label("×" + index.getValue().getValue().size()), 1, (int) index.getIndex());
+						Button button = new Button("Show trace…");
+						button.setOnAction(__ -> {
+							ExceptionDialog d = new ExceptionDialog(e);
+							d.setHeaderText(e.toString());
+							d.showAndWait();
+						});
+						popContent.add(button, 2, (int) index.getIndex());
+					});
 			return info;
 		}
 	}
@@ -619,13 +771,13 @@ public class Pin {
 		}
 	}
 
-	private static class VillagePin extends Pin {
+	private static class VillageObjectPin extends Pin {
+		protected WorldPins.VillageObjectPin villageObjectPin;
 
-		protected WorldPins.VillagePin village;
-
-		public VillagePin(WorldPins.VillagePin village, DisplayViewport viewport) {
-			super(new Vector2d(village.getPosition().x(), village.getPosition().z()), PinType.VILLAGE_CENTER, viewport);
-			this.village = Objects.requireNonNull(village);
+		public VillageObjectPin(WorldPins.VillageObjectPin villageObjectPin, DisplayViewport viewport) {
+			super(new Vector2d(villageObjectPin.getPosition().x(), villageObjectPin.getPosition().z()), PinType.VILLAGE_MAPPING.get(villageObjectPin.getType()),
+					viewport);
+			this.villageObjectPin = Objects.requireNonNull(villageObjectPin);
 		}
 
 		@Override
@@ -634,21 +786,13 @@ public class Pin {
 			GridPane content = new GridPane();
 			content.getStyleClass().add("grid");
 
-			content.add(new Label("Village"), 0, 0, 1, 2);
-			content.add(new Separator(), 0, 1, 1, 2);
+			content.add(new Label("Position: "), 0, 2, 1, 2);
+			content.add(new Label(villageObjectPin.getPosition().toString()), 1, 2, 2, 2);
 
-			if (village.getRadius().isPresent()) {
-				content.add(new Label("Radius: "), 0, 2);
-				content.add(new Label(village.getRadius().get().toString()), 1, 2);
-			}
-			if (village.getGolems().isPresent()) {
-				content.add(new Label("Golem count: "), 0, 3);
-				content.add(new Label(village.getGolems().get().toString()), 1, 3);
-			}
-			if (village.getDoors().isPresent()) {
-				content.add(new Label("Door count: "), 0, 4);
-				content.add(new Label(String.valueOf(village.getDoors().get().size())), 1, 4);
-			}
+			content.add(new Label("Free tickets: "), 0, 4);
+			content.add(new Label(String.valueOf(villageObjectPin.getFreeTickets())), 1, 4);
+
+			content.add(new Label(type.name), 0, 5);
 
 			info.setContentNode(content);
 			return info;
@@ -692,6 +836,16 @@ public class Pin {
 		protected Node initTopGui() {
 			/* If there are to many different pins, merge some */
 			Map<PinType, Long> pinCount = new HashMap<>(this.pinCount);
+
+			if (pinCount.size() > 4 && (PinType.VILLAGE_MAPPING.values().stream().filter(x -> pinCount.getOrDefault(x, 0L) > 0).count() > 1)) {
+				/* Merge village pins to one */
+				List<PinType> villageObjects = PinType.VILLAGE.children.stream().filter(this.pinCount::containsKey).collect(Collectors.toList());
+				if (!villageObjects.isEmpty()) {
+					pinCount.keySet().removeAll(villageObjects);
+					pinCount.put(PinType.VILLAGE, villageObjects.stream().mapToLong(this.pinCount::get).sum());
+				}
+			}
+
 			if (pinCount.size() > 4) {
 				/* Merge all structures */
 				List<PinType> structures = PinType.STRUCTURE.children.stream().filter(this.pinCount::containsKey).collect(Collectors.toList());
@@ -701,11 +855,7 @@ public class Pin {
 				}
 
 			}
-			if (pinCount.size() > 4 && pinCount.getOrDefault(PinType.VILLAGE_CENTER, 0L) > 0 && pinCount.getOrDefault(PinType.VILLAGE_DOOR, 0L) > 0) {
-				/* Merge village with doors */
-				pinCount.put(PinType.VILLAGE_CENTER, pinCount.get(PinType.VILLAGE_CENTER) + pinCount.get(PinType.VILLAGE_DOOR));
-				pinCount.remove(PinType.VILLAGE_DOOR);
-			}
+
 			if (pinCount.size() > 4 && pinCount.getOrDefault(PinType.MAP_POSITION, 0L) > 0 && pinCount.getOrDefault(PinType.MAP_BANNER, 0L) > 0) {
 				/* Merge map with banners */
 				pinCount.put(PinType.MAP_POSITION, pinCount.get(PinType.MAP_POSITION) + pinCount.get(PinType.MAP_BANNER));
@@ -773,11 +923,13 @@ public class Pin {
 			if (player.getSpawnpoint().isPresent())
 				pins.add(new PlayerSpawnpointPin(player, viewport));
 		}
-
-		for (WorldPins.VillagePin village : pin.getVillages().orElse(Collections.emptyList())) {
-			pins.add(new VillagePin(village, viewport));
-			for (Vector3ic door : village.getDoors().orElse(Collections.emptyList()))
-				pins.add(new Pin(new Vector2d(door.x(), door.z()), PinType.VILLAGE_DOOR, viewport));
+		for (WorldPins.VillageObjectPin villageObject : pin.getVillageObjects().orElse(Collections.emptyList())) {
+			try {
+				pins.add(new VillageObjectPin(villageObject, viewport));
+			} catch (NullPointerException e) {
+				log.warn("Nullpointer. Type: " + villageObject.getType());
+				throw e;
+			}
 		}
 
 		/* Cluster maps at identical position to merge their pins. */
@@ -801,47 +953,55 @@ public class Pin {
 	/** Convert the {@link ChunkMetadata} that was generated while rendering into (dynamic) pins. */
 	public static List<Pin> convertDynamic(Map<Vector2ic, ChunkMetadata> metadataMap, DisplayViewport viewport) {
 		List<Pin> pins = new ArrayList<>();
-		Set<Vector2ic> oldChunks = new HashSet<>(), failedChunks = new HashSet<>(), unfinishedChunks = new HashSet<>();
-		/* Map each generation status to the amount of chunks with this state */
-		int[] unfinishedCount = new int[ChunkGenerationStatus.values().length];
+		Set<Vector2ic> unfinishedChunks = new HashSet<>();
+		List<String> chunkGeneration = new ArrayList<>();
+		Map<Vector2ic, ChunkMetadataVersion> oldChunks = new HashMap<>();
+		Map<Vector2ic, ChunkMetadataFailed> failedChunks = new HashMap<>();
 		for (ChunkMetadata metadata : metadataMap.values()) {
-			switch (metadata.renderState) {
-			case RENDERED:
-				if (metadata.generationStatus != null && metadata.generationStatus != ChunkGenerationStatus.POSTPROCESSED)
-					unfinishedChunks.add(metadata.position);
-				unfinishedCount[metadata.generationStatus.ordinal()]++;
-				break;
-			case FAILED:
-				failedChunks.add(metadata.position);
-				break;
-			case TOO_OLD:
-				oldChunks.add(metadata.position);
-				break;
-			default:
-				break;
-			}
+			metadata.visit(new ChunkMetadataVisitor<Void>() {
+
+				@Override
+				public Void rendered(ChunkMetadataRendered metadata) {
+					if (!ChunkMetadataRendered.STATUS_FINISHED.contains(metadata.generationStatus)) {
+						unfinishedChunks.add(metadata.position);
+						chunkGeneration.add(metadata.generationStatus);
+					}
+					return null;
+				}
+
+				@Override
+				public Void failed(ChunkMetadataFailed metadata) {
+					failedChunks.put(metadata.position, metadata);
+					return null;
+				}
+
+				@Override
+				public Void culled(ChunkMetadataCulled metadata) {
+					return null;
+				}
+
+				@Override
+				public Void version(ChunkMetadataVersion metadata) {
+					oldChunks.put(metadata.position, metadata);
+					return null;
+				}
+			});
 		}
 
 		for (Set<Vector2ic> chunks : splitChunks(unfinishedChunks)) {
 			Vector2dc center = chunks.stream().map(v -> new Vector2d(v.x() * 16.0 + 8, v.y() * 16.0 + 8)).collect(Vector2d::new, Vector2d::add,
 					Vector2d::add).mul(1.0 / chunks.size());
-			pins.add(new UnfinishedChunkPin(center, outlineSet(chunks), unfinishedCount,
-					new Image(Pin.class.getResource("textures/overlays/chunk_unfinished.png").toString(), 64, 64, true, false),
-					viewport));
+			pins.add(new UnfinishedChunkPin(center, outlineSet(chunks), chunkGeneration, viewport));
 		}
-		for (Set<Vector2ic> chunks : splitChunks(failedChunks)) {
-			Vector2dc center = chunks.stream().map(v -> new Vector2d(v.x() * 16.0 + 8, v.y() * 16.0 + 8)).collect(Vector2d::new, Vector2d::add,
+		for (Map<Vector2ic, ChunkMetadataFailed> chunks : splitChunks(failedChunks)) {
+			Vector2dc center = chunks.keySet().stream().map(v -> new Vector2d(v.x() * 16.0 + 8, v.y() * 16.0 + 8)).collect(Vector2d::new, Vector2d::add,
 					Vector2d::add).mul(1.0 / chunks.size());
-			pins.add(new ChunkPin(PinType.CHUNK_UNFINISHED, center, outlineSet(chunks),
-					new Image(Pin.class.getResource("textures/overlays/chunk_corrupted.png").toString(), 64, 64, true, false),
-					viewport));
+			pins.add(new FailedChunkPin(center, outlineSet(chunks.keySet()), chunks.values(), viewport));
 		}
-		for (Set<Vector2ic> chunks : splitChunks(oldChunks)) {
-			Vector2dc center = chunks.stream().map(v -> new Vector2d(v.x() * 16.0 + 8, v.y() * 16.0 + 8)).collect(Vector2d::new, Vector2d::add,
+		for (Map<Vector2ic, ChunkMetadataVersion> chunks : splitChunks(oldChunks)) {
+			Vector2dc center = chunks.keySet().stream().map(v -> new Vector2d(v.x() * 16.0 + 8, v.y() * 16.0 + 8)).collect(Vector2d::new, Vector2d::add,
 					Vector2d::add).mul(1.0 / chunks.size());
-			pins.add(new ChunkPin(PinType.CHUNK_UNFINISHED, center, outlineSet(chunks),
-					new Image(Pin.class.getResource("textures/overlays/chunk_outdated.png").toString(), 64, 64, true, false),
-					viewport));
+			pins.add(new OldChunkPin(center, outlineSet(chunks.keySet()), chunks.values(), viewport));
 		}
 
 		/*
@@ -849,9 +1009,18 @@ public class Pin {
 		 * a pin from it and add it to the list.
 		 */
 		pins.addAll(metadataMap.values().stream()
+				.filter(m -> m instanceof ChunkMetadataRendered)
+				.map(m -> (ChunkMetadataRendered) m)
 				.flatMap(m -> m.structures.entrySet().stream())
-				.filter(e -> PinType.structureTypes.containsKey(e.getKey()))
-				.map(e -> new Pin(new Vector2d(e.getValue().x(), e.getValue().z()), PinType.structureTypes.get(e.getKey()), viewport))
+				.filter(e -> {
+					if (PinType.STRUCTURE_TYPES.containsKey(e.getKey()))
+						return true;
+					else {
+						log.warn("Could not parse structure id " + e.getKey());
+						return false;
+					}
+				})
+				.map(e -> new Pin(new Vector2d(e.getValue().x(), e.getValue().z()), PinType.STRUCTURE_TYPES.get(e.getKey()), viewport))
 				.collect(Collectors.toList()));
 		return pins;
 	}
@@ -888,7 +1057,7 @@ public class Pin {
 	}
 
 	/**
-	 * Takes in a set of chunk positions, identifies all connected subsets and calculates the outline of each one.
+	 * Takes in a set of chunk positions and identifies all connected subsets.
 	 * 
 	 * @param chunks
 	 *            A set of chunk positions. This will be emptied during the calculation.
@@ -908,6 +1077,38 @@ public class Pin {
 						todo.add(neighbor);
 				}
 				done.add(current);
+			}
+			islands.add(done);
+		}
+		return islands;
+	}
+
+	/**
+	 * Takes in a map of chunk positions and identifies all connected subsets.
+	 * 
+	 * @param chunks
+	 *            A map of chunk positions. This will be emptied during the calculation.
+	 */
+	private static <T> List<Map<Vector2ic, T>> splitChunks(Map<Vector2ic, T> chunks) {
+		List<Map<Vector2ic, T>> islands = new ArrayList<>();
+		while (!chunks.isEmpty()) {
+			Map<Vector2ic, T> done = new HashMap<>();
+			Queue<Vector2ic> todo = new LinkedList<>();
+			Queue<T> todoV = new LinkedList<>();
+			todo.add(chunks.entrySet().iterator().next().getKey());
+			todoV.add(chunks.entrySet().iterator().next().getValue());
+			chunks.remove(todo.element());
+			while (!todo.isEmpty()) {
+				Vector2ic current = todo.remove();
+				T val = todoV.remove();
+				for (Vector2i neighbor : new Vector2i[] { new Vector2i(-1, 0), new Vector2i(1, 0), new Vector2i(0, -1), new Vector2i(0, 1) }) {
+					neighbor.add(current);
+					if (chunks.containsKey(neighbor)) {
+						todoV.add(chunks.remove(neighbor));
+						todo.add(neighbor);
+					}
+				}
+				done.put(current, val);
 			}
 			islands.add(done);
 		}

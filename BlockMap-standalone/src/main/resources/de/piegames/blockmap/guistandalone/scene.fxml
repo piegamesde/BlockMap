@@ -53,7 +53,8 @@
 				</Menu>
 				<Menu text="_Help">
 					<items>
-						<MenuItem text="About" />
+						<MenuItem text="About" 
+						onAction="#showAbout"/>
 					</items>
 				</Menu>
 			</menus>

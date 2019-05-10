@@ -19,6 +19,7 @@ import org.apache.commons.logging.LogFactory;
 import org.controlsfx.control.CheckTreeView;
 import org.controlsfx.control.RangeSlider;
 import org.controlsfx.control.StatusBar;
+import org.controlsfx.dialog.ExceptionDialog;
 import org.joml.Vector2ic;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -34,6 +35,7 @@ import de.piegames.blockmap.gui.decoration.Pin.PinType;
 import de.piegames.blockmap.gui.decoration.PinDecoration;
 import de.piegames.blockmap.guistandalone.RegionFolderProvider.LocalFolderProvider;
 import de.piegames.blockmap.guistandalone.RegionFolderProvider.RemoteFolderProvider;
+import de.piegames.blockmap.guistandalone.about.AboutDialog;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RegionShader;
 import de.piegames.blockmap.renderer.RenderSettings;
@@ -341,6 +343,19 @@ public class GuiController implements Initializable {
 	@FXML
 	public void exit() {
 		Platform.exit();
+	}
+
+	@FXML
+	public void showAbout() {
+		try {
+			new AboutDialog().showAndWait();
+		} catch (Exception e) {
+			log.error("Could not show 'about' dialog, please file a bug report", e);
+			ExceptionDialog d = new ExceptionDialog(e);
+			d.setTitle("Could not load dialog");
+			d.setHeaderText("Please file a bug report");
+			d.showAndWait();
+		}
 	}
 
 	public void shutDown() {

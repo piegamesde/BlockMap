@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.SplitPane?>
+
+<SplitPane
+	prefWidth="800"
+	prefHeight="500"
+	xmlns="http://javafx.com/javafx/10.0.1"
+	xmlns:fx="http://javafx.com/fxml/1">
+	<items>
+		<VBox>
+			<children>
+				<Label
+					text="BlockMap 1.3.0"
+					id="about-title"
+					alignment="CENTER"
+					maxWidth="Infinity"
+					maxHeight="Infinity"
+					VBox.vgrow="ALWAYS" />
+				<TextArea
+					fx:id="license"
+					wrapText="false"
+					editable="false"
+					VBox.vgrow="ALWAYS"/>
+			</children>
+		</VBox>
+		<VBox>
+			<children>
+				<Label
+					text="Used software:"
+					id="about-subtitle"
+					alignment="CENTER"
+					maxWidth="Infinity" />
+				<ScrollPane
+					fx:id="dependencyContainer"
+					fitToHeight="true"
+					fitToWidth="true">
+					<content>
+						<VBox fx:id="dependencies" />
+					</content>
+				</ScrollPane>
+			</children>
+		</VBox>
+	</items>
+</SplitPane>

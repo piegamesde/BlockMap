@@ -1,0 +1,22 @@
+/* "BlockMap ${version}" */
+#about-title {
+	-fx-font-wheight: bolder;
+	-fx-font-size: 220%;/*27 */
+}
+
+/* "Used software:" */
+#about-subtitle {
+	-fx-font-size: 180%;/*23 */
+}
+
+/* The dependency name and version */
+.dependency-header {
+	-fx-font-weight: bold;
+	-fx-font-size: 120%;
+}
+
+/* The gradle code of the dependency */
+.dependency-gradle {
+	-fx-font: 90% monospace;
+	-fx-text-fill: dimgray;
+}

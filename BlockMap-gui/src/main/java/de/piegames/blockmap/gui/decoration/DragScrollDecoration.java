@@ -16,7 +16,7 @@ import javafx.scene.robot.Robot;
  */
 public class DragScrollDecoration extends Region {
 
-	protected Robot	robot	= new Robot();
+	protected Robot	robot;
 	protected int cooldown;
 
 	/** Creates an instance of this class that will drag with the right mouse button and a scroll factor of 1/10. */
@@ -56,6 +56,9 @@ public class DragScrollDecoration extends Region {
 						dy = -height + 4;
 					if (dx != 0 || dy != 0) {
 						current.add(dx, dy);
+						/* Lazy initialization */
+						if (robot == null)
+							robot = new Robot();
 						robot.mouseMove((int) (e.getScreenX() + dx), (int) (e.getScreenY() + dy));
 						cooldown = 3;
 					}

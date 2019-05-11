@@ -170,7 +170,7 @@ public class Pin {
 				parent.children.add(this);
 		}
 
-		public List<? extends PinType> getChildren() {
+		public List<PinType> getChildren() {
 			return Collections.unmodifiableList(children);
 		}
 

@@ -218,7 +218,7 @@ public abstract class RegionFolderProvider {
 
 				@Override
 				public String toString(MinecraftDimension object) {
-					return object.name;
+					return object.displayName;
 				}
 
 				@Override

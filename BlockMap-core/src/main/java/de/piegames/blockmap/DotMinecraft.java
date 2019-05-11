@@ -21,12 +21,12 @@ public final class DotMinecraft {
 
 	static {
 		Path mc = null;
-		String OS = System.getProperty("os.name").toUpperCase();
-		if (OS.contains("WIN")) {
+		String os = System.getProperty("os.name").toUpperCase();
+		if (os.contains("WIN")) {
 			mc = Paths.get(System.getenv("APPDATA")).resolve(".minecraft");
-		} else if (OS.contains("MAC")) {
+		} else if (os.contains("MAC")) {
 			mc = Paths.get(System.getProperty("user.home") + "/Library/Application Support").resolve("minecraft");
-		} else if (OS.contains("NUX")) {
+		} else if (os.contains("NUX")) {
 			mc = Paths.get(System.getProperty("user.home"), ".minecraft");
 		} else {
 			mc = Paths.get(System.getProperty("user.dir"));

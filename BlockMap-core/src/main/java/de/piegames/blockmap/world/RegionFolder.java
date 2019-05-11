@@ -169,10 +169,12 @@ public abstract class RegionFolder {
 		 */
 		public static WorldRegionFolder load(Path regionFolder, RegionRenderer renderer) throws IOException {
 			Map<Vector2ic, Path> files = new HashMap<>();
-			for (Path p : Files.list(regionFolder).collect(Collectors.toList())) {
-				Matcher m = rfpat.matcher(p.getFileName().toString());
-				if (m.matches())
-					files.put(new Vector2i(Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2))), p);
+			try (Stream<Path> stream = Files.list(regionFolder)) {
+				for (Path p : (Iterable<Path>) stream::iterator) {
+					Matcher m = rfpat.matcher(p.getFileName().toString());
+					if (m.matches())
+						files.put(new Vector2i(Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2))), p);
+				}
 			}
 			return new WorldRegionFolder(files, renderer);
 		}

@@ -41,7 +41,7 @@ import io.gsonfire.gson.ExclusionByValueStrategy;
  */
 public class BlockColorMap {
 
-	public static enum InternalColorMap {
+	public enum InternalColorMap {
 		DEFAULT("default"), CAVES("caves"), NO_FOLIAGE("foliage"), OCEAN_GROUND("water");
 		private String fileName;
 
@@ -184,7 +184,7 @@ public class BlockColorMap {
 
 		public default BlockColor getColor(Supplier<BitSet> state) {
 			return getColor(state.get());
-		};
+		}
 
 		public abstract boolean hasColor(BitSet state);
 	}
@@ -260,7 +260,7 @@ public class BlockColorMap {
 
 	protected Map<String, StateColors>		blockColors;
 	protected transient BlockColor			airColor;
-	protected transient final StateColors	missing	= new SingleStateColors(BlockColor.MISSING) {
+	protected final transient StateColors	missing	= new SingleStateColors(BlockColor.MISSING) {
 														@Override
 														public boolean hasColor(BitSet state) {
 															return false;

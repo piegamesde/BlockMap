@@ -10,11 +10,11 @@ public enum MinecraftDimension {
 	END("End", 1, Paths.get("DIM1", "region"), Paths.get("data", "villages_end.dat"));
 
 	public final int	index;
-	public final String	name;
+	public final String	displayName;
 	public final Path	regionPath, villagePath;
 
-	MinecraftDimension(String name, int index, Path regionPath, Path villagePath) {
-		this.name = name;
+	MinecraftDimension(String displayName, int index, Path regionPath, Path villagePath) {
+		this.displayName = displayName;
 		this.index = index;
 		this.regionPath = regionPath;
 		this.villagePath = villagePath;

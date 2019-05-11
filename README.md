@@ -1,5 +1,7 @@
 # BlockMap - A Minecraft 1.13 world viewer
 
+[![Build Status](https://saibotk.de/buildstatus.php)]()
+
 *This started as fork of [TMCMR](https://github.com/TOGoS/TMCMR), but has been almost completely rewritten due to the update. If you want something stable that works with 1.12 and before worlds, go check it out.*
 
 ## Features:

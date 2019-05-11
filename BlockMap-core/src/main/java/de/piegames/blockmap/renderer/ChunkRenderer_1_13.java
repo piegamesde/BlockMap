@@ -208,7 +208,7 @@ public class ChunkRenderer_1_13 extends ChunkRenderer {
 		List<Block> palette = ((ListTag<CompoundTag>) section.get("Palette"))
 				.getValue()
 				.stream()
-				.map(tag -> tag.getValue())
+				.map(Tag::getValue)
 				.map(map -> new Block(
 						((StringTag) map.get("Name")).getValue(),
 						parseBlockState((CompoundTag) map.get("Properties"), version.getBlockStates())))

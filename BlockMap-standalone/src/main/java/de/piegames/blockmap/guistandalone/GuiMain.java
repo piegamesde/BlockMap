@@ -13,7 +13,13 @@ import javafx.stage.Stage;
 
 public class GuiMain extends Application {
 
-	private static Log		log	= LogFactory.getLog(GuiMain.class);
+	private static Log log = null;
+
+	/** Lazily initialize the logger to avoid loading Log4j too early (startup performance). */
+	private static void checkLogger() {
+		if (log == null)
+			log = LogFactory.getLog(GuiMain.class);
+	}
 
 	/** Internal API, public due to technical reasons */
 	public static GuiMain	instance;
@@ -34,6 +40,7 @@ public class GuiMain extends Application {
 			root = (Parent) loader.load();
 			controller = (GuiController) loader.getController();
 		} catch (Throwable t) {
+			checkLogger();
 			log.fatal("Cannot start BlockMap", t);
 			System.exit(-1);
 		}
@@ -55,6 +62,7 @@ public class GuiMain extends Application {
 			/* Put this last to guarantee that the application is fully initialized once instance!=null. */
 			instance = this;
 		} catch (Throwable t) {
+			checkLogger();
 			log.fatal("Cannot start BlockMap", t);
 			System.exit(-1);
 		}

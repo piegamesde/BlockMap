@@ -19,7 +19,6 @@ public class GuiMainPreloader extends Preloader {
 
 	@Override
 	public void start(Stage stage) throws Exception {
-		System.out.println("Start preloader");
 		splashScreen = stage;
 		stage.initStyle(StageStyle.UNDECORATED);
 		Scene scene = new Scene(new Label("TODO"), SPLASH_WIDTH, SPLASH_HEIGHT);

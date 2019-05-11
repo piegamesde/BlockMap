@@ -1,7 +1,6 @@
 package de.piegames.blockmap.standalone;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Callable;
@@ -15,6 +14,7 @@ import org.joml.Vector2ic;
 import de.piegames.blockmap.MinecraftDimension;
 import de.piegames.blockmap.color.BiomeColorMap;
 import de.piegames.blockmap.color.BlockColorMap.InternalColorMap;
+import de.piegames.blockmap.guistandalone.GuiMain;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RegionShader.DefaultShader;
 import de.piegames.blockmap.renderer.RenderSettings;
@@ -37,7 +37,13 @@ import picocli.CommandLine.RunLast;
 		subcommands = { CommandRender.class, HelpCommand.class })
 public class CommandLineMain implements Runnable {
 
-	private static Log	log	= LogFactory.getLog(CommandLineMain.class);
+	private static Log	log	= null;
+
+	/** Lazily initialize the logger to avoid loading Log4j too early (startup performance). */
+	private static void checkLogger() {
+		if (log == null)
+			log = LogFactory.getLog(CommandLineMain.class);
+	}
 
 	@Option(names = { "-V", "--version" },
 			versionHelp = true,
@@ -84,10 +90,6 @@ public class CommandLineMain implements Runnable {
 				paramLabel = "{OVERWORLD|NETHER|END}",
 				description = "The dimension of the world to render. If this is set, INPUT must point to a world folder instead of a region folder")
 		private MinecraftDimension	dimension;
-		// @Option(names = "--custom-color-map", description = "Load a custom color map from the specified file. Overrides --color-map.")
-		// private Path customColorMap;
-		// @Option(names = "--custom-biome-map", description = "Load a custom biome color map from the specified file.")
-		// private Path customBiomeMap;
 
 		@Option(names = { "--min-Y", "--min-height" }, description = "Don't draw blocks lower than this height.", defaultValue = "0")
 		private int					minY;
@@ -122,30 +124,15 @@ public class CommandLineMain implements Runnable {
 			settings.maxY = maxY;
 			settings.minZ = minZ;
 			settings.maxZ = maxZ;
-			// if (customColorMap == null)
 			settings.blockColors = colorMap.getColorMap();
-			// else
-			// try (Reader r = Files.newBufferedReader(customColorMap)) {
-			// settings.blockColors = BlockColorMap.load(r);
-			// } catch (IOException e) {
-			// log.error("Could not load custom block color map", e);
-			// return null;
-			// }
-			// if (customBiomeMap == null)
 			settings.biomeColors = BiomeColorMap.loadDefault();
-			// else
-			// try (Reader r = Files.newBufferedReader(customBiomeMap)) {
-			// settings.biomeColors = BiomeColorMap.load(r);
-			// } catch (IOException e) {
-			// log.error("Could not load custom biome color map", e);
-			// return null;
-			// }
 			settings.shader = shader.getShader();
 
 			RegionRenderer renderer = new RegionRenderer(settings);
 			Path input = this.input;
 			if (dimension != null)
 				input = input.resolve(dimension.getRegionPath());
+			checkLogger();
 			log.debug("Input " + input.normalize().toAbsolutePath());
 			log.debug("Output: " + output.normalize().toAbsolutePath());
 			WorldRegionFolder world;
@@ -204,6 +191,7 @@ public class CommandLineMain implements Runnable {
 
 		@Override
 		public void run() {
+			checkLogger();
 			CachedRegionFolder rendered = parent.call();
 			if (rendered != null)
 				try {
@@ -237,30 +225,24 @@ public class CommandLineMain implements Runnable {
 
 	@Override
 	public void run() {
-		// verbose = true;
 		runAll();
-		/*
-		 * Using generics will make sure the class is only loaded now and not before. Loading this class may cause to load JavaFX classes which
-		 * might not be on the class path with some java installations. This way, even users without JavaFX can still use the CLI
-		 */
-		try {
-			Class.forName("de.piegames.blockmap.guistandalone.GuiMain").getMethod("main", String[].class).invoke(null, (Object) new String[0]);
-		} catch (NoClassDefFoundError e) {
-			log.fatal("Could not load GUI classes. Please make sure you have JavaFX loaded and on your class path. "
-					+ "Alternatively, use Java 8 which includes JavaFX. You can use the BlockMap CLI anyway with `BlockMap help` or `BlockMap render`.",
-					e);
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException
-				| ClassNotFoundException e) {
-			log.fatal("Could not load GUI main class", e);
-		}
+		GuiMain.main();
 	}
 
 	public static void main(String... args) {
 		/* Without this, JOML will print vectors out in scientific notation which isn't the most human readable thing in the world */
 		System.setProperty("joml.format", "false");
 
-		CommandLine cli = new CommandLine(new CommandLineMain());
-		cli.parseWithHandler(new RunLast(), args);
+		/*
+		 * If called with no arguments, the GUI will always start. This short evaluation skips loading Picocli and command line parsing for faster
+		 * startup
+		 */
+		if (args.length == 0)
+			GuiMain.main();
+		else {
+			CommandLine cli = new CommandLine(new CommandLineMain());
+			cli.parseWithHandler(new RunLast(), args);
+		}
 	}
 
 }

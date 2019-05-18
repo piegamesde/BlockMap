@@ -14,6 +14,10 @@
 	-fx-vgap: 3;
 }
 
+/* The right items of the status bar */
+.right-items {
+	-fx-spacing: 8;
+}
 
 /* 
  * This is a workaround to create a gap between the checkbox tree item and its icon. Since apparently there is no other way

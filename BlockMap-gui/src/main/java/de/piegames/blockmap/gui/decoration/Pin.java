@@ -105,29 +105,29 @@ public class Pin {
 		public static final PinType		VILLAGE						= new PinType("Village", ANY_PIN, true, false, "textures/structures/village.png");
 
 		// Village structure
-		public static final PinType		VILLAGE_HOME				= new PinType("Village home", VILLAGE, true, false, "/tmp.png");
-		public static final PinType		VILLAGE_MEETING				= new PinType("Meetingpoint", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_HOME				= new PinType("Village home", VILLAGE, true, false, "textures/villages/home.png");
+		public static final PinType		VILLAGE_MEETING				= new PinType("Meetingpoint", VILLAGE, true, false, "textures/villages/bell.png");
 
 		// Village crafting
-		public static final PinType		VILLAGE_LEATHERWORKER		= new PinType("Leatherworker", VILLAGE, true, false, "/tmp.png");
-		public static final PinType		VILLAGE_MASON				= new PinType("Mason", VILLAGE, true, false, "/tmp.png");
-		public static final PinType		VILLAGE_FLETCHER			= new PinType("Fletcher", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_LEATHERWORKER		= new PinType("Leatherworker", VILLAGE, true, false, "textures/villages/leatherworker.png");
+		public static final PinType		VILLAGE_MASON				= new PinType("Mason", VILLAGE, true, false, "textures/villages/mason.png");
+		public static final PinType		VILLAGE_FLETCHER			= new PinType("Fletcher", VILLAGE, true, false, "textures/villages/fletcher.png");
 
 		// Ironworks
-		public static final PinType		VILLAGE_TOOLSMITH			= new PinType("Toolsmith", VILLAGE, true, false, "/tmp.png");
-		public static final PinType		VILLAGE_WEAPONSMITH			= new PinType("Weaponsmith", VILLAGE, true, false, "/tmp.png");
-		public static final PinType		VILLAGE_ARMORER				= new PinType("Armorer", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_TOOLSMITH			= new PinType("Toolsmith", VILLAGE, true, false, "textures/villages/toolsmith.png");
+		public static final PinType		VILLAGE_WEAPONSMITH			= new PinType("Weaponsmith", VILLAGE, true, false, "textures/villages/weaponsmith.png");
+		public static final PinType		VILLAGE_ARMORER				= new PinType("Armorer", VILLAGE, true, false, "textures/villages/armorer.png");
 
 		// Food
-		public static final PinType		VILLAGE_FARMER				= new PinType("Farmer", VILLAGE, true, false, "/tmp.png");
-		public static final PinType		VILLAGE_SHEPHERD			= new PinType("Shepherd", VILLAGE, true, false, "/tmp.png");
-		public static final PinType		VILLAGE_BUTCHER				= new PinType("Butcher", VILLAGE, true, false, "/tmp.png");
-		public static final PinType		VILLAGE_FISHERMAN			= new PinType("Fisherman,", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_FARMER				= new PinType("Farmer", VILLAGE, true, false, "textures/villages/farmer.png");
+		public static final PinType		VILLAGE_SHEPHERD			= new PinType("Shepherd", VILLAGE, true, false, "textures/villages/shepherd.png");
+		public static final PinType		VILLAGE_BUTCHER				= new PinType("Butcher", VILLAGE, true, false, "textures/villages/butcher.png");
+		public static final PinType		VILLAGE_FISHERMAN			= new PinType("Fisherman,", VILLAGE, true, false, "textures/villages/fisherman.png");
 
 		// Intellectual
-		public static final PinType		VILLAGE_CLERIC				= new PinType("Cleric", VILLAGE, true, false, "/tmp.png");
-		public static final PinType		VILLAGE_CARTOGRAPHER		= new PinType("Cartographer", VILLAGE, true, false, "/tmp.png");
-		public static final PinType		VILLAGE_LIBRARIAN			= new PinType("Librarian", VILLAGE, true, false, "/tmp.png");
+		public static final PinType		VILLAGE_CLERIC				= new PinType("Cleric", VILLAGE, true, false, "textures/villages/cleric.png");
+		public static final PinType		VILLAGE_CARTOGRAPHER		= new PinType("Cartographer", VILLAGE, true, false, "textures/villages/cartographer.png");
+		public static final PinType		VILLAGE_LIBRARIAN			= new PinType("Librarian", VILLAGE, true, false, "textures/villages/librarian.png");
 
 		public static final PinType		WORLD_SPAWN					= new PinType("Spawnpoint", ANY_PIN, true, false, "textures/pins/spawn_map.png");
 
@@ -148,7 +148,8 @@ public class Pin {
 		public static final PinType		STRUCTURE_SHIPWRECK			= new PinType("Shipwreck", STRUCTURE, false, false, "textures/structures/shipwreck.png");
 		public static final PinType		STRUCTURE_STRONGHOLD		= new PinType("Stronghold", STRUCTURE, true, false, "textures/structures/stronghold.png");
 		public static final PinType		STRUCTURE_WITCH_HUT			= new PinType("Witch hut", STRUCTURE, true, false, "textures/structures/swamp_hut.png");
-		public static final PinType		STRUCTURE_OUTPOST			= new PinType("Pillager outpost", STRUCTURE, true, false, "/tmp.png");
+		public static final PinType		STRUCTURE_OUTPOST			= new PinType("Pillager outpost", STRUCTURE, true, false,
+				"textures/structures/outpost.png");
 
 		protected final List<PinType>	children					= new ArrayList<>();
 		private final String			name;
@@ -837,7 +838,12 @@ public class Pin {
 			/* If there are to many different pins, merge some */
 			Map<PinType, Long> pinCount = new HashMap<>(this.pinCount);
 
-			if (pinCount.size() > 4 && (PinType.VILLAGE_MAPPING.values().stream().filter(x -> pinCount.getOrDefault(x, 0L) > 0).count() > 1)) {
+			/*
+			 * Merge the village pins not based on their count, but based on the current zoom factor.
+			 */
+			if (minHeight > 50) {
+				// if (minHeight > 50 ||
+				// (pinCount.size() > 4 && (PinType.VILLAGE_MAPPING.values().stream().filter(x -> pinCount.getOrDefault(x, 0L) > 0).count() > 1))) {
 				/* Merge village pins to one */
 				List<PinType> villageObjects = PinType.VILLAGE.children.stream().filter(this.pinCount::containsKey).collect(Collectors.toList());
 				if (!villageObjects.isEmpty()) {

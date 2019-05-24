@@ -64,7 +64,7 @@ public class PostProcessing {
 			for (int z = minZ; z <= maxZ; z++) {
 				for (int x = minX; x <= maxX; x++) {
 					Vector2i pos = new Vector2i(x, z);
-					Path region = world.render(pos).getPath();
+					Path region = world.getPath(pos);
 					if (region != null) {
 						int top = (z - minZ) * 512, left = (x - minX) * 512;
 						String title = "Region " + x + ", " + z;

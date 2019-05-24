@@ -20,7 +20,7 @@ import com.flowpowered.nbt.regionfile.RegionFile;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RenderSettings;
 import de.piegames.blockmap.standalone.PostProcessing;
-import de.piegames.blockmap.world.Region.BufferedRegion;
+import de.piegames.blockmap.world.Region;
 import de.piegames.blockmap.world.RegionFolder.CachedRegionFolder;
 import de.piegames.blockmap.world.RegionFolder.LocalRegionFolder;
 import de.piegames.blockmap.world.RegionFolder.RemoteRegionFolder;
@@ -40,7 +40,7 @@ public class RegionFolderTest {
 		settings.loadDefaultColors();
 		RegionRenderer renderer = new RegionRenderer(settings) {
 			@Override
-			public BufferedRegion render(Vector2ic regionPos, RegionFile file) {
+			public Region render(Vector2ic regionPos, RegionFile file) {
 				rendered.add(regionPos);
 				return super.render(regionPos, file);
 			}
@@ -104,7 +104,7 @@ public class RegionFolderTest {
 		settings.loadDefaultColors();
 		RegionRenderer renderer = new RegionRenderer(settings) {
 			@Override
-			public BufferedRegion render(Vector2ic regionPos, RegionFile file) {
+			public Region render(Vector2ic regionPos, RegionFile file) {
 				rendered.add(regionPos);
 				return super.render(regionPos, file);
 			}

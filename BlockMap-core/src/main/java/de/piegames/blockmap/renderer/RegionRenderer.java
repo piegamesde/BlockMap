@@ -25,7 +25,7 @@ import de.piegames.blockmap.world.ChunkMetadata;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataCulled;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataFailed;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataVersion;
-import de.piegames.blockmap.world.Region.BufferedRegion;
+import de.piegames.blockmap.world.Region;
 
 public class RegionRenderer {
 
@@ -49,7 +49,7 @@ public class RegionRenderer {
 	 *            The position of the region file in region coordinates. Used to check if blocks are within the bounds of the area to render.
 	 * @return An array of colors representing the final image. The image is square and 512x512 wide. The array sorted in XZ order.
 	 */
-	public BufferedRegion render(Vector2ic regionPos, RegionFile file) {
+	public Region render(Vector2ic regionPos, RegionFile file) {
 		log.info("Rendering region file " + regionPos.x() + " " + regionPos.y());
 		BufferedImage image = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
 		Map<Vector2ic, ChunkMetadata> metadata = new HashMap<>();
@@ -59,7 +59,7 @@ public class RegionRenderer {
 			for (int z = 0; z < 512; z++)
 				if (colors[x | (z << 9)] != null)
 					image.setRGB(x, z, colors[x | (z << 9)].toRGB());
-		return new BufferedRegion(regionPos, image, metadata);
+		return new Region(regionPos, image, metadata);
 	}
 
 	/**

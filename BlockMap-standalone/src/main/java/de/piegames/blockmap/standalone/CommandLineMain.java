@@ -3,8 +3,6 @@ package de.piegames.blockmap.standalone;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.concurrent.Callable;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -52,8 +50,8 @@ public class CommandLineMain implements Runnable {
 			description = "Render a folder containing region files to another folder through the command line interface",
 			footer = "Please don't forget that you can use global options too, which can be accessed through `BlockMap help`."
 					+ " These have to be put before the render command.",
-			subcommands = { CommandSaveRendered.class, HelpCommand.class })
-	public static class CommandRender implements Callable<CachedRegionFolder> {
+			subcommands = { HelpCommand.class })
+	public static class CommandRender implements Runnable {
 
 		@ParentCommand
 		private CommandLineMain		main;
@@ -84,10 +82,6 @@ public class CommandLineMain implements Runnable {
 				paramLabel = "{OVERWORLD|NETHER|END}",
 				description = "The dimension of the world to render. If this is set, INPUT must point to a world folder instead of a region folder")
 		private MinecraftDimension	dimension;
-		// @Option(names = "--custom-color-map", description = "Load a custom color map from the specified file. Overrides --color-map.")
-		// private Path customColorMap;
-		// @Option(names = "--custom-biome-map", description = "Load a custom biome color map from the specified file.")
-		// private Path customBiomeMap;
 
 		@Option(names = { "--min-Y", "--min-height" }, description = "Don't draw blocks lower than this height.", defaultValue = "0")
 		private int					minY;
@@ -104,6 +98,8 @@ public class CommandLineMain implements Runnable {
 		@Option(names = { "-l", "--lazy" },
 				description = "Don't render region files if there is already an up to date. This saves time when rendering the same world regularly with the same settings.")
 		private boolean				lazy;
+		@Option(names = { "-p", "--pins" }, description = "Load pin data from the world. This requires the use of the --dimension option")
+		private boolean				pins;
 
 		@Option(names = "--create-tile-html",
 				description = "Generate a tiles.html in the output directory that will show all rendered images ona mapin your browsed.")
@@ -113,8 +109,11 @@ public class CommandLineMain implements Runnable {
 		private boolean				createBigPic;
 
 		@Override
-		public CachedRegionFolder call() {
+		public void run() {
 			main.runAll();
+
+			/* Initialize settings */
+
 			RenderSettings settings = new RenderSettings();
 			settings.minX = minX;
 			settings.maxX = maxX;
@@ -122,24 +121,8 @@ public class CommandLineMain implements Runnable {
 			settings.maxY = maxY;
 			settings.minZ = minZ;
 			settings.maxZ = maxZ;
-			// if (customColorMap == null)
 			settings.blockColors = colorMap.getColorMap();
-			// else
-			// try (Reader r = Files.newBufferedReader(customColorMap)) {
-			// settings.blockColors = BlockColorMap.load(r);
-			// } catch (IOException e) {
-			// log.error("Could not load custom block color map", e);
-			// return null;
-			// }
-			// if (customBiomeMap == null)
 			settings.biomeColors = BiomeColorMap.loadDefault();
-			// else
-			// try (Reader r = Files.newBufferedReader(customBiomeMap)) {
-			// settings.biomeColors = BiomeColorMap.load(r);
-			// } catch (IOException e) {
-			// log.error("Could not load custom biome color map", e);
-			// return null;
-			// }
 			settings.shader = shader.getShader();
 
 			RegionRenderer renderer = new RegionRenderer(settings);
@@ -149,13 +132,16 @@ public class CommandLineMain implements Runnable {
 			log.debug("Input " + input.normalize().toAbsolutePath());
 			log.debug("Output: " + output.normalize().toAbsolutePath());
 			WorldRegionFolder world;
+			CachedRegionFolder cached;
 			try {
 				world = WorldRegionFolder.load(input, renderer);
+				cached = CachedRegionFolder.create(world, lazy, output);
 			} catch (IOException e) {
 				log.error("Could not load region folder", e);
-				return null;
+				return;
 			}
-			CachedRegionFolder cached = new CachedRegionFolder(world, lazy, output);
+
+			/* Actual rendering */
 
 			for (Vector2ic pos : world.listRegions()) {
 				if (!PostProcessing.inBounds(pos.x(), settings.minX, settings.maxX)
@@ -167,65 +153,25 @@ public class CommandLineMain implements Runnable {
 					log.error("Could not render region file", e);
 				}
 			}
+
+			/* Post-processing, saving */
+
+			if (pins) {
+				if (dimension != null)
+					world.setPins(WorldPins.loadFromWorld(input, dimension));
+				else
+					log.error("You must specify the --dimension option to load the pin information");
+			}
+			try {
+				cached.save();
+			} catch (IOException e) {
+				log.error("Could not save the rendered world", e);
+			}
+
 			if (createBigPic)
-				PostProcessing.createBigImage(cached.save(), output, settings);
+				PostProcessing.createBigImage(cached, output, settings);
 			if (createHtml)
-				PostProcessing.createTileHtml(cached.save(), output, settings);
-			return cached;
-		}
-
-	}
-
-	@Command(name = "save",
-			description = "Save the rendering information to a file for later use. If the file already exists, the rendering's data will be appended, preserving the existing ones. "
-					+ "The file is in json format and contains the paths of the rendered images, along with additional data.")
-	public static class CommandSaveRendered implements Runnable {
-		@ParentCommand
-		CommandRender	parent;
-
-		@Option(names = "--world-name",
-				required = true,
-				description = "A saved rendering can contain multiple rendered worlds, no matter if they are of the same world but with different settings or multiple actually distinct "
-						+ "worlds. This name is used as identifier to distinguish between them. It is recommended to encode useful information like the world's name or distinct render "
-						+ "settings into it.")
-		private String	name;
-		@Option(names = "--file",
-				description = "The path of the file to write. If relative, it will be resolved against the output directory.",
-				defaultValue = "./rendered.json",
-				showDefaultValue = Visibility.ALWAYS)
-		private Path	file;
-		@Option(names = "--absolute",
-				description = "By default, all paths are relativized to this file so moving the whole folder won't break the paths. This is useful if you want to put this file on a server, "
-						+ "but if you want to be able to move this file and keep all images in place, use this option instead.")
-		private boolean	absolute;
-
-		@Option(names = { "-p", "--pins" }, description = "Load pin data from the world. This requires the use of the --dimension option")
-		private boolean	pins;
-
-		@Override
-		public void run() {
-			CachedRegionFolder rendered = parent.call();
-			if (rendered != null)
-				try {
-					if (pins) {
-						if (parent.dimension != null) {
-							WorldRegionFolder world = rendered.getWorldRegionFolder();
-							world.setPins(WorldPins.loadFromWorld(parent.input, parent.dimension));
-						} else
-							log.error("You must specify the --dimension option to load the pin information");
-					}
-					Path out = file;
-					if (out == null)
-						out = Paths.get("rendered.json");
-					if (!out.isAbsolute())
-						out = parent.output.resolve(out);
-					log.info("Saving rendering information to " + out.normalize());
-					rendered.save(out, name, !absolute);
-				} catch (IOException e) {
-					log.error(e);
-				}
-			else
-				log.warn("Could not save the world's information to a file since it didn't get rendered correctly");
+				PostProcessing.createTileHtml(cached, output, settings);
 		}
 	}
 
@@ -237,7 +183,6 @@ public class CommandLineMain implements Runnable {
 
 	@Override
 	public void run() {
-		// verbose = true;
 		runAll();
 		/*
 		 * Using generics will make sure the class is only loaded now and not before. Loading this class may cause to load JavaFX classes which

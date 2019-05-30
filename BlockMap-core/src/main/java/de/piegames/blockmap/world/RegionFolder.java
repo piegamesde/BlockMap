@@ -371,7 +371,7 @@ public abstract class RegionFolder {
 			RegionHelper helper = regions.get(pos);
 			if (helper != null
 					&& lazy
-					&& world.getTimestamp(pos) > helper.lastModified) {
+					&& world.getTimestamp(pos) < helper.lastModified) {
 				return new Region(pos,
 						super.render(helper),
 						helper.metadata);

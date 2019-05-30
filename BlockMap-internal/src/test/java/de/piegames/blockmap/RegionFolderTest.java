@@ -50,21 +50,24 @@ public class RegionFolderTest {
 				Paths.get(URI.create(getClass().getResource("/BlockMapWorld/region").toString())),
 				renderer);
 
-		File out1 = folder.newFolder();
-		CachedRegionFolder cachedWorld = new CachedRegionFolder(localWorld, false, out1.toPath());
-		for (Vector2ic v : REGIONS) {
-			assertNotNull(cachedWorld.render(v));
-			assertFalse(rendered.isEmpty());
-			assertEquals(v, rendered.remove());
-		}
-		for (Vector2ic v : REGIONS) {
-			assertNotNull(cachedWorld.render(v));
-			assertFalse(rendered.isEmpty());
-			assertEquals(v, rendered.remove());
+		{
+			File out1 = folder.newFolder();
+			CachedRegionFolder cachedWorld = CachedRegionFolder.create(localWorld, false, out1.toPath());
+			for (Vector2ic v : REGIONS) {
+				assertNotNull(cachedWorld.render(v));
+				assertFalse(rendered.isEmpty());
+				assertEquals(v, rendered.remove());
+			}
+			for (Vector2ic v : REGIONS) {
+				assertNotNull(cachedWorld.render(v));
+				assertFalse(rendered.isEmpty());
+				assertEquals(v, rendered.remove());
+			}
+			assertTrue(rendered.isEmpty());
 		}
 
 		File out2 = folder.newFolder();
-		CachedRegionFolder cachedWorldLazy = new CachedRegionFolder(localWorld, true, out2.toPath());
+		CachedRegionFolder cachedWorldLazy = CachedRegionFolder.create(localWorld, true, out2.toPath());
 		for (Vector2ic v : REGIONS) {
 			assertNotNull(cachedWorldLazy.render(v));
 			assertFalse(rendered.isEmpty());
@@ -74,17 +77,15 @@ public class RegionFolderTest {
 			assertNotNull(cachedWorldLazy.render(v));
 			assertTrue(rendered.isEmpty());
 		}
-
-		LocalRegionFolder savedWorld = cachedWorldLazy.save();
 		for (Vector2ic v : REGIONS) {
-			assertNotNull(savedWorld.render(v));
+			assertNotNull(cachedWorldLazy.render(v));
 			assertTrue(rendered.isEmpty());
 		}
 
-		cachedWorldLazy.save(out2.toPath().resolve("saved.json"), "testworld", true);
+		cachedWorldLazy.save();
 
-		LocalRegionFolder savedWorld2 = new LocalRegionFolder(out2.toPath().resolve("saved.json"), "testworld");
-		RemoteRegionFolder savedWorld3 = new RemoteRegionFolder(out2.toPath().resolve("saved.json").toUri(), "testworld");
+		LocalRegionFolder savedWorld2 = new LocalRegionFolder(out2.toPath().resolve("rendered.json"));
+		RemoteRegionFolder savedWorld3 = new RemoteRegionFolder(out2.toPath().resolve("rendered.json").toUri());
 		for (Vector2ic v : REGIONS) {
 			assertNotNull(savedWorld2.render(v));
 			assertNotNull(savedWorld3.render(v));
@@ -93,7 +94,7 @@ public class RegionFolderTest {
 	}
 
 	/**
-	 * Test for #15 ({@link https://github.com/Minecraft-Technik-Wiki/BlockMap/issues/15})
+	 * Test for <a href="https://github.com/Minecraft-Technik-Wiki/BlockMap/issues/15">#15</a>
 	 * 
 	 * @throws IOException
 	 */
@@ -115,14 +116,15 @@ public class RegionFolderTest {
 				renderer);
 
 		File out1 = folder.newFolder();
-		CachedRegionFolder cachedWorld = new CachedRegionFolder(localWorld, false, out1.toPath());
+		CachedRegionFolder cachedWorld = CachedRegionFolder.create(localWorld, true, out1.toPath());
 		for (Vector2ic v : REGIONS) {
 			assertNotNull(cachedWorld.render(v));
 			assertFalse(rendered.isEmpty());
 			assertEquals(v, rendered.remove());
 		}
+		assertTrue(rendered.isEmpty());
 
-		PostProcessing.createBigImage(cachedWorld.save(), out1.toPath(), settings);
+		PostProcessing.createBigImage(cachedWorld, out1.toPath(), settings);
 		assertTrue(rendered.isEmpty());
 	}
 }

@@ -27,7 +27,7 @@ import com.flowpowered.nbt.regionfile.RegionFile;
 import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.gui.decoration.Pin.PinType;
 import de.piegames.blockmap.guistandalone.GuiMain;
-import de.piegames.blockmap.guistandalone.RegionFolderProvider.LocalWorldProvider;
+import de.piegames.blockmap.guistandalone.RegionFolderProvider.LocalRegionFolderProvider;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RegionShader;
 import de.piegames.blockmap.renderer.RenderSettings;
@@ -113,7 +113,7 @@ public class Screenshots {
 						GuiMain.instance.stage.hide();
 						GuiMain.instance.stage.show();
 						GuiMain.instance.controller.load(
-								new LocalWorldProvider(Generator.OUTPUT_INTERNAL_CACHE.resolve("BlockMapWorld"), renderer) {
+								new LocalRegionFolderProvider(GuiMain.instance.controller, Generator.OUTPUT_INTERNAL_CACHE.resolve("BlockMapWorld"), renderer) {
 									/** Override this method to hide the file structure of the local system from the screenshots */
 									@Override
 									public String getLocation() {

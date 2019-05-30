@@ -37,7 +37,7 @@ import javafx.collections.FXCollections;
 // Saved, remote:
 // - World
 
-abstract class RegionFolderProvider {
+public abstract class RegionFolderProvider {
 
 	private static Log								log				= LogFactory.getLog(RegionFolderProvider.class);
 
@@ -66,7 +66,7 @@ abstract class RegionFolderProvider {
 	public abstract String getLocation();
 
 	/** A single local region folder */
-	static class LocalRegionFolderProvider extends RegionFolderProvider {
+	public static class LocalRegionFolderProvider extends RegionFolderProvider {
 
 		protected Path				regionFolder;
 		protected RegionRenderer	renderer;
@@ -100,7 +100,7 @@ abstract class RegionFolderProvider {
 	}
 
 	/** A complete local world */
-	static class LocalWorldProvider extends RegionFolderProvider {
+	public static class LocalWorldProvider extends RegionFolderProvider {
 
 		private static Log							log	= LogFactory.getLog(LocalWorldProvider.class);
 
@@ -153,7 +153,7 @@ abstract class RegionFolderProvider {
 	}
 
 	/** A single region folder, pre-rendered. May be local or remote */
-	static class SavedRegionFolderProvider extends RegionFolderProvider {
+	public static class SavedRegionFolderProvider extends RegionFolderProvider {
 		protected URI				file;
 		protected RegionRenderer	renderer;
 
@@ -185,7 +185,7 @@ abstract class RegionFolderProvider {
 	}
 
 	/** Multiple rendered region folder, possibly rendered with different settings. May be local or remote */
-	static class SavedWorldProvider extends RegionFolderProvider {
+	public static class SavedWorldProvider extends RegionFolderProvider {
 		protected URI					file;
 		protected RegionRenderer		renderer;
 		protected Map<String, String>	worlds;
@@ -238,7 +238,7 @@ abstract class RegionFolderProvider {
 		}
 	}
 
-	static RegionFolderProvider create(GuiController controller, Path path, RegionRenderer renderer) {
+	public static RegionFolderProvider create(GuiController controller, Path path, RegionRenderer renderer) {
 		if (Files.isDirectory(path) && Files.exists(path.resolve("level.dat")))
 			return new LocalWorldProvider(controller, path, renderer);
 		else if (Files.exists(path) && path.getFileName().toString().equals("rendered.json"))
@@ -249,7 +249,7 @@ abstract class RegionFolderProvider {
 			return new LocalRegionFolderProvider(controller, path, renderer);
 	}
 
-	static RegionFolderProvider create(GuiController controller, URI uri) {
+	public static RegionFolderProvider create(GuiController controller, URI uri) {
 		if (uri.toString().endsWith("rendered.json"))
 			return new SavedRegionFolderProvider(controller, uri);
 		else if (uri.toString().endsWith("index.json"))

@@ -7,8 +7,8 @@ import org.joml.Vector2ic;
 
 /** Objects of this class represent a rendered Minecraft region. The image data is stored as {@link BufferedImage} in memory. */
 public class Region {
-	protected Vector2ic position;
-	protected BufferedImage	image;
+	protected Vector2ic									position;
+	protected BufferedImage								image;
 	protected Map<? extends Vector2ic, ChunkMetadata>	metadata;
 
 	public Region(Vector2ic position, BufferedImage image, Map<? extends Vector2ic, ChunkMetadata> metadata) {

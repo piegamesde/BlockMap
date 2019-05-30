@@ -25,6 +25,7 @@ import org.joml.Vector2ic;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import de.piegames.blockmap.DotMinecraft;
+import de.piegames.blockmap.MinecraftDimension;
 import de.piegames.blockmap.color.BlockColorMap.InternalColorMap;
 import de.piegames.blockmap.gui.MapPane;
 import de.piegames.blockmap.gui.WorldRendererCanvas;
@@ -33,8 +34,6 @@ import de.piegames.blockmap.gui.decoration.GridDecoration;
 import de.piegames.blockmap.gui.decoration.Pin;
 import de.piegames.blockmap.gui.decoration.Pin.PinType;
 import de.piegames.blockmap.gui.decoration.PinDecoration;
-import de.piegames.blockmap.guistandalone.RegionFolderProvider.LocalFolderProvider;
-import de.piegames.blockmap.guistandalone.RegionFolderProvider.RemoteFolderProvider;
 import de.piegames.blockmap.guistandalone.about.AboutDialog;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RegionShader;
@@ -60,9 +59,9 @@ import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import javafx.util.StringConverter;
 
 public class GuiController implements Initializable {
 
@@ -85,13 +84,15 @@ public class GuiController implements Initializable {
 	@FXML
 	private Label									minHeight, maxHeight;
 	@FXML
-	private RangeSlider								heightSlider;
+	RangeSlider										heightSlider;
 	@FXML
-	private GridPane								regionSettings;
+	ChoiceBox<String>								shadingBox;
 	@FXML
-	private ChoiceBox<String>						shadingBox;
+	ChoiceBox<String>								colorBox;
 	@FXML
-	private ChoiceBox<String>						colorBox;
+	ChoiceBox<MinecraftDimension>					dimensionBox;
+	@FXML
+	ChoiceBox<String>								worldBox;
 	@FXML
 	private CheckBox								gridBox;
 	@FXML
@@ -172,6 +173,18 @@ public class GuiController implements Initializable {
 			renderer.invalidateTextures();
 			renderer.repaint();
 		});
+		dimensionBox.setConverter(new StringConverter<MinecraftDimension>() {
+
+			@Override
+			public String toString(MinecraftDimension object) {
+				return object.displayName;
+			}
+
+			@Override
+			public MinecraftDimension fromString(String string) {
+				return null;
+			}
+		});
 
 		{ /* Pin checkbox icon */
 			ImageView image = new ImageView(PinType.ANY_PIN.image);
@@ -197,19 +210,19 @@ public class GuiController implements Initializable {
 
 		{
 			ChangeListener<? super RegionFolderProvider> regionFolderProviderListener = (observable, previous, val) -> {
-				regionSettings.getChildren().clear();
 				if (val == null) {
 					regionFolder.unbind();
 					regionFolder.set(null);
 				} else {
 					regionFolder.bind(val.folderProperty());
-					regionSettings.getChildren().addAll(val.getGUI());
 				}
-				regionSettings.setVisible(!regionSettings.getChildren().isEmpty());
-				boolean disabled = val == null ? true : val.hideSettings();
-				heightSlider.setDisable(disabled);
-				colorBox.setDisable(disabled);
-				shadingBox.setDisable(disabled);
+				byte mask = val == null ? 0 : val.getGuiBitmask();
+				heightSlider.setDisable((mask & RegionFolderProvider.BIT_HEIGHT) == 0);
+				colorBox.setDisable((mask & RegionFolderProvider.BIT_COLOR) == 0);
+				shadingBox.setDisable((mask & RegionFolderProvider.BIT_SHADING) == 0);
+				dimensionBox.setDisable((mask & RegionFolderProvider.BIT_DIMENSION) == 0);
+				worldBox.setDisable((mask & RegionFolderProvider.BIT_WORLD) == 0);
+
 				pinBox.setDisable(val == null);
 				gridBox.setDisable(val == null);
 
@@ -290,7 +303,7 @@ public class GuiController implements Initializable {
 		f = dialog.showDialog(null);
 		if (f != null) {
 			lastBrowsedPath = f.toPath();
-			regionFolderProvider.set(RegionFolderProvider.byPath(lastBrowsedPath, regionRenderer));
+			regionFolderProvider.set(RegionFolderProvider.create(this, lastBrowsedPath, regionRenderer));
 		}
 	}
 
@@ -306,7 +319,7 @@ public class GuiController implements Initializable {
 		f = dialog.showOpenDialog(null);
 		if (f != null) {
 			lastBrowsedPath = f.toPath();
-			regionFolderProvider.set(new LocalFolderProvider(lastBrowsedPath));
+			regionFolderProvider.set(RegionFolderProvider.create(this, lastBrowsedPath, regionRenderer));
 		}
 	}
 
@@ -318,7 +331,7 @@ public class GuiController implements Initializable {
 		dialog.setGraphic(null);
 		dialog.showAndWait().ifPresent(s -> {
 			try {
-				regionFolderProvider.set(new RemoteFolderProvider(new URI(s)));
+				regionFolderProvider.set(RegionFolderProvider.create(this, new URI(s)));
 			} catch (URISyntaxException | IllegalArgumentException e) {
 				log.warn("Malformed input uri", e);
 			}

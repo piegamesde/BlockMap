@@ -2,9 +2,11 @@ package de.piegames.blockmap.guistandalone;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -13,59 +15,67 @@ import java.util.Objects;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.common.reflect.TypeToken;
 
 import de.piegames.blockmap.MinecraftDimension;
 import de.piegames.blockmap.renderer.RegionRenderer;
-import de.piegames.blockmap.world.Region.LocalSavedRegion;
-import de.piegames.blockmap.world.Region.SavedRegion;
 import de.piegames.blockmap.world.RegionFolder;
-import de.piegames.blockmap.world.RegionFolder.SavedRegionFolder;
 import de.piegames.blockmap.world.RegionFolder.WorldRegionFolder;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
-import javafx.scene.Node;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Label;
-import javafx.scene.layout.GridPane;
-import javafx.util.StringConverter;
 
-public abstract class RegionFolderProvider {
+// World:
+// - Dimension
+// - Shader
+// - Color pack
+// - Height
+// Saved, local:
+// - World?
+// Saved, remote:
+// - World
 
-	private static Log								log		= LogFactory.getLog(RegionFolderProvider.class);
+abstract class RegionFolderProvider {
 
-	protected ReadOnlyObjectWrapper<RegionFolder>	folder	= new ReadOnlyObjectWrapper<>();
+	private static Log								log				= LogFactory.getLog(RegionFolderProvider.class);
+
+	static final byte								BIT_HEIGHT		= 0x01;
+	static final byte								BIT_COLOR		= 0x02;
+	static final byte								BIT_SHADING		= 0x04;
+	static final byte								BIT_DIMENSION	= 0x08;
+	static final byte								BIT_WORLD		= 0x10;
+
+	protected GuiController							controller;
+	protected ReadOnlyObjectWrapper<RegionFolder>	folder			= new ReadOnlyObjectWrapper<>();
+
+	public RegionFolderProvider(GuiController controller) {
+		this.controller = controller;
+	}
 
 	public ReadOnlyObjectProperty<RegionFolder> folderProperty() {
 		return folder.getReadOnlyProperty();
 	}
 
-	public abstract boolean hideSettings();
-
-	public abstract List<Node> getGUI();
+	/** Bit mask which settings controls should be enabled and shown in the GUI */
+	public abstract byte getGuiBitmask();
 
 	public abstract void reload();
 
 	public abstract String getLocation();
 
-	public static class RegionFolderProviderImpl extends RegionFolderProvider {
+	/** A single local region folder */
+	static class LocalRegionFolderProvider extends RegionFolderProvider {
 
 		protected Path				regionFolder;
 		protected RegionRenderer	renderer;
-		protected List<Node>		gui	= new ArrayList<>();
 
-		public RegionFolderProviderImpl(Path regionFolder, RegionRenderer renderer) {
+		public LocalRegionFolderProvider(GuiController controller, Path regionFolder, RegionRenderer renderer) {
+			super(controller);
 			this.regionFolder = regionFolder;
 			this.renderer = Objects.requireNonNull(renderer);
 			reload();
-		}
-
-		@Override
-		public List<Node> getGUI() {
-			return gui;
 		}
 
 		@Override
@@ -84,121 +94,26 @@ public abstract class RegionFolderProvider {
 		}
 
 		@Override
-		public boolean hideSettings() {
-			return false;
+		public byte getGuiBitmask() {
+			return BIT_HEIGHT | BIT_COLOR | BIT_SHADING;
 		}
 	}
 
-	public static abstract class SavedFolderProvider<T> extends RegionFolderProvider {
-		protected T							file;
-		protected RegionRenderer			renderer;
-		protected List<Node>				gui	= new ArrayList<>();
-		protected ChoiceBox<String>			worldBox;
-		protected Map<String, JsonObject>	worlds;
+	/** A complete local world */
+	static class LocalWorldProvider extends RegionFolderProvider {
 
-		public SavedFolderProvider(T file) {
-			this.file = file;
-			worldBox = new ChoiceBox<>();
-			worldBox.valueProperty().addListener((o, old, val) -> {
-				if (old != val)
-					folder.set(load(val));
-			});
-			gui.add(worldBox);
-			reload();
-		}
+		private static Log							log	= LogFactory.getLog(LocalWorldProvider.class);
 
-		@Override
-		public List<Node> getGUI() {
-			return gui;
-		}
+		protected Path								worldPath;
+		protected RegionRenderer					renderer;
+		protected List<MinecraftDimension>			available;
 
-		@Override
-		public void reload() {
-			try {
-				worlds = SavedRegionFolder.parseSaved(load());
-				String selected = worldBox.getValue();
+		/* Strong reference */
+		@SuppressWarnings("unused")
+		private ChangeListener<MinecraftDimension>	listener;
 
-				worldBox.setItems(FXCollections.observableList(new ArrayList<>(worlds.keySet())));
-				if (worlds.keySet().contains(selected))
-					worldBox.setValue(selected);
-				else if (!worlds.isEmpty())
-					worldBox.setValue(worldBox.getItems().get(0));
-			} catch (IOException e) {
-				folder.set(null);
-				log.warn("Could not load world " + file, e);
-			}
-		}
-
-		protected abstract JsonElement load() throws IOException;
-
-		protected abstract SavedRegionFolder<T, ?> load(String world);
-
-		@Override
-		public String getLocation() {
-			return file.toString();
-		}
-
-		@Override
-		public boolean hideSettings() {
-			return true;
-		}
-	}
-
-	public static class LocalFolderProvider extends SavedFolderProvider<Path> {
-
-		public LocalFolderProvider(Path file) {
-			super(file);
-		}
-
-		@Override
-		protected JsonElement load() throws IOException {
-			return new JsonParser().parse(new InputStreamReader(Files.newInputStream(file)));
-		}
-
-		@Override
-		protected SavedRegionFolder<Path, LocalSavedRegion> load(String world) {
-			try {
-				return new RegionFolder.LocalRegionFolder(file, world);
-			} catch (IOException e) {
-				log.warn("Could not load world " + world + " from file " + file);
-				return null;
-			}
-		}
-	}
-
-	public static class RemoteFolderProvider extends SavedFolderProvider<URI> {
-
-		public RemoteFolderProvider(URI file) {
-			super(file);
-		}
-
-		@Override
-		protected JsonElement load() throws IOException {
-			return new JsonParser().parse(new InputStreamReader(file.toURL().openStream()));
-		}
-
-		@Override
-		protected SavedRegionFolder<URI, SavedRegion> load(String world) {
-			try {
-				return new RegionFolder.RemoteRegionFolder(file, world);
-			} catch (IOException e) {
-				log.warn("Could not load world " + world + " from remote file " + file);
-				return null;
-			}
-		}
-	}
-
-	public static class WorldRegionFolderProvider extends RegionFolderProvider {
-
-		private static Log						log	= LogFactory.getLog(WorldRegionFolderProvider.class);
-
-		protected Path							worldPath;
-		protected RegionRenderer				renderer;
-		protected List<MinecraftDimension>		available;
-		protected ChoiceBox<MinecraftDimension>	dimensionBox;
-		protected List<Node>					gui	= new ArrayList<>();
-
-		public WorldRegionFolderProvider(Path worldPath, RegionRenderer renderer) {
+		public LocalWorldProvider(GuiController controller, Path worldPath, RegionRenderer renderer) {
+			super(controller);
 			this.worldPath = worldPath;
 			this.renderer = renderer;
 			available = new ArrayList<>(3);
@@ -207,45 +122,19 @@ public abstract class RegionFolderProvider {
 					available.add(d);
 			if (available.isEmpty())
 				throw new IllegalArgumentException("Not a vaild world folder");
-			dimensionBox = new ChoiceBox<MinecraftDimension>();
-			dimensionBox.setItems(FXCollections.observableList(available));
-			dimensionBox.valueProperty().addListener((observable, oldValue, newValue) -> {
+			controller.dimensionBox.setItems(FXCollections.observableList(available));
+			controller.dimensionBox.valueProperty().addListener(new WeakChangeListener<>(listener = (observable, oldValue, newValue) -> {
 				if (oldValue != newValue)
 					reload();
-			});
-			dimensionBox.setValue(available.get(0));
-			dimensionBox.setConverter(new StringConverter<MinecraftDimension>() {
-
-				@Override
-				public String toString(MinecraftDimension object) {
-					return object.displayName;
-				}
-
-				@Override
-				public MinecraftDimension fromString(String string) {
-					return null;
-				}
-			});
-			dimensionBox.setMaxWidth(Double.POSITIVE_INFINITY);
-
-			Label text = new Label("Dimension:");
-			GridPane.setColumnIndex(text, 0);
-			GridPane.setColumnIndex(dimensionBox, 1);
-			gui.add(text);
-			gui.add(dimensionBox);
-
+			}));
+			controller.dimensionBox.setValue(available.get(0));
 			reload();
-		}
-
-		@Override
-		public List<Node> getGUI() {
-			return gui;
 		}
 
 		@Override
 		public void reload() {
 			try {
-				folder.set(WorldRegionFolder.load(worldPath, dimensionBox.getValue(), renderer, true));
+				folder.set(WorldRegionFolder.load(worldPath, controller.dimensionBox.getValue(), renderer, true));
 			} catch (IOException e) {
 				folder.set(null);
 				log.warn("Could not load world " + worldPath, e);
@@ -258,15 +147,114 @@ public abstract class RegionFolderProvider {
 		}
 
 		@Override
-		public boolean hideSettings() {
-			return false;
+		public byte getGuiBitmask() {
+			return BIT_HEIGHT | BIT_COLOR | BIT_SHADING | BIT_DIMENSION;
 		}
 	}
 
-	public static RegionFolderProvider byPath(Path path, RegionRenderer renderer) {
+	/** A single region folder, pre-rendered. May be local or remote */
+	static class SavedRegionFolderProvider extends RegionFolderProvider {
+		protected URI				file;
+		protected RegionRenderer	renderer;
+
+		public SavedRegionFolderProvider(GuiController controller, URI file) {
+			super(controller);
+			this.file = file;
+			reload();
+		}
+
+		@Override
+		public void reload() {
+			try {
+				folder.set(new RegionFolder.RemoteRegionFolder(file));
+			} catch (IOException e) {
+				log.warn("Could not load  from remote file " + file);
+				folder.set(null);
+			}
+		}
+
+		@Override
+		public String getLocation() {
+			return "file".equals(file.getScheme()) ? Paths.get(file).toString() : file.toString();
+		}
+
+		@Override
+		public byte getGuiBitmask() {
+			return 0;
+		}
+	}
+
+	/** Multiple rendered region folder, possibly rendered with different settings. May be local or remote */
+	static class SavedWorldProvider extends RegionFolderProvider {
+		protected URI					file;
+		protected RegionRenderer		renderer;
+		protected Map<String, String>	worlds;
+
+		/* Strong reference */
+		@SuppressWarnings("unused")
+		private ChangeListener<String>	listener;
+
+		public SavedWorldProvider(GuiController controller, URI file) {
+			super(controller);
+			this.file = file;
+			controller.worldBox.valueProperty().addListener(new WeakChangeListener<>(listener = (o, old, val) -> {
+				try {
+					folder.set(new RegionFolder.RemoteRegionFolder(file));
+				} catch (IOException e) {
+					log.warn("Could not load world " + val + " from remote file " + file);
+					folder.set(null);
+				}
+			}));
+			reload();
+		}
+
+		@SuppressWarnings("serial")
+		@Override
+		public void reload() {
+			try (Reader reader = new InputStreamReader(file.toURL().openStream())) {
+				worlds = RegionFolder.GSON.fromJson(reader, new TypeToken<Map<String, String>>() {
+				}.getType());
+				String selected = controller.worldBox.getValue();
+
+				controller.worldBox.setItems(FXCollections.observableList(new ArrayList<>(worlds.keySet())));
+				if (worlds.keySet().contains(selected))
+					controller.worldBox.setValue(selected);
+				else if (!worlds.isEmpty())
+					controller.worldBox.setValue(controller.worldBox.getItems().get(0));
+			} catch (IOException e) {
+				folder.set(null);
+				log.warn("Could not load world " + file, e);
+			}
+		}
+
+		@Override
+		public String getLocation() {
+			return "file".equals(file.getScheme()) ? Paths.get(file).toString() : file.toString();
+		}
+
+		@Override
+		public byte getGuiBitmask() {
+			return BIT_WORLD;
+		}
+	}
+
+	static RegionFolderProvider create(GuiController controller, Path path, RegionRenderer renderer) {
 		if (Files.isDirectory(path) && Files.exists(path.resolve("level.dat")))
-			return new WorldRegionFolderProvider(path, renderer);
+			return new LocalWorldProvider(controller, path, renderer);
+		else if (Files.exists(path) && path.getFileName().toString().equals("rendered.json"))
+			return new SavedRegionFolderProvider(controller, path.toUri());
+		else if (Files.exists(path) && path.getFileName().toString().equals("index.json"))
+			return new SavedWorldProvider(controller, path.toUri());
 		else
-			return new RegionFolderProviderImpl(path, renderer);
+			return new LocalRegionFolderProvider(controller, path, renderer);
+	}
+
+	static RegionFolderProvider create(GuiController controller, URI uri) {
+		if (uri.toString().endsWith("rendered.json"))
+			return new SavedRegionFolderProvider(controller, uri);
+		else if (uri.toString().endsWith("index.json"))
+			return new SavedWorldProvider(controller, uri);
+		else
+			return null;
 	}
 }

@@ -17,6 +17,7 @@
 <?import javafx.scene.control.TreeItem?>
 <?import javafx.scene.control.CheckBoxTreeItem?>
 <?import javafx.scene.input.KeyCodeCombination?>
+<?import de.piegames.blockmap.MinecraftDimension?>
 
 <BorderPane
 	maxHeight="0"
@@ -121,20 +122,50 @@
 						<Label fx:id="minHeight" />
 					</children>
 				</VBox>
-				<!-- Split the GridPane into three ones combined by a vbox. This is because the content of the second one will change dynamically and it's difficult to add and remove rows from a grid pane. -->
 				<VBox spacing="6">
 					<children>
-						<GridPane id="left-settings">
+						<GridPane
+							hgap="6"
+							vgap="3"
+							id="left-settings">
 							<children>
 								<Label
-									text="Color pack:"
+									text="World"
 									GridPane.rowIndex="0"
+									GridPane.columnIndex="0" />
+								<ChoiceBox
+									fx:id="worldBox"
+									maxWidth="Infinity"
+									GridPane.rowIndex="0"
+									GridPane.columnIndex="1" />
+
+								<Label
+									text="Dimension"
+									GridPane.rowIndex="1"
+									GridPane.columnIndex="0" />
+								<ChoiceBox
+									fx:id="dimensionBox"
+									maxWidth="Infinity"
+									GridPane.rowIndex="1"
+									GridPane.columnIndex="1">
+									<items>
+										<FXCollections fx:factory="observableArrayList">
+											<MinecraftDimension fx:value="OVERWORLD" />
+											<MinecraftDimension fx:value="NETHER" />
+											<MinecraftDimension fx:value="END" />
+										</FXCollections>
+									</items>
+								</ChoiceBox>
+
+								<Label
+									text="Color pack:"
+									GridPane.rowIndex="2"
 									GridPane.columnIndex="0" />
 								<ChoiceBox
 									value="Default"
 									fx:id="colorBox"
 									maxWidth="Infinity"
-									GridPane.rowIndex="0"
+									GridPane.rowIndex="2"
 									GridPane.columnIndex="1">
 									<items>
 										<FXCollections fx:factory="observableArrayList">
@@ -145,15 +176,16 @@
 										</FXCollections>
 									</items>
 								</ChoiceBox>
+
 								<Label
 									text="Shading:"
-									GridPane.rowIndex="1"
+									GridPane.rowIndex="3"
 									GridPane.columnIndex="0" />
 								<ChoiceBox
 									value="Relief"
 									fx:id="shadingBox"
 									maxWidth="Infinity"
-									GridPane.rowIndex="1"
+									GridPane.rowIndex="3"
 									GridPane.columnIndex="1">
 									<items>
 										<FXCollections fx:factory="observableArrayList">
@@ -164,50 +196,32 @@
 										</FXCollections>
 									</items>
 								</ChoiceBox>
+
 								<CheckBox
 									text="Show grid"
 									fx:id="gridBox"
-									GridPane.rowIndex="2"
+									GridPane.rowIndex="4"
 									GridPane.columnIndex="0"
 									GridPane.columnSpan="2">
 								</CheckBox>
+
 								<CheckBox
 									text="Show pins"
 									fx:id="pinBox"
 									selected="true"
-									GridPane.rowIndex="3"
+									GridPane.rowIndex="5"
 									GridPane.columnIndex="0"
 									GridPane.columnSpan="2">
 								</CheckBox>
-							</children>
-							<columnConstraints>
-								<ColumnConstraints hgrow="ALWAYS" />
-								<ColumnConstraints hgrow="ALWAYS" />
-							</columnConstraints>
-							<rowConstraints>
-								<RowConstraints />
-								<RowConstraints />
-								<RowConstraints />
-							</rowConstraints>
-						</GridPane>
-						<GridPane fx:id="regionSettings">
-							<columnConstraints>
-								<ColumnConstraints hgrow="ALWAYS" />
-								<ColumnConstraints hgrow="ALWAYS" />
-							</columnConstraints>
-						</GridPane>
-						<GridPane
-							hgap="6"
-							vgap="3"
-							VBox.vgrow="ALWAYS">
-							<children>
+
 								<CheckTreeView
 									showRoot="false"
 									id="pin-tree"
 									fx:id="pinView"
-									GridPane.rowIndex="0"
+									GridPane.rowIndex="6"
 									GridPane.columnIndex="0"
-									GridPane.columnSpan="2">
+									GridPane.columnSpan="2"
+									GridPane.vgrow="ALWAYS">
 								</CheckTreeView>
 							</children>
 							<columnConstraints>
@@ -215,6 +229,12 @@
 								<ColumnConstraints hgrow="ALWAYS" />
 							</columnConstraints>
 							<rowConstraints>
+								<RowConstraints />
+								<RowConstraints />
+								<RowConstraints />
+								<RowConstraints />
+								<RowConstraints />
+								<RowConstraints />
 								<RowConstraints vgrow="ALWAYS" />
 							</rowConstraints>
 						</GridPane>

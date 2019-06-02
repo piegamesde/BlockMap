@@ -230,6 +230,23 @@ public class BlockColorMap {
 		public Map<BitSet, BlockColor> getColors() {
 			return new HashMap<>(blockColors);
 		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(blockColors);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			NormalStateColors other = (NormalStateColors) obj;
+			return Objects.equals(blockColors2, other.blockColors2);
+		}
 	}
 
 	public static class SingleStateColors extends BlockColor implements StateColors {
@@ -302,6 +319,23 @@ public class BlockColorMap {
 	/** Use for testing only */
 	public Map<String, StateColors> getBlockColors() {
 		return new HashMap<>(blockColors);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(blockColors);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		BlockColorMap other = (BlockColorMap) obj;
+		return Objects.equals(blockColors, other.blockColors);
 	}
 
 	public static BlockColorMap load(Reader reader) {

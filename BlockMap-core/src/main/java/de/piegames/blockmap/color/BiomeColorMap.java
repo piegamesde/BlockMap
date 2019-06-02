@@ -39,6 +39,24 @@ public class BiomeColorMap {
 			this.foliageColor = foliageColor;
 			this.biomeColor = biomeColor;
 		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(biomeColor, foliageColor, grassColor, waterColor);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			BiomeColor other = (BiomeColor) obj;
+			return Objects.equals(biomeColor, other.biomeColor) && Objects.equals(foliageColor, other.foliageColor) && Objects.equals(grassColor,
+					other.grassColor) && Objects.equals(waterColor, other.waterColor);
+		}
 	}
 
 	protected Map<Integer, BiomeColor> biomeColors;
@@ -54,6 +72,23 @@ public class BiomeColorMap {
 
 	public BiomeColorMap(Map<Integer, BiomeColor> biomeColors) {
 		this.biomeColors = Objects.requireNonNull(biomeColors);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(biomeColors);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		BiomeColorMap other = (BiomeColorMap) obj;
+		return Objects.equals(biomeColors, other.biomeColors);
 	}
 
 	public static BiomeColorMap load(Reader reader) {

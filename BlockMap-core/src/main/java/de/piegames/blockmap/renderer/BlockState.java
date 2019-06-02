@@ -33,4 +33,21 @@ public class BlockState {
 	public int getSize() {
 		return states.size();
 	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(states);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		BlockState other = (BlockState) obj;
+		return Objects.equals(states, other.states);
+	}
 }

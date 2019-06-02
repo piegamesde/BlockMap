@@ -1,6 +1,7 @@
 package de.piegames.blockmap.renderer;
 
 import java.io.InputStreamReader;
+import java.util.Objects;
 
 import com.google.gson.stream.JsonReader;
 
@@ -51,6 +52,11 @@ public interface RegionShader {
 
 		@Override
 		public void shade(Color[] map, int[] height, int[] biome, BiomeColorMap biomeColors) {
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(getClass().getName());
 		}
 	}
 
@@ -132,6 +138,11 @@ public interface RegionShader {
 					// map[z << 9 | x] = Color.alphaOver(map[z << 9 | x], new Color(0.1f, 0, 0, 0));
 				}
 		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(getClass().getName());
+		}
 	}
 
 	/** This shader will discard all color information and replace it by the color of the biome the block is in. */
@@ -142,6 +153,11 @@ public interface RegionShader {
 			for (int i = 0; i < 512 * 512; i++)
 				if (biome[i] != -1)
 					map[i] = biomeColors.getBiomeColor(biome[i] & 0xFF).biomeColor;
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(getClass().getName());
 		}
 	}
 
@@ -160,6 +176,11 @@ public interface RegionShader {
 			for (int i = 0; i < 512 * 512; i++)
 				if (biome[i] != -1)
 					map[i] = colors[height[i]];
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(getClass().getName());
 		}
 	}
 }

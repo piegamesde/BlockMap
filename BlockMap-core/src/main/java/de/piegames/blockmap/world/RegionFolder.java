@@ -26,8 +26,12 @@ import java.util.stream.Stream;
 
 import javax.imageio.ImageIO;
 
+import org.joml.Vector2d;
+import org.joml.Vector2dc;
 import org.joml.Vector2i;
 import org.joml.Vector2ic;
+import org.joml.Vector3d;
+import org.joml.Vector3dc;
 import org.joml.Vector3i;
 import org.joml.Vector3ic;
 
@@ -56,6 +60,8 @@ public abstract class RegionFolder {
 			.enableHooks(RegionHelper.class)
 			.registerTypeSelector(Vector2ic.class, e -> Vector2i.class)
 			.registerTypeSelector(Vector3ic.class, e -> Vector3i.class)
+			.registerTypeSelector(Vector2dc.class, e -> Vector2d.class)
+			.registerTypeSelector(Vector3dc.class, e -> Vector3d.class)
 			.registerTypeSelector(ChunkMetadata.class, e -> ChunkRenderState.valueOf(e.getAsJsonObject().getAsJsonPrimitive("renderState").getAsString()).clazz)
 			.createGsonBuilder()
 			.disableHtmlEscaping()
@@ -95,7 +101,10 @@ public abstract class RegionFolder {
 	public abstract Region render(Vector2ic pos) throws IOException;
 
 	/**
-	 * TODO
+	 * Get the time the region file at {@code pos} was last modified. This will be used to determine if a cached rendered image of that file is
+	 * still valid or not.
+	 * 
+	 * @see Files#getLastModifiedTime(Path, java.nio.file.LinkOption...)
 	 */
 	public abstract long getTimestamp(Vector2ic pos) throws IOException;
 
@@ -103,7 +112,7 @@ public abstract class RegionFolder {
 	public abstract Optional<WorldPins> getPins();
 
 	/**
-	 * TODO
+	 * Whether the render process of this region folder may need caching or not.
 	 */
 	public abstract boolean needsCaching();
 
@@ -276,7 +285,7 @@ public abstract class RegionFolder {
 	/**
 	 * An implementation of {@link SavedRegionFolder} based on the Java {@link Path} API. Use it for accessing files from your local file
 	 * system, but Java paths work with other URI schemata as well. Check {@link FileSystemProvider#installedProviders()} for more information.
-	 * (There is even an URLSystemProvider somewhere on GitHub ...)
+	 * (There is even an URLSystemProvider somewhere on GitHub …)
 	 */
 	public static class LocalRegionFolder extends SavedRegionFolder<Path> {
 
@@ -346,9 +355,6 @@ public abstract class RegionFolder {
 		 *            if set to false, no cached files will be returned for re-rendering. If set to true, a re-render will load the image from disk
 		 *            if the respective region file has not been modified since then (based on the timestamp). Laziness has the effect that changing
 		 *            the render settings will not cause already rendered files to be updated.
-		 * @param imageFolder
-		 *            the folder where all the rendered images will be stored. The images will be named like their region file name, but with the
-		 *            {@code .mca} replaced with {@code .png}.
 		 * @throws IOException
 		 */
 		protected CachedRegionFolder(RegionFolder cached, boolean lazy, Path file) throws IOException {
@@ -380,7 +386,10 @@ public abstract class RegionFolder {
 				String imageName = "r." + pos.x() + "." + pos.y() + ".png";
 				Path imagePath = getSibling(basePath, imageName);
 				ImageIO.write(rendered.getImage(), "png", Files.newOutputStream(imagePath));
-				regions.put(pos, new RegionHelper(pos.x(), pos.y(), Files.getLastModifiedTime(imagePath).toMillis(), imageName, rendered.metadata));
+				synchronized (regions) {
+					regions.put(pos, new RegionHelper(pos.x(), pos.y(), Files.getLastModifiedTime(imagePath).toMillis(), imageName, rendered.metadata));
+				}
+				save();
 				return rendered;
 			}
 		}
@@ -396,9 +405,11 @@ public abstract class RegionFolder {
 		}
 
 		public void save() throws IOException {
-			try (BufferedWriter writer = Files.newBufferedWriter(basePath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-				GSON.toJson(new SavedRegionHelper(regions.values(), getPins().orElse(null)), writer);
-				writer.flush();
+			synchronized (regions) {
+				try (BufferedWriter writer = Files.newBufferedWriter(basePath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+					GSON.toJson(new SavedRegionHelper(regions.values(), getPins().orElse(null)), writer);
+					writer.flush();
+				}
 			}
 		}
 
@@ -413,6 +424,7 @@ public abstract class RegionFolder {
 
 	}
 
+	/** Object representation of the content of the {@code rendered.json} metadata file.< */
 	static class SavedRegionHelper {
 		Collection<RegionHelper>	regions;
 		WorldPins					pins;

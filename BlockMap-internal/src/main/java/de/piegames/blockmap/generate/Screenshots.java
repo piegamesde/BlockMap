@@ -96,9 +96,6 @@ public class Screenshots {
 	}
 
 	public static void generateScreenshots() throws Exception {
-		RenderSettings settings = new RenderSettings();
-		settings.loadDefaultColors();
-		RegionRenderer renderer = new RegionRenderer(settings);
 		Thread th = new Thread(() -> GuiMain.main());
 		th.start();
 		while (GuiMain.instance == null)
@@ -113,7 +110,7 @@ public class Screenshots {
 						GuiMain.instance.stage.hide();
 						GuiMain.instance.stage.show();
 						GuiMain.instance.controller.load(
-								new LocalRegionFolderProvider(GuiMain.instance.controller, Generator.OUTPUT_INTERNAL_CACHE.resolve("BlockMapWorld"), renderer) {
+								new LocalRegionFolderProvider(GuiMain.instance.controller, Generator.OUTPUT_INTERNAL_CACHE.resolve("BlockMapWorld")) {
 									/** Override this method to hide the file structure of the local system from the screenshots */
 									@Override
 									public String getLocation() {

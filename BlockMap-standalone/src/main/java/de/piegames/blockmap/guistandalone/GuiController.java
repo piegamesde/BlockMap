@@ -1,6 +1,7 @@
 package de.piegames.blockmap.guistandalone;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -26,7 +27,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import de.piegames.blockmap.DotMinecraft;
 import de.piegames.blockmap.MinecraftDimension;
-import de.piegames.blockmap.color.BlockColorMap.InternalColorMap;
 import de.piegames.blockmap.gui.MapPane;
 import de.piegames.blockmap.gui.WorldRendererCanvas;
 import de.piegames.blockmap.gui.decoration.DragScrollDecoration;
@@ -35,11 +35,9 @@ import de.piegames.blockmap.gui.decoration.Pin;
 import de.piegames.blockmap.gui.decoration.Pin.PinType;
 import de.piegames.blockmap.gui.decoration.PinDecoration;
 import de.piegames.blockmap.guistandalone.about.AboutDialog;
-import de.piegames.blockmap.renderer.RegionRenderer;
-import de.piegames.blockmap.renderer.RegionShader;
-import de.piegames.blockmap.renderer.RenderSettings;
 import de.piegames.blockmap.world.ChunkMetadata;
 import de.piegames.blockmap.world.RegionFolder;
+import de.piegames.blockmap.world.RegionFolder.CachedRegionFolder;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
@@ -67,13 +65,12 @@ public class GuiController implements Initializable {
 
 	private static Log								log						= LogFactory.getLog(GuiController.class);
 
-	protected RegionRenderer						regionRenderer;
 	public WorldRendererCanvas						renderer;
 	protected ObjectProperty<RegionFolder>			regionFolder			= new SimpleObjectProperty<>();
 	protected ObjectProperty<RegionFolderProvider>	regionFolderProvider	= new SimpleObjectProperty<>();
 
 	protected Path									lastBrowsedPath;
-	protected URL									lastBrowsedURL;
+	protected String								lastBrowsedURL;
 
 	@FXML
 	private BorderPane								root;
@@ -107,6 +104,7 @@ public class GuiController implements Initializable {
 
 	protected ScheduledExecutorService				backgroundThread		= Executors.newSingleThreadScheduledExecutor(
 			new ThreadFactoryBuilder().setNameFormat("pin-background-thread-%d").build());
+	protected RegionFolderCache						cache					= new RegionFolderCache();
 
 	public GuiController() {
 	}
@@ -114,9 +112,6 @@ public class GuiController implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		log.debug("Initializing GUI");
-		RenderSettings settings = new RenderSettings();
-		settings.loadDefaultColors();
-		regionRenderer = new RegionRenderer(settings);
 
 		renderer = new WorldRendererCanvas(null);
 		root.setCenter(pane = new MapPane(renderer));
@@ -150,29 +145,6 @@ public class GuiController implements Initializable {
 
 		minHeight.textProperty().bind(Bindings.format("Min: %3.0f", heightSlider.lowValueProperty()));
 		maxHeight.textProperty().bind(Bindings.format("Max: %3.0f", heightSlider.highValueProperty()));
-		ChangeListener<? super Boolean> heightListener = (e, oldVal, newVal) -> {
-			if (oldVal && !newVal) {
-				if (e == heightSlider.lowValueChangingProperty())
-					settings.minY = (int) Math.round(heightSlider.lowValueProperty().getValue().doubleValue());
-				else if (e == heightSlider.highValueChangingProperty())
-					settings.maxY = (int) Math.round(heightSlider.highValueProperty().getValue().doubleValue());
-				renderer.invalidateTextures();
-				renderer.repaint();
-			}
-		};
-		heightSlider.lowValueChangingProperty().addListener(heightListener);
-		heightSlider.highValueChangingProperty().addListener(heightListener);
-
-		colorBox.valueProperty().addListener((observer, old, value) -> {
-			settings.blockColors = InternalColorMap.values()[colorBox.getSelectionModel().getSelectedIndex()].getColorMap();
-			renderer.invalidateTextures();
-			renderer.repaint();
-		});
-		shadingBox.valueProperty().addListener((observer, old, value) -> {
-			settings.shader = RegionShader.DEFAULT_SHADERS[shadingBox.getSelectionModel().getSelectedIndex()];
-			renderer.invalidateTextures();
-			renderer.repaint();
-		});
 		dimensionBox.setConverter(new StringConverter<MinecraftDimension>() {
 
 			@Override
@@ -214,7 +186,7 @@ public class GuiController implements Initializable {
 					regionFolder.unbind();
 					regionFolder.set(null);
 				} else {
-					regionFolder.bind(val.folderProperty());
+					regionFolder.bind(Bindings.createObjectBinding(() -> cache.cache(val.folderProperty().get(), val.getID()), val.folderProperty()));
 				}
 				byte mask = val == null ? 0 : val.getGuiBitmask();
 				heightSlider.setDisable((mask & RegionFolderProvider.BIT_HEIGHT) == 0);
@@ -303,7 +275,7 @@ public class GuiController implements Initializable {
 		f = dialog.showDialog(null);
 		if (f != null) {
 			lastBrowsedPath = f.toPath();
-			regionFolderProvider.set(RegionFolderProvider.create(this, lastBrowsedPath, regionRenderer));
+			regionFolderProvider.set(RegionFolderProvider.create(this, lastBrowsedPath));
 		}
 	}
 
@@ -319,7 +291,7 @@ public class GuiController implements Initializable {
 		f = dialog.showOpenDialog(null);
 		if (f != null) {
 			lastBrowsedPath = f.toPath();
-			regionFolderProvider.set(RegionFolderProvider.create(this, lastBrowsedPath, regionRenderer));
+			regionFolderProvider.set(RegionFolderProvider.create(this, lastBrowsedPath));
 		}
 	}
 
@@ -329,11 +301,16 @@ public class GuiController implements Initializable {
 		dialog.setTitle("Load remote world");
 		dialog.setHeaderText("Enter the URL to the remote world you want to load");
 		dialog.setGraphic(null);
+		dialog.setResult(lastBrowsedURL);
 		dialog.showAndWait().ifPresent(s -> {
 			try {
+				lastBrowsedURL = s;
 				regionFolderProvider.set(RegionFolderProvider.create(this, new URI(s)));
 			} catch (URISyntaxException | IllegalArgumentException e) {
 				log.warn("Malformed input uri", e);
+				ExceptionDialog d = new ExceptionDialog(e);
+				d.setTitle("Malformed input");
+				d.showAndWait();
 			}
 		});
 	}

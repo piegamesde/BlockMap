@@ -1,0 +1,105 @@
+package de.piegames.blockmap.guistandalone;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonSyntaxException;
+
+import de.piegames.blockmap.world.RegionFolder;
+import de.piegames.blockmap.world.RegionFolder.CachedRegionFolder;
+import io.github.soc.directories.ProjectDirectories;
+
+public class RegionFolderCache {
+
+	private static final Gson			GSON		= new GsonBuilder().setPrettyPrinting().create();
+	private static Log					log			= LogFactory.getLog(RegionFolderCache.class);
+
+	private final ProjectDirectories	directories	= ProjectDirectories.from("de", "piegames", "blockmap");
+	private final Path					cacheDir	= Paths.get(directories.cacheDir);
+	private final Path					cacheIndex	= cacheDir.resolve("cache.json");
+
+	@SuppressWarnings("serial")
+	public RegionFolderCache() {
+		try {
+			Files.createDirectories(cacheDir);
+			Map<String, Long> cache;
+			try {
+				cache = GSON.fromJson(Files.newBufferedReader(cacheIndex), new TypeToken<Map<String, Long>>() {
+				}.getType());
+			} catch (NoSuchFileException e) {
+				cache = new HashMap<>();
+			}
+			int before = cache.size();
+			cache.values().removeIf(l -> Duration.between(Instant.ofEpochMilli(l), Instant.now()).toDays() > 14);
+			cache.keySet().removeIf(path -> Files.notExists(cacheDir.resolve(path)) || !Files.isDirectory(cacheDir.resolve(path)));
+
+			for (Path path : Files.newDirectoryStream(cacheDir)) {
+				if (!cache.containsKey(path.getFileName().toString())) {
+					log.debug("Removing world " + path + " from cache");
+					Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+						@Override
+						public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+							Files.delete(file);
+							return FileVisitResult.CONTINUE;
+						}
+
+						@Override
+						public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+							Files.delete(dir);
+							return FileVisitResult.CONTINUE;
+						}
+					});
+				}
+			}
+
+			log.info("Removed " + (before - cache.size()) + " worlds from cache");
+			try (Writer writer = Files.newBufferedWriter(cacheIndex)) {
+				GSON.toJson(cache, writer);
+				writer.flush();
+			}
+		} catch (IOException e) {
+			log.warn("Could not initialize cache", e);
+		}
+	}
+
+	/** Wrap a given {@link RegionFolder} in a {@link RegionFolderCache} if needed. */
+	public RegionFolder cache(RegionFolder input, String id) {
+		if (input == null || !input.needsCaching())
+			return input;
+
+		try {
+			@SuppressWarnings("serial")
+			Map<String, Long> cache = GSON.fromJson(Files.newBufferedReader(cacheIndex), new TypeToken<Map<String, Long>>() {
+			}.getType());
+
+			cache.put(id, Instant.now().toEpochMilli());
+			input = CachedRegionFolder.create(input, true, cacheDir.resolve(id));
+
+			try (Writer writer = Files.newBufferedWriter(cacheIndex)) {
+				GSON.toJson(cache, writer);
+				writer.flush();
+			}
+		} catch (JsonIOException | JsonSyntaxException | IOException e) {
+			log.warn("Could not cache world with id '" + id + "'", e);
+		}
+		return input;
+	}
+}

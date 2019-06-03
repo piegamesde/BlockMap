@@ -138,6 +138,23 @@ public class GuiController implements Initializable {
 					regionFolderProvider));
 			statusBar.getLeftItems().add(pathLabel);
 
+			Label zoomLabel = new Label();
+			zoomLabel.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+			zoomLabel.textProperty().bind(Bindings.createStringBinding(() -> {
+				double scale = renderer.viewport.scaleProperty.get();
+				boolean zoomIn = false;
+				if (scale < 1) {
+					zoomIn = true;
+					scale = 1 / scale;
+				}
+				String text = scale < 3 ? Double.toString((int) (scale * 10) / 10d) : Integer.toString((int) scale);
+				if (zoomIn)
+					return "1:" + text;
+				else
+					return text + ":1";
+			}, renderer.viewport.scaleProperty));
+			statusBar.getRightItems().add(zoomLabel);
+
 			Label mouseLabel = new Label();
 			mouseLabel.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 			mouseLabel.textProperty().bind(Bindings.createStringBinding(

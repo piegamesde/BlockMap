@@ -21,6 +21,7 @@ import org.controlsfx.control.CheckTreeView;
 import org.controlsfx.control.RangeSlider;
 import org.controlsfx.control.StatusBar;
 import org.controlsfx.dialog.ExceptionDialog;
+import org.controlsfx.dialog.ProgressDialog;
 import org.joml.Vector2ic;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -45,9 +46,11 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.CheckBoxTreeItem;
 import javafx.scene.control.ChoiceBox;
@@ -313,6 +316,51 @@ public class GuiController implements Initializable {
 				d.showAndWait();
 			}
 		});
+	}
+
+	@FXML
+	public void save() {
+		DirectoryChooser dialog = new DirectoryChooser();
+		File f = dialog.showDialog(null);
+		if (f != null) {
+			try {
+				CachedRegionFolder cached = CachedRegionFolder.create(regionFolder.get(), true, f.toPath());
+				Task<Void> task = new Task<Void>() {
+
+					@Override
+					protected Void call() throws IOException {
+						int count = 0, amount = cached.listRegions().size();
+						updateProgress(count, amount);
+						for (Vector2ic v : cached.listRegions()) {
+							if (Thread.interrupted())
+								break;
+							updateMessage("Rendering " + v);
+							cached.render(v);
+							count++;
+							updateProgress(count, amount);
+						}
+						updateProgress(count, amount);
+						cached.save();
+						return null;
+					}
+				};
+				backgroundThread.execute(task);
+				ProgressDialog p = new ProgressDialog(task);
+				p.setTitle("Saving world");
+				p.setHeaderText("Rendering " + cached.listRegions().size() + " region files");
+				p.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+				p.setOnCloseRequest(e -> {
+					task.cancel(true);
+					p.close();
+				});
+				p.showAndWait();
+			} catch (IOException e) {
+				log.error("Failed to save", e);
+				ExceptionDialog d = new ExceptionDialog(e);
+				d.setTitle("Could not save world");
+				d.showAndWait();
+			}
+		}
 	}
 
 	@FXML

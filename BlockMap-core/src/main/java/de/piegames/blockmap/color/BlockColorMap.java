@@ -2,7 +2,6 @@ package de.piegames.blockmap.color;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.BitSet;
@@ -13,19 +12,19 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import de.piegames.blockmap.MinecraftVersion;
 import de.piegames.blockmap.renderer.Block;
 import io.gsonfire.GsonFireBuilder;
 import io.gsonfire.TypeSelector;
-import io.gsonfire.annotations.ExcludeByValue;
+import io.gsonfire.annotations.Exclude;
+import io.gsonfire.annotations.ExposeMethodParam;
+import io.gsonfire.annotations.ExposeMethodResult;
 import io.gsonfire.annotations.PostDeserialize;
-import io.gsonfire.annotations.PreSerialize;
-import io.gsonfire.gson.ExclusionByValueStrategy;
+import io.gsonfire.annotations.PostSerialize;
 
 /**
  * Represents a mapping from block states to properties that are used to calculate this block's color. These properties are: base color, if
@@ -56,10 +55,11 @@ public class BlockColorMap {
 	}
 
 	public static final Gson GSON = new GsonFireBuilder()
-			.enableHooks(NormalStateColors.class)
 			.enableHooks(BlockColor.class)
 			.enableHooks(BlockColorMap.class)
-			.enableExclusionByValue()
+			.enableExposeMethodParam()
+			.enableExposeMethodResult()
+			.enableExcludeByAnnotation()
 			.registerTypeSelector(StateColors.class, new TypeSelector<StateColors>() {
 
 				@Override
@@ -70,20 +70,9 @@ public class BlockColorMap {
 			})
 			.createGsonBuilder()
 			.serializeNulls()
-			.addSerializationExclusionStrategy(new ExclusionStrategy() {
-
-				@Override
-				public boolean shouldSkipField(FieldAttributes f) {
-					return f.hasModifier(Modifier.TRANSIENT);
-				}
-
-				@Override
-				public boolean shouldSkipClass(Class<?> clazz) {
-					return false;
-				}
-			})
 			.registerTypeAdapter(Color.class, Color.ADAPTER)
 			.disableHtmlEscaping()
+			// .setPrettyPrinting()
 			.create();
 
 	public static class BlockColor {
@@ -92,24 +81,17 @@ public class BlockColorMap {
 
 		public Color					color;
 		/** Tell if a given block has a grassy surface which should be tainted according to the biome the block stands in */
-		public transient boolean		isGrass;
+		@Exclude
+		public boolean					isGrass;
 		/** Tell if a given block represents foliage and should be tainted according to the biome the block stands in */
-		public transient boolean		isFoliage;
+		@Exclude
+		public boolean					isFoliage;
 		/** Tell if a given block contains water and should be tainted according to the biome the block stands in */
-		public transient boolean		isWater;
+		@Exclude
+		public boolean					isWater;
 		/** Tell if a given block is letting light through and thus will not count to any height shading calculations */
-		public transient boolean		isTranslucent;
-
-		public static class ExcludeZero implements ExclusionByValueStrategy<Integer> {
-
-			@Override
-			public boolean shouldSkipField(Integer fieldValue) {
-				return fieldValue == 0;
-			}
-		}
-
-		@ExcludeByValue(value = ExcludeZero.class)
-		public int isGFWT;
+		@Exclude
+		public boolean					isTranslucent;
 
 		public BlockColor() {
 
@@ -121,23 +103,23 @@ public class BlockColorMap {
 			this.isFoliage = isFoliage;
 			this.isWater = isWater;
 			this.isTranslucent = isTranslucent;
-			preSerialize();
 		}
 
 		@PostDeserialize
-		private void postDeserialize() {
+		private void postDeserialize(JsonElement src, Gson gson) {
+			JsonObject obj = src.getAsJsonObject();
+			int isGFWT = obj.has("isGFWT") ? obj.getAsJsonPrimitive("isGFWT").getAsInt() : 0;
 			isGrass = (isGFWT & 8) != 0;
 			isFoliage = (isGFWT & 4) != 0;
 			isWater = (isGFWT & 2) != 0;
 			isTranslucent = (isGFWT & 1) != 0;
 		}
 
-		@PreSerialize
-		private void preSerialize() {
-			isGFWT = (isGrass ? 8 : 0)
-					| (isFoliage ? 4 : 0)
-					| (isWater ? 2 : 0)
-					| (isTranslucent ? 1 : 0);
+		@PostSerialize
+		private void preSerialize(JsonElement src, Gson gson) {
+			int isGFWT = isGFWT();
+			if (isGFWT != 0)
+				src.getAsJsonObject().addProperty("isGFWT", isGFWT);
 		}
 
 		@Override
@@ -151,8 +133,15 @@ public class BlockColorMap {
 			final int prime = 31;
 			int result = 1;
 			result = prime * result + ((color == null) ? 0 : color.hashCode());
-			result = prime * result + isGFWT;
+			result = prime * result + isGFWT();
 			return result;
+		}
+
+		int isGFWT() {
+			return (isGrass ? 8 : 0)
+					| (isFoliage ? 4 : 0)
+					| (isWater ? 2 : 0)
+					| (isTranslucent ? 1 : 0);
 		}
 
 		@Override
@@ -168,7 +157,7 @@ public class BlockColorMap {
 		}
 
 		public boolean equals(BlockColor other) {
-			if (isGFWT != other.isGFWT)
+			if (isGFWT() != other.isGFWT())
 				return false;
 			if (color == null) {
 				if (other.color != null)
@@ -191,8 +180,8 @@ public class BlockColorMap {
 
 	public static class NormalStateColors implements StateColors {
 
-		transient Map<BitSet, BlockColor>	blockColors;
-		Map<String, BlockColor>				blockColors2;
+		@Exclude
+		Map<BitSet, BlockColor> blockColors;
 
 		@SuppressWarnings("unused")
 		private NormalStateColors() {
@@ -213,17 +202,17 @@ public class BlockColorMap {
 			return blockColors.containsKey(state);
 		}
 
-		@PostDeserialize
-		private void postDeserialize() {
-			blockColors = new HashMap<>(blockColors2.size() * 2, 0.51f);
-			blockColors2.forEach((k, v) -> blockColors.put(BitSet.valueOf(Base64.getDecoder().decode(k)), v));
-			blockColors2 = null;
+		@ExposeMethodResult("blockColors")
+		Map<String, BlockColor> getColorsRaw() {
+			Map<String, BlockColor> blockColors = new HashMap<>();
+			this.blockColors.forEach((k, v) -> blockColors.put(Base64.getEncoder().encodeToString(k.toByteArray()), v));
+			return blockColors;
 		}
 
-		@PreSerialize
-		private void preSerialize() {
-			blockColors2 = new HashMap<>();
-			blockColors.forEach((k, v) -> blockColors2.put(Base64.getEncoder().encodeToString(k.toByteArray()), v));
+		@ExposeMethodParam("blockColors")
+		void setColorsRaw(Map<String, BlockColor> blockColors) {
+			this.blockColors = new HashMap<>(blockColors.size() * 2, 0.51f);
+			blockColors.forEach((k, v) -> this.blockColors.put(BitSet.valueOf(Base64.getDecoder().decode(k)), v));
 		}
 
 		/** Use for testing only */
@@ -245,7 +234,7 @@ public class BlockColorMap {
 			if (getClass() != obj.getClass())
 				return false;
 			NormalStateColors other = (NormalStateColors) obj;
-			return Objects.equals(blockColors2, other.blockColors2);
+			return Objects.equals(blockColors, other.blockColors);
 		}
 	}
 

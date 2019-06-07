@@ -6,6 +6,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -36,9 +37,14 @@ import com.flowpowered.nbt.regionfile.RegionFile;
 import com.flowpowered.nbt.stream.NBTInputStream;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
 
 import de.piegames.blockmap.MinecraftDimension;
 import de.piegames.blockmap.world.WorldPins.MapPin.BannerPin;
+import io.gsonfire.annotations.Exclude;
+import io.gsonfire.annotations.PostDeserialize;
+import io.gsonfire.annotations.PostSerialize;
 
 /**
  * Each world may be annotated with a set of pins, represented by instances of this class. Actually, the pins will be generated from this
@@ -168,6 +174,7 @@ public class WorldPins {
 		byte						scale;
 
 		Optional<List<BannerPin>>	banners;
+		@Exclude
 		Optional<byte[]>			colors;
 
 		@SuppressWarnings("unused")
@@ -185,6 +192,18 @@ public class WorldPins {
 			this.dimension = dimension;
 			this.banners = banners;
 			this.colors = colors;
+		}
+
+		@PostSerialize
+		private void postSerialize(JsonElement src, Gson gson) {
+			colors.ifPresent(c -> src.getAsJsonObject().addProperty("colors", Base64.getEncoder().encodeToString(c)));
+		}
+
+		@PostDeserialize
+		private void postDeserialize(JsonElement src, Gson gson) {
+			colors = Optional.ofNullable(src.getAsJsonObject().getAsJsonPrimitive("colors"))
+					.map(JsonPrimitive::getAsString)
+					.map(Base64.getDecoder()::decode);
 		}
 
 		public byte getScale() {
@@ -429,7 +448,7 @@ public class WorldPins {
 					if (map.containsKey("colors"))
 						colors = ((ByteArrayTag) map.get("colors")).getValue();
 
-					int dimension = ((IntTag) map.get("dimension")).getValue();
+					int dimension = ((Number) map.get("dimension").getValue()).intValue();
 					if (filterDimension != null && dimension != filterDimension.index)
 						continue;
 					maps.add(new MapPin(scale, center, MinecraftDimension.byID(dimension), banners, colors));

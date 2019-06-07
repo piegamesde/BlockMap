@@ -15,5 +15,5 @@ dependencies {
 	api 'org.controlsfx:controlsfx:11.0.0'
 	implementation group: 'com.github.haifengl', name: 'smile-core', version: '1.5.2'
 	implementation group: 'com.codepoetics', name: 'protonpack', version: '1.15'
-    implementation 'com.github.saibotk:JMAW:9d66dde803'
+    implementation 'com.github.saibotk:JMAW:0.1'
 }

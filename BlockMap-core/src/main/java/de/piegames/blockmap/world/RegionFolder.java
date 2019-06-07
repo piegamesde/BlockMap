@@ -36,8 +36,6 @@ import org.joml.Vector3i;
 import org.joml.Vector3ic;
 
 import com.flowpowered.nbt.regionfile.RegionFile;
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 
@@ -46,8 +44,9 @@ import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkRenderState;
 import de.piegames.blockmap.world.RegionFolder.SavedRegionHelper.RegionHelper;
 import io.gsonfire.GsonFireBuilder;
-import io.gsonfire.annotations.PostDeserialize;
-import io.gsonfire.annotations.PreSerialize;
+import io.gsonfire.annotations.Exclude;
+import io.gsonfire.annotations.ExposeMethodParam;
+import io.gsonfire.annotations.ExposeMethodResult;
 
 /**
  * This class represents a mapping from region file positions in a world to {@link BufferedImage}s of that rendered region. How this is done
@@ -56,8 +55,11 @@ import io.gsonfire.annotations.PreSerialize;
 public abstract class RegionFolder {
 
 	public static final Gson GSON = new GsonFireBuilder()
+			.enableExposeMethodParam()
 			.enableExposeMethodResult()
+			.enableExcludeByAnnotation()
 			.enableHooks(RegionHelper.class)
+			.enableHooks(WorldPins.MapPin.class)
 			.registerTypeSelector(Vector2ic.class, e -> Vector2i.class)
 			.registerTypeSelector(Vector3ic.class, e -> Vector3i.class)
 			.registerTypeSelector(Vector2dc.class, e -> Vector2d.class)
@@ -65,19 +67,7 @@ public abstract class RegionFolder {
 			.registerTypeSelector(ChunkMetadata.class, e -> ChunkRenderState.valueOf(e.getAsJsonObject().getAsJsonPrimitive("renderState").getAsString()).clazz)
 			.createGsonBuilder()
 			.disableHtmlEscaping()
-			.addSerializationExclusionStrategy(new ExclusionStrategy() {
-
-				@Override
-				public boolean shouldSkipField(FieldAttributes f) {
-					return f.hasModifier(Modifier.TRANSIENT);
-				}
-
-				@Override
-				public boolean shouldSkipClass(Class<?> clazz) {
-					return false;
-				}
-			})
-			.setPrettyPrinting()
+			// .setPrettyPrinting()
 			.create();
 
 	/**
@@ -435,11 +425,11 @@ public abstract class RegionFolder {
 		}
 
 		static class RegionHelper {
-			int													x, z;
-			long												lastModified;
-			String												image;
-			transient Map<? extends Vector2ic, ChunkMetadata>	metadata;
-			private Collection<ChunkMetadata>					metadata2;
+			int										x, z;
+			long									lastModified;
+			String									image;
+			@Exclude
+			Map<? extends Vector2ic, ChunkMetadata>	metadata;
 
 			RegionHelper() {
 
@@ -453,17 +443,15 @@ public abstract class RegionFolder {
 				this.metadata = metadata;
 			}
 
-			@PreSerialize
-			private void preSerialize() {
-				metadata2 = metadata != null ? metadata.values() : Collections.emptyList();
-				metadata = null;
+			@ExposeMethodResult("metadata")
+			private Collection<ChunkMetadata> postSerialize() {
+				return metadata != null ? metadata.values() : Collections.emptyList();
 			}
 
-			@PostDeserialize
-			private void postDeserialize() {
-				metadata = Optional.ofNullable(metadata2).stream().flatMap(Collection::stream)
+			@ExposeMethodParam("metadata")
+			private void postDeserialize(Collection<ChunkMetadata> metadata) {
+				this.metadata = Optional.ofNullable(metadata).stream().flatMap(Collection::stream)
 						.collect(Collectors.toMap(meta -> meta.position, Function.identity()));
-				metadata2 = null;
 			}
 		}
 	}

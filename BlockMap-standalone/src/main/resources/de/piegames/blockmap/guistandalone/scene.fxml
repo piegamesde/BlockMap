@@ -67,7 +67,17 @@
 						</MenuItem>
 						<MenuItem
 							text="Unload"
-							onAction="#unload" />
+							onAction="#unload">
+							<accelerator>
+								<KeyCodeCombination
+									code="W"
+									alt="UP"
+									control="DOWN"
+									meta="UP"
+									shift="UP"
+									shortcut="UP" />
+							</accelerator>
+						</MenuItem>
 						<MenuItem
 							text="Save current view"
 							onAction="#save">
@@ -82,7 +92,7 @@
 							</accelerator>
 						</MenuItem>
 						<MenuItem
-							text="Exit"
+							text="Quit"
 							onAction="#exit">
 							<accelerator>
 								<KeyCodeCombination

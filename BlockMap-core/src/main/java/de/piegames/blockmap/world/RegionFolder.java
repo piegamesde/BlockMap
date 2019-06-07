@@ -1,11 +1,12 @@
 package de.piegames.blockmap.world;
 
 import java.awt.image.BufferedImage;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Modifier;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.Writer;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,6 +24,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import javax.imageio.ImageIO;
 
@@ -232,11 +235,12 @@ public abstract class RegionFolder {
 		 */
 		protected SavedRegionFolder(T file) throws IOException {
 			this.basePath = file;
-			SavedRegionHelper helper = GSON.fromJson(new InputStreamReader(getInputStream(file)), SavedRegionHelper.class);
+			SavedRegionHelper helper = load(file);
 			pins = Optional.ofNullable(helper.pins);
 			regions = Optional.ofNullable(helper.regions)
 					.stream().flatMap(Collection::stream)
 					.collect(Collectors.toMap(r -> new Vector2i(r.x, r.z), Function.identity()));
+
 		}
 
 		@Override
@@ -251,6 +255,8 @@ public abstract class RegionFolder {
 		protected abstract InputStream getInputStream(T basePath) throws IOException;
 
 		protected abstract T getSibling(T basePath, String sibling);
+
+		protected abstract SavedRegionHelper load(T basePath) throws IOException;
 
 		protected BufferedImage render(RegionHelper rawRegion) throws IOException {
 			return ImageIO.read(getInputStream(getSibling(basePath, rawRegion.image)));
@@ -289,6 +295,13 @@ public abstract class RegionFolder {
 		}
 
 		@Override
+		public SavedRegionHelper load(Path basePath) throws IOException {
+			try (Reader reader = new InputStreamReader(new GZIPInputStream(getInputStream(basePath)))) {
+				return GSON.fromJson(reader, SavedRegionHelper.class);
+			}
+		}
+
+		@Override
 		protected Path getSibling(Path basePath, String sibling) {
 			return basePath.resolveSibling(sibling);
 		}
@@ -316,6 +329,13 @@ public abstract class RegionFolder {
 		@Override
 		protected InputStream getInputStream(URI path) throws IOException {
 			return path.toURL().openStream();
+		}
+
+		@Override
+		protected SavedRegionHelper load(URI basePath) throws IOException {
+			try (Reader reader = new InputStreamReader(new GZIPInputStream(getInputStream(basePath), 8192))) {
+				return GSON.fromJson(reader, SavedRegionHelper.class);
+			}
 		}
 
 		@Override
@@ -379,7 +399,6 @@ public abstract class RegionFolder {
 				synchronized (regions) {
 					regions.put(pos, new RegionHelper(pos.x(), pos.y(), Files.getLastModifiedTime(imagePath).toMillis(), imageName, rendered.metadata));
 				}
-				save();
 				return rendered;
 			}
 		}
@@ -396,7 +415,8 @@ public abstract class RegionFolder {
 
 		public void save() throws IOException {
 			synchronized (regions) {
-				try (BufferedWriter writer = Files.newBufferedWriter(basePath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+				try (Writer writer = new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(basePath,
+						StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING), 8192, true))) {
 					GSON.toJson(new SavedRegionHelper(regions.values(), getPins().orElse(null)), writer);
 					writer.flush();
 				}
@@ -406,9 +426,13 @@ public abstract class RegionFolder {
 		public static CachedRegionFolder create(RegionFolder cached, boolean lazy, Path folder) throws IOException {
 			if (!Files.exists(folder))
 				Files.createDirectories(folder);
-			Path file = folder.resolve("rendered.json");
+			Path file = folder.resolve("rendered.json.gz");
 			if (!Files.exists(file))
-				Files.writeString(file, "{regions:[]}");
+				try (Writer writer = new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(file, StandardOpenOption.CREATE,
+						StandardOpenOption.WRITE), 8192, true))) {
+					writer.write("{regions:[]}");
+					writer.flush();
+				}
 			return new CachedRegionFolder(cached, lazy, file);
 		}
 

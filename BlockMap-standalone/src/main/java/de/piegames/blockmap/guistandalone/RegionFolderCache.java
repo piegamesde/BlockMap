@@ -20,8 +20,6 @@ import org.apache.commons.logging.LogFactory;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonIOException;
-import com.google.gson.JsonSyntaxException;
 
 import de.piegames.blockmap.world.RegionFolder;
 import de.piegames.blockmap.world.RegionFolder.CachedRegionFolder;
@@ -29,12 +27,14 @@ import io.github.soc.directories.ProjectDirectories;
 
 public class RegionFolderCache {
 
-	private static final Gson			GSON		= new GsonBuilder().setPrettyPrinting().create();
-	private static Log					log			= LogFactory.getLog(RegionFolderCache.class);
+	private static final Gson						GSON		= new GsonBuilder().setPrettyPrinting().create();
+	private static Log								log			= LogFactory.getLog(RegionFolderCache.class);
 
-	private final ProjectDirectories	directories	= ProjectDirectories.from("de", "piegames", "blockmap");
-	private final Path					cacheDir	= Paths.get(directories.cacheDir);
-	private final Path					cacheIndex	= cacheDir.resolve("cache.json");
+	private final ProjectDirectories				directories	= ProjectDirectories.from("de", "piegames", "blockmap");
+	private final Path								cacheDir	= Paths.get(directories.cacheDir);
+	private final Path								cacheIndex	= cacheDir.resolve("cache.json");
+
+	private final Map<String, CachedRegionFolder>	inUse		= new HashMap<>();
 
 	@SuppressWarnings("serial")
 	public RegionFolderCache() {
@@ -80,10 +80,14 @@ public class RegionFolderCache {
 		}
 	}
 
-	/** Wrap a given {@link RegionFolder} in a {@link RegionFolderCache} if needed. */
-	public RegionFolder cache(RegionFolder input, String id) {
+	/** Wrap a given {@link RegionFolder} in a {@link RegionFolderCache} if needed and mark this cache id as used. */
+	public synchronized RegionFolder cache(RegionFolder input, String id) {
 		if (input == null || !input.needsCaching())
 			return input;
+		if (inUse.containsKey(id)) {
+			log.warn("Could not cache world with id '" + id + "' because it is already in use");
+			return input;
+		}
 
 		try {
 			@SuppressWarnings("serial")
@@ -97,9 +101,20 @@ public class RegionFolderCache {
 				GSON.toJson(cache, writer);
 				writer.flush();
 			}
-		} catch (JsonIOException | JsonSyntaxException | IOException e) {
+			inUse.put(id, (CachedRegionFolder) input);
+		} catch (RuntimeException | IOException e) {
 			log.warn("Could not cache world with id '" + id + "'", e);
 		}
 		return input;
+	}
+
+	/** Mark this cache id as not used anymore so it may be re-used again. */
+	public synchronized void releaseCache(String id) {
+		if (inUse.containsKey(id))
+			try {
+				inUse.remove(id).save();
+			} catch (IOException e) {
+				log.warn("Could not save changes to cache", e);
+			}
 	}
 }

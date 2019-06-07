@@ -62,6 +62,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import javafx.util.Pair;
 import javafx.util.StringConverter;
 
 public class GuiController implements Initializable {
@@ -107,7 +108,7 @@ public class GuiController implements Initializable {
 
 	protected ScheduledExecutorService				backgroundThread		= Executors.newSingleThreadScheduledExecutor(
 			new ThreadFactoryBuilder().setNameFormat("pin-background-thread-%d").build());
-	protected RegionFolderCache						cache					= new RegionFolderCache();
+	RegionFolderCache								cache					= new RegionFolderCache();
 
 	public GuiController() {
 	}
@@ -201,13 +202,25 @@ public class GuiController implements Initializable {
 		}
 
 		{
-			ChangeListener<? super RegionFolderProvider> regionFolderProviderListener = (observable, previous, val) -> {
-				if (val == null) {
-					regionFolder.unbind();
+			ChangeListener<? super Pair<String, RegionFolder>> regionFolderListener = (e, old, val) -> {
+				if (old != null)
+					cache.releaseCache(old.getKey());
+				if (val != null)
+					regionFolder.set(cache.cache(val.getValue(), val.getKey()));
+				else
 					regionFolder.set(null);
-				} else {
-					regionFolder.bind(Bindings.createObjectBinding(() -> cache.cache(val.folderProperty().get(), val.getID()), val.folderProperty()));
-				}
+			};
+
+			ChangeListener<? super RegionFolderProvider> regionFolderProviderListener = (observable, old, val) -> {
+				if (old != null)
+					old.folderProperty().removeListener(regionFolderListener);
+				if (val != null)
+					val.folderProperty().addListener(regionFolderListener);
+				/* Force listener update */
+				regionFolderListener.changed(null,
+						old != null ? old.folderProperty().get() : null,
+						val != null ? val.folderProperty().get() : null);
+
 				byte mask = val == null ? 0 : val.getGuiBitmask();
 				heightSlider.setDisable((mask & RegionFolderProvider.BIT_HEIGHT) == 0);
 				colorBox.setDisable((mask & RegionFolderProvider.BIT_COLOR) == 0);

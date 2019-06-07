@@ -15,7 +15,6 @@ import java.util.Objects;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.google.common.hash.Hashing;
 import com.google.common.reflect.TypeToken;
 
 import de.piegames.blockmap.MinecraftDimension;
@@ -31,6 +30,7 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
+import javafx.util.Pair;
 
 // World:
 // - Dimension
@@ -53,13 +53,14 @@ public abstract class RegionFolderProvider {
 	static final byte								BIT_WORLD		= 0x10;
 
 	protected GuiController							controller;
-	protected ReadOnlyObjectWrapper<RegionFolder>	folder			= new ReadOnlyObjectWrapper<>();
+	/* The String is a hash code used for caching */
+	protected ReadOnlyObjectWrapper<Pair<String, RegionFolder>>	folder			= new ReadOnlyObjectWrapper<>();
 
 	public RegionFolderProvider(GuiController controller) {
 		this.controller = controller;
 	}
 
-	public ReadOnlyObjectProperty<RegionFolder> folderProperty() {
+	public ReadOnlyObjectProperty<Pair<String, RegionFolder>> folderProperty() {
 		return folder.getReadOnlyProperty();
 	}
 
@@ -74,12 +75,6 @@ public abstract class RegionFolderProvider {
 
 	/** This is used to represent the path to the region folder. It may be used as default directory for file chooser dialogs */
 	public abstract String getLocation();
-
-	/**
-	 * Represent the current RegionFolder with its settings as unique string, to enable caching. This function must be injective over all
-	 * instances of all subclasses.
-	 */
-	public abstract String getID();
 
 	/** A single local region folder */
 	public static class LocalRegionFolderProvider extends RegionFolderProvider {
@@ -122,10 +117,13 @@ public abstract class RegionFolderProvider {
 						BiomeColorMap.loadDefault(),
 						RegionShader.DEFAULT_SHADERS[controller.shadingBox.getSelectionModel().getSelectedIndex()]);
 				RegionRenderer renderer = new RegionRenderer(settings);
-				folder.set(WorldRegionFolder.load(regionFolder, renderer));
+				folder.set(new Pair<>(
+						Integer.toHexString(Objects.hash(regionFolder.toAbsolutePath().toString(), settings)),
+						WorldRegionFolder.load(regionFolder, renderer)));
 			} catch (IOException e) {
 				folder.set(null);
 				log.warn("Could not load world " + regionFolder, e);
+				// TODO exception handling
 			}
 		}
 
@@ -137,11 +135,6 @@ public abstract class RegionFolderProvider {
 		@Override
 		public byte getGuiBitmask() {
 			return BIT_HEIGHT | BIT_COLOR | BIT_SHADING;
-		}
-
-		@Override
-		public String getID() {
-			return Integer.toHexString(Objects.hash(regionFolder.toAbsolutePath().toString(), settings));
 		}
 	}
 
@@ -199,7 +192,10 @@ public abstract class RegionFolderProvider {
 						BiomeColorMap.loadDefault(),
 						RegionShader.DEFAULT_SHADERS[controller.shadingBox.getSelectionModel().getSelectedIndex()]);
 				RegionRenderer renderer = new RegionRenderer(settings);
-				folder.set(WorldRegionFolder.load(worldPath, controller.dimensionBox.getValue(), renderer, true));
+				folder.set(new Pair<>(
+						Integer.toHexString(Objects.hash(worldPath.toAbsolutePath().toString(), settings, controller.dimensionBox.getValue())),
+						WorldRegionFolder.load(worldPath,
+						controller.dimensionBox.getValue(), renderer, true)));
 			} catch (IOException e) {
 				folder.set(null);
 				log.warn("Could not load world " + worldPath, e);
@@ -214,11 +210,6 @@ public abstract class RegionFolderProvider {
 		@Override
 		public byte getGuiBitmask() {
 			return BIT_HEIGHT | BIT_COLOR | BIT_SHADING | BIT_DIMENSION;
-		}
-
-		@Override
-		public String getID() {
-			return Integer.toHexString(Objects.hash(worldPath.toAbsolutePath().toString(), settings));
 		}
 	}
 
@@ -235,9 +226,11 @@ public abstract class RegionFolderProvider {
 		@Override
 		public void reload() {
 			try {
-				folder.set(new RegionFolder.RemoteRegionFolder(file));
+				folder.set(new Pair<>(
+						Integer.toHexString(file.toString().hashCode()),
+						new RegionFolder.RemoteRegionFolder(file)));
 			} catch (IOException e) {
-				log.warn("Could not load  from remote file " + file);
+				log.warn("Could not load from remote file " + file);
 				folder.set(null);
 			}
 		}
@@ -250,11 +243,6 @@ public abstract class RegionFolderProvider {
 		@Override
 		public byte getGuiBitmask() {
 			return 0;
-		}
-
-		@Override
-		public String getID() {
-			return Hashing.sha256().hashUnencodedChars(file.toString()).toString();
 		}
 	}
 
@@ -272,10 +260,12 @@ public abstract class RegionFolderProvider {
 			this.file = file;
 			controller.worldBox.valueProperty().addListener(new WeakChangeListener<>(listener = (o, old, val) -> {
 				try {
-					folder.set(new RegionFolder.RemoteRegionFolder(file));
+					folder.set(new Pair<>(
+							Integer.toHexString(Objects.hash(file.toString(), controller.worldBox.getValue())),
+							new RegionFolder.RemoteRegionFolder(file)));
 				} catch (IOException e) {
-					log.warn("Could not load world " + val + " from remote file " + file);
 					folder.set(null);
+					log.warn("Could not load world " + val + " from remote file " + file);
 				}
 			}));
 			reload();
@@ -308,11 +298,6 @@ public abstract class RegionFolderProvider {
 		@Override
 		public byte getGuiBitmask() {
 			return BIT_WORLD;
-		}
-
-		@Override
-		public String getID() {
-			return Hashing.sha256().hashUnencodedChars(file.toString()).toString() + "-" + controller.worldBox.getValue();
 		}
 	}
 

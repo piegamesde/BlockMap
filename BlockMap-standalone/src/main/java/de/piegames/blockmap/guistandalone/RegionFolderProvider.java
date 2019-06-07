@@ -32,16 +32,6 @@ import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
 import javafx.util.Pair;
 
-// World:
-// - Dimension
-// - Shader
-// - Color pack
-// - Height
-// Saved, local:
-// - World?
-// Saved, remote:
-// - World
-
 public abstract class RegionFolderProvider {
 
 	private static Log								log				= LogFactory.getLog(RegionFolderProvider.class);
@@ -252,22 +242,21 @@ public abstract class RegionFolderProvider {
 		protected Map<String, String>	worlds;
 
 		/* Strong reference */
-		@SuppressWarnings("unused")
-		private ChangeListener<String>	listener;
+		private ChangeListener<String>	listener	= (o, old, val) -> {
+														try {
+															folder.set(new Pair<>(
+																	Integer.toHexString(Objects.hash(file.toString(), controller.worldBox.getValue())),
+																	new RegionFolder.RemoteRegionFolder(file.resolve(worlds.get(val)))));
+														} catch (IOException e) {
+															folder.set(null);
+															log.warn("Could not load world " + val + " from remote file " + file);
+														}
+													};
 
 		public SavedWorldProvider(GuiController controller, URI file) {
 			super(controller);
 			this.file = file;
-			controller.worldBox.valueProperty().addListener(new WeakChangeListener<>(listener = (o, old, val) -> {
-				try {
-					folder.set(new Pair<>(
-							Integer.toHexString(Objects.hash(file.toString(), controller.worldBox.getValue())),
-							new RegionFolder.RemoteRegionFolder(file)));
-				} catch (IOException e) {
-					folder.set(null);
-					log.warn("Could not load world " + val + " from remote file " + file);
-				}
-			}));
+			controller.worldBox.valueProperty().addListener(new WeakChangeListener<>(listener));
 			reload();
 		}
 
@@ -304,7 +293,7 @@ public abstract class RegionFolderProvider {
 	public static RegionFolderProvider create(GuiController controller, Path path) {
 		if (Files.isDirectory(path) && Files.exists(path.resolve("level.dat")))
 			return new LocalWorldProvider(controller, path);
-		else if (Files.exists(path) && path.getFileName().toString().equals("rendered.json"))
+		else if (Files.exists(path) && path.getFileName().toString().equals("rendered.json.gz"))
 			return new SavedRegionFolderProvider(controller, path.toUri());
 		else if (Files.exists(path) && path.getFileName().toString().equals("index.json"))
 			return new SavedWorldProvider(controller, path.toUri());

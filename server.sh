@@ -18,16 +18,27 @@ mkdir -p $OUTPUT_DIR
 
 # A simple and plain overworld view
 mkdir -p $OUTPUT_DIR/overworld
-java -jar $BLOCKMAP_FILE -v render -l -o=$OUTPUT_DIR/overworld $WORLD_FOLDER_OVERWORLD save --world-name="Overworld" --file="$OUTPUT_DIR/rendered.json"
+java -jar $BLOCKMAP_FILE -v render -l -o=$OUTPUT_DIR/overworld $WORLD_FOLDER_OVERWORLD
 # The ocean grounds of the overworld
 mkdir -p $OUTPUT_DIR/overworld_ocean
-java -jar $BLOCKMAP_FILE -v render -l -o=$OUTPUT_DIR/overworld_ocean -c=OCEAN_GROUND $WORLD_FOLDER_OVERWORLD save --world-name="Overworld (Ocean)" --file="$OUTPUT_DIR/rendered.json"
+java -jar $BLOCKMAP_FILE -v render -l -o=$OUTPUT_DIR/overworld_ocean -c=OCEAN_GROUND $WORLD_FOLDER_OVERWORLD
 # All caves up to height 30
 mkdir -p $OUTPUT_DIR/overworld_cave
-java -jar $BLOCKMAP_FILE -v render -l -o=$OUTPUT_DIR/overworld_cave -c=CAVES --max-height=30 $WORLD_FOLDER_OVERWORLD save --world-name="Overworld (Cave)" --file="$OUTPUT_DIR/rendered.json"
+java -jar $BLOCKMAP_FILE -v render -l -o=$OUTPUT_DIR/overworld_cave -c=CAVES --max-height=30 $WORLD_FOLDER_OVERWORLD
 # The nether up to height 64
 mkdir -p $OUTPUT_DIR/overworld_nether
-java -jar $BLOCKMAP_FILE -v render -l -o=$OUTPUT_DIR/nether --max-height=64 $WORLD_FOLDER_NETHER save --world-name="Nether" --file="$OUTPUT_DIR/rendered.json"
+java -jar $BLOCKMAP_FILE -v render -l -o=$OUTPUT_DIR/nether --max-height=64 $WORLD_FOLDER_NETHER
 # A plain view of the end
 mkdir -p $OUTPUT_DIR/overworld_end
-java -jar $BLOCKMAP_FILE -v render -l -o=$OUTPUT_DIR/end $WORLD_FOLDER_END save --world-name="End" --file="$OUTPUT_DIR/rendered.json"
+java -jar $BLOCKMAP_FILE -v render -l -o=$OUTPUT_DIR/end $WORLD_FOLDER_END
+
+# Write an index file to the root directory. It is a simple name=path properties file, but in JSON.
+cat << EOF > $OUTPUT_DIR/index.json
+{
+	"Overworld": "./overworld/rendered.json.gz",
+	"Overworld (Ocean)": "./overworld_ocean/rendered.json.gz",
+	"Overworld (Cave)": "./overworld_cave/rendered.json.gz",
+	"Nether": "./nether/rendered.json.gz",
+	"End": "./end/rendered.json.gz"
+}
+EOF

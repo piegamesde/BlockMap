@@ -37,21 +37,21 @@ import javafx.scene.paint.Color;
 
 public class WorldRendererCanvas extends Canvas implements Runnable {
 
-	public static final int									THREAD_COUNT	= 4;
+	public static final int													THREAD_COUNT	= 4;
 
-	protected RenderedMap									map;
+	protected RenderedMap													map;
 
-	protected ScheduledThreadPoolExecutor					executor;
-	protected final List<Future<?>>							submitted		= Collections.synchronizedList(new LinkedList<>());
+	protected ScheduledThreadPoolExecutor									executor;
+	protected final List<Future<?>>											submitted		= Collections.synchronizedList(new LinkedList<>());
 
-	protected GraphicsContext								gc				= getGraphicsContext2D();
+	protected GraphicsContext												gc				= getGraphicsContext2D();
 
-	public final DisplayViewport							viewport		= new DisplayViewport();
-	protected ReadOnlyObjectWrapper<String>					status			= new ReadOnlyObjectWrapper<String>();
-	protected ReadOnlyFloatWrapper							progress		= new ReadOnlyFloatWrapper();
+	public final DisplayViewport											viewport		= new DisplayViewport();
+	protected ReadOnlyObjectWrapper<String>									status			= new ReadOnlyObjectWrapper<String>();
+	protected ReadOnlyFloatWrapper											progress		= new ReadOnlyFloatWrapper();
 	protected ReadOnlyMapWrapper<Vector2ic, Map<Vector2ic, ChunkMetadata>>	chunkMetadata	= new ReadOnlyMapWrapper<>(FXCollections.observableHashMap());
 
-	public final ObjectProperty<RegionFolder>				regionFolder	= new SimpleObjectProperty<>();
+	public final ObjectProperty<RegionFolder>								regionFolder	= new SimpleObjectProperty<>();
 
 	public WorldRendererCanvas(RegionFolder regionFolder) {
 		this.regionFolder.set(regionFolder);

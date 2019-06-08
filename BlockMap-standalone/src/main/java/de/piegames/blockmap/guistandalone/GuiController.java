@@ -35,6 +35,7 @@ import de.piegames.blockmap.gui.decoration.GridDecoration;
 import de.piegames.blockmap.gui.decoration.Pin;
 import de.piegames.blockmap.gui.decoration.Pin.PinType;
 import de.piegames.blockmap.gui.decoration.PinDecoration;
+import de.piegames.blockmap.gui.decoration.ScaleDecoration;
 import de.piegames.blockmap.guistandalone.about.AboutDialog;
 import de.piegames.blockmap.world.ChunkMetadata;
 import de.piegames.blockmap.world.RegionFolder;
@@ -97,6 +98,8 @@ public class GuiController implements Initializable {
 	@FXML
 	private CheckBox								gridBox;
 	@FXML
+	private CheckBox								scaleBox;
+	@FXML
 	private CheckBox								pinBox;
 	@FXML
 	public CheckTreeView<PinType>					pinView;
@@ -120,9 +123,16 @@ public class GuiController implements Initializable {
 		renderer = new WorldRendererCanvas(null);
 		root.setCenter(pane = new MapPane(renderer));
 		pane.decorationLayers.add(new DragScrollDecoration(renderer.viewport));
-		GridDecoration grid = new GridDecoration(renderer.viewport);
-		pane.decorationLayers.add(grid);
-		grid.visibleProperty().bind(gridBox.selectedProperty());
+		{
+			GridDecoration grid = new GridDecoration(renderer.viewport);
+			pane.decorationLayers.add(grid);
+			grid.visibleProperty().bind(gridBox.selectedProperty());
+		}
+		{
+			ScaleDecoration scale = new ScaleDecoration(renderer.viewport);
+			pane.settingsLayers.add(scale);
+			scale.visibleProperty().bind(scaleBox.selectedProperty());
+		}
 		pins = new PinDecoration(renderer.viewport);
 		pane.pinLayers.add(pins);
 
@@ -230,6 +240,7 @@ public class GuiController implements Initializable {
 
 				pinBox.setDisable(val == null);
 				gridBox.setDisable(val == null);
+				scaleBox.setDisable(val == null);
 
 				renderer.repaint();
 			};

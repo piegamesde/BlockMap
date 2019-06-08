@@ -110,7 +110,7 @@ public class Screenshots {
 						GuiMain.instance.stage.hide();
 						GuiMain.instance.stage.show();
 						GuiMain.instance.controller.load(
-								new LocalRegionFolderProvider(GuiMain.instance.controller, Generator.OUTPUT_INTERNAL_CACHE.resolve("BlockMapWorld")) {
+								new LocalRegionFolderProvider(GuiMain.instance.controller, Generator.OUTPUT_INTERNAL_CACHE.resolve("BlockMapWorld/region")) {
 									/** Override this method to hide the file structure of the local system from the screenshots */
 									@Override
 									public String getLocation() {
@@ -229,6 +229,11 @@ public class Screenshots {
 					return true;
 				});
 			}
+			tasks.add(() -> {
+				/* Unload the world and thus force caching */
+				GuiMain.instance.controller.unload();
+				return true;
+			});
 			processSteps(tasks);
 
 			log.debug("Writing final gif to disk");

@@ -84,8 +84,8 @@ public class RegionFolderTest {
 
 		cachedWorldLazy.save();
 
-		LocalRegionFolder savedWorld2 = new LocalRegionFolder(out2.toPath().resolve("rendered.json"));
-		RemoteRegionFolder savedWorld3 = new RemoteRegionFolder(out2.toPath().resolve("rendered.json").toUri());
+		LocalRegionFolder savedWorld2 = new LocalRegionFolder(out2.toPath().resolve("rendered.json.gz"));
+		RemoteRegionFolder savedWorld3 = new RemoteRegionFolder(out2.toPath().resolve("rendered.json.gz").toUri());
 		for (Vector2ic v : REGIONS) {
 			assertNotNull(savedWorld2.render(v));
 			assertNotNull(savedWorld3.render(v));

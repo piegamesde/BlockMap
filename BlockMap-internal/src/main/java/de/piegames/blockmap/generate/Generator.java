@@ -159,22 +159,17 @@ public class Generator {
 
 		FileUtils.copyDirectory(new File(URI.create(Generator.class.getResource("/BlockMapWorld").toString())), worldPath
 				.toFile());
-		Path serverFolder = Files.createTempDirectory("generateTestWorldServer");
-		Path serverFile = serverFolder.resolve("server.jar");
-		Files.copy(OUTPUT_INTERNAL_CACHE.resolve("server-" + MinecraftVersion.LATEST.fileSuffix + ".jar"), serverFile);
-		Files.createSymbolicLink(serverFolder.resolve("world"), worldPath.toAbsolutePath());
 
-		Server server = new Server(serverFile, null);
-		World world = server.initWorld(Paths.get("world"), true);
+		Server server = new Server(OUTPUT_INTERNAL_CACHE.resolve("server-" + MinecraftVersion.LATEST.fileSuffix + ".jar"), null);
+		World world = server.initWorld(worldPath, true);
 
 		int SIZE = 256;// 256;
 		ArrayList<Vector2i> chunks = new ArrayList<>(SIZE * SIZE * 4);
 		for (int z = -SIZE; z < SIZE; z++)
 			for (int x = -SIZE; x < SIZE; x++)
 				chunks.add(new Vector2i(x, z));
-		MinecraftLandGenerator.forceloadChunks(server, world, chunks, Dimension.OVERWORLD, true, 64 * 64, false);
+		MinecraftLandGenerator.forceloadChunks(server, world, chunks, Dimension.OVERWORLD, true, 64 * 64, true);
 		world.resetChanges();
-		server.resetChanges();
 
 		processResources();
 	}

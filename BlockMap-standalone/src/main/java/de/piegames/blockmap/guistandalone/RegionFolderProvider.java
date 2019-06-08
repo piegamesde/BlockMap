@@ -14,6 +14,7 @@ import java.util.Objects;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.controlsfx.dialog.ExceptionDialog;
 
 import com.google.common.reflect.TypeToken;
 
@@ -113,7 +114,9 @@ public abstract class RegionFolderProvider {
 			} catch (IOException e) {
 				folder.set(null);
 				log.warn("Could not load world " + regionFolder, e);
-				// TODO exception handling
+				ExceptionDialog d = new ExceptionDialog(e);
+				d.setTitle("Could not load world");
+				d.showAndWait();
 			}
 		}
 
@@ -189,6 +192,9 @@ public abstract class RegionFolderProvider {
 			} catch (IOException e) {
 				folder.set(null);
 				log.warn("Could not load world " + worldPath, e);
+				ExceptionDialog d = new ExceptionDialog(e);
+				d.setTitle("Could not load world");
+				d.showAndWait();
 			}
 		}
 
@@ -222,6 +228,9 @@ public abstract class RegionFolderProvider {
 			} catch (IOException e) {
 				log.warn("Could not load from remote file " + file);
 				folder.set(null);
+				ExceptionDialog d = new ExceptionDialog(e);
+				d.setTitle("Could not load world");
+				d.showAndWait();
 			}
 		}
 
@@ -250,6 +259,9 @@ public abstract class RegionFolderProvider {
 														} catch (IOException e) {
 															folder.set(null);
 															log.warn("Could not load world " + val + " from remote file " + file);
+															ExceptionDialog d = new ExceptionDialog(e);
+															d.setTitle("Could not load world from remote file " + file);
+															d.showAndWait();
 														}
 													};
 
@@ -276,6 +288,9 @@ public abstract class RegionFolderProvider {
 			} catch (IOException e) {
 				folder.set(null);
 				log.warn("Could not load world " + file, e);
+				ExceptionDialog d = new ExceptionDialog(e);
+				d.setTitle("Could not load world");
+				d.showAndWait();
 			}
 		}
 
@@ -291,18 +306,21 @@ public abstract class RegionFolderProvider {
 	}
 
 	public static RegionFolderProvider create(GuiController controller, Path path) {
-		if (Files.isDirectory(path) && Files.exists(path.resolve("level.dat")))
-			return new LocalWorldProvider(controller, path);
-		else if (Files.exists(path) && path.getFileName().toString().equals("rendered.json.gz"))
+		if (Files.isDirectory(path)) {
+			if (Files.exists(path.resolve("level.dat")))
+				return new LocalWorldProvider(controller, path);
+			else
+				return new LocalRegionFolderProvider(controller, path);
+		} else if (Files.exists(path) && path.getFileName().toString().equals("rendered.json.gz"))
 			return new SavedRegionFolderProvider(controller, path.toUri());
 		else if (Files.exists(path) && path.getFileName().toString().equals("index.json"))
 			return new SavedWorldProvider(controller, path.toUri());
 		else
-			return new LocalRegionFolderProvider(controller, path);
+			return null;
 	}
 
 	public static RegionFolderProvider create(GuiController controller, URI uri) {
-		if (uri.toString().endsWith("rendered.json"))
+		if (uri.toString().endsWith("rendered.json.gz"))
 			return new SavedRegionFolderProvider(controller, uri);
 		else if (uri.toString().endsWith("index.json"))
 			return new SavedWorldProvider(controller, uri);

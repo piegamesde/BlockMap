@@ -9,6 +9,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 public class GuiMain extends Application {
@@ -51,6 +52,7 @@ public class GuiMain extends Application {
 		try {
 			this.stage = stage;
 			stage.setTitle("BlockMap map viewer");
+			stage.getIcons().add(new Image(getClass().getResourceAsStream("icon.png")));
 
 			Scene scene = new Scene(root, 700, 450);
 			scene.getStylesheets().add("/de/piegames/blockmap/guistandalone/style.css");

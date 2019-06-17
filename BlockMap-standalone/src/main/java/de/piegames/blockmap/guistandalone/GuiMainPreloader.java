@@ -2,7 +2,10 @@ package de.piegames.blockmap.guistandalone;
 
 import javafx.application.Preloader;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
@@ -15,18 +18,20 @@ public class GuiMainPreloader extends Preloader {
 	static Stage splashScreen;
 
 	private static final int	SPLASH_WIDTH	= 300;
-	private static final int	SPLASH_HEIGHT	= 200;
+	private static final int	SPLASH_HEIGHT	= SPLASH_WIDTH;
 
 	@Override
 	public void start(Stage stage) throws Exception {
 		splashScreen = stage;
-		stage.initStyle(StageStyle.UNDECORATED);
-		Scene scene = new Scene(new Label("TODO"), SPLASH_WIDTH, SPLASH_HEIGHT);
-
-		/* Optionally: center it */
-		// final Rectangle2D bounds = Screen.getPrimary().getBounds();
-		// stage.setX(bounds.getMinX() + bounds.getWidth() / 2 - SPLASH_WIDTH / 2);
-		// stage.setY(bounds.getMinY() + bounds.getHeight() / 2 - SPLASH_HEIGHT / 2);
+		stage.centerOnScreen();
+		stage.initStyle(StageStyle.TRANSPARENT);
+		ImageView icon = new ImageView(getClass().getResource("icon.png").toString());
+		icon.setFitWidth(SPLASH_WIDTH);
+		icon.setPreserveRatio(true);
+		BorderPane parent = new BorderPane(icon);
+		parent.setBackground(Background.EMPTY);
+		Scene scene = new Scene(parent, SPLASH_WIDTH, SPLASH_HEIGHT);
+		scene.setFill(Color.TRANSPARENT);
 
 		splashScreen.setScene(scene);
 		splashScreen.show();

@@ -1,13 +1,7 @@
 package de.piegames.blockmap.gui;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.ConcurrentModificationException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -192,19 +186,17 @@ public class RenderedMap {
 	public boolean updateImage(int level, AABBd frustum) {
 		try {
 			Thread current = Thread.currentThread();
-			if (regions.isEmpty())
+			if (regions.isEmpty()) {
 				// Race hazard: updateImage() is called while clearReload() is reloading all the chunks
 				return false;
+			}
 			return get(level)
-					.entrySet()
+					.values()
 					.stream()
-					.map(e -> e.getValue())
-					.filter(r -> r != null)
+					.filter(Objects::nonNull)
 					.filter(r -> r.isVisible(frustum))
-					.filter(r -> current.isInterrupted() ? false : r.updateImage())
-					.limit(10)
-					.collect(Collectors.toList())
-					.size() > 0;
+					.filter(r -> !current.isInterrupted() && r.updateImage())
+					.limit(10).count() != 0;
 		} catch (ConcurrentModificationException e) {
 			// System.out.println(e);
 			return true;

@@ -1,7 +1,29 @@
 # Changelog
 
-## Version 1.3.0
+## Version 1.4.0
 ## Changes
+- Updated to 1.14
+	- 1.13 worlds and chunks still work
+	- 1.14 villages are recognized
+	- New biome colors and other details are still missing (help appreciated!)
+- Improved GUI
+	- Minor pin improvements
+	- Added "about" dialog
+	- Keyboard shortcuts
+	- Splash screen
+	- Improved startup performance
+	- Everything is cached now, so it should be a lot faster
+- New world save format and command line options
+- Bug fixes
+- New bugs
+
+## Backwards-compatibility
+The save format and command line have changed, and it is not backwards-compatible to BlockMap 1.3.0.
+If you use BlockMap on a server, you'll need to update the server script and older clients won't be able
+to open the worlds anymore.
+
+## Version 1.3.0
+### Changes
 - Added Pins
 	- They contain information about the world and the render process (did it fail?)
 	- Save them together with your rendered world

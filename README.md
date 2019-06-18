@@ -1,6 +1,8 @@
-# BlockMap - A Minecraft 1.13 world viewer
+# BlockMap - A Minecraft 1.13/1.14 world viewer
 
 [![Build Status](https://saibotk.de/buildstatus.php)]()
+
+<img src="BlockMap-standalone/src/main/resources/de/piegames/blockmap/guistandalone/icon.png" width=150/>
 
 *This started as fork of [TMCMR](https://github.com/TOGoS/TMCMR), but has been almost completely rewritten due to the update. If you want something stable that works with 1.12 and before worlds, go check it out.*
 
@@ -32,16 +34,16 @@ Download the latest version from the [Release page](https://github.com/piegamesd
 
 The GUI version should just run by (double)clicking it. Otherwise run it through:
 
-    java -jar BlockMap-1.3.0.jar
+    java -jar BlockMap-1.4.0.jar
 
 to start. If you want to use BlockMap through the command line without GUI (not only for scripts),
 
     # For general usage help
-    java -jar BlockMap-1.3.0.jar help
+    java -jar BlockMap-1.4.0.jar help
     # For help about rendering worlds to a folder
-    java -jar BlockMap-1.3.0.jar help render
+    java -jar BlockMap-1.4.0.jar help render
     # For help about saving rendered worlds
-    java -jar BlockMap-1.3.0.jar render help save
+    java -jar BlockMap-1.4.0.jar render help save
 
 will get you started. On Linux even with colors!
 
@@ -74,6 +76,20 @@ All screenshots (see them below) are generated automatically through the gradle 
 **Notice — run from Gradle:**
 
 There is a bug in JavaFX that currently prevents the `run` task to work, so as a workaround use `./gradlew run2` for now.
+
+**Quick start:**
+
+    git clone https://github.com/Minecraft-Technik-Wiki/BlockMap
+    cd BlockMap
+    ./gradlew regenerate
+    ./gradlew run2
+
+## Troubleshooting
+
+If you cannot start the GUI and you get errors similar to
+
+    java.lang.IllegalAccessError: superclass access check failed: class impl.org.controlsfx.behavior.RangeSliderBehavior (in unnamed module @0xa1d113b) cannot access class com.sun.javafx.scene.control.behavior.BehaviorBase (in module javafx.controls) because module javafx.controls does not export com.sun.javafx.scene.control.behavior to unnamed module @0xa1d113b
+please try the *Quick start* section above. This is a known JavaFX bug, please try the workaround before reporting.
 
 ## Gallery
 

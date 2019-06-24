@@ -48,8 +48,14 @@ public class PostProcessing {
 			}
 		}
 
-		Set<Vector2ic> allowedBlocks = world.listRegions().stream().filter(v -> inBounds(v.x(), settings.minX, settings.maxX) && inBounds(v.y(), settings.minZ,
-				settings.maxZ)).collect(Collectors.toSet());
+		Set<Vector2ic> allowedBlocks = world.listRegions()
+				.stream()
+				.filter(v -> inBounds(v.x(), settings.minX, settings.maxX) && inBounds(v.y(), settings.minZ, settings.maxZ))
+				.collect(Collectors.toSet());
+		if (allowedBlocks.isEmpty()) {
+			log.warn("No chunks selected, please increase your bounds");
+			return;
+		}
 		int minX = allowedBlocks.stream().mapToInt(v -> v.x()).min().getAsInt();
 		int maxX = allowedBlocks.stream().mapToInt(v -> v.x()).max().getAsInt();
 		int minZ = allowedBlocks.stream().mapToInt(v -> v.y()).min().getAsInt();
@@ -101,8 +107,14 @@ public class PostProcessing {
 		}
 
 		/** The bounds of the rendered files, in region coordinates */
-		Set<Vector2ic> allowedBlocks = world.listRegions().stream().filter(v -> inBounds(v.x(), settings.minX, settings.maxX) && inBounds(v.y(), settings.minZ,
-				settings.maxZ)).collect(Collectors.toSet());
+		Set<Vector2ic> allowedBlocks = world.listRegions()
+				.stream()
+				.filter(v -> inBounds(v.x(), settings.minX, settings.maxX) && inBounds(v.y(), settings.minZ, settings.maxZ))
+				.collect(Collectors.toSet());
+		if (allowedBlocks.isEmpty()) {
+			log.warn("No chunks selected, please increase your bounds");
+			return;
+		}
 		int minX = allowedBlocks.stream().mapToInt(v -> v.x()).min().getAsInt();
 		int maxX = allowedBlocks.stream().mapToInt(v -> v.x()).max().getAsInt();
 		int minZ = allowedBlocks.stream().mapToInt(v -> v.y()).min().getAsInt();

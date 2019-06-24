@@ -46,6 +46,10 @@ public class CommandLineTest {
 		CommandLineMain.main("-v", "render", "--create-tile-html", "--lazy", "-o=" + out2 + "/", "./src/main/resources/BlockMapWorld/", "--min-X=-1024",
 				"--max-X=1024", "--min-Z=-1024", "--max-Z=1024",
 				"--dimension=OVERWORLD");
+
+		CommandLineMain.main("-v", "render", "--create-tile-html", "--lazy", "-o=" + out2 + "/", "./src/main/resources/BlockMapWorld/", "--min-X=1024",
+				"--max-X=1024", "--min-Z=1024", "--max-Z=1024",
+				"--dimension=OVERWORLD");
 	}
 
 	/**

@@ -41,7 +41,7 @@ import io.gsonfire.annotations.PostSerialize;
 public class BlockColorMap {
 
 	public enum InternalColorMap {
-		DEFAULT("default"), CAVES("caves"), NO_FOLIAGE("foliage"), OCEAN_GROUND("water");
+		DEFAULT("default"), CAVES("caves"), NO_FOLIAGE("foliage"), OCEAN_GROUND("water"), RAILS("rails");
 		private String fileName;
 
 		InternalColorMap(String fileName) {

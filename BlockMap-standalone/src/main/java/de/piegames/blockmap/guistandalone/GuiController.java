@@ -50,6 +50,8 @@ import javafx.collections.MapChangeListener;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
@@ -349,7 +351,13 @@ public class GuiController implements Initializable {
 		dialog.showAndWait().ifPresent(s -> {
 			try {
 				lastBrowsedURL = s;
-				regionFolderProvider.set(RegionFolderProvider.create(this, new URI(s)));
+				RegionFolderProvider provider = RegionFolderProvider.create(this, new URI(s));
+				if (provider != null)
+					regionFolderProvider.set(provider);
+				else {
+					Alert alert = new Alert(AlertType.ERROR, "Invalid URL", ButtonType.OK);
+					alert.showAndWait();
+				}
 			} catch (URISyntaxException | IllegalArgumentException e) {
 				log.warn("Malformed input uri", e);
 				ExceptionDialog d = new ExceptionDialog(e);

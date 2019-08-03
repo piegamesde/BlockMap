@@ -25,6 +25,12 @@ dependencies {
 	implementation 'io.github.soc:directories:11'
 }
 
+task copyLibs(type: Copy) {
+	description 'Copy all dependencies into a folder to package this application'
+	from configurations.runtimeClasspath
+	into "$buildDir/libs"
+}
+
 shadowJar.archiveName = "BlockMap-${version}.jar"
 // Hide tasks
 shadowJar.group = null

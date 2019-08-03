@@ -1,7 +1,13 @@
 # Changelog
 
+## Version 1.4.1
+### Changes
+
+- Minor bug fixes
+- Updated to Minecraft 1.14.4
+
 ## Version 1.4.0
-## Changes
+### Changes
 - Updated to 1.14
 	- 1.13 worlds and chunks still work
 	- 1.14 villages are recognized

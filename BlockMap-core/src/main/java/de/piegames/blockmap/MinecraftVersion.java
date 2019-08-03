@@ -8,7 +8,7 @@ import de.piegames.blockmap.renderer.BlockState;
 
 public enum MinecraftVersion {
 	MC_1_13("1_13", 1519, 1631, "1.13.2"),
-	MC_1_14("1_14", 1901, Integer.MAX_VALUE, "1.14");
+	MC_1_14("1_14", 1901, Integer.MAX_VALUE, "1.14.4");
 
 	public static final MinecraftVersion	LATEST	= MC_1_14;
 

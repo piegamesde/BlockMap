@@ -24,6 +24,7 @@ public class Downloader {
 
 	private static Log			log				= LogFactory.getLog(Generator.class);
 	private static final String	DOWNLOAD_URL	= "https://launchermeta.mojang.com/mc/game/version_manifest.json";
+	// TODO replace this with a better way of telling if a locally downloaded versions manifest is up to date
 	private static final String	DOWNLOAD_SHA256	= "a4343bca3e10d257b265b8c1ad8405e0f4bfcaacf87828d52a9eef3db8d5a988";
 
 	public static VersionManifest downloadManifest() throws IOException {

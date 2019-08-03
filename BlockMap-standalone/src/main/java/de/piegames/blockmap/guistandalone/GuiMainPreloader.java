@@ -2,6 +2,7 @@ package de.piegames.blockmap.guistandalone;
 
 import javafx.application.Preloader;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BorderPane;
@@ -25,6 +26,7 @@ public class GuiMainPreloader extends Preloader {
 		splashScreen = stage;
 		stage.centerOnScreen();
 		stage.initStyle(StageStyle.TRANSPARENT);
+		stage.getIcons().add(new Image(getClass().getResourceAsStream("icon.png")));
 		ImageView icon = new ImageView(getClass().getResource("icon.png").toString());
 		icon.setFitWidth(SPLASH_WIDTH);
 		icon.setPreserveRatio(true);

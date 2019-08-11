@@ -23,7 +23,7 @@
 
 ## Requirements:
 
-- Java 11+
+- Java 12+
 - Minecraft 1.13+ worlds. Chunks from before the release (even from 1.13 snapshots) will be ignored. Please optimize your worlds in Minecraft before rendering them
 
 ## Download:

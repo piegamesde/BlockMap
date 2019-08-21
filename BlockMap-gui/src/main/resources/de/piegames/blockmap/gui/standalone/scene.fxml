@@ -26,7 +26,7 @@
 	minWidth="0"
 	xmlns="http://javafx.com/javafx/8"
 	xmlns:fx="http://javafx.com/fxml/1"
-	fx:controller="de.piegames.blockmap.guistandalone.GuiController"
+	fx:controller="de.piegames.blockmap.gui.standalone.GuiController"
 	fx:id="root">
 	<top>
 		<MenuBar>

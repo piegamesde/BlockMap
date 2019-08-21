@@ -54,7 +54,7 @@ public class Generator {
 	static final Path			OUTPUT_INTERNAL_MAIN	= OUTPUT.resolve("BlockMap-internal/generated-resources-main");
 	static final Path			OUTPUT_INTERNAL_TEST	= OUTPUT.resolve("BlockMap-internal/generated-resources-test");
 	static final Path			OUTPUT_INTERNAL_CACHE	= OUTPUT.resolve("BlockMap-internal/generated-resources-cache");
-	static final Path			OUTPUT_STANDALONE		= OUTPUT.resolve("BlockMap-standalone/generated-resources-main");
+	static final Path			OUTPUT_STANDALONE		= OUTPUT.resolve("BlockMap-cli/generated-resources-main");
 	static final Path			OUTPUT_GUI				= OUTPUT.resolve("BlockMap-gui/generated-resources-main");
 	static final Path			OUTPUT_SCREENSHOTS		= Paths.get("../screenshots");
 	private static final Path[]	OUTPUTS					= { OUTPUT_CORE, OUTPUT_INTERNAL_MAIN, OUTPUT_INTERNAL_TEST, OUTPUT_STANDALONE, OUTPUT_GUI };
@@ -139,7 +139,7 @@ public class Generator {
 	@Command
 	public void generateVersion(String version) throws Exception {
 		log.info("Generating VersionProvider for version " + version);
-		Path versionProvider = Paths.get("../BlockMap-standalone/", "src/main/java", "de/piegames/blockmap/standalone", "VersionProvider.java");
+		Path versionProvider = Paths.get("../BlockMap-cli/", "src/main/java", "de/piegames/blockmap/standalone", "VersionProvider.java");
 		List<String> file = Files.readAllLines(versionProvider);
 		int line = 0;
 		while (!file.get(line).contains("$REPLACE_START"))

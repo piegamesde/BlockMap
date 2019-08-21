@@ -33,7 +33,7 @@ task run2(type: JavaExec) {
 	group 'Application'
 	description 'Task run may fail due to a JavaFX bug, use this as a workaround'
 	classpath = sourceSets.main.runtimeClasspath
-	main = "de.piegames.blockmap.standalone.CommandLineMain"
+	main = "de.piegames.blockmap.gui.standalone.GuiMain"
 }
 
 dependencies {
@@ -47,6 +47,7 @@ dependencies {
 	implementation 'com.google.guava:guava:27.1-jre'
 	implementation 'info.picocli:picocli:3.7.0'
 	implementation 'com.github.Minecraft-Technik-Wiki:MinecraftLandGenerator:3.1.0'
+	implementation 'org.controlsfx:controlsfx:11.0.0'
 	implementation group: 'com.codepoetics', name: 'protonpack', version: '1.15'
 
 	/* This is not an actual dependency, but some biome color data has been copied from there so it will show up in the credits list */

@@ -13,13 +13,7 @@ dependencies {
 	implementation 'org.apache.logging.log4j:log4j-jcl:2.11.2'
 }
 
-task copyLibs(type: Copy) {
-	description 'Copy all dependencies into a folder to package this application'
-	from configurations.runtimeClasspath
-	into "$buildDir/libs"
-}
-
-shadowJar.archiveName = "BlockMap-${version}-cli.jar"
+shadowJar.archiveName = "BlockMap-cli-${version}.jar"
 // Hide tasks
 shadowJar.group = null
 knows.group = null

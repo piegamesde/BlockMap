@@ -8,6 +8,7 @@ mainClassName = "de.piegames.blockmap.standalone.CommandLineMain"
 dependencies {
     implementation project(':BlockMap-core')
 
+	implementation 'info.picocli:picocli:3.7.0'
 	implementation 'org.apache.logging.log4j:log4j-core:2.11.2'
 	implementation 'org.apache.logging.log4j:log4j-jcl:2.11.2'
 }

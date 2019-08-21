@@ -21,7 +21,6 @@ dependencies {
     
     // GUI standalone dependencies
 	implementation 'org.controlsfx:controlsfx:11.0.0'
-	implementation 'info.picocli:picocli:3.7.0'
 	implementation 'com.google.guava:guava:27.1-jre'
 	implementation 'net.dongliu:gson-java8-datatype:1.1.0'
 	implementation 'io.github.soc:directories:11'

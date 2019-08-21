@@ -12,7 +12,6 @@ import org.joml.Vector2ic;
 import de.piegames.blockmap.MinecraftDimension;
 import de.piegames.blockmap.color.BiomeColorMap;
 import de.piegames.blockmap.color.BlockColorMap.InternalColorMap;
-import de.piegames.blockmap.guistandalone.GuiMain;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RegionShader.DefaultShader;
 import de.piegames.blockmap.renderer.RenderSettings;
@@ -29,9 +28,8 @@ import picocli.CommandLine.Parameters;
 import picocli.CommandLine.ParentCommand;
 import picocli.CommandLine.RunLast;
 
-@Command(name = "blockmap",
+@Command(name = "blockmap-cli",
 		versionProvider = VersionProvider.class,
-		footer = "To access the GUI, omit the [COMMAND].",
 		subcommands = { CommandRender.class, HelpCommand.class })
 public class CommandLineMain implements Runnable {
 
@@ -191,23 +189,14 @@ public class CommandLineMain implements Runnable {
 	@Override
 	public void run() {
 		runAll();
-		GuiMain.main();
 	}
 
 	public static void main(String... args) {
 		/* Without this, JOML will print vectors out in scientific notation which isn't the most human readable thing in the world */
 		System.setProperty("joml.format", "false");
 
-		/*
-		 * If called with no arguments, the GUI will always start. This short evaluation skips loading Picocli and command line parsing for faster
-		 * startup
-		 */
-		if (args.length == 0)
-			GuiMain.main();
-		else {
-			CommandLine cli = new CommandLine(new CommandLineMain());
-			cli.parseWithHandler(new RunLast(), args);
-		}
+		CommandLine cli = new CommandLine(new CommandLineMain());
+		cli.parseWithHandler(new RunLast(), args);
 	}
 
 }

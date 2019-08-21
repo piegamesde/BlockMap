@@ -1,4 +1,4 @@
-package de.piegames.blockmap.guistandalone;
+package de.piegames.blockmap.gui.standalone;
 
 import java.io.IOException;
 
@@ -76,6 +76,8 @@ public class GuiMain extends Application {
 	}
 
 	public static void main(String... args) {
+		/* Without this, JOML will print vectors out in scientific notation which isn't the most human readable thing in the world */
+		System.setProperty("joml.format", "false");
 		System.setProperty("javafx.preloader", GuiMainPreloader.class.getCanonicalName());
 		Application.launch(args);
 	}

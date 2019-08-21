@@ -26,8 +26,8 @@ import com.flowpowered.nbt.regionfile.RegionFile;
 
 import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.gui.decoration.Pin.PinType;
-import de.piegames.blockmap.guistandalone.GuiMain;
-import de.piegames.blockmap.guistandalone.RegionFolderProvider.LocalRegionFolderProvider;
+import de.piegames.blockmap.gui.standalone.GuiMain;
+import de.piegames.blockmap.gui.standalone.RegionFolderProvider.LocalRegionFolderProvider;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RegionShader;
 import de.piegames.blockmap.renderer.RenderSettings;

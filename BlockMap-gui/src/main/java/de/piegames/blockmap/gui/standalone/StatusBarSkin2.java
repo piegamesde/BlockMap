@@ -1,4 +1,4 @@
-package de.piegames.blockmap.guistandalone;
+package de.piegames.blockmap.gui.standalone;
 
 import org.controlsfx.control.StatusBar;
 

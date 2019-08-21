@@ -36,6 +36,6 @@ knows.group = null
 jar {
 	manifest {
         attributes 'Implementation-Title': 'BlockMap',
-        	'Main-Class': 'de.piegames.blockmap.standalone.CommandLineMain'
+        	'Main-Class': 'de.piegames.blockmap.gui.standalone.GuiMain'
     }
 }

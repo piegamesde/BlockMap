@@ -461,7 +461,7 @@
             "void_air": ["fixed", "0x00000000", "translucent=true"],
             "wall_sign,facing=*,waterlogged=*": ["transparent"],
             "wall_torch,facing=*": ["transparent"],
-            "water,level=*": ["texture", "water_still.png", "tint=water"],
+            "water,level=*": ["multiply", "texture", "water_still.png", "fixed", "0x70FFFFFF", "tint=water"],
             "wet_sponge": "wet_sponge.png",
             "wheat,age=0": "wheat_stage0.png",
             "wheat,age=1": "wheat_stage1.png",

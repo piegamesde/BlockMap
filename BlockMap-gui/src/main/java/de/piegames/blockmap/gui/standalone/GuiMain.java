@@ -55,7 +55,7 @@ public class GuiMain extends Application {
 			stage.getIcons().add(new Image(getClass().getResourceAsStream("icon.png")));
 
 			Scene scene = new Scene(root, 700, 450);
-			scene.getStylesheets().add("/de/piegames/blockmap/guistandalone/style.css");
+			scene.getStylesheets().add("/de/piegames/blockmap/gui/standalone/style.css");
 			stage.setScene(scene);
 			stage.show();
 

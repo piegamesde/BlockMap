@@ -3,8 +3,6 @@ plugins {
     id 'com.github.johnrengelman.shadow'
 }
 
-mainClassName = "de.piegames.blockmap.standalone.CommandLineMain"
-
 dependencies {
     implementation project(':BlockMap-core')
 
@@ -13,9 +11,11 @@ dependencies {
 	implementation 'org.apache.logging.log4j:log4j-jcl:2.11.2'
 }
 
-shadowJar.archiveName = "BlockMap-cli-${version}.jar"
+application {
+	mainClassName = "de.piegames.blockmap.standalone.CommandLineMain"
+}
+
 // Hide tasks
-shadowJar.group = null
 knows.group = null
 
 jar {
@@ -23,4 +23,9 @@ jar {
         attributes 'Implementation-Title': 'BlockMap',
         	'Main-Class': 'de.piegames.blockmap.standalone.CommandLineMain'
     }
+}
+
+shadowJar {
+	destinationDir = file("build/libs/fat")
+	archiveClassifier = ""
 }

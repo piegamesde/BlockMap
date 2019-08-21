@@ -12,8 +12,6 @@ javafx {
     //configuration = 'compileOnly'
 }
 
-mainClassName = "de.piegames.blockmap.gui.standalone.GuiMain"
-
 dependencies {
     implementation project(':BlockMap-core')
 	// GUI dependencies
@@ -32,14 +30,22 @@ dependencies {
 	implementation 'org.apache.logging.log4j:log4j-jcl:2.11.2'
 }
 
-shadowJar.archiveName = "BlockMap-gui-${version}-${OS_NAME}.jar"
+application {
+	mainClassName = "de.piegames.blockmap.gui.standalone.GuiMainLauncher"
+}
+
 // Hide tasks
-shadowJar.group = null
 knows.group = null
 
 jar {
+	archiveClassifier = "${OS_NAME}"
 	manifest {
         attributes 'Implementation-Title': 'BlockMap',
-        	'Main-Class': 'de.piegames.blockmap.gui.standalone.GuiMain'
+        	'Main-Class': 'de.piegames.blockmap.gui.standalone.GuiMainLauncher'
     }
+}
+
+shadowJar {
+	destinationDir = file("build/libs/fat")
+	archiveClassifier = "${OS_NAME}"
 }

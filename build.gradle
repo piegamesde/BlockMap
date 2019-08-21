@@ -91,7 +91,7 @@ task initIdea(type: GradleBuild) {
 	tasks = ['regenerate', 'cleanIdea', 'idea']
 }
 
-task github(type: GradleBuild) {
+task release(type: GradleBuild) {
 	group 'Distribution'
 	description 'Generate a fat jar to publish on GitHub (or to execute) after having run all tests'
 	tasks = ['regenerate', 'build', ':BlockMap-standalone:shadowJar']

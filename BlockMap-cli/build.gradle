@@ -1,28 +1,15 @@
 plugins {
     id 'application'
     id 'com.github.johnrengelman.shadow'
-    id 'org.openjfx.javafxplugin' version '0.0.7'
 }
 
 mainClassName = "de.piegames.blockmap.standalone.CommandLineMain"
 
-javafx {
-    version = "12"
-    modules = [ 'javafx.controls', 'javafx.fxml' ]
-}
-
 dependencies {
-    implementation project(':BlockMap-gui')
     implementation project(':BlockMap-core')
 
-	implementation 'org.controlsfx:controlsfx:11.0.0'
-
-	implementation 'info.picocli:picocli:3.7.0'
-	implementation 'com.google.guava:guava:27.1-jre'
 	implementation 'org.apache.logging.log4j:log4j-core:2.11.2'
 	implementation 'org.apache.logging.log4j:log4j-jcl:2.11.2'
-	implementation 'net.dongliu:gson-java8-datatype:1.1.0'
-	implementation 'io.github.soc:directories:11'
 }
 
 task copyLibs(type: Copy) {
@@ -31,7 +18,7 @@ task copyLibs(type: Copy) {
 	into "$buildDir/libs"
 }
 
-shadowJar.archiveName = "BlockMap-${version}.jar"
+shadowJar.archiveName = "BlockMap-${version}-cli.jar"
 // Hide tasks
 shadowJar.group = null
 knows.group = null

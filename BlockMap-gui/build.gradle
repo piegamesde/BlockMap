@@ -1,11 +1,13 @@
 plugins {
     id 'java-library'
-    id 'org.openjfx.javafxplugin' version '0.0.7'
+    id 'org.openjfx.javafxplugin' version '0.0.8'
+    id 'com.github.johnrengelman.shadow'
 }
 
 javafx {
     version = "12"
     modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.swing' ]
+    //configuration = 'compileOnly'
 }
 
 dependencies {
@@ -16,4 +18,25 @@ dependencies {
 	implementation group: 'com.github.haifengl', name: 'smile-core', version: '1.5.2'
 	implementation group: 'com.codepoetics', name: 'protonpack', version: '1.15'
     implementation 'com.github.saibotk:JMAW:0.1'
+    
+    // GUI standalone dependencies
+	implementation 'org.controlsfx:controlsfx:11.0.0'
+	implementation 'info.picocli:picocli:3.7.0'
+	implementation 'com.google.guava:guava:27.1-jre'
+	implementation 'net.dongliu:gson-java8-datatype:1.1.0'
+	implementation 'io.github.soc:directories:11'
+	implementation 'org.apache.logging.log4j:log4j-core:2.11.2'
+	implementation 'org.apache.logging.log4j:log4j-jcl:2.11.2'
+}
+
+shadowJar.archiveName = "BlockMap-${version}-gui.jar"
+// Hide tasks
+shadowJar.group = null
+knows.group = null
+
+jar {
+	manifest {
+        attributes 'Implementation-Title': 'BlockMap',
+        	'Main-Class': 'de.piegames.blockmap.standalone.CommandLineMain'
+    }
 }

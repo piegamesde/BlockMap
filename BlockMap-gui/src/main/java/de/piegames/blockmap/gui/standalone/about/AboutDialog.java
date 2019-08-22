@@ -1,4 +1,4 @@
-package de.piegames.blockmap.guistandalone.about;
+package de.piegames.blockmap.gui.standalone.about;
 
 import java.io.IOException;
 import java.io.InputStreamReader;

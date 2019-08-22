@@ -1,4 +1,4 @@
-package de.piegames.blockmap.guistandalone.about;
+package de.piegames.blockmap.gui.standalone.about;
 
 import java.io.IOException;
 import java.util.stream.Collectors;
@@ -6,8 +6,8 @@ import java.util.stream.Stream;
 
 import com.google.common.collect.Streams;
 
-import de.piegames.blockmap.guistandalone.about.AboutDialog.Dependency;
-import de.piegames.blockmap.guistandalone.about.AboutDialog.License;
+import de.piegames.blockmap.gui.standalone.about.AboutDialog.Dependency;
+import de.piegames.blockmap.gui.standalone.about.AboutDialog.License;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Hyperlink;

@@ -16,7 +16,7 @@ buildscript {
 apply plugin: "com.github.ben-manes.versions"
 
 allprojects {
-	version = '1.4.1'
+	version = '1.5.0'
 
 	repositories {
 		jcenter()
@@ -75,12 +75,6 @@ task regenerate(type: GradleBuild) {
     tasks = ['BlockMap-internal:generateSources', 'BlockMap-internal:generateData']
 }
 
-task beforeCommit(type: GradleBuild) {
-	group 'Distribution'
-	description 'Call this before each commit to make sure it works'
-	tasks = ['clean', 'regenerate', 'test']
-}
-
 task initEclipse(type: GradleBuild) {
 	group 'IDE'
 	tasks = ['regenerate', 'cleanEclipse', 'eclipse']
@@ -91,10 +85,22 @@ task initIdea(type: GradleBuild) {
 	tasks = ['regenerate', 'cleanIdea', 'idea']
 }
 
-task github(type: GradleBuild) {
+task release(type: GradleBuild) {
 	group 'Distribution'
 	description 'Generate a fat jar to publish on GitHub (or to execute) after having run all tests'
-	tasks = ['regenerate', 'build', ':BlockMap-standalone:shadowJar']
+	tasks = ['build', 'previewRelease']
+}
+
+task previewRelease(type: GradleBuild) {
+	group 'Distribution'
+	description 'Generate jar files without running the tests (NOT FOR DEPLOYMENT!)'
+	tasks = [':BlockMap-cli:shadowJar', ':BlockMap-gui:shadowJar']
+}
+
+task copyLibs(type: Copy) {
+	description 'Copy all dependencies into a folder to package this application'
+	from project(':BlockMap-cli').configurations.runtimeClasspath, project(':BlockMap-gui').configurations.runtimeClasspath
+	into "$buildDir/libs"
 }
 
 clean {

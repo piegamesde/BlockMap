@@ -1,4 +1,4 @@
-package de.piegames.blockmap.guistandalone;
+package de.piegames.blockmap.gui.standalone;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,9 +34,9 @@ import de.piegames.blockmap.gui.decoration.DragScrollDecoration;
 import de.piegames.blockmap.gui.decoration.GridDecoration;
 import de.piegames.blockmap.gui.decoration.Pin;
 import de.piegames.blockmap.gui.decoration.Pin.PinType;
+import de.piegames.blockmap.gui.standalone.about.AboutDialog;
 import de.piegames.blockmap.gui.decoration.PinDecoration;
 import de.piegames.blockmap.gui.decoration.ScaleDecoration;
-import de.piegames.blockmap.guistandalone.about.AboutDialog;
 import de.piegames.blockmap.world.ChunkMetadata;
 import de.piegames.blockmap.world.RegionFolder;
 import de.piegames.blockmap.world.RegionFolder.CachedRegionFolder;

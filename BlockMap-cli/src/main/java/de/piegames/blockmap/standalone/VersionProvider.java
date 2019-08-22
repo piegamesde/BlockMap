@@ -8,7 +8,7 @@ public class VersionProvider implements IVersionProvider {
 	public String[] getVersion() throws Exception {
 		/* This part of the code gets generated automatically through `gradle generateSources`. Do not modify! */
 		// $REPLACE_START
-		return new String[] { "1.4.1" };
+		return new String[] { "1.5.0" };
 		// $REPLACE_END
 	}
 }

@@ -19,6 +19,7 @@ application {
 knows.group = null
 
 jar {
+	archiveVersion = ""
 	manifest {
         attributes 'Implementation-Title': 'BlockMap',
         	'Main-Class': 'de.piegames.blockmap.standalone.CommandLineMain'
@@ -28,4 +29,8 @@ jar {
 shadowJar {
 	destinationDir = file("build/libs/fat")
 	archiveClassifier = ""
+}
+
+task versionlessJar(type: Jar) {
+	archiveVersion = ""
 }

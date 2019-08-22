@@ -38,6 +38,7 @@ application {
 knows.group = null
 
 jar {
+	archiveVersion = ""
 	archiveClassifier = "${OS_NAME}"
 	manifest {
         attributes 'Implementation-Title': 'BlockMap',
@@ -48,4 +49,8 @@ jar {
 shadowJar {
 	destinationDir = file("build/libs/fat")
 	archiveClassifier = "${OS_NAME}"
+}
+
+task versionlessJar(type: Jar) {
+	archiveVersion = ""
 }

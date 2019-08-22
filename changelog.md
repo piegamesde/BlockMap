@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 1.5.0
+### Changes
+
+- All biome colors (especially the water color) are up to date now
+- There are proper Windows releases now. This should fix some class path issues.
+- The application has been into separate CLI and GUI binaries. The command line interface is platform independent, but not the GUI.
+
 ## Version 1.4.1
 ### Changes
 

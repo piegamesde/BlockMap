@@ -127,6 +127,23 @@
         "dependency": "org.apache.logging.log4j:log4j-core:2.11.2"
     },
     {
+        "project": "Apache Log4j SLF4J Binding",
+        "description": "The Apache Log4j SLF4J API binding to Log4j 2 Core",
+        "version": null,
+        "developers": [
+            
+        ],
+        "url": null,
+        "year": null,
+        "licenses": [
+            {
+                "license": "Apache License, Version 2.0",
+                "license_url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+            }
+        ],
+        "dependency": "org.apache.logging.log4j:log4j-slf4j-impl:2.11.1"
+    },
+    {
         "project": "Checker Qual",
         "description": "Checker Qual is the set of annotations (qualifiers) and supporting classes\n        used by the Checker Framework to type check Java source code.  Please\n        see artifact:\n        org.checkerframework:checker",
         "version": "2.5.2",
@@ -180,6 +197,23 @@
         "dependency": "com.squareup.retrofit2:converter-gson:2.5.0"
     },
     {
+        "project": "Directories",
+        "description": "directories",
+        "version": "11",
+        "developers": [
+            "Simon Ochsenreither"
+        ],
+        "url": "https://github.com/soc/directories-jvm",
+        "year": null,
+        "licenses": [
+            {
+                "license": "Mozilla Public License 2.0",
+                "license_url": "https://opensource.org/licenses/MPL-2.0"
+            }
+        ],
+        "dependency": "io.github.soc:directories:11"
+    },
+    {
         "project": "Eclipse Collections API",
         "description": null,
         "version": null,
@@ -198,7 +232,7 @@
                 "license_url": "https://www.eclipse.org/licenses/edl-v10.html"
             }
         ],
-        "dependency": "org.eclipse.collections:eclipse-collections-api:10.0.0.M3"
+        "dependency": "org.eclipse.collections:eclipse-collections-api:10.0.0"
     },
     {
         "project": "Eclipse Collections Fork Join Utilities",
@@ -219,7 +253,7 @@
                 "license_url": "https://www.eclipse.org/licenses/edl-v10.html"
             }
         ],
-        "dependency": "org.eclipse.collections:eclipse-collections-forkjoin:10.0.0.M3"
+        "dependency": "org.eclipse.collections:eclipse-collections-forkjoin:10.0.0"
     },
     {
         "project": "Eclipse Collections Main Library",
@@ -240,7 +274,7 @@
                 "license_url": "https://www.eclipse.org/licenses/edl-v10.html"
             }
         ],
-        "dependency": "org.eclipse.collections:eclipse-collections:10.0.0.M3"
+        "dependency": "org.eclipse.collections:eclipse-collections:10.0.0"
     },
     {
         "project": "Elsa Serialization",
@@ -313,19 +347,19 @@
     {
         "project": "Gson on Fire!",
         "description": "A java library that adds some very useful features to Gson, like Date serializing to unix timestamp or RFC3339, method (getter) serialization, pre and post processors and many more. Check out the documentation to learn how to use it!",
-        "version": "1.8.3",
+        "version": "9210521426",
         "developers": [
             "Julio Viera"
         ],
         "url": "http://gsonfire.io",
-        "year": null,
+        "year": "2019",
         "licenses": [
             {
                 "license": "The MIT License",
                 "license_url": "http://opensource.org/licenses/MIT"
             }
         ],
-        "dependency": "io.gsonfire:gson-fire:1.8.3"
+        "dependency": "com.github.piegamesde:gson-fire:9210521426"
     },
     {
         "project": "Guava InternalFutureFailureAccess and InternalFutures",
@@ -411,20 +445,6 @@
             }
         ],
         "dependency": "com.google.j2objc:j2objc-annotations:1.1"
-    },
-    {
-        "project": "JMAW",
-        "description": null,
-        "version": "9d66dde803",
-        "developers": [
-            
-        ],
-        "url": null,
-        "year": null,
-        "licenses": [
-            
-        ],
-        "dependency": "com.github.saibotk:JMAW:9d66dde803"
     },
     {
         "project": "JOML",
@@ -635,7 +655,7 @@
     {
         "project": "MinecraftLandGenerator",
         "description": null,
-        "version": "2.0.0",
+        "version": "3.1.0",
         "developers": [
             
         ],
@@ -644,7 +664,21 @@
         "licenses": [
             
         ],
-        "dependency": "com.github.Minecraft-Technik-Wiki:MinecraftLandGenerator:2.0.0"
+        "dependency": "com.github.Minecraft-Technik-Wiki:MinecraftLandGenerator:3.1.0"
+    },
+    {
+        "project": "Nbt",
+        "description": null,
+        "version": "9cfb01465b",
+        "developers": [
+            
+        ],
+        "url": null,
+        "year": null,
+        "licenses": [
+            
+        ],
+        "dependency": "com.github.piegamesde:nbt:9cfb01465b"
     },
     {
         "project": "OkHttp",
@@ -732,23 +766,6 @@
         "dependency": "info.picocli:picocli:3.7.0"
     },
     {
-        "project": "Piegamesde/nbt",
-        "description": "Named Binary Tag (NBT) library for Java based on Graham Edgecombe's JNBT library. NBT is a tag based binary format designed to carry large amounts of binary data with smaller amounts of additional data.",
-        "version": "dbe4ea253b",
-        "developers": [
-            "Piegames"
-        ],
-        "url": "https://flowpowered.com/nbt",
-        "year": "2018",
-        "licenses": [
-            {
-                "license": "MIT License",
-                "license_url": "https://api.github.com/licenses/mit"
-            }
-        ],
-        "dependency": "com.github.piegamesde:nbt:dbe4ea253b"
-    },
-    {
         "project": "Protonpack",
         "description": null,
         "version": "1.15",
@@ -794,7 +811,24 @@
                 "license_url": "http://www.opensource.org/licenses/mit-license.php"
             }
         ],
-        "dependency": "org.slf4j:slf4j-api:1.7.25"
+        "dependency": "org.slf4j:slf4j-api:1.7.26"
+    },
+    {
+        "project": "Saibotk/JMAW",
+        "description": "Java Mojang API Wrapper",
+        "version": "0.1",
+        "developers": [
+            "saibotk"
+        ],
+        "url": "https://saibotk.github.io/JMAW/",
+        "year": "2019",
+        "licenses": [
+            {
+                "license": "MIT License",
+                "license_url": "https://api.github.com/licenses/mit"
+            }
+        ],
+        "dependency": "com.github.saibotk:JMAW:0.1"
     },
     {
         "project": "Smile-core",

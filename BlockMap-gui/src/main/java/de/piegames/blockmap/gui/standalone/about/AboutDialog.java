@@ -59,7 +59,7 @@ public class AboutDialog extends Alert {
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("aboutpane.fxml"));
 		loader.setController(this);
 		getDialogPane().setContent(loader.load());
-		getDialogPane().getStylesheets().add("/de/piegames/blockmap/guistandalone/about/style.css");
+		getDialogPane().getStylesheets().add("/de/piegames/blockmap/gui/standalone/about/style.css");
 
 		@SuppressWarnings("serial")
 		List<Dependency> dependencies = new GsonBuilder().registerTypeAdapterFactory(new GsonJava8TypeAdapterFactory()).create().fromJson(

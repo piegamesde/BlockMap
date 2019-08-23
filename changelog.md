@@ -1,5 +1,10 @@
 # Changelog
 
+## Version 1.5.1
+### Changes
+
+- Fixed a bug
+
 ## Version 1.5.0
 ### Changes
 

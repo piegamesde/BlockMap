@@ -15,7 +15,7 @@
 <?import javafx.scene.control.TextArea?>
 
 <fx:root
-	type="de.piegames.blockmap.guistandalone.about.DependencyPane"
+	type="de.piegames.blockmap.gui.standalone.about.DependencyPane"
 	spacing="5.0"
 	xmlns="http://javafx.com/javafx/10.0.1"
 	xmlns:fx="http://javafx.com/fxml/1">

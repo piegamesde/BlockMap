@@ -1,7 +1,25 @@
 # Changelog
 
+## Version 1.5.1
+### Changes
+
+- Fixed a bug
+
+## Version 1.5.0
+### Changes
+
+- All biome colors (especially the water color) are up to date now
+- There are proper Windows releases now. This should fix some class path issues.
+- The application has been into separate CLI and GUI binaries. The command line interface is platform independent, but not the GUI.
+
+## Version 1.4.1
+### Changes
+
+- Minor bug fixes
+- Updated to Minecraft 1.14.4
+
 ## Version 1.4.0
-## Changes
+### Changes
 - Updated to 1.14
 	- 1.13 worlds and chunks still work
 	- 1.14 villages are recognized

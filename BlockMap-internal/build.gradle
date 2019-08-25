@@ -1,6 +1,6 @@
 plugins {
     id 'com.jaredsburrows.license'
-    id 'org.openjfx.javafxplugin' version '0.0.7'
+    id 'org.openjfx.javafxplugin' version '0.0.8'
 }
 
 javafx {
@@ -33,7 +33,7 @@ task run2(type: JavaExec) {
 	group 'Application'
 	description 'Task run may fail due to a JavaFX bug, use this as a workaround'
 	classpath = sourceSets.main.runtimeClasspath
-	main = "de.piegames.blockmap.standalone.CommandLineMain"
+	main = "de.piegames.blockmap.gui.standalone.GuiMainLauncher"
 }
 
 dependencies {
@@ -41,12 +41,13 @@ dependencies {
 
 	implementation project(':BlockMap-core')
 	implementation project(':BlockMap-gui')
-	implementation project(':BlockMap-standalone')
+	implementation project(':BlockMap-cli')
 	implementation 'org.apache.logging.log4j:log4j-core:2.11.2'
 	implementation 'commons-io:commons-io:2.6'
 	implementation 'com.google.guava:guava:27.1-jre'
 	implementation 'info.picocli:picocli:3.7.0'
 	implementation 'com.github.Minecraft-Technik-Wiki:MinecraftLandGenerator:3.1.0'
+	implementation 'org.controlsfx:controlsfx:11.0.0'
 	implementation group: 'com.codepoetics', name: 'protonpack', version: '1.15'
 
 	/* This is not an actual dependency, but some biome color data has been copied from there so it will show up in the credits list */

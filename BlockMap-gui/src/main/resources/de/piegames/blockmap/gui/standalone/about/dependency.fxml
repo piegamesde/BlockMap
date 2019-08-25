@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.TextArea?>
+
+<fx:root
+	type="de.piegames.blockmap.gui.standalone.about.DependencyPane"
+	spacing="5.0"
+	xmlns="http://javafx.com/javafx/10.0.1"
+	xmlns:fx="http://javafx.com/fxml/1">
+	<children>
+		<BorderPane>
+			<left>
+				<Label
+					fx:id="name"
+					wrapText="false"
+					minWidth="0.0"
+					minHeight="-Infinity"
+					maxHeight="Infinity"
+					maxWidth="400"
+					styleClass="dependency-header"
+					BorderPane.alignment="CENTER" />
+			</left>
+			<right>
+				<Label
+					fx:id="version"
+					maxWidth="100"
+					styleClass="dependency-header"
+					BorderPane.alignment="CENTER" />
+			</right>
+		</BorderPane>
+		<Separator />
+	</children>
+	<VBox.margin>
+		<Insets
+			bottom="10.0"
+			left="10.0"
+			right="10.0"
+			top="10.0" />
+	</VBox.margin>
+	<padding>
+		<Insets
+			bottom="10.0"
+			left="10.0"
+			right="10.0"
+			top="10.0" />
+	</padding>
+</fx:root>

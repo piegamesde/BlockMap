@@ -1,6 +1,7 @@
 package de.piegames.blockmap.renderer;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
 import java.util.Arrays;
@@ -14,11 +15,6 @@ import org.apache.commons.logging.LogFactory;
 import org.joml.Vector2i;
 import org.joml.Vector2ic;
 
-import com.flowpowered.nbt.CompoundTag;
-import com.flowpowered.nbt.Tag;
-import com.flowpowered.nbt.regionfile.Chunk;
-import com.flowpowered.nbt.regionfile.RegionFile;
-
 import de.piegames.blockmap.MinecraftVersion;
 import de.piegames.blockmap.color.Color;
 import de.piegames.blockmap.world.ChunkMetadata;
@@ -26,6 +22,11 @@ import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataCulled;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataFailed;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataVersion;
 import de.piegames.blockmap.world.Region;
+import de.piegames.nbt.CompoundTag;
+import de.piegames.nbt.Tag;
+import de.piegames.nbt.regionfile.Chunk;
+import de.piegames.nbt.regionfile.RegionFile;
+import de.piegames.nbt.stream.NBTInputStream;
 
 public class RegionRenderer {
 
@@ -109,8 +110,9 @@ public class RegionRenderer {
 			}
 
 			CompoundTag root;
-			try {
-				root = chunk.readTag();
+			try (NBTInputStream nbtIn = new NBTInputStream(new ByteArrayInputStream(chunk.getData().array(), 5, chunk.getRealLength()), chunk
+					.getCompression(), true);) {
+				root = new CompoundTag("chunk", ((CompoundTag) nbtIn.readTag()).getValue());
 			} catch (IOException e) {
 				log.warn("Failed to load chunk " + chunkPosRegion, e);
 				metadata.put(chunkPos, new ChunkMetadataFailed(chunkPos, e));

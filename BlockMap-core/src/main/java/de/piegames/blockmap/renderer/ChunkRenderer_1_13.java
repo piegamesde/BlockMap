@@ -12,22 +12,19 @@ import org.joml.Vector2ic;
 import org.joml.Vector3i;
 import org.joml.Vector3ic;
 
-import com.flowpowered.nbt.CompoundMap;
-import com.flowpowered.nbt.CompoundTag;
-import com.flowpowered.nbt.IntArrayTag;
-import com.flowpowered.nbt.ListTag;
-import com.flowpowered.nbt.LongArrayTag;
-import com.flowpowered.nbt.StringTag;
-import com.flowpowered.nbt.Tag;
-import com.flowpowered.nbt.TagType;
-import com.flowpowered.nbt.regionfile.Chunk;
-
 import de.piegames.blockmap.MinecraftVersion;
 import de.piegames.blockmap.color.BlockColorMap.BlockColor;
 import de.piegames.blockmap.color.Color;
 import de.piegames.blockmap.world.ChunkMetadata;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataFailed;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataRendered;
+import de.piegames.nbt.CompoundMap;
+import de.piegames.nbt.CompoundTag;
+import de.piegames.nbt.ListTag;
+import de.piegames.nbt.StringTag;
+import de.piegames.nbt.Tag;
+import de.piegames.nbt.TagType;
+import de.piegames.nbt.regionfile.Chunk;
 
 /**
  * Use this class to transform a Minecraft region file into a top-down image view of it.
@@ -65,7 +62,7 @@ public class ChunkRenderer_1_13 extends ChunkRenderer {
 					CompoundMap structure = ((CompoundTag) structureTag).getValue();
 					String id = ((StringTag) structure.get("id")).getValue();
 					if (!id.equals("INVALID")) {
-						int[] bb = ((IntArrayTag) structure.get("BB")).getValue();
+						int[] bb = structure.get("BB").getAsIntArrayTag().get().getValue();
 						Vector3i center = new Vector3i(bb[0], bb[1], bb[2]).add(bb[3], bb[4], bb[5]);
 						// JOML has no Vector3i#div function, why?
 						center.x /= 2;
@@ -76,7 +73,7 @@ public class ChunkRenderer_1_13 extends ChunkRenderer {
 				}
 			}
 
-			int[] biomes = ((IntArrayTag) level.getValue().get("Biomes")).getValue();
+			int[] biomes = level.getIntArrayValue("Biomes").orElse(new int[256]);
 
 			/*
 			 * The height of the lowest section that has already been loaded. Section are loaded lazily from top to bottom and this value gets decreased
@@ -214,7 +211,7 @@ public class ChunkRenderer_1_13 extends ChunkRenderer {
 						parseBlockState((CompoundTag) map.get("Properties"), version.getBlockStates())))
 				.collect(Collectors.toList());
 
-		long[] blocks = ((LongArrayTag) section.get("BlockStates")).getValue();
+		long[] blocks = section.get("BlockStates").getAsLongArrayTag().get().getValue();
 
 		int bitsPerIndex = blocks.length * 64 / 4096;
 		Block[] ret = new Block[16 * 16 * 16];

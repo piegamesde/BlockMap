@@ -29,8 +29,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
-import com.flowpowered.nbt.regionfile.RegionFile;
-
 import de.piegames.blockmap.color.BiomeColorMap;
 import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.color.BlockColorMap.BlockColor;
@@ -43,6 +41,7 @@ import de.piegames.blockmap.renderer.BlockState;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RegionShader;
 import de.piegames.blockmap.renderer.RenderSettings;
+import de.piegames.nbt.regionfile.RegionFile;
 
 @RunWith(Parameterized.class)
 public class ColorMapTest {

@@ -22,8 +22,6 @@ import org.apache.commons.logging.LogFactory;
 import org.joml.Vector2d;
 import org.joml.Vector2i;
 
-import com.flowpowered.nbt.regionfile.RegionFile;
-
 import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.gui.decoration.Pin.PinType;
 import de.piegames.blockmap.gui.standalone.GuiMain;
@@ -31,6 +29,7 @@ import de.piegames.blockmap.gui.standalone.RegionFolderProvider.LocalRegionFolde
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RegionShader;
 import de.piegames.blockmap.renderer.RenderSettings;
+import de.piegames.nbt.regionfile.RegionFile;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.WritableImage;

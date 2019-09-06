@@ -14,10 +14,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.flowpowered.nbt.regionfile.RegionFile;
-
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RenderSettings;
+import de.piegames.nbt.regionfile.RegionFile;
 
 public class RegionRendererTest {
 

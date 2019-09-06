@@ -46,7 +46,7 @@ dependencies {
 	implementation 'commons-io:commons-io:2.6'
 	implementation 'com.google.guava:guava:27.1-jre'
 	implementation 'info.picocli:picocli:3.7.0'
-	implementation 'com.github.Minecraft-Technik-Wiki:MinecraftLandGenerator:3.1.0'
+	implementation 'com.github.Minecraft-Technik-Wiki:MinecraftLandGenerator:3e6ca86438ca6fee90c42ef2ef08cf8fbe7dc078'
 	implementation 'org.controlsfx:controlsfx:11.0.0'
 	implementation group: 'com.codepoetics', name: 'protonpack', version: '1.15'
 

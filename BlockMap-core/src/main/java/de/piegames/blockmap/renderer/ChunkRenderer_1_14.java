@@ -14,13 +14,6 @@ import org.joml.Vector2ic;
 import org.joml.Vector3i;
 import org.joml.Vector3ic;
 
-import com.flowpowered.nbt.CompoundMap;
-import com.flowpowered.nbt.CompoundTag;
-import com.flowpowered.nbt.ListTag;
-import com.flowpowered.nbt.LongArrayTag;
-import com.flowpowered.nbt.Tag;
-import com.flowpowered.nbt.regionfile.Chunk;
-
 import de.piegames.blockmap.MinecraftVersion;
 import de.piegames.blockmap.color.BiomeColorMap.BiomeColor;
 import de.piegames.blockmap.color.BlockColorMap;
@@ -29,6 +22,11 @@ import de.piegames.blockmap.color.Color;
 import de.piegames.blockmap.world.ChunkMetadata;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataFailed;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataRendered;
+import de.piegames.nbt.CompoundMap;
+import de.piegames.nbt.CompoundTag;
+import de.piegames.nbt.ListTag;
+import de.piegames.nbt.Tag;
+import de.piegames.nbt.regionfile.Chunk;
 
 /**
  * Use this class to transform a Minecraft region file into a top-down image view of it.
@@ -234,7 +232,7 @@ class ChunkRenderer_1_14 extends ChunkRenderer {
 						}))
 				.collect(Collectors.toList());
 
-		long[] blocks = ((LongArrayTag) section.get("BlockStates")).getValue();
+		long[] blocks = section.get("BlockStates").getAsLongArrayTag().get().getValue();
 
 		int bitsPerIndex = blocks.length * 64 / 4096;
 		BlockColor[] ret = new BlockColor[16 * 16 * 16];

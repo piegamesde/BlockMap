@@ -7,18 +7,18 @@
 *This started as fork of [TMCMR](https://github.com/TOGoS/TMCMR), but has been almost completely rewritten due to the update. If you want something stable that works with 1.12 and before worlds, go check it out.*
 
 ## Features:
+- Really fast (>700 chunks/s on my system)
+- Works with huge worlds
+- Works on servers
+- Rendering scale: 1 pixel : 1 block
 - An interactive GUI viewer made with JavaFX
 - Pins on the map show additional information like players and villages
 - Different color maps and shaders that highlight exactly what you are looking for (including an underground caves and an ocean ground view)
 - A gui library to include maps into your own JavaFX applications (but not released yet)
 - A command line interface to render your worlds from scripts
-- The core rendering code as library to use in your own projects (releasing soon)
-- Rendering scale: 1 pixel : 1 block
-- Really fast
-- Works with huge worlds
-- Works on servers
+- The core rendering code as library to use in your own projects (releasing soon™)
 - Gamma corrected rendering
-- Works with both 1.13 and 1.14
+- Works with both 1.13 and 1.14 worlds
 
 ## Gallery
 

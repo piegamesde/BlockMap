@@ -47,11 +47,18 @@
 							</accelerator>
 						</MenuItem>
 						<MenuItem
-							text="Load rendered world..."
-							onAction="#browseFile" />
-						<MenuItem
-							text="Load remote world..."
-							onAction="#loadRemote" />
+							text="Load from server..."
+							onAction="#loadRemote">
+							<accelerator>
+								<KeyCodeCombination
+									code="O"
+									alt="UP"
+									control="DOWN"
+									meta="UP"
+									shift="DOWN"
+									shortcut="UP" />
+							</accelerator>
+						</MenuItem>
 						<MenuItem
 							text="Reload"
 							onAction="#reloadWorld">

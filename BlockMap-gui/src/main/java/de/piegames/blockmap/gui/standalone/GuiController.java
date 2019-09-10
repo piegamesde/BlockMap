@@ -34,9 +34,9 @@ import de.piegames.blockmap.gui.decoration.DragScrollDecoration;
 import de.piegames.blockmap.gui.decoration.GridDecoration;
 import de.piegames.blockmap.gui.decoration.Pin;
 import de.piegames.blockmap.gui.decoration.Pin.PinType;
-import de.piegames.blockmap.gui.standalone.about.AboutDialog;
 import de.piegames.blockmap.gui.decoration.PinDecoration;
 import de.piegames.blockmap.gui.decoration.ScaleDecoration;
+import de.piegames.blockmap.gui.standalone.about.AboutDialog;
 import de.piegames.blockmap.world.ChunkMetadata;
 import de.piegames.blockmap.world.RegionFolder;
 import de.piegames.blockmap.world.RegionFolder.CachedRegionFolder;
@@ -64,7 +64,6 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
 import javafx.util.Pair;
 import javafx.util.StringConverter;
 
@@ -319,22 +318,6 @@ public class GuiController implements Initializable {
 			f = null;
 		dialog.setInitialDirectory(f);
 		f = dialog.showDialog(null);
-		if (f != null) {
-			lastBrowsedPath = f.toPath();
-			regionFolderProvider.set(RegionFolderProvider.create(this, lastBrowsedPath));
-		}
-	}
-
-	@FXML
-	public void browseFile() {
-		FileChooser dialog = new FileChooser();
-		File f = (lastBrowsedPath == null) ? DotMinecraft.DOTMINECRAFT.resolve("saves").toFile() : lastBrowsedPath.getParent().toFile();
-		if (!f.isDirectory())
-			f = DotMinecraft.DOTMINECRAFT.resolve("saves").toFile();
-		if (!f.isDirectory())
-			f = null;
-		dialog.setInitialDirectory(f);
-		f = dialog.showOpenDialog(null);
 		if (f != null) {
 			lastBrowsedPath = f.toPath();
 			regionFolderProvider.set(RegionFolderProvider.create(this, lastBrowsedPath));

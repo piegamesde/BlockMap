@@ -67,70 +67,6 @@ public abstract class RegionFolderProvider {
 	/** This is used to represent the path to the region folder. It may be used as default directory for file chooser dialogs */
 	public abstract String getLocation();
 
-	/** A single local region folder */
-	public static class LocalRegionFolderProvider extends RegionFolderProvider {
-
-		protected Path					regionFolder;
-		protected RenderSettings		settings;
-
-		private ChangeListener<Boolean>	heightListener	= (e, oldVal, newVal) -> {
-															if (oldVal && !newVal)
-																reload();
-														};
-		private ChangeListener<String>	reloadListener	= (observer, old, value) -> {
-															reload();
-														};
-
-		public LocalRegionFolderProvider(GuiController controller, Path regionFolder) {
-			super(controller);
-			this.regionFolder = regionFolder;
-
-			controller.heightSlider.lowValueChangingProperty().addListener(new WeakChangeListener<>(heightListener));
-			controller.heightSlider.highValueChangingProperty().addListener(new WeakChangeListener<>(heightListener));
-
-			controller.colorBox.valueProperty().addListener(new WeakChangeListener<>(reloadListener));
-			controller.shadingBox.valueProperty().addListener(new WeakChangeListener<>(reloadListener));
-
-			reload();
-		}
-
-		@Override
-		public void reload() {
-			try {
-				settings = new RenderSettings(
-						Integer.MIN_VALUE,
-						Integer.MAX_VALUE,
-						(int) Math.round(controller.heightSlider.lowValueProperty().getValue().doubleValue()),
-						(int) Math.round(controller.heightSlider.highValueProperty().getValue().doubleValue()),
-						Integer.MIN_VALUE,
-						Integer.MAX_VALUE,
-						InternalColorMap.values()[controller.colorBox.getSelectionModel().getSelectedIndex()].getColorMap(),
-						BiomeColorMap.loadDefault(),
-						RegionShader.DEFAULT_SHADERS[controller.shadingBox.getSelectionModel().getSelectedIndex()]);
-				RegionRenderer renderer = new RegionRenderer(settings);
-				folder.set(new Pair<>(
-						Integer.toHexString(Objects.hash(regionFolder.toAbsolutePath().toString(), settings)),
-						WorldRegionFolder.load(regionFolder, renderer)));
-			} catch (IOException e) {
-				folder.set(null);
-				log.warn("Could not load world " + regionFolder, e);
-				ExceptionDialog d = new ExceptionDialog(e);
-				d.setTitle("Could not load world");
-				d.showAndWait();
-			}
-		}
-
-		@Override
-		public String getLocation() {
-			return regionFolder.toString();
-		}
-
-		@Override
-		public byte getGuiBitmask() {
-			return BIT_HEIGHT | BIT_COLOR | BIT_SHADING;
-		}
-	}
-
 	/** A complete local world */
 	public static class LocalWorldProvider extends RegionFolderProvider {
 
@@ -209,43 +145,7 @@ public abstract class RegionFolderProvider {
 		}
 	}
 
-	/** A single region folder, pre-rendered. May be local or remote */
-	public static class SavedRegionFolderProvider extends RegionFolderProvider {
-		protected URI file;
-
-		public SavedRegionFolderProvider(GuiController controller, URI file) {
-			super(controller);
-			this.file = file;
-			reload();
-		}
-
-		@Override
-		public void reload() {
-			try {
-				folder.set(new Pair<>(
-						Integer.toHexString(file.toString().hashCode()),
-						new RegionFolder.RemoteRegionFolder(file)));
-			} catch (IOException e) {
-				log.warn("Could not load from remote file " + file);
-				folder.set(null);
-				ExceptionDialog d = new ExceptionDialog(e);
-				d.setTitle("Could not load world");
-				d.showAndWait();
-			}
-		}
-
-		@Override
-		public String getLocation() {
-			return "file".equals(file.getScheme()) ? Paths.get(file).toString() : file.toString();
-		}
-
-		@Override
-		public byte getGuiBitmask() {
-			return 0;
-		}
-	}
-
-	/** Multiple rendered region folder, possibly rendered with different settings. May be local or remote */
+	/** Multiple rendered region folders, possibly rendered with different settings. May be local or remote */
 	public static class SavedWorldProvider extends RegionFolderProvider {
 		protected URI					file;
 		protected Map<String, String>	worlds;
@@ -307,22 +207,15 @@ public abstract class RegionFolderProvider {
 
 	public static RegionFolderProvider create(GuiController controller, Path path) {
 		if (Files.isDirectory(path)) {
-			if (Files.exists(path.resolve("level.dat")))
-				return new LocalWorldProvider(controller, path);
-			else
-				return new LocalRegionFolderProvider(controller, path);
-		} else if (Files.exists(path) && path.getFileName().toString().equals("rendered.json.gz"))
-			return new SavedRegionFolderProvider(controller, path.toUri());
-		else if (Files.exists(path) && path.getFileName().toString().equals("index.json"))
+			return new LocalWorldProvider(controller, path);
+		} else if (Files.exists(path) && path.getFileName().toString().equals("index.json"))
 			return new SavedWorldProvider(controller, path.toUri());
 		else
 			return null;
 	}
 
 	public static RegionFolderProvider create(GuiController controller, URI uri) {
-		if (uri.toString().endsWith("rendered.json.gz"))
-			return new SavedRegionFolderProvider(controller, uri);
-		else if (uri.toString().endsWith("index.json"))
+		if (uri.toString().endsWith("index.json"))
 			return new SavedWorldProvider(controller, uri);
 		else
 			return null;

@@ -1,6 +1,7 @@
 plugins {
     id 'com.jaredsburrows.license'
     id 'org.openjfx.javafxplugin' version '0.0.8'
+	id "me.champeau.gradle.jmh" version "0.5.0-rc-2"
 }
 
 javafx {
@@ -46,13 +47,15 @@ dependencies {
 	implementation 'commons-io:commons-io:2.6'
 	implementation 'com.google.guava:guava:27.1-jre'
 	implementation 'info.picocli:picocli:3.7.0'
-	implementation 'com.github.Minecraft-Technik-Wiki:MinecraftLandGenerator:3e6ca86438ca6fee90c42ef2ef08cf8fbe7dc078'
+	implementation 'com.github.Minecraft-Technik-Wiki:MinecraftLandGenerator:3.1.1'
 	implementation 'org.controlsfx:controlsfx:11.0.0'
 	implementation group: 'com.codepoetics', name: 'protonpack', version: '1.15'
 
 	/* This is not an actual dependency, but some biome color data has been copied from there so it will show up in the credits list */
-	// Currently broken because it does not compile on jitpack
-	//implementation 'com.github.toolbox4minecraft:amidst:129d3fb9e0'
+	//implementation 'com.github.toolbox4minecraft:amidst:v4.3'
+	
+    jmh group: 'org.openjdk.jmh', name: 'jmh-core', version: '1.12'
+    jmh group: 'org.openjdk.jmh', name: 'jmh-generator-annprocess', version: '1.12'
 }
 
 sourceSets {
@@ -62,6 +65,14 @@ sourceSets {
 		}
 		resources {
 			srcDirs = ['src/main/resources', "./build/generated-resources/${project.name}/generated-resources-main"]
+		}
+	}
+	jmh {
+		java {
+			srcDirs = ['src/jmh/java']
+		}
+		resources {
+			srcDirs = ['src/jmh/resources']
 		}
 	}
 	test {
@@ -76,4 +87,9 @@ sourceSets {
 
 test {
 	exclude 'de/piegames/blockmap/AllTests.class'
+}
+
+jmh {
+   // Hacky workaround for https://github.com/melix/jmh-gradle-plugin/issues/122
+   jvmArgsAppend = ["-Dbenchmark.resources=" + "${sourceSets.main.resources.srcDirs[0].toString()}"]
 }

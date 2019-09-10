@@ -1,11 +1,9 @@
 package de.piegames.blockmap.renderer;
 
-import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
@@ -26,7 +24,7 @@ import de.piegames.nbt.CompoundMap;
 import de.piegames.nbt.CompoundTag;
 import de.piegames.nbt.ListTag;
 import de.piegames.nbt.Tag;
-import de.piegames.nbt.regionfile.Chunk;
+import de.piegames.nbt.regionfile.Palette;
 
 /**
  * Use this class to transform a Minecraft region file into a top-down image view of it.
@@ -220,34 +218,26 @@ class ChunkRenderer_1_14 extends ChunkRenderer {
 				.stream().flatMap(Collection::stream)
 				.map(map -> blockColors.getBlockColor(
 						map.getStringValue("Name").get(),
-						new Supplier<BitSet>() {
-							BitSet memoize;
-
-							@Override
-							public BitSet get() {
-								return memoize == null
-										? memoize = parseBlockState(map.getAsCompoundTag("Properties").get(), version.getBlockStates())
-										: memoize;
-							}
-						}))
+						() -> parseBlockState(map.getAsCompoundTag("Properties").get(), version.getBlockStates())))
 				.collect(Collectors.toList());
 
 		long[] blocks = section.get("BlockStates").getAsLongArrayTag().get().getValue();
 
-		int bitsPerIndex = blocks.length * 64 / 4096;
-		BlockColor[] ret = new BlockColor[16 * 16 * 16];
+		BlockColor[] ret = new BlockColor[4096];
 
-		for (int i = 0; i < 4096; i++) {
-			long blockIndex = Chunk.extractFromLong(blocks, i, bitsPerIndex);
-
-			if (blockIndex >= palette.size()) {
-				log.warn("Block " + i + " " + blockIndex + " was out of bounds, is this world corrupt?");
-				continue;
+		Palette p = new Palette(blocks);
+		for (int i = 0; i < 4096; i += 64) {
+			long[] output = p.next64();
+			for (int j = 0; j < 64; j++) {
+				int b = (int) output[j];
+				if (b >= palette.size()) {
+					log.warn("Block " + i + " " + b + " was out of bounds, is this world corrupt?");
+					continue;
+				}
+				ret[i + j] = palette.get(b);
 			}
-			BlockColor block = palette.get((int) blockIndex);
-
-			ret[i] = block;
 		}
+
 		return ret;
 	}
 }

@@ -1,3 +1,8 @@
+/* The top bar where the user chooses the world to show */
+#top {
+	-fx-spacing: 3;
+}
+
 /* The complete left side */
 #left {
 }

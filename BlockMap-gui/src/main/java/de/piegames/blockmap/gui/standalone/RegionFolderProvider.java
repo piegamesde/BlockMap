@@ -208,9 +208,7 @@ public abstract class RegionFolderProvider {
 	public static RegionFolderProvider create(GuiController controller, Path path) {
 		if (Files.isDirectory(path)) {
 			return new LocalWorldProvider(controller, path);
-		} else if (Files.exists(path) && path.getFileName().toString().equals("index.json"))
-			return new SavedWorldProvider(controller, path.toUri());
-		else
+		} else
 			return null;
 	}
 

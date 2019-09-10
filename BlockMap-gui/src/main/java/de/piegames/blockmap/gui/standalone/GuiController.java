@@ -5,7 +5,10 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,13 +55,13 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.CheckBoxTreeItem;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
@@ -75,15 +78,24 @@ public class GuiController implements Initializable {
 	protected ObjectProperty<RegionFolder>			regionFolder			= new SimpleObjectProperty<>();
 	protected ObjectProperty<RegionFolderProvider>	regionFolderProvider	= new SimpleObjectProperty<>();
 
-	protected Path									lastBrowsedPath;
-	protected String								lastBrowsedURL;
-
 	@FXML
 	private BorderPane								root;
+
+	/* Top */
+
 	@FXML
-	private Button									browseButton;
+	private TextField								worldInput;
+	// TODO replace with full history
+	private Path									lastBrowsedPath;
+	private String									lastBrowsedURL;
+
+	/* Bottom */
+
 	@FXML
 	private StatusBar								statusBar;
+
+	/* Left */
+
 	@FXML
 	private Label									minHeight, maxHeight;
 	@FXML
@@ -107,7 +119,6 @@ public class GuiController implements Initializable {
 	public Map<PinType, TreeItem<PinType>>			checkedPins				= new HashMap<>();
 
 	protected MapPane								pane;
-	protected ObjectProperty<Path>					currentPath				= new SimpleObjectProperty<>();
 	public PinDecoration							pins;
 
 	protected ScheduledExecutorService				backgroundThread		= Executors.newSingleThreadScheduledExecutor(
@@ -142,13 +153,6 @@ public class GuiController implements Initializable {
 			statusBar.progressProperty().bind(renderer.getProgress());
 			statusBar.setText(null);
 			statusBar.textProperty().bind(renderer.getStatus());
-
-			Label pathLabel = new Label();
-			pathLabel.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-			pathLabel.textProperty().bind(Bindings.createStringBinding(
-					() -> regionFolderProvider.get() == null ? "" : regionFolderProvider.get().getLocation(),
-					regionFolderProvider));
-			statusBar.getLeftItems().add(pathLabel);
 
 			Label zoomLabel = new Label();
 			zoomLabel.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
@@ -308,6 +312,57 @@ public class GuiController implements Initializable {
 		checkedPins.put(type, ret);
 	}
 
+	// TODO rewrite
+	public void load() {
+		String input = worldInput.getText();
+
+		/* Try to load it as local world first */
+		try {
+			/* Try parsing as local world folder */
+			Path path = Paths.get(input);
+			/* Make sure path is an existing directory containing a level.dat. Show an error message otherwise. */
+			if (Files.exists(path)) {
+				if (!Files.isDirectory(path)) {
+					if (path.getFileName().toString().equals("level.dat"))
+						path = path.getParent();
+					else {
+						Alert alert = new Alert(AlertType.ERROR, "Path to a world must either be a folder or a level.dat file", ButtonType.OK);
+						alert.showAndWait();
+						worldInput.selectAll();
+						return;
+					}
+				} else if (!Files.exists(path.resolve("level.dat"))) {
+					Alert alert = new Alert(AlertType.ERROR, "A world folder must contain a level.dat", ButtonType.OK);
+					alert.showAndWait();
+					worldInput.selectAll();
+					return;
+				}
+				/* Load the world */
+				try {
+					regionFolderProvider.set(new RegionFolderProvider.LocalWorldProvider(this, path));
+				} catch (RuntimeException e) {
+					Alert alert = new Alert(AlertType.ERROR, "Failed to load world – " + e.getMessage(), ButtonType.OK);
+					alert.showAndWait();
+					worldInput.selectAll();
+				}
+				return;
+			}
+		} catch (InvalidPathException e) {
+		}
+
+		/* Try to parse as server URI */
+		try {
+			URI uri = new URI(input);
+			regionFolderProvider.set(new RegionFolderProvider.SavedWorldProvider(this, uri));
+		} catch (URISyntaxException e) {
+		}
+
+		/* Total failure */
+		Alert alert = new Alert(AlertType.ERROR, "Could not parse input", ButtonType.OK);
+		alert.showAndWait();
+		worldInput.selectAll();
+	}
+
 	@FXML
 	public void browseFolder() {
 		DirectoryChooser dialog = new DirectoryChooser();
@@ -320,6 +375,7 @@ public class GuiController implements Initializable {
 		f = dialog.showDialog(null);
 		if (f != null) {
 			lastBrowsedPath = f.toPath();
+			worldInput.setText(f.toString());
 			regionFolderProvider.set(RegionFolderProvider.create(this, lastBrowsedPath));
 		}
 	}
@@ -335,9 +391,10 @@ public class GuiController implements Initializable {
 			try {
 				lastBrowsedURL = s;
 				RegionFolderProvider provider = RegionFolderProvider.create(this, new URI(s));
-				if (provider != null)
+				if (provider != null) {
 					regionFolderProvider.set(provider);
-				else {
+					worldInput.setText(s);
+				} else {
 					Alert alert = new Alert(AlertType.ERROR, "Invalid URL", ButtonType.OK);
 					alert.showAndWait();
 				}

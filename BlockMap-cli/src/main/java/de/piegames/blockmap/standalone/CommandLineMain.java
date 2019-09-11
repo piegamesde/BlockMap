@@ -3,6 +3,7 @@ package de.piegames.blockmap.standalone;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.Callable;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -36,7 +37,7 @@ import picocli.CommandLine.Spec;
 		subcommands = { CommandRender.class },
 		footerHeading = "%n",
 		footer = "This is the command line interface of blockmap. To access the GUI (if installed), run `blockmap-gui`.")
-public class CommandLineMain implements Runnable {
+public class CommandLineMain implements Callable<Integer> {
 
 	private static Log	log	= null;
 
@@ -66,7 +67,7 @@ public class CommandLineMain implements Runnable {
 	}
 
 	@Override
-	public void run() {
+	public Integer call() {
 		runAll();
 		throw new ParameterException(spec.commandLine(), "Missing required subcommand");
 	}
@@ -77,7 +78,7 @@ public class CommandLineMain implements Runnable {
 			footerHeading = "%n",
 			footer = "Please don't forget that you can use global options too, which can be accessed through `blockmap help`."
 					+ " These have to be put before the render command.")
-	public static class CommandRender implements Runnable {
+	public static class CommandRender implements Callable<Integer> {
 
 		@ParentCommand
 		private CommandLineMain		main;
@@ -148,7 +149,7 @@ public class CommandLineMain implements Runnable {
 		private boolean				createBigPic;
 
 		@Override
-		public void run() {
+		public Integer call() {
 			main.runAll();
 			checkLogger();
 
@@ -176,7 +177,7 @@ public class CommandLineMain implements Runnable {
 					input = input.getParent();
 				else {
 					log.error("Input path must either point to a folder or to the `level.dat`");
-					return;
+					return 2;
 				}
 			}
 			input = input.resolve(dimension.getRegionPath());
@@ -184,11 +185,11 @@ public class CommandLineMain implements Runnable {
 			log.debug("Output: " + output.normalize().toAbsolutePath());
 			if (!Files.exists(input)) {
 				log.error("Specified region folder does not exist");
-				return;
+				return 2;
 			}
 			if (!Files.isDirectory(input)) {
 				log.error("Specified region folder is not a directory");
-				return;
+				return 2;
 			}
 			WorldRegionFolder world;
 			CachedRegionFolder cached;
@@ -197,7 +198,7 @@ public class CommandLineMain implements Runnable {
 				cached = CachedRegionFolder.create(world, !force, output);
 			} catch (IOException e) {
 				log.error("Could not load region folder", e);
-				return;
+				return 1;
 			}
 
 			/* Actual rendering */
@@ -216,21 +217,21 @@ public class CommandLineMain implements Runnable {
 			/* Post-processing, saving */
 
 			if (pins) {
-				if (dimension != null)
-					world.setPins(WorldPins.loadFromWorld(input, dimension));
-				else
-					log.error("You must specify the --dimension option to load the pin information");
+				world.setPins(WorldPins.loadFromWorld(input, dimension));
 			}
+
 			try {
 				cached.save();
 			} catch (IOException e) {
 				log.error("Could not save the rendered world", e);
+				return 1;
 			}
 
 			if (createBigPic)
-				PostProcessing.createBigImage(cached, output, settings);
+				return PostProcessing.createBigImage(cached, output, settings);
 			if (createHtml)
-				PostProcessing.createTileHtml(cached, output, settings);
+				return PostProcessing.createTileHtml(cached, output, settings);
+			return 0;
 		}
 	}
 

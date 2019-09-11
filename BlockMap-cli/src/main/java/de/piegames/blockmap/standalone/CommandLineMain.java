@@ -1,6 +1,7 @@
 package de.piegames.blockmap.standalone;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.apache.commons.logging.Log;
@@ -91,8 +92,7 @@ public class CommandLineMain implements Runnable {
 		private Path				output;
 		@Parameters(index = "0",
 				paramLabel = "INPUT",
-				description = "Path to the world data. Normally, this should point to a 'region/' of a world. If --dimension is set, this must point to a "
-						+ "world folder instead (the one with the level.dat in it)")
+				description = "Path to the world data. This should be a folder containing a level.dat. A path to the level.dat itself is valid too.")
 		private Path				input;
 		@Option(names = { "-c", "--color-map" },
 				paramLabel = "{DEFAULT|CAVES|NO_FOLIAGE|OCEAN_GROUND}",
@@ -107,7 +107,9 @@ public class CommandLineMain implements Runnable {
 		private DefaultShader		shader;
 		@Option(names = { "-d", "--dim", "--dimension" },
 				paramLabel = "{OVERWORLD|NETHER|END}",
-				description = "The dimension of the world to render. If this is set, INPUT must point to a world folder instead of a region folder")
+				defaultValue = "OVERWORLD",
+				showDefaultValue = Visibility.ALWAYS,
+				description = "The dimension of the world to render.")
 		private MinecraftDimension	dimension;
 
 		@Option(names = { "--min-Y", "--min-height" }, description = "Don't draw blocks lower than this height.", defaultValue = "0")
@@ -148,6 +150,7 @@ public class CommandLineMain implements Runnable {
 		@Override
 		public void run() {
 			main.runAll();
+			checkLogger();
 
 			/* Initialize settings */
 
@@ -164,11 +167,29 @@ public class CommandLineMain implements Runnable {
 
 			RegionRenderer renderer = new RegionRenderer(settings);
 			Path input = this.input;
-			if (dimension != null)
-				input = input.resolve(dimension.getRegionPath());
-			checkLogger();
-			log.debug("Input " + input.normalize().toAbsolutePath());
+			if (Files.isDirectory(input)) {
+				if (!Files.exists(input.resolve("level.dat")))
+					/* Don't exit, this is fine as long as the region folders are present */
+					log.warn("World folders normally contain a file called `level.dat`");
+			} else {
+				if (input.getFileName().toString().equals("level.dat"))
+					input = input.getParent();
+				else {
+					log.error("Input path must either point to a folder or to the `level.dat`");
+					return;
+				}
+			}
+			input = input.resolve(dimension.getRegionPath());
+			log.debug("Input: " + input.normalize().toAbsolutePath());
 			log.debug("Output: " + output.normalize().toAbsolutePath());
+			if (!Files.exists(input)) {
+				log.error("Specified region folder does not exist");
+				return;
+			}
+			if (!Files.isDirectory(input)) {
+				log.error("Specified region folder is not a directory");
+				return;
+			}
 			WorldRegionFolder world;
 			CachedRegionFolder cached;
 			try {

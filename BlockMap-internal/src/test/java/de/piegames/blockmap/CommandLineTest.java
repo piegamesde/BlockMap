@@ -25,10 +25,10 @@ public class CommandLineTest {
 	 */
 	@Test
 	public void test() throws IOException {
+		CommandLineMain.mainWithoutQuit("-v", "-V");
 		for (MinecraftVersion version : MinecraftVersion.values()) {
 			File out1 = folder.newFolder();
 			String path = "./src/test/resources/Debug-" + version.fileSuffix + "/region/";
-			CommandLineMain.mainWithoutQuit("-v", "-V");
 			CommandLineMain.mainWithoutQuit("render", "--force", "-o=" + out1 + "", path);
 			CommandLineMain.mainWithoutQuit("render", "--create-tile-html", "-o=" + out1 + "", path);
 			CommandLineMain.mainWithoutQuit("render", "--create-big-image", "-o=" + out1 + "", "--force", "--shader=RELIEF", "--color-map=OCEAN_GROUND", path);

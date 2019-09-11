@@ -30,11 +30,11 @@ public class PostProcessing {
 	private PostProcessing() {
 	}
 
-	public static void createTileHtml(LocalRegionFolder world, Path outputDir, RenderSettings settings) {
+	public static int createTileHtml(LocalRegionFolder world, Path outputDir, RenderSettings settings) {
 		log.info("Writing HTML tiles...");
 		if (world.listRegions().isEmpty()) {
 			log.warn("The world is empty, there is nothing to do!");
-			return;
+			return 0;
 		}
 
 		Path cssFile = outputDir.resolve("tiles.css");
@@ -44,7 +44,7 @@ public class PostProcessing {
 				Files.copy(cssInputStream, cssFile);
 			} catch (IOException e) {
 				log.error("Could not copy style sheet file", e);
-				return;
+				return 1;
 			}
 		}
 
@@ -54,7 +54,7 @@ public class PostProcessing {
 				.collect(Collectors.toSet());
 		if (allowedBlocks.isEmpty()) {
 			log.warn("No chunks selected, please increase your bounds");
-			return;
+			return 2;
 		}
 		int minX = allowedBlocks.stream().mapToInt(v -> v.x()).min().getAsInt();
 		int maxX = allowedBlocks.stream().mapToInt(v -> v.x()).max().getAsInt();
@@ -97,13 +97,14 @@ public class PostProcessing {
 		} catch (IOException e) {
 			log.error("Could not write html file", e);
 		}
+		return 0;
 	}
 
-	public static void createBigImage(RegionFolder world, Path outputDir, RenderSettings settings) {
+	public static int createBigImage(RegionFolder world, Path outputDir, RenderSettings settings) {
 		log.info("Creating big image...");
 		if (world.listRegions().isEmpty()) {
 			log.warn("The world is empty, there is nothing to do!");
-			return;
+			return 0;
 		}
 
 		/** The bounds of the rendered files, in region coordinates */
@@ -113,7 +114,7 @@ public class PostProcessing {
 				.collect(Collectors.toSet());
 		if (allowedBlocks.isEmpty()) {
 			log.warn("No chunks selected, please increase your bounds");
-			return;
+			return 2;
 		}
 		int minX = allowedBlocks.stream().mapToInt(v -> v.x()).min().getAsInt();
 		int maxX = allowedBlocks.stream().mapToInt(v -> v.x()).max().getAsInt();
@@ -134,7 +135,7 @@ public class PostProcessing {
 			bigImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		} catch (Throwable t) {
 			log.error("Could not create image, is it too big?", t);
-			return;
+			return 1;
 		}
 
 		for (Vector2ic pos : world.listRegions()) {
@@ -153,6 +154,7 @@ public class PostProcessing {
 		} catch (IOException e) {
 			log.error("Could not write big image to " + outputDir + "/big.png", e);
 		}
+		return 0;
 	}
 
 	/** Test if the given region file contains blocks that should be rendered. The bounds are given in world space. */

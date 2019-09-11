@@ -28,26 +28,27 @@ public class CommandLineTest {
 		for (MinecraftVersion version : MinecraftVersion.values()) {
 			File out1 = folder.newFolder();
 			String path = "./src/test/resources/Debug-" + version.fileSuffix + "/region/";
-			CommandLineMain.main("-v", "-V");
-			CommandLineMain.main("render", "-o=" + out1 + "", path);
-			CommandLineMain.main("render", "--create-tile-html", "--lazy", "-o=" + out1 + "", path);
-			CommandLineMain.main("render", "--create-big-image", "-o=" + out1 + "", "--shader=RELIEF", "--color-map=OCEAN_GROUND", path);
+			CommandLineMain.mainWithoutQuit("-v", "-V");
+			CommandLineMain.mainWithoutQuit("render", "--force", "-o=" + out1 + "", path);
+			CommandLineMain.mainWithoutQuit("render", "--create-tile-html", "-o=" + out1 + "", path);
+			CommandLineMain.mainWithoutQuit("render", "--create-big-image", "-o=" + out1 + "", "--force", "--shader=RELIEF", "--color-map=OCEAN_GROUND", path);
 		}
 		File out2 = folder.newFolder();
 
-		CommandLineMain.main("-v", "render", "-o=" + out2 + "", "--min-X=-1024", "--max-X=1024", "--min-Z=-1024", "--max-Z=1024",
+		CommandLineMain.mainWithoutQuit("-v", "render", "-o=" + out2 + "", "--force", "--min-X=-1024", "--max-X=1024", "--min-Z=-1024", "--max-Z=1024",
 				"./src/main/resources/BlockMapWorld/region/");
-		CommandLineMain.main("-v", "render", "--create-tile-html", "--lazy", "-o=" + out2 + "/", "--min-X=-1024", "--max-X=1024", "--min-Z=-1024",
+		CommandLineMain.mainWithoutQuit("-v", "render", "--create-tile-html", "-o=" + out2 + "/", "--min-X=-1024", "--max-X=1024", "--min-Z=-1024",
 				"--max-Z=1024", "./src/main/resources/BlockMapWorld/region/");
-		CommandLineMain.main("-v", "render", "--create-big-image", "-o=" + out2 + "", "--shader=RELIEF", "--color-map=OCEAN_GROUND", "--min-X=-1024",
+		CommandLineMain.mainWithoutQuit("-v", "render", "--create-big-image", "-o=" + out2 + "", "--force", "--shader=RELIEF", "--color-map=OCEAN_GROUND",
+				"--min-X=-1024",
 				"--max-X=1024", "--min-Z=-1024", "--max-Z=1024",
 				"./src/main/resources/BlockMapWorld/region/");
 
-		CommandLineMain.main("-v", "render", "--create-tile-html", "--lazy", "-o=" + out2 + "/", "./src/main/resources/BlockMapWorld/", "--min-X=-1024",
+		CommandLineMain.mainWithoutQuit("-v", "render", "--create-tile-html", "-o=" + out2 + "/", "./src/main/resources/BlockMapWorld/", "--min-X=-1024",
 				"--max-X=1024", "--min-Z=-1024", "--max-Z=1024",
 				"--dimension=OVERWORLD");
 
-		CommandLineMain.main("-v", "render", "--create-tile-html", "--lazy", "-o=" + out2 + "/", "./src/main/resources/BlockMapWorld/", "--min-X=1024",
+		CommandLineMain.mainWithoutQuit("-v", "render", "--create-tile-html", "-o=" + out2 + "/", "./src/main/resources/BlockMapWorld/", "--min-X=1024",
 				"--max-X=1024", "--min-Z=1024", "--max-Z=1024",
 				"--dimension=OVERWORLD");
 	}

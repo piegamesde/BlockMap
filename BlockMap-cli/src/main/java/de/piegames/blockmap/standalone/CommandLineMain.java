@@ -122,9 +122,19 @@ public class CommandLineMain implements Runnable {
 		private int					minZ;
 		@Option(names = "--max-Z", description = "Don't draw blocks to the south of this coordinate.", defaultValue = "2147483647")
 		private int					maxZ;
+		/**
+		 * Lazy is the default now. This option will thus be ignored.
+		 * 
+		 * @see CommandLineMain#force
+		 */
 		@Option(names = { "-l", "--lazy" },
-				description = "Don't render region files if there is already an up to date. This saves time when rendering the same world regularly with the same settings.")
+				description = "Don't render region files if there is already an up to date. This saves time when rendering the same world regularly with the same settings.",
+				hidden = true)
+		@Deprecated
 		private boolean				lazy;
+		@Option(names = { "-f", "--force" },
+				description = "Re-render region files even if they are up to date (based on their timestamp)")
+		private boolean				force;
 		@Option(names = { "-p", "--pins" }, description = "Load pin data from the world. This requires the use of the --dimension option")
 		private boolean				pins;
 
@@ -163,7 +173,7 @@ public class CommandLineMain implements Runnable {
 			CachedRegionFolder cached;
 			try {
 				world = WorldRegionFolder.load(input, renderer);
-				cached = CachedRegionFolder.create(world, lazy, output);
+				cached = CachedRegionFolder.create(world, !force, output);
 			} catch (IOException e) {
 				log.error("Could not load region folder", e);
 				return;
@@ -203,10 +213,14 @@ public class CommandLineMain implements Runnable {
 		}
 	}
 
-	public static void main(String... args) {
+	/** Separate method for testing the exit code without quitting the application */
+	public static int mainWithoutQuit(String... args) {
 		/* Without this, JOML will print vectors out in scientific notation which isn't the most human readable thing in the world */
 		System.setProperty("joml.format", "false");
+		return new CommandLine(new CommandLineMain()).execute(args);
+	}
 
-		System.exit(new CommandLine(new CommandLineMain()).execute(args));
+	public static void main(String... args) {
+		System.exit(mainWithoutQuit(args));
 	}
 }

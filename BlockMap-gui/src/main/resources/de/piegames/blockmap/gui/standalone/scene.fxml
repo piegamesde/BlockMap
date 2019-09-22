@@ -91,19 +91,6 @@
 						</accelerator>
 					</MenuItem>
 					<MenuItem
-						text="Save current view"
-						onAction="#save">
-						<accelerator>
-							<KeyCodeCombination
-								code="S"
-								alt="UP"
-								control="DOWN"
-								meta="UP"
-								shift="UP"
-								shortcut="UP" />
-						</accelerator>
-					</MenuItem>
-					<MenuItem
 						text="Quit"
 						onAction="#exit">
 						<accelerator>

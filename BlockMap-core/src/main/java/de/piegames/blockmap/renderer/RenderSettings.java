@@ -9,6 +9,7 @@ import de.piegames.blockmap.color.BiomeColorMap;
 import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.color.BlockColorMap.InternalColorMap;
 import de.piegames.blockmap.renderer.RegionShader.ReliefShader;
+import io.gsonfire.annotations.ExposeMethodParam;
 
 public class RenderSettings {
 
@@ -24,6 +25,7 @@ public class RenderSettings {
 	public RegionShader							shader	= new ReliefShader();
 
 	public RenderSettings() {
+		loadDefaultColors();
 	}
 
 	public RenderSettings(int minX, int maxX, int minY, int maxY, int minZ, int maxZ, Map<MinecraftVersion, BlockColorMap> blockColors,
@@ -42,6 +44,11 @@ public class RenderSettings {
 	public void loadDefaultColors() {
 		blockColors = InternalColorMap.DEFAULT.getColorMap();
 		biomeColors = BiomeColorMap.loadDefault();
+	}
+
+	@ExposeMethodParam("block colors")
+	public void loadBlockColors(String name) {
+		blockColors = InternalColorMap.valueOf(name).getColorMap();
 	}
 
 	@Override

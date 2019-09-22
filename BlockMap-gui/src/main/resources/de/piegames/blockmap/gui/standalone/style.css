@@ -13,8 +13,7 @@
 }
 
 /* The settings combo- and checkboxes in a GridPane */
-#left-settings {
-	-fx-padding: 5 3 0 3;
+#world-settings {
 	-fx-hgap: 6;
 	-fx-vgap: 3;
 }

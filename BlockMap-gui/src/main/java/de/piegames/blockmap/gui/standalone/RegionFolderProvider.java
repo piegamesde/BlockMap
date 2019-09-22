@@ -26,12 +26,14 @@ import de.piegames.blockmap.renderer.RegionShader;
 import de.piegames.blockmap.renderer.RenderSettings;
 import de.piegames.blockmap.world.RegionFolder;
 import de.piegames.blockmap.world.RegionFolder.WorldRegionFolder;
+import javafx.beans.WeakInvalidationListener;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
 import javafx.util.Pair;
+import javafx.util.converter.IntegerStringConverter;
 
 public abstract class RegionFolderProvider {
 
@@ -76,10 +78,6 @@ public abstract class RegionFolderProvider {
 		protected RenderSettings			settings;
 		protected List<MinecraftDimension>	available;
 
-		private ChangeListener<Boolean>		heightListener	= (e, oldVal, newVal) -> {
-																if (oldVal && !newVal)
-																	reload();
-															};
 		private ChangeListener<Object>		reloadListener	= (observer, old, value) -> {
 																if (old != value)
 																	reload();
@@ -98,8 +96,8 @@ public abstract class RegionFolderProvider {
 			controller.dimensionBox.valueProperty().addListener(new WeakChangeListener<>(reloadListener));
 			controller.dimensionBox.setValue(available.get(0));
 
-			controller.heightSlider.lowValueChangingProperty().addListener(new WeakChangeListener<>(heightListener));
-			controller.heightSlider.highValueChangingProperty().addListener(new WeakChangeListener<>(heightListener));
+			controller.minHeight.textProperty().addListener(new WeakInvalidationListener(e -> reload()));
+			controller.maxHeight.textProperty().addListener(new WeakInvalidationListener(e -> reload()));
 
 			controller.colorBox.valueProperty().addListener(new WeakChangeListener<>(reloadListener));
 			controller.shadingBox.valueProperty().addListener(new WeakChangeListener<>(reloadListener));
@@ -113,8 +111,8 @@ public abstract class RegionFolderProvider {
 				settings = new RenderSettings(
 						Integer.MIN_VALUE,
 						Integer.MAX_VALUE,
-						(int) Math.round(controller.heightSlider.lowValueProperty().getValue().doubleValue()),
-						(int) Math.round(controller.heightSlider.highValueProperty().getValue().doubleValue()),
+						new IntegerStringConverter().fromString(controller.minHeight.getText()),
+						new IntegerStringConverter().fromString(controller.maxHeight.getText()),
 						Integer.MIN_VALUE,
 						Integer.MAX_VALUE,
 						InternalColorMap.values()[controller.colorBox.getSelectionModel().getSelectedIndex()].getColorMap(),

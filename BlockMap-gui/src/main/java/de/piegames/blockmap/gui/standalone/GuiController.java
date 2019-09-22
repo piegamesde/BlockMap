@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.controlsfx.control.CheckTreeView;
-import org.controlsfx.control.RangeSlider;
 import org.controlsfx.control.StatusBar;
 import org.controlsfx.dialog.ExceptionDialog;
 import org.controlsfx.dialog.ProgressDialog;
@@ -62,6 +61,7 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
@@ -69,6 +69,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.DirectoryChooser;
 import javafx.util.Pair;
 import javafx.util.StringConverter;
+import javafx.util.converter.IntegerStringConverter;
 
 public class GuiController implements Initializable {
 
@@ -97,9 +98,7 @@ public class GuiController implements Initializable {
 	/* Left */
 
 	@FXML
-	private Label									minHeight, maxHeight;
-	@FXML
-	RangeSlider										heightSlider;
+	TextField										minHeight, maxHeight;
 	@FXML
 	ChoiceBox<String>								shadingBox;
 	@FXML
@@ -179,8 +178,8 @@ public class GuiController implements Initializable {
 			statusBar.getRightItems().add(mouseLabel);
 		}
 
-		minHeight.textProperty().bind(Bindings.format("Min: %3.0f", heightSlider.lowValueProperty()));
-		maxHeight.textProperty().bind(Bindings.format("Max: %3.0f", heightSlider.highValueProperty()));
+		minHeight.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
+		maxHeight.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
 		dimensionBox.setConverter(new StringConverter<MinecraftDimension>() {
 
 			@Override
@@ -237,7 +236,8 @@ public class GuiController implements Initializable {
 						val != null ? val.folderProperty().get() : null);
 
 				byte mask = val == null ? 0 : val.getGuiBitmask();
-				heightSlider.setDisable((mask & RegionFolderProvider.BIT_HEIGHT) == 0);
+				minHeight.setDisable((mask & RegionFolderProvider.BIT_HEIGHT) == 0);
+				maxHeight.setDisable((mask & RegionFolderProvider.BIT_HEIGHT) == 0);
 				colorBox.setDisable((mask & RegionFolderProvider.BIT_COLOR) == 0);
 				shadingBox.setDisable((mask & RegionFolderProvider.BIT_SHADING) == 0);
 				dimensionBox.setDisable((mask & RegionFolderProvider.BIT_DIMENSION) == 0);

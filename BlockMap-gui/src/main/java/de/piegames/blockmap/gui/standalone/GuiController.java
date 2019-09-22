@@ -1,7 +1,6 @@
 package de.piegames.blockmap.gui.standalone;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -23,13 +22,11 @@ import org.apache.commons.logging.LogFactory;
 import org.controlsfx.control.CheckTreeView;
 import org.controlsfx.control.StatusBar;
 import org.controlsfx.dialog.ExceptionDialog;
-import org.controlsfx.dialog.ProgressDialog;
 import org.joml.Vector2ic;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import de.piegames.blockmap.DotMinecraft;
-import de.piegames.blockmap.MinecraftDimension;
 import de.piegames.blockmap.gui.MapPane;
 import de.piegames.blockmap.gui.WorldRendererCanvas;
 import de.piegames.blockmap.gui.decoration.DragScrollDecoration;
@@ -41,7 +38,6 @@ import de.piegames.blockmap.gui.decoration.ScaleDecoration;
 import de.piegames.blockmap.gui.standalone.about.AboutDialog;
 import de.piegames.blockmap.world.ChunkMetadata;
 import de.piegames.blockmap.world.RegionFolder;
-import de.piegames.blockmap.world.RegionFolder.CachedRegionFolder;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
@@ -49,7 +45,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
-import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
@@ -57,72 +52,71 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.CheckBoxTreeItem;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TextFormatter;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.TitledPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.DirectoryChooser;
 import javafx.util.Pair;
-import javafx.util.StringConverter;
-import javafx.util.converter.IntegerStringConverter;
 
 public class GuiController implements Initializable {
 
-	private static Log								log						= LogFactory.getLog(GuiController.class);
+	private static Log log = LogFactory.getLog(GuiController.class);
 
-	public WorldRendererCanvas						renderer;
-	protected ObjectProperty<RegionFolder>			regionFolder			= new SimpleObjectProperty<>();
-	protected ObjectProperty<RegionFolderProvider>	regionFolderProvider	= new SimpleObjectProperty<>();
+	static enum WorldType {
+		LOCAL, REMOTE, NONE;
+	}
+
+	public WorldRendererCanvas								renderer;
+	protected WorldType										loaded				= WorldType.NONE;
+	protected ObjectProperty<Pair<String, RegionFolder>>	regionFolder		= new SimpleObjectProperty<>();
+	protected ObjectProperty<RegionFolder>					regionFolderCached	= new SimpleObjectProperty<>();
 
 	@FXML
-	private BorderPane								root;
+	private BorderPane										root;
 
 	/* Top */
 
 	@FXML
-	private TextField								worldInput;
-	// TODO replace with full history
-	private Path									lastBrowsedPath;
-	private String									lastBrowsedURL;
+	private TextField										worldInput;
 
 	/* Bottom */
 
 	@FXML
-	private StatusBar								statusBar;
+	private StatusBar										statusBar;
 
-	/* Left */
+	/* Other (external) settings */
+	@FXML
+	protected TitledPane									worldSettings;
+	@FXML
+	protected GuiControllerWorld							worldSettingsController;
+	@FXML
+	protected TitledPane									serverSettings;
+	@FXML
+	protected GuiControllerServer							serverSettingsController;
+
+	/* View settings */
 
 	@FXML
-	TextField										minHeight, maxHeight;
+	private CheckBox										gridBox;
 	@FXML
-	ChoiceBox<String>								shadingBox;
+	private CheckBox										scaleBox;
 	@FXML
-	ChoiceBox<String>								colorBox;
+	private CheckBox										pinBox;
 	@FXML
-	ChoiceBox<MinecraftDimension>					dimensionBox;
-	@FXML
-	ChoiceBox<String>								worldBox;
-	@FXML
-	private CheckBox								gridBox;
-	@FXML
-	private CheckBox								scaleBox;
-	@FXML
-	private CheckBox								pinBox;
-	@FXML
-	public CheckTreeView<PinType>					pinView;
-	public Map<PinType, TreeItem<PinType>>			checkedPins				= new HashMap<>();
+	public CheckTreeView<PinType>							pinView;
+	public Map<PinType, TreeItem<PinType>>					checkedPins			= new HashMap<>();
 
-	protected MapPane								pane;
-	public PinDecoration							pins;
+	protected MapPane										pane;
+	public PinDecoration									pins;
 
-	protected ScheduledExecutorService				backgroundThread		= Executors.newSingleThreadScheduledExecutor(
+	protected ScheduledExecutorService						backgroundThread	= Executors.newSingleThreadScheduledExecutor(
 			new ThreadFactoryBuilder().setNameFormat("pin-background-thread-%d").build());
-	RegionFolderCache								cache					= new RegionFolderCache();
+	RegionFolderCache										cache				= new RegionFolderCache();
 
 	public GuiController() {
 	}
@@ -178,21 +172,6 @@ public class GuiController implements Initializable {
 			statusBar.getRightItems().add(mouseLabel);
 		}
 
-		minHeight.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
-		maxHeight.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
-		dimensionBox.setConverter(new StringConverter<MinecraftDimension>() {
-
-			@Override
-			public String toString(MinecraftDimension object) {
-				return object.displayName;
-			}
-
-			@Override
-			public MinecraftDimension fromString(String string) {
-				return null;
-			}
-		});
-
 		{ /* Pin checkbox icon */
 			ImageView image = new ImageView(PinType.ANY_PIN.image);
 			image.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> pinBox.getFont().getSize() * 1.5, pinBox.fontProperty()));
@@ -215,46 +194,18 @@ public class GuiController implements Initializable {
 					.disabledProperty()));
 		}
 
-		{
-			ChangeListener<? super Pair<String, RegionFolder>> regionFolderListener = (e, old, val) -> {
-				if (old != null)
-					cache.releaseCache(old.getKey());
-				if (val != null)
-					regionFolder.set(cache.cache(val.getValue(), val.getKey()));
-				else
-					regionFolder.set(null);
-			};
+		/* Cache wrapper */
+		regionFolder.addListener((ChangeListener<? super Pair<String, RegionFolder>>) (e, old, val) -> {
+			if (old != null)
+				cache.releaseCache(old.getKey());
+			if (val != null)
+				regionFolderCached.set(cache.cache(val.getValue(), val.getKey()));
+			else
+				regionFolderCached.set(null);
+			renderer.repaint();
+		});
 
-			ChangeListener<? super RegionFolderProvider> regionFolderProviderListener = (observable, old, val) -> {
-				if (old != null)
-					old.folderProperty().removeListener(regionFolderListener);
-				if (val != null)
-					val.folderProperty().addListener(regionFolderListener);
-				/* Force listener update */
-				regionFolderListener.changed(null,
-						old != null ? old.folderProperty().get() : null,
-						val != null ? val.folderProperty().get() : null);
-
-				byte mask = val == null ? 0 : val.getGuiBitmask();
-				minHeight.setDisable((mask & RegionFolderProvider.BIT_HEIGHT) == 0);
-				maxHeight.setDisable((mask & RegionFolderProvider.BIT_HEIGHT) == 0);
-				colorBox.setDisable((mask & RegionFolderProvider.BIT_COLOR) == 0);
-				shadingBox.setDisable((mask & RegionFolderProvider.BIT_SHADING) == 0);
-				dimensionBox.setDisable((mask & RegionFolderProvider.BIT_DIMENSION) == 0);
-				worldBox.setDisable((mask & RegionFolderProvider.BIT_WORLD) == 0);
-
-				pinBox.setDisable(val == null);
-				gridBox.setDisable(val == null);
-				scaleBox.setDisable(val == null);
-
-				renderer.repaint();
-			};
-			regionFolderProvider.addListener(regionFolderProviderListener);
-			/* Force listener update */
-			regionFolderProviderListener.changed(regionFolderProvider, null, null);
-		}
-
-		renderer.regionFolder.bind(regionFolder);
+		renderer.regionFolder.bind(regionFolderCached);
 		renderer.regionFolder.addListener((observable, previous, val) -> {
 			if (val != null)
 				this.pins.loadWorld(val.listRegions(), val.getPins().map(pins -> Pin.convertStatic(pins, backgroundThread, renderer.viewport)).orElse(
@@ -339,7 +290,7 @@ public class GuiController implements Initializable {
 				}
 				/* Load the world */
 				try {
-					regionFolderProvider.set(new RegionFolderProvider.LocalWorldProvider(this, path));
+					loadLocal(path);
 				} catch (RuntimeException e) {
 					Alert alert = new Alert(AlertType.ERROR, "Failed to load world – " + e.getMessage(), ButtonType.OK);
 					alert.showAndWait();
@@ -352,8 +303,7 @@ public class GuiController implements Initializable {
 
 		/* Try to parse as server URI */
 		try {
-			URI uri = new URI(input);
-			regionFolderProvider.set(new RegionFolderProvider.SavedWorldProvider(this, uri));
+			loadRemote(new URI(input));
 		} catch (URISyntaxException e) {
 		}
 
@@ -364,9 +314,10 @@ public class GuiController implements Initializable {
 	}
 
 	@FXML
-	public void browseFolder() {
+	public void showFolderDialog() {
 		DirectoryChooser dialog = new DirectoryChooser();
-		File f = (lastBrowsedPath == null) ? DotMinecraft.DOTMINECRAFT.resolve("saves").toFile() : lastBrowsedPath.getParent().toFile();
+		File f = (worldSettingsController.lastBrowsedPath == null) ? DotMinecraft.DOTMINECRAFT.resolve("saves").toFile()
+				: worldSettingsController.lastBrowsedPath.getParent().toFile();
 		if (!f.isDirectory())
 			f = DotMinecraft.DOTMINECRAFT.resolve("saves").toFile();
 		if (!f.isDirectory())
@@ -374,30 +325,24 @@ public class GuiController implements Initializable {
 		dialog.setInitialDirectory(f);
 		f = dialog.showDialog(null);
 		if (f != null) {
-			lastBrowsedPath = f.toPath();
+			worldSettingsController.lastBrowsedPath = f.toPath();
+			loadLocal(worldSettingsController.lastBrowsedPath);
 			worldInput.setText(f.toString());
-			regionFolderProvider.set(RegionFolderProvider.create(this, lastBrowsedPath));
 		}
 	}
 
 	@FXML
-	public void loadRemote() {
+	public void showUrlDialog() {
 		TextInputDialog dialog = new TextInputDialog();
 		dialog.setTitle("Load remote world");
 		dialog.setHeaderText("Enter the URL to the remote world you want to load");
 		dialog.setGraphic(null);
-		dialog.setResult(lastBrowsedURL);
+		dialog.setResult(serverSettingsController.lastBrowsedURL);
 		dialog.showAndWait().ifPresent(s -> {
 			try {
-				lastBrowsedURL = s;
-				RegionFolderProvider provider = RegionFolderProvider.create(this, new URI(s));
-				if (provider != null) {
-					regionFolderProvider.set(provider);
-					worldInput.setText(s);
-				} else {
-					Alert alert = new Alert(AlertType.ERROR, "Invalid URL", ButtonType.OK);
-					alert.showAndWait();
-				}
+				serverSettingsController.lastBrowsedURL = s;
+				loadRemote(new URI(s));
+				worldInput.setText(s);
 			} catch (URISyntaxException | IllegalArgumentException e) {
 				log.warn("Malformed input uri", e);
 				ExceptionDialog d = new ExceptionDialog(e);
@@ -409,17 +354,40 @@ public class GuiController implements Initializable {
 
 	@FXML
 	public void reloadWorld() {
-		if (regionFolderProvider.get() != null)
-			regionFolderProvider.get().reload();
+		switch (loaded) {
+		case LOCAL:
+			worldSettingsController.reload();
+			break;
+		case REMOTE:
+			serverSettingsController.reload();
+			break;
+		default:
+		}
+	}
+
+	public void loadLocal(Path path) {
+		worldSettingsController.load(path);
+		worldSettingsController.content.setDisable(false);
+		serverSettingsController.content.setDisable(true);
+		regionFolder.bind(worldSettingsController.folderProperty());
+		loaded = WorldType.LOCAL;
+	}
+
+	public void loadRemote(URI file) {
+		serverSettingsController.load(file);
+		serverSettingsController.content.setDisable(false);
+		worldSettingsController.content.setDisable(true);
+		regionFolder.bind(serverSettingsController.folderProperty());
+		loaded = WorldType.REMOTE;
 	}
 
 	@FXML
 	public void unload() {
-		regionFolderProvider.set(null);
-	}
-
-	public void load(RegionFolderProvider world) {
-		regionFolderProvider.set(world);
+		worldSettingsController.content.setDisable(true);
+		serverSettingsController.content.setDisable(true);
+		loaded = WorldType.NONE;
+		regionFolder.unbind();
+		regionFolder.setValue(null);
 	}
 
 	@FXML

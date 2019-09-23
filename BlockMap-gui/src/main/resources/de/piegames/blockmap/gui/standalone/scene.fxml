@@ -133,56 +133,50 @@
 			</HBox>
 		</top>
 		<left>
-			<Accordion>
-				<panes> 
-					<fx:include fx:id="serverSettings" source="scene-serversettings.fxml" />
-					<fx:include fx:id="worldSettings" source="scene-worldsettings.fxml" />
+			<VBox>
+				<children>
+					<fx:include
+						fx:id="serverSettings"
+						source="scene-serversettings.fxml" />
+					<fx:include
+						fx:id="worldSettings"
+						source="scene-worldsettings.fxml" />
 					<TitledPane
 						text="View"
-						expanded="true">
+						expanded="true"
+						fx:id="viewSettings"
+						id="view-settings">
 						<content>
-							<GridPane>
+							<VBox styleClass="list">
 								<children>
 									<CheckBox
 										text="Show grid"
-										fx:id="gridBox"
-										GridPane.rowIndex="2"
-										GridPane.columnIndex="0"
-										GridPane.columnSpan="2">
+										fx:id="gridBox">
 									</CheckBox>
 
 									<CheckBox
 										text="Show scale bar"
-										fx:id="scaleBox"
-										GridPane.rowIndex="3"
-										GridPane.columnIndex="0"
-										GridPane.columnSpan="2">
+										fx:id="scaleBox">
 									</CheckBox>
 
 									<CheckBox
 										text="Show pins"
 										fx:id="pinBox"
-										selected="true"
-										GridPane.rowIndex="4"
-										GridPane.columnIndex="0"
-										GridPane.columnSpan="2">
+										selected="true">
 									</CheckBox>
 
 									<CheckTreeView
 										showRoot="false"
 										id="pin-tree"
 										fx:id="pinView"
-										GridPane.rowIndex="5"
-										GridPane.columnIndex="0"
-										GridPane.columnSpan="2"
-										GridPane.vgrow="ALWAYS">
+										VBox.vgrow="ALWAYS">
 									</CheckTreeView>
 								</children>
-							</GridPane>
+							</VBox>
 						</content>
 					</TitledPane>
-				</panes>
-			</Accordion>
+				</children>
+			</VBox>
 		</left>
 		<center>
 		</center>

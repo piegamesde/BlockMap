@@ -4,10 +4,11 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -21,18 +22,17 @@ import de.piegames.blockmap.renderer.RegionShader;
 import de.piegames.blockmap.renderer.RenderSettings;
 import de.piegames.blockmap.world.RegionFolder;
 import de.piegames.blockmap.world.RegionFolder.WorldRegionFolder;
-import javafx.beans.WeakInvalidationListener;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
-import javafx.scene.layout.GridPane;
 import javafx.util.Pair;
 import javafx.util.StringConverter;
 import javafx.util.converter.IntegerStringConverter;
@@ -41,8 +41,6 @@ public class GuiControllerWorld implements Initializable {
 
 	private static Log											log				= LogFactory.getLog(GuiControllerWorld.class);
 
-	@FXML
-	GridPane													content;
 	@FXML
 	TextField													minHeight, maxHeight;
 	@FXML
@@ -57,7 +55,6 @@ public class GuiControllerWorld implements Initializable {
 	protected Path												worldPath;
 	protected Path												lastBrowsedPath;
 	protected RenderSettings									settings;
-	protected List<MinecraftDimension>							available;
 
 	private ChangeListener<Object>								reloadListener	= (observer, old, value) -> {
 																					if (old != value)
@@ -70,16 +67,26 @@ public class GuiControllerWorld implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		available = new ArrayList<>(3);
-
-		// TODO add range checks
 		minHeight.setTextFormatter(new TextFormatter<>(new IntegerStringConverter(), 0));
 		maxHeight.setTextFormatter(new TextFormatter<>(new IntegerStringConverter(), 255));
-		minHeight.textProperty().addListener(new WeakInvalidationListener(e -> reload()));
-		maxHeight.textProperty().addListener(new WeakInvalidationListener(e -> reload()));
 
-		colorBox.valueProperty().addListener(new WeakChangeListener<>(reloadListener));
-		shadingBox.valueProperty().addListener(new WeakChangeListener<>(reloadListener));
+		EventHandler<ActionEvent> onHeightChange = e -> {
+			if (minHeight.getText().isEmpty())
+				minHeight.setText("0");
+			if (maxHeight.getText().isEmpty())
+				maxHeight.setText("255");
+			if (new IntegerStringConverter().fromString(minHeight.getText()) > new IntegerStringConverter().fromString(maxHeight.getText())) {
+				String tmp = minHeight.getText();
+				minHeight.setText(maxHeight.getText());
+				maxHeight.setText(tmp);
+			}
+			reload();
+		};
+		minHeight.setOnAction(onHeightChange);
+		maxHeight.setOnAction(onHeightChange);
+
+		colorBox.valueProperty().addListener(reloadListener);
+		shadingBox.valueProperty().addListener(reloadListener);
 
 		dimensionBox.setConverter(new StringConverter<MinecraftDimension>() {
 
@@ -96,19 +103,24 @@ public class GuiControllerWorld implements Initializable {
 	}
 
 	public void load(Path worldPath) {
-		for (MinecraftDimension d : MinecraftDimension.values())
-			if (Files.exists(worldPath.resolve(d.getRegionPath())) && Files.isDirectory(worldPath.resolve(d.getRegionPath())))
-				available.add(d);
+		List<MinecraftDimension> available = Arrays.stream(MinecraftDimension.values())
+				.filter(d -> Files.exists(worldPath.resolve(d.getRegionPath())) && Files.isDirectory(worldPath.resolve(d.getRegionPath())))
+				.collect(Collectors.toList());
 		if (available.isEmpty())
 			throw new IllegalArgumentException("Not a vaild world folder");
+		dimensionBox.valueProperty().removeListener(reloadListener);
 		dimensionBox.setItems(FXCollections.observableList(available));
-		dimensionBox.valueProperty().addListener(new WeakChangeListener<>(reloadListener));
 		dimensionBox.setValue(available.get(0));
+		dimensionBox.valueProperty().addListener(reloadListener);
 		this.worldPath = worldPath;
 		reload();
 	}
 
 	public void reload() {
+		if (worldPath == null) {
+			folder.set(null);
+			return;
+		}
 		try {
 			settings = new RenderSettings(
 					Integer.MIN_VALUE,
@@ -125,16 +137,12 @@ public class GuiControllerWorld implements Initializable {
 					Integer.toHexString(Objects.hash(worldPath.toAbsolutePath().toString(), settings, dimensionBox.getValue())),
 					WorldRegionFolder.load(worldPath,
 							dimensionBox.getValue(), renderer, true)));
-		} catch (IOException e) {
+		} catch (RuntimeException | IOException e) {
 			folder.set(null);
 			log.warn("Could not load world " + worldPath, e);
 			ExceptionDialog d = new ExceptionDialog(e);
 			d.setTitle("Could not load world");
 			d.showAndWait();
 		}
-	}
-
-	public String getLocation() {
-		return worldPath.toString();
 	}
 }

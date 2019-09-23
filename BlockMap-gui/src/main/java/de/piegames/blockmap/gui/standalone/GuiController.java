@@ -102,6 +102,8 @@ public class GuiController implements Initializable {
 	/* View settings */
 
 	@FXML
+	private TitledPane										viewSettings;
+	@FXML
 	private CheckBox										gridBox;
 	@FXML
 	private CheckBox										scaleBox;
@@ -367,24 +369,35 @@ public class GuiController implements Initializable {
 
 	public void loadLocal(Path path) {
 		worldSettingsController.load(path);
-		worldSettingsController.content.setDisable(false);
-		serverSettingsController.content.setDisable(true);
+
+		worldSettings.setDisable(false);
+		serverSettings.setExpanded(false);
+		worldSettings.setExpanded(true);
+		serverSettings.setDisable(true);
+
 		regionFolder.bind(worldSettingsController.folderProperty());
 		loaded = WorldType.LOCAL;
 	}
 
 	public void loadRemote(URI file) {
 		serverSettingsController.load(file);
-		serverSettingsController.content.setDisable(false);
-		worldSettingsController.content.setDisable(true);
+
+		serverSettings.setDisable(false);
+		worldSettings.setExpanded(false);
+		serverSettings.setExpanded(true);
+		worldSettings.setDisable(true);
+
 		regionFolder.bind(serverSettingsController.folderProperty());
 		loaded = WorldType.REMOTE;
 	}
 
 	@FXML
 	public void unload() {
-		worldSettingsController.content.setDisable(true);
-		serverSettingsController.content.setDisable(true);
+		serverSettings.setDisable(true);
+		serverSettings.setExpanded(false);
+		worldSettings.setDisable(true);
+		worldSettings.setExpanded(false);
+
 		loaded = WorldType.NONE;
 		regionFolder.unbind();
 		regionFolder.setValue(null);

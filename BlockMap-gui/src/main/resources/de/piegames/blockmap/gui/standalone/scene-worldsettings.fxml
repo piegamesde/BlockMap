@@ -28,15 +28,14 @@
 
 <TitledPane
 	text="World"
-	expanded="true"
+	expanded="false"
+	disable="true"
 	xmlns="http://javafx.com/javafx/8"
 	xmlns:fx="http://javafx.com/fxml/1"
 	fx:controller="de.piegames.blockmap.gui.standalone.GuiControllerWorld">
 	<content>
 		<GridPane
-			id="world-settings"
-			fx:id="content"
-			disable="true">
+			id="world-settings">
 			<children>
 				<Label
 					text="Dimension:"

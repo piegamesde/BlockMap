@@ -28,24 +28,37 @@
 
 <TitledPane
 	text="Server"
-	expanded="true"
+	disable="true"
+	expanded="false"
 	xmlns="http://javafx.com/javafx/8"
 	xmlns:fx="http://javafx.com/fxml/1"
 	fx:controller="de.piegames.blockmap.gui.standalone.GuiControllerServer">
 	<content>
-		<VBox id="server-settings" fx:id="content" disable="true">
+		<VBox
+			id="server-settings"
+			alignment="TOP_CENTER">
 			<children>
-				<HBox>
+				<HBox
+					spacing="4"
+					alignment="CENTER">
 					<children>
-						<Label text="World" />
+						<Label text="World:" />
 						<ChoiceBox
 							fx:id="worldBox"
-							maxWidth="Infinity" />
+							maxWidth="Infinity"
+							HBox.hgrow="ALWAYS" />
 					</children>
 				</HBox>
-				<Label text="Server name" />
-				<ImageView />
-				<Label text="Server description" />
+				<Label
+					text="Server name"
+					fx:id="serverName"
+					id="server-name"
+					maxWidth="Infinity"
+					alignment="CENTER" />
+				<ImageView fx:id="serverIcon" />
+				<Label
+					fx:id="serverDescription"
+					text="Server description" />
 				<Label text="Players online: 0/30" />
 			</children>
 		</VBox>

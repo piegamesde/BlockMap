@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URI;
 import java.net.URL;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
@@ -15,9 +16,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.controlsfx.dialog.ExceptionDialog;
 
+import com.google.gson.Gson;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+
 import de.piegames.blockmap.world.RegionFolder;
 import de.piegames.blockmap.world.ServerMetadata;
 import de.piegames.blockmap.world.ServerMetadata.ServerLevel;
+import io.gsonfire.GsonFireBuilder;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
@@ -26,15 +33,39 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ChoiceBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.util.Pair;
+import net.dongliu.gson.GsonJava8TypeAdapterFactory;
 
 public class GuiControllerServer implements Initializable {
 
 	private static Log											log			= LogFactory.getLog(GuiControllerServer.class);
 
+	public static final Gson									GSON		= new GsonFireBuilder()
+			.enableExposeMethodParam()
+			.createGsonBuilder()
+			.registerTypeAdapterFactory(new GsonJava8TypeAdapterFactory())
+			.registerTypeHierarchyAdapter(Path.class, new TypeAdapter<Path>() {
+
+																						@Override
+																						public void write(JsonWriter out, Path value) throws IOException {
+																							out.value(value.toString());
+																						}
+
+																						@Override
+																						public Path read(JsonReader in) throws IOException {
+																							return Paths.get(in.nextString());
+																						}
+																					})
+			.disableHtmlEscaping()
+			.setPrettyPrinting()
+			.create();
 	@FXML
-	VBox														content;
+	Label														serverName, serverDescription;
+	@FXML
+	ImageView													serverIcon;
 	@FXML
 	ChoiceBox<String>											worldBox;
 
@@ -81,7 +112,7 @@ public class GuiControllerServer implements Initializable {
 
 	public void reload() {
 		try (Reader reader = new InputStreamReader(file.toURL().openStream())) {
-			metadata = RegionFolder.GSON.fromJson(reader, ServerMetadata.class);
+			metadata = GSON.fromJson(reader, ServerMetadata.class);
 			worlds = metadata.levels;
 			String selected = worldBox.getValue();
 
@@ -90,16 +121,17 @@ public class GuiControllerServer implements Initializable {
 				worldBox.setValue(selected);
 			else if (!worlds.isEmpty())
 				worldBox.setValue(worldBox.getItems().get(0));
-		} catch (IOException e) {
+
+			serverName.setText(metadata.name.orElse("(unknown server)"));
+			serverDescription.setText(metadata.description.orElse("(unknown description)"));
+
+			serverIcon.setImage(metadata.iconLocation.map(url -> new Image(url)).orElse(new Image(getClass().getResourceAsStream("/unknown_server.png"))));
+		} catch (RuntimeException | IOException e) {
 			folder.set(null);
-			log.warn("Could not load world " + file, e);
+			log.warn("Could not load server world " + file, e);
 			ExceptionDialog d = new ExceptionDialog(e);
-			d.setTitle("Could not load world");
+			d.setTitle("Could not load server world");
 			d.showAndWait();
 		}
-	}
-
-	public String getLocation() {
-		return "file".equals(file.getScheme()) ? Paths.get(file).toString() : file.toString();
 	}
 }

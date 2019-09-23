@@ -2,7 +2,6 @@ package de.piegames.blockmap.standalone;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -36,6 +35,7 @@ import de.piegames.blockmap.world.RegionFolder.CachedRegionFolder;
 import de.piegames.blockmap.world.RegionFolder.WorldRegionFolder;
 import de.piegames.blockmap.world.ServerMetadata;
 import io.gsonfire.GsonFireBuilder;
+import net.dongliu.gson.GsonJava8TypeAdapterFactory;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Help.Visibility;
@@ -59,6 +59,7 @@ public class CommandLineMain implements Callable<Integer> {
 	public static final Gson	GSON	= new GsonFireBuilder()
 			.enableExposeMethodParam()
 			.createGsonBuilder()
+			.registerTypeAdapterFactory(new GsonJava8TypeAdapterFactory())
 			.registerTypeHierarchyAdapter(Path.class, new TypeAdapter<Path>() {
 
 													@Override
@@ -292,7 +293,7 @@ public class CommandLineMain implements Callable<Integer> {
 		@Option(names = { "--server-address" })
 		private String			ipAddress;
 		@Option(names = { "--server-icon" })
-		private URI				iconLocation;
+		private String			iconLocation;
 		@Option(names = { "--online-players" }, description = "The UUIDs of all players to be shown as 'online'")
 		private String			online;
 
@@ -310,7 +311,7 @@ public class CommandLineMain implements Callable<Integer> {
 				return 2;
 			}
 
-			ServerMetadata metadata = new ServerMetadata();
+			ServerMetadata metadata = new ServerMetadata(name, description, ipAddress, iconLocation);
 			metadata.levels = new ArrayList<>(settings.worlds.length);
 
 			/* Render all worlds */

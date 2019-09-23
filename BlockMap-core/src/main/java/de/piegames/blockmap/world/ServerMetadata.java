@@ -1,5 +1,6 @@
 package de.piegames.blockmap.world;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,7 +11,18 @@ public class ServerMetadata {
 	public Optional<String>		description;
 	public Optional<String>		ipAddress;
 	public Optional<String>		iconLocation;
-	public List<ServerLevel>	levels;
+	public List<ServerLevel>	levels	= new ArrayList<>();
+
+	public ServerMetadata() {
+		this(null, null, null, null);
+	}
+
+	public ServerMetadata(String name, String description, String ipAddress, String iconLocation) {
+		this.name = Optional.ofNullable(name);
+		this.description = Optional.ofNullable(description);
+		this.ipAddress = Optional.ofNullable(ipAddress);
+		this.iconLocation = Optional.ofNullable(iconLocation);
+	}
 
 	public static class ServerLevel {
 		public String	name;

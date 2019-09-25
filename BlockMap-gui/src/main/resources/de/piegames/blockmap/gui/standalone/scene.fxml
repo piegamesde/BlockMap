@@ -106,11 +106,12 @@
 			<HBox id="top">
 				<children>
 					<TextField
+						editable="true"
 						onAction="#load"
-						promptText="Enter path to world or server URI"
+						promptText="Enter path to world or server URL"
 						fx:id="worldInput"
 						maxWidth="Infinity"
-						HBox.hgrow="ALWAYS" />
+						HBox.hgrow="ALWAYS"/>
 					<Button
 						text="Load"
 						onAction="#load" />

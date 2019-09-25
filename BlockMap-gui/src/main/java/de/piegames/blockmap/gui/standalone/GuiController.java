@@ -1,6 +1,7 @@
 package de.piegames.blockmap.gui.standalone;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -10,6 +11,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.concurrent.Executors;
@@ -21,6 +24,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.controlsfx.control.CheckTreeView;
 import org.controlsfx.control.StatusBar;
+import org.controlsfx.control.textfield.AutoCompletionBinding;
+import org.controlsfx.control.textfield.TextFields;
 import org.controlsfx.dialog.ExceptionDialog;
 import org.joml.Vector2ic;
 
@@ -37,7 +42,9 @@ import de.piegames.blockmap.gui.decoration.PinDecoration;
 import de.piegames.blockmap.gui.decoration.ScaleDecoration;
 import de.piegames.blockmap.gui.standalone.about.AboutDialog;
 import de.piegames.blockmap.world.ChunkMetadata;
+import de.piegames.blockmap.world.LevelMetadata;
 import de.piegames.blockmap.world.RegionFolder;
+import impl.org.controlsfx.skin.AutoCompletePopup;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
@@ -53,6 +60,8 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.CheckBoxTreeItem;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
@@ -61,7 +70,9 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.DirectoryChooser;
+import javafx.util.Callback;
 import javafx.util.Pair;
+import javafx.util.StringConverter;
 
 public class GuiController implements Initializable {
 
@@ -83,6 +94,10 @@ public class GuiController implements Initializable {
 
 	@FXML
 	private TextField										worldInput;
+	/** Recently loaded worlds and servers */
+	private List<HistoryItem>								recentWorlds		= new LinkedList<>();
+	/** Whatever found in {@code .minecraft} for autocomplete purposes */
+	private List<HistoryItem>								otherWorlds			= new LinkedList<>();
 
 	/* Bottom */
 
@@ -142,6 +157,39 @@ public class GuiController implements Initializable {
 		}
 		pins = new PinDecoration(renderer.viewport);
 		pane.pinLayers.add(pins);
+
+		AutoCompletionBinding<HistoryItem> autoComplete = TextFields.bindAutoCompletion(worldInput, request -> recentWorlds,
+				new StringConverter<HistoryItem>() {
+
+					@Override
+					public String toString(HistoryItem object) {
+						return object.path;
+					}
+
+					@Override
+					public HistoryItem fromString(String string) {
+						return null;
+					}
+				});
+		try {
+			Field field = AutoCompletionBinding.class.getDeclaredField("autoCompletionPopup");
+			field.setAccessible(true);
+			@SuppressWarnings("unchecked")
+			AutoCompletePopup<HistoryItem> popup = (AutoCompletePopup<HistoryItem>) field.get(autoComplete);
+			popup.setSkin(new AutoCompletePopupSkin2<HistoryItem>(popup, new Callback<ListView<HistoryItem>, ListCell<HistoryItem>>() {
+
+				@Override
+				public ListCell<HistoryItem> call(ListView<HistoryItem> param) {
+					return new AutoCompleteItem();
+				}
+			}));
+		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e1) {
+			e1.printStackTrace();
+		}
+
+		autoComplete.maxWidthProperty().bind(worldInput.widthProperty());
+		autoComplete.prefWidthProperty().bind(worldInput.widthProperty());
+		autoComplete.setDelay(0);
 
 		{ /* Status bar initialization */
 			statusBar.setSkin(new StatusBarSkin2(statusBar));
@@ -265,9 +313,12 @@ public class GuiController implements Initializable {
 		checkedPins.put(type, ret);
 	}
 
-	// TODO rewrite
 	public void load() {
 		String input = worldInput.getText();
+		if (input.isBlank()) {
+			unload();
+			return;
+		}
 
 		/* Try to load it as local world first */
 		try {
@@ -306,11 +357,12 @@ public class GuiController implements Initializable {
 		/* Try to parse as server URI */
 		try {
 			loadRemote(new URI(input));
+			return;
 		} catch (URISyntaxException e) {
 		}
 
 		/* Total failure */
-		Alert alert = new Alert(AlertType.ERROR, "Could not parse input", ButtonType.OK);
+		Alert alert = new Alert(AlertType.ERROR, "Please specify the path to a world or the URL to a server", ButtonType.OK);
 		alert.showAndWait();
 		worldInput.selectAll();
 	}
@@ -377,6 +429,18 @@ public class GuiController implements Initializable {
 
 		regionFolder.bind(worldSettingsController.folderProperty());
 		loaded = WorldType.LOCAL;
+
+		{ /* Update history */
+			recentWorlds.removeIf(w -> w.path.equals(path.toAbsolutePath().toString()));
+			String name = regionFolderCached.get()
+					.getPins()
+					.flatMap(LevelMetadata::getWorldName)
+					.orElse(path.getFileName().toString());
+			String imageURL = null;
+			if (Files.exists(path.resolve("icon.png")))
+				imageURL = path.resolve("icon.png").toUri().toString();
+			recentWorlds.add(0, new HistoryItem(false, name, path.toAbsolutePath().toString(), imageURL));
+		}
 	}
 
 	public void loadRemote(URI file) {
@@ -389,6 +453,13 @@ public class GuiController implements Initializable {
 
 		regionFolder.bind(serverSettingsController.folderProperty());
 		loaded = WorldType.REMOTE;
+
+		{ /* Update history */
+			recentWorlds.removeIf(w -> w.path.equals(file.toString()));
+			String name = serverSettingsController.getMetadata().name.orElse(null);
+			String imageURL = serverSettingsController.getMetadata().iconLocation.orElse(null);
+			recentWorlds.add(0, new HistoryItem(true, name, file.toString(), imageURL));
+		}
 	}
 
 	@FXML

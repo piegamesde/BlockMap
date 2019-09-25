@@ -28,7 +28,6 @@ import io.gsonfire.GsonFireBuilder;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -76,7 +75,6 @@ public class GuiControllerServer implements Initializable {
 	protected List<ServerLevel>									worlds;
 	protected String											lastBrowsedURL;
 
-	/* Strong reference */
 	private ChangeListener<String>								listener	= (o, old, val) -> {
 																				try {
 																					String path = worlds.stream()
@@ -102,7 +100,7 @@ public class GuiControllerServer implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		worldBox.valueProperty().addListener(new WeakChangeListener<>(listener));
+		worldBox.valueProperty().addListener(listener);
 	}
 
 	public void load(URI file) {
@@ -116,16 +114,22 @@ public class GuiControllerServer implements Initializable {
 			worlds = metadata.levels;
 			String selected = worldBox.getValue();
 
+			/* Temporarily disable listener to avoid premature triggers */
+			worldBox.valueProperty().removeListener(listener);
 			worldBox.setItems(FXCollections.observableList(worlds.stream().map(l -> l.name).collect(Collectors.toList())));
 			if (worldBox.getItems().contains(selected))
 				worldBox.setValue(selected);
 			else if (!worlds.isEmpty())
 				worldBox.setValue(worldBox.getItems().get(0));
+			worldBox.valueProperty().addListener(listener);
 
 			serverName.setText(metadata.name.orElse("(unknown server)"));
 			serverDescription.setText(metadata.description.orElse("(unknown description)"));
 
 			serverIcon.setImage(metadata.iconLocation.map(url -> new Image(url)).orElse(new Image(getClass().getResourceAsStream("/unknown_server.png"))));
+
+			/* Force listener update to reload world */
+			listener.changed(worldBox.valueProperty(), null, worldBox.getValue());
 		} catch (RuntimeException | IOException e) {
 			folder.set(null);
 			log.warn("Could not load server world " + file, e);
@@ -133,5 +137,9 @@ public class GuiControllerServer implements Initializable {
 			d.setTitle("Could not load server world");
 			d.showAndWait();
 		}
+	}
+
+	public ServerMetadata getMetadata() {
+		return metadata;
 	}
 }

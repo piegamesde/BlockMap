@@ -108,6 +108,7 @@ public class GuiControllerWorld implements Initializable {
 				.collect(Collectors.toList());
 		if (available.isEmpty())
 			throw new IllegalArgumentException("Not a vaild world folder");
+		/* Temporarily disable listener to avoid premature triggers */
 		dimensionBox.valueProperty().removeListener(reloadListener);
 		dimensionBox.setItems(FXCollections.observableList(available));
 		dimensionBox.setValue(available.get(0));

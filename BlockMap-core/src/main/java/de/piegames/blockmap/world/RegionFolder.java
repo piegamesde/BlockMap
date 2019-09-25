@@ -62,7 +62,7 @@ public abstract class RegionFolder {
 			.enableExposeMethodResult()
 			.enableExcludeByAnnotation()
 			.enableHooks(RegionHelper.class)
-			.enableHooks(WorldPins.MapPin.class)
+			.enableHooks(LevelMetadata.MapPin.class)
 			.registerTypeSelector(Vector2ic.class, e -> Vector2i.class)
 			.registerTypeSelector(Vector3ic.class, e -> Vector3i.class)
 			.registerTypeSelector(Vector2dc.class, e -> Vector2d.class)
@@ -102,7 +102,7 @@ public abstract class RegionFolder {
 	public abstract long getTimestamp(Vector2ic pos) throws IOException;
 
 	/** Returns the pins of this specific world or {@code Optional.empty()} if they are not loaded. */
-	public abstract Optional<WorldPins> getPins();
+	public abstract Optional<LevelMetadata> getPins();
 
 	/**
 	 * Whether the render process of this region folder may need caching or not.
@@ -119,7 +119,7 @@ public abstract class RegionFolder {
 
 		protected final Map<Vector2ic, Path>	regions;
 		protected final RegionRenderer			renderer;
-		protected WorldPins						pins;
+		protected LevelMetadata						pins;
 
 		/**
 		 * @param file
@@ -163,11 +163,11 @@ public abstract class RegionFolder {
 		}
 
 		@Override
-		public Optional<WorldPins> getPins() {
+		public Optional<LevelMetadata> getPins() {
 			return Optional.ofNullable(pins);
 		}
 
-		public void setPins(WorldPins pins) {
+		public void setPins(LevelMetadata pins) {
 			this.pins = pins;
 		}
 
@@ -186,7 +186,7 @@ public abstract class RegionFolder {
 		public static WorldRegionFolder load(Path world, MinecraftDimension dimension, RegionRenderer renderer, boolean loadPins) throws IOException {
 			WorldRegionFolder folder = load(world.resolve(dimension.getRegionPath()), renderer);
 			if (loadPins)
-				folder.setPins(WorldPins.loadFromWorld(world, dimension));
+				folder.setPins(LevelMetadata.loadFromWorld(world, dimension));
 			return folder;
 		}
 
@@ -226,7 +226,7 @@ public abstract class RegionFolder {
 		/** The path to the metadata.json file. All paths are relative to this. */
 		protected final T								basePath;
 		protected final Map<Vector2ic, RegionHelper>	regions;
-		protected final Optional<WorldPins>				pins;
+		protected final Optional<LevelMetadata>				pins;
 
 		/**
 		 * Loads a json file that contains the information about all rendered files.
@@ -273,7 +273,7 @@ public abstract class RegionFolder {
 		}
 
 		@Override
-		public Optional<WorldPins> getPins() {
+		public Optional<LevelMetadata> getPins() {
 			return pins;
 		}
 	}
@@ -409,7 +409,7 @@ public abstract class RegionFolder {
 		}
 
 		@Override
-		public Optional<WorldPins> getPins() {
+		public Optional<LevelMetadata> getPins() {
 			return world.getPins();
 		}
 
@@ -441,9 +441,9 @@ public abstract class RegionFolder {
 	/** Object representation of the content of the {@code rendered.json} metadata file.< */
 	static class SavedRegionHelper {
 		Collection<RegionHelper>	regions;
-		WorldPins					pins;
+		LevelMetadata					pins;
 
-		public SavedRegionHelper(Collection<RegionHelper> regions, WorldPins pins) {
+		public SavedRegionHelper(Collection<RegionHelper> regions, LevelMetadata pins) {
 			this.regions = regions;
 			this.pins = pins;
 		}

@@ -42,7 +42,7 @@ import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataFailed;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataRendered;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataVersion;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataVisitor;
-import de.piegames.blockmap.world.WorldPins;
+import de.piegames.blockmap.world.LevelMetadata;
 import de.saibotk.jmaw.ApiResponseException;
 import de.saibotk.jmaw.MojangAPI;
 import de.saibotk.jmaw.PlayerProfile;
@@ -581,9 +581,9 @@ public class Pin {
 			}
 		}
 
-		protected List<de.piegames.blockmap.world.WorldPins.MapPin> maps;
+		protected List<de.piegames.blockmap.world.LevelMetadata.MapPin> maps;
 
-		public MapPin(Vector2d position, List<de.piegames.blockmap.world.WorldPins.MapPin> maps, DisplayViewport viewport) {
+		public MapPin(Vector2d position, List<de.piegames.blockmap.world.LevelMetadata.MapPin> maps, DisplayViewport viewport) {
 			super(position, PinType.MAP_POSITION, viewport);
 			this.maps = Objects.requireNonNull(maps);
 		}
@@ -601,7 +601,7 @@ public class Pin {
 				content.add(new Label(Integer.toString(maps.size())), 1, rowCount++);
 			}
 
-			for (de.piegames.blockmap.world.WorldPins.MapPin map : maps) {
+			for (de.piegames.blockmap.world.LevelMetadata.MapPin map : maps) {
 				BorderPane mapPane = new BorderPane();
 				mapPane.setLeft(new Label("Scale:"));
 				mapPane.setRight(new Label("1:" + (1 << map.getScale())));
@@ -656,11 +656,11 @@ public class Pin {
 		 */
 		private static MojangAPI			api;
 
-		protected WorldPins.PlayerPin		player;
+		protected LevelMetadata.PlayerPin		player;
 		protected StringProperty			playerName	= new SimpleStringProperty("loading…");
 		protected ScheduledExecutorService	backgroundThread;
 
-		public PlayerPin(WorldPins.PlayerPin player, ScheduledExecutorService backgroundThread, DisplayViewport viewport) {
+		public PlayerPin(LevelMetadata.PlayerPin player, ScheduledExecutorService backgroundThread, DisplayViewport viewport) {
 			super(new Vector2d(player.getPosition().x(), player.getPosition().z()), PinType.PLAYER_POSITION, viewport);
 			this.player = player;
 			this.backgroundThread = Objects.requireNonNull(backgroundThread);
@@ -741,9 +741,9 @@ public class Pin {
 	}
 
 	private static class PlayerSpawnpointPin extends Pin {
-		protected WorldPins.PlayerPin player;
+		protected LevelMetadata.PlayerPin player;
 
-		public PlayerSpawnpointPin(WorldPins.PlayerPin player, DisplayViewport viewport) {
+		public PlayerSpawnpointPin(LevelMetadata.PlayerPin player, DisplayViewport viewport) {
 			super(new Vector2d(player.getSpawnpoint().get().x(), player.getSpawnpoint().get().z()), PinType.PLAYER_SPAWN, viewport);
 			this.player = Objects.requireNonNull(player);
 		}
@@ -773,9 +773,9 @@ public class Pin {
 	}
 
 	private static class VillageObjectPin extends Pin {
-		protected WorldPins.VillageObjectPin villageObjectPin;
+		protected LevelMetadata.VillageObjectPin villageObjectPin;
 
-		public VillageObjectPin(WorldPins.VillageObjectPin villageObjectPin, DisplayViewport viewport) {
+		public VillageObjectPin(LevelMetadata.VillageObjectPin villageObjectPin, DisplayViewport viewport) {
 			super(new Vector2d(villageObjectPin.getPosition().x(), villageObjectPin.getPosition().z()), PinType.VILLAGE_MAPPING.get(villageObjectPin.getType()),
 					viewport);
 			this.villageObjectPin = Objects.requireNonNull(villageObjectPin);
@@ -921,15 +921,15 @@ public class Pin {
 		}
 	}
 
-	/** Convert a {@link WorldPins} object containing information retrieved directly from the world to (static) pins. */
-	public static Set<Pin> convertStatic(WorldPins pin, ScheduledExecutorService backgroundThread, DisplayViewport viewport) {
+	/** Convert a {@link LevelMetadata} object containing information retrieved directly from the world to (static) pins. */
+	public static Set<Pin> convertStatic(LevelMetadata pin, ScheduledExecutorService backgroundThread, DisplayViewport viewport) {
 		Set<Pin> pins = new HashSet<>();
-		for (WorldPins.PlayerPin player : pin.getPlayers().orElse(Collections.emptyList())) {
+		for (LevelMetadata.PlayerPin player : pin.getPlayers().orElse(Collections.emptyList())) {
 			pins.add(new PlayerPin(player, backgroundThread, viewport));
 			if (player.getSpawnpoint().isPresent())
 				pins.add(new PlayerSpawnpointPin(player, viewport));
 		}
-		for (WorldPins.VillageObjectPin villageObject : pin.getVillageObjects().orElse(Collections.emptyList())) {
+		for (LevelMetadata.VillageObjectPin villageObject : pin.getVillageObjects().orElse(Collections.emptyList())) {
 			try {
 				pins.add(new VillageObjectPin(villageObject, viewport));
 			} catch (NullPointerException e) {

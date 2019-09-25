@@ -24,12 +24,11 @@ import org.joml.Vector3i;
 import org.joml.Vector3ic;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 
 import de.piegames.blockmap.MinecraftDimension;
-import de.piegames.blockmap.world.WorldPins.MapPin.BannerPin;
+import de.piegames.blockmap.world.LevelMetadata.MapPin.BannerPin;
 import de.piegames.nbt.ByteArrayTag;
 import de.piegames.nbt.ByteTag;
 import de.piegames.nbt.CompoundMap;
@@ -47,15 +46,19 @@ import io.gsonfire.annotations.PostDeserialize;
 import io.gsonfire.annotations.PostSerialize;
 
 /**
- * Each world may be annotated with a set of pins, represented by instances of this class. Actually, the pins will be generated from this
- * information much later on in the GUI (or any third-party applications). This class is more an abstract representation of all information
- * contained in a world that may be of interest for this purpose.
+ * <p>
+ * When rendering a region folder, more information than just the rendered image is collected. Such meta data may be useful to the user or
+ * third party programs and is stored in this class. The GUI will use it to render overlays and pins showing information about other players
+ * and generated structures.
+ * </p>
+ * <p>
+ * The information in this class is by far not complete. Almost every value may be {@code null} for various reasons. Little integrity checks
+ * are made. It may thus contain (or "wrong") information, like the position of players or villages in other dimensions.
+ * </p>
  */
-public class WorldPins {
+public class LevelMetadata {
 
-	private static Log					log		= LogFactory.getLog(WorldPins.class);
-
-	public static final Gson			GSON	= new GsonBuilder().create();
+	private static Log					log		= LogFactory.getLog(LevelMetadata.class);
 
 	/** This will be used in the future to keep track of old serialized files. */
 	int									version	= 0;
@@ -67,17 +70,17 @@ public class WorldPins {
 	Optional<WorldSpawnPin>				worldSpawn;
 
 	@SuppressWarnings("unused")
-	private WorldPins() {
+	private LevelMetadata() {
 		// Used by GSON
 	}
 
-	public WorldPins(List<PlayerPin> players, List<MapPin> maps, List<VillageObjectPin> villageObjects, List<ChunkPin> slimeChunks,
+	public LevelMetadata(List<PlayerPin> players, List<MapPin> maps, List<VillageObjectPin> villageObjects, List<ChunkPin> slimeChunks,
 			List<ChunkPin> loadedChunks, BorderPin barrier, WorldSpawnPin worldSpawn) {
 		this(Optional.ofNullable(players), Optional.ofNullable(maps), Optional.ofNullable(villageObjects), Optional.ofNullable(slimeChunks), Optional
 				.ofNullable(loadedChunks), Optional.ofNullable(barrier), Optional.ofNullable(worldSpawn));
 	}
 
-	public WorldPins(Optional<List<PlayerPin>> players, Optional<List<MapPin>> maps, Optional<List<VillageObjectPin>> villageObjects,
+	public LevelMetadata(Optional<List<PlayerPin>> players, Optional<List<MapPin>> maps, Optional<List<VillageObjectPin>> villageObjects,
 			Optional<List<ChunkPin>> slimeChunks,
 			Optional<List<ChunkPin>> loadedChunks, Optional<BorderPin> barrier, Optional<WorldSpawnPin> worldSpawn) {
 		this.players = players;
@@ -341,7 +344,7 @@ public class WorldPins {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static WorldPins loadFromWorld(Path worldPath, MinecraftDimension filterDimension) {
+	public static LevelMetadata loadFromWorld(Path worldPath, MinecraftDimension filterDimension) {
 		List<PlayerPin> players = new ArrayList<>();
 		// Players
 		try (DirectoryStream<Path> d = Files.newDirectoryStream(worldPath.resolve("playerdata"))) {
@@ -477,6 +480,6 @@ public class WorldPins {
 		} catch (IOException e) {
 			log.warn("Could not access level data", e);
 		}
-		return new WorldPins(players, maps, villageObjects, null, null, barrier, worldSpawn);
+		return new LevelMetadata(players, maps, villageObjects, null, null, barrier, worldSpawn);
 	}
 }

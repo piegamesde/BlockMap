@@ -62,6 +62,8 @@ public class LevelMetadata {
 
 	/** This will be used in the future to keep track of old serialized files. */
 	int									version	= 0;
+	/** The world's name as stored in the {@code level.dat} */
+	Optional<String>					worldName;
 	Optional<List<PlayerPin>>			players;
 	Optional<List<MapPin>>				maps;
 	Optional<List<VillageObjectPin>>	villageObjects;
@@ -74,15 +76,18 @@ public class LevelMetadata {
 		// Used by GSON
 	}
 
-	public LevelMetadata(List<PlayerPin> players, List<MapPin> maps, List<VillageObjectPin> villageObjects, List<ChunkPin> slimeChunks,
+	public LevelMetadata(String worldName, List<PlayerPin> players, List<MapPin> maps, List<VillageObjectPin> villageObjects, List<ChunkPin> slimeChunks,
 			List<ChunkPin> loadedChunks, BorderPin barrier, WorldSpawnPin worldSpawn) {
-		this(Optional.ofNullable(players), Optional.ofNullable(maps), Optional.ofNullable(villageObjects), Optional.ofNullable(slimeChunks), Optional
+		this(Optional.ofNullable(worldName), Optional.ofNullable(players), Optional.ofNullable(maps), Optional.ofNullable(villageObjects), Optional.ofNullable(
+				slimeChunks), Optional
 				.ofNullable(loadedChunks), Optional.ofNullable(barrier), Optional.ofNullable(worldSpawn));
 	}
 
-	public LevelMetadata(Optional<List<PlayerPin>> players, Optional<List<MapPin>> maps, Optional<List<VillageObjectPin>> villageObjects,
+	public LevelMetadata(Optional<String> worldName, Optional<List<PlayerPin>> players, Optional<List<MapPin>> maps,
+			Optional<List<VillageObjectPin>> villageObjects,
 			Optional<List<ChunkPin>> slimeChunks,
 			Optional<List<ChunkPin>> loadedChunks, Optional<BorderPin> barrier, Optional<WorldSpawnPin> worldSpawn) {
+		this.worldName = worldName;
 		this.players = players;
 		this.maps = maps;
 		this.villageObjects = villageObjects;
@@ -90,6 +95,10 @@ public class LevelMetadata {
 		this.loadedChunks = loadedChunks;
 		this.barrier = barrier;
 		this.worldSpawn = worldSpawn;
+	}
+
+	public Optional<String> getWorldName() {
+		return worldName;
 	}
 
 	public Optional<List<PlayerPin>> getPlayers() {
@@ -465,11 +474,14 @@ public class LevelMetadata {
 		{ // Loaded chunks
 
 		}
+
 		WorldSpawnPin worldSpawn = null;
 		BorderPin barrier = null;
-		// World spawn and World border
+		String name = null;
+		/* Stuff from level.dat */
 		try (NBTInputStream in = new NBTInputStream(Files.newInputStream(worldPath.resolve("level.dat")), NBTInputStream.GZIP_COMPRESSION)) {
 			CompoundMap level = ((CompoundTag) ((CompoundTag) in.readTag()).getValue().get("Data")).getValue();
+			name = level.get("LevelName").getAsStringTag().map(StringTag::getValue).orElse(null);
 			worldSpawn = new WorldSpawnPin(new Vector3i(
 					((IntTag) level.get("SpawnX")).getValue(),
 					((IntTag) level.get("SpawnY")).getValue(),
@@ -480,6 +492,6 @@ public class LevelMetadata {
 		} catch (IOException e) {
 			log.warn("Could not access level data", e);
 		}
-		return new LevelMetadata(players, maps, villageObjects, null, null, barrier, worldSpawn);
+		return new LevelMetadata(name, players, maps, villageObjects, null, null, barrier, worldSpawn);
 	}
 }

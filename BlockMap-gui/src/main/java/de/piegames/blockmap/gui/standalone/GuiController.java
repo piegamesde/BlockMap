@@ -1,6 +1,7 @@
 package de.piegames.blockmap.gui.standalone;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -14,6 +15,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -27,8 +29,10 @@ import org.controlsfx.control.StatusBar;
 import org.controlsfx.control.textfield.AutoCompletionBinding;
 import org.controlsfx.control.textfield.TextFields;
 import org.controlsfx.dialog.ExceptionDialog;
+import org.eclipse.collections.impl.block.factory.Comparators;
 import org.joml.Vector2ic;
 
+import com.google.common.collect.Streams;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import de.piegames.blockmap.DotMinecraft;
@@ -44,6 +48,8 @@ import de.piegames.blockmap.gui.standalone.about.AboutDialog;
 import de.piegames.blockmap.world.ChunkMetadata;
 import de.piegames.blockmap.world.LevelMetadata;
 import de.piegames.blockmap.world.RegionFolder;
+import de.piegames.nbt.CompoundTag;
+import de.piegames.nbt.stream.NBTInputStream;
 import impl.org.controlsfx.skin.AutoCompletePopup;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -73,6 +79,8 @@ import javafx.stage.DirectoryChooser;
 import javafx.util.Callback;
 import javafx.util.Pair;
 import javafx.util.StringConverter;
+import me.xdrop.fuzzywuzzy.FuzzySearch;
+import me.xdrop.fuzzywuzzy.model.BoundExtractedResult;
 
 public class GuiController implements Initializable {
 
@@ -158,38 +166,86 @@ public class GuiController implements Initializable {
 		pins = new PinDecoration(renderer.viewport);
 		pane.pinLayers.add(pins);
 
-		AutoCompletionBinding<HistoryItem> autoComplete = TextFields.bindAutoCompletion(worldInput, request -> recentWorlds,
-				new StringConverter<HistoryItem>() {
+		/* Load list of worlds in .minecraft/saves (in background) */
+		backgroundThread.execute(() -> {
+			Path saves = DotMinecraft.DOTMINECRAFT.resolve("saves");
+			if (Files.exists(saves) && Files.isDirectory(saves))
+				try {
+					List<HistoryItem> toAdd = Files.list(saves)
+							.filter(Files::exists)
+							.filter(Files::isDirectory)
+							.filter(p -> Files.exists(p.resolve("level.dat")))
+							.map(save -> {
+								String name = save.getFileName().toString();
+								long timestamp = 0;
+								try (NBTInputStream in = new NBTInputStream(Files.newInputStream(save.resolve("level.dat")), NBTInputStream.GZIP_COMPRESSION)) {
+									Optional<CompoundTag> data = in.readTag().getAsCompoundTag().flatMap(t -> t.getAsCompoundTag("Data"));
+									name = data.flatMap(t -> t.getStringValue("LevelName")).orElse(null);
+									timestamp = data.flatMap(t -> t.getLongValue("LastPlayed")).orElse(0L);
+								} catch (IOException e) {
+									log.warn("Could not read world name for " + save, e);
+								}
 
-					@Override
-					public String toString(HistoryItem object) {
-						return object.path;
-					}
-
-					@Override
-					public HistoryItem fromString(String string) {
-						return null;
-					}
-				});
-		try {
-			Field field = AutoCompletionBinding.class.getDeclaredField("autoCompletionPopup");
-			field.setAccessible(true);
-			@SuppressWarnings("unchecked")
-			AutoCompletePopup<HistoryItem> popup = (AutoCompletePopup<HistoryItem>) field.get(autoComplete);
-			popup.setSkin(new AutoCompletePopupSkin2<HistoryItem>(popup, new Callback<ListView<HistoryItem>, ListCell<HistoryItem>>() {
-
-				@Override
-				public ListCell<HistoryItem> call(ListView<HistoryItem> param) {
-					return new AutoCompleteItem();
+								String imageURL = null;
+								if (Files.exists(save.resolve("icon.png")))
+									imageURL = save.resolve("icon.png").toUri().toString();
+								return new HistoryItem(false, name, save.toAbsolutePath().toString(), imageURL, timestamp);
+							})
+							.sorted(Comparators.byLongFunction(HistoryItem::lastAccessed).reversed())
+							.collect(Collectors.toList());
+					Platform.runLater(() -> otherWorlds.addAll(toAdd));
+				} catch (IOException e) {
+					log.warn("Could not load worlds from saves folder", e);
 				}
-			}));
-		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e1) {
-			e1.printStackTrace();
-		}
+		});
+		{/* Input auto completion */
+			AutoCompletionBinding<HistoryItem> autoComplete = TextFields.bindAutoCompletion(worldInput, request -> {
+				String text = request.getUserText();
+				/* TODO tweak once history saving is implemented */
+				return Streams.concat(
+						FuzzySearch.extractAll(text, recentWorlds, HistoryItem::getName, 20).stream()
+								.sorted()
+								.limit(5)
+								.map(BoundExtractedResult::getReferent)
+								.sorted(Comparators.byLongFunction(HistoryItem::lastAccessed).reversed()),
+						FuzzySearch.extractAll(text, otherWorlds, HistoryItem::getName, 50)
+								.stream()
+								.map(BoundExtractedResult::getReferent)
+								.sorted(Comparators.byLongFunction(HistoryItem::lastAccessed).reversed()))
+						.collect(Collectors.toList());
+			},
+					new StringConverter<HistoryItem>() {
 
-		autoComplete.maxWidthProperty().bind(worldInput.widthProperty());
-		autoComplete.prefWidthProperty().bind(worldInput.widthProperty());
-		autoComplete.setDelay(0);
+						@Override
+						public String toString(HistoryItem object) {
+							return object.path;
+						}
+
+						@Override
+						public HistoryItem fromString(String string) {
+							return null;
+						}
+					});
+			try {
+				Field field = AutoCompletionBinding.class.getDeclaredField("autoCompletionPopup");
+				field.setAccessible(true);
+				@SuppressWarnings("unchecked")
+				AutoCompletePopup<HistoryItem> popup = (AutoCompletePopup<HistoryItem>) field.get(autoComplete);
+				popup.setSkin(new AutoCompletePopupSkin2<HistoryItem>(popup, new Callback<ListView<HistoryItem>, ListCell<HistoryItem>>() {
+
+					@Override
+					public ListCell<HistoryItem> call(ListView<HistoryItem> param) {
+						return new AutoCompleteItem();
+					}
+				}));
+			} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e1) {
+				e1.printStackTrace();
+			}
+
+			autoComplete.maxWidthProperty().bind(worldInput.widthProperty());
+			autoComplete.prefWidthProperty().bind(worldInput.widthProperty());
+			autoComplete.setDelay(0);
+		}
 
 		{ /* Status bar initialization */
 			statusBar.setSkin(new StatusBarSkin2(statusBar));
@@ -439,7 +495,7 @@ public class GuiController implements Initializable {
 			String imageURL = null;
 			if (Files.exists(path.resolve("icon.png")))
 				imageURL = path.resolve("icon.png").toUri().toString();
-			recentWorlds.add(0, new HistoryItem(false, name, path.toAbsolutePath().toString(), imageURL));
+			recentWorlds.add(0, new HistoryItem(false, name, path.toAbsolutePath().toString(), imageURL, System.currentTimeMillis()));
 		}
 	}
 
@@ -456,9 +512,9 @@ public class GuiController implements Initializable {
 
 		{ /* Update history */
 			recentWorlds.removeIf(w -> w.path.equals(file.toString()));
-			String name = serverSettingsController.getMetadata().name.orElse(null);
+			String name = serverSettingsController.getMetadata().name.orElse("<unknown server>");
 			String imageURL = serverSettingsController.getMetadata().iconLocation.orElse(null);
-			recentWorlds.add(0, new HistoryItem(true, name, file.toString(), imageURL));
+			recentWorlds.add(0, new HistoryItem(true, name, file.toString(), imageURL, System.currentTimeMillis()));
 		}
 	}
 

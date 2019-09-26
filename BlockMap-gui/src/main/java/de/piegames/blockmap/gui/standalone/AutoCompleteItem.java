@@ -47,7 +47,7 @@ public class AutoCompleteItem extends ListCell<HistoryItem> {
 		} else {
 			graphic.setImage(item.iconURL.map(url -> new Image(url, 20, 20, true, false, true))
 					.orElse(new Image(getClass().getResourceAsStream("/unknown_server.png"))));
-			name.setText(item.name.orElse(null));
+			name.setText(item.name);
 			path.
 			setText(item.path);
 		}

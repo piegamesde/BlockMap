@@ -51,6 +51,8 @@ import de.piegames.blockmap.world.RegionFolder;
 import de.piegames.nbt.CompoundTag;
 import de.piegames.nbt.stream.NBTInputStream;
 import impl.org.controlsfx.skin.AutoCompletePopup;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
@@ -77,6 +79,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.DirectoryChooser;
 import javafx.util.Callback;
+import javafx.util.Duration;
 import javafx.util.Pair;
 import javafx.util.StringConverter;
 import me.xdrop.fuzzywuzzy.FuzzySearch;
@@ -101,7 +104,7 @@ public class GuiController implements Initializable {
 	/* Top */
 
 	@FXML
-	private TextField										worldInput;
+	protected TextField										worldInput;
 	/** Recently loaded worlds and servers */
 	private List<HistoryItem>								recentWorlds		= new LinkedList<>();
 	/** Whatever found in {@code .minecraft} for autocomplete purposes */
@@ -199,9 +202,11 @@ public class GuiController implements Initializable {
 				}
 		});
 		{/* Input auto completion */
+			/* TODO tweak once history saving is implemented */
 			AutoCompletionBinding<HistoryItem> autoComplete = TextFields.bindAutoCompletion(worldInput, request -> {
 				String text = request.getUserText();
-				/* TODO tweak once history saving is implemented */
+				if (text.length() < 3)
+					return Streams.concat(recentWorlds.stream().limit(5), otherWorlds.stream()).collect(Collectors.toList());
 				return Streams.concat(
 						FuzzySearch.extractAll(text, recentWorlds, HistoryItem::getName, 20).stream()
 								.sorted()
@@ -227,6 +232,7 @@ public class GuiController implements Initializable {
 						}
 					});
 			try {
+				/* Access a private field (the actual popup) to set a custom skin */
 				Field field = AutoCompletionBinding.class.getDeclaredField("autoCompletionPopup");
 				field.setAccessible(true);
 				@SuppressWarnings("unchecked")
@@ -244,7 +250,14 @@ public class GuiController implements Initializable {
 
 			autoComplete.maxWidthProperty().bind(worldInput.widthProperty());
 			autoComplete.prefWidthProperty().bind(worldInput.widthProperty());
-			autoComplete.setDelay(0);
+
+			worldInput.focusedProperty().addListener((property, old, val) -> {
+				if (!old && val && worldInput.getText().isBlank())
+					new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+						if (worldInput.isFocused())
+							autoComplete.setUserInput("");
+					})).play();
+			});
 		}
 
 		{ /* Status bar initialization */

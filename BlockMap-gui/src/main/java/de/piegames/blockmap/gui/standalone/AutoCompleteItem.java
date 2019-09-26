@@ -5,6 +5,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
+import javafx.scene.control.OverrunStyle;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -26,6 +27,7 @@ public class AutoCompleteItem extends ListCell<HistoryItem> {
 		HBox.setHgrow(path, Priority.ALWAYS);
 		HBox.setMargin(path, new Insets(0, 8, 0, 0));
 		path.setAlignment(Pos.CENTER_RIGHT);
+		path.setTextOverrun(OverrunStyle.CENTER_ELLIPSIS);
 
 		graphic = new ImageView();
 		graphic.setPreserveRatio(true);
@@ -33,6 +35,7 @@ public class AutoCompleteItem extends ListCell<HistoryItem> {
 
 		setText(null);
 		setGraphic(new HBox(2, graphic, name, path));
+		setPrefWidth(0);
 	}
 
 	/** {@inheritDoc} */

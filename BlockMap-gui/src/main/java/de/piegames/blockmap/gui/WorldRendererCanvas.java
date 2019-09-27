@@ -74,7 +74,6 @@ public class WorldRendererCanvas extends Canvas implements Runnable {
 					throw e;
 				}
 			}, 1000, 1000, TimeUnit.MILLISECONDS);
-			executor.scheduleWithFixedDelay(map::evictCache, 10, 10, TimeUnit.SECONDS);
 
 			executor.setKeepAliveTime(20, TimeUnit.SECONDS);
 			executor.allowCoreThreadTimeOut(true);

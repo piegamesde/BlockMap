@@ -15,7 +15,6 @@ javafx {
 dependencies {
     implementation project(':BlockMap-core')
 	// GUI dependencies
-	implementation 'org.mapdb:mapdb:3.0.7'
 	implementation 'org.controlsfx:controlsfx:11.0.0'
 	implementation 'com.github.piegamesde:gson-fire:9210521426'
 	implementation group: 'com.github.haifengl', name: 'smile-core', version: '1.5.2'

@@ -1,6 +1,5 @@
 package de.piegames.blockmap.gui;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -8,22 +7,11 @@ import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import org.joml.AABBd;
 import org.joml.Vector2i;
 import org.joml.Vector2ic;
-import org.joml.Vector3i;
-import org.joml.Vector3ic;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.DataInput2;
-import org.mapdb.DataOutput2;
-import org.mapdb.HTreeMap;
-import org.mapdb.Serializer;
 
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.PixelFormat;
@@ -34,124 +22,20 @@ import javafx.scene.paint.Color;
 
 public class RenderedMap {
 
-	/** https://github.com/jankotek/mapdb/issues/839 */
-	protected Set<Vector3ic>								unloaded			= ConcurrentHashMap.newKeySet();
-	public final Serializer<Vector3ic>						VECTOR_SERIALIZER	= new Serializer<Vector3ic>() {
-
-																					@SuppressWarnings("unchecked")
-																					@Override
-																					public void serialize(DataOutput2 out, Vector3ic value) throws IOException {
-																						unloaded.add(value);
-																						Serializer.JAVA.serialize(out, value);
-																					}
-
-																					@Override
-																					public Vector3ic deserialize(DataInput2 input, int available) throws IOException {
-																						Vector3ic value = (Vector3ic) Serializer.JAVA.deserialize(input, available);
-																						unloaded.remove(value);
-																						return value;
-																					}
-
-																				};
-
-	/**
-	 * Thank the JavaFX guys who a) Made WriteableImage not Serializable b) Didn't include any serialization except by converting to BufferedImage for this ugly
-	 * mess.
-	 */
-	public final Serializer<WritableImage>					IMAGE_SERIALIZER	= new Serializer<WritableImage>() {
-
-																					@Override
-																					public boolean isTrusted() {
-																								return true;
-																					}
-
-																					@Override
-																					public void serialize(DataOutput2 out, WritableImage value) throws IOException {
-																						byte[] data = new byte[512 * 512 * 4];
-																						value.getPixelReader().getPixels(0, 0, 512, 512,
-																								PixelFormat.getByteBgraInstance(), data, 0, 512 * 4);
-																								out.write(data);
-																					}
-
-																					@Override
-																					public WritableImage deserialize(DataInput2 input, int available) throws IOException {
-																						byte[] data = new byte[available];
-																						input.readFully(data);
-																						WritableImage ret = new WritableImage(512, 512);
-																								ret.getPixelWriter().setPixels(0, 0, 512, 512,
-																										PixelFormat.getByteBgraInstance(), data, 0, 512 * 4);
-																								return ret;
-																							}
-																				};
-
-	// Disk for overflow
-	private static final DB									cacheDBDisk			= DBMaker.tempFileDB().fileDeleteAfterClose().closeOnJvmShutdown().make();
-	// Fast memory cache
-	private static final DB									cacheDBMem			= DBMaker.heapDB().closeOnJvmShutdown().make();
-
-	private final HTreeMap<Vector3ic, WritableImage>		cacheMapDisk, cacheMapDiskMem, cacheMapMem;
-
 	private Map<Vector2ic, RenderedRegion>					plainRegions		= new HashMap<>();
 	private Map<Integer, Map<Vector2ic, RenderedRegion>>	regions				= new HashMap<>();
 	private int														regionsCount, regionsRendered;
 
 	@SuppressWarnings("unchecked")
 	public RenderedMap(ScheduledExecutorService executor) {
-		cacheMapDisk = cacheDBDisk.hashMap("OnDisk" + System.identityHashCode(this), VECTOR_SERIALIZER, IMAGE_SERIALIZER).create();
-		cacheMapDisk.clear();
-		cacheMapDiskMem = cacheDBMem
-				.hashMap("RenderedRegionCache" + System.identityHashCode(this), Serializer.JAVA, Serializer.JAVA)
-				// .expireStoreSize(1)
-				.expireMaxSize(1024)
-				.expireAfterCreate()
-				.expireAfterUpdate()
-				// .expireAfterGet()
-				.expireAfterCreate(30, TimeUnit.SECONDS)
-				.expireAfterUpdate(30, TimeUnit.SECONDS)
-				.expireAfterGet(60, TimeUnit.SECONDS)
-				.expireOverflow(cacheMapDisk)
-				.expireExecutor(executor)
-				.expireExecutorPeriod(10000)
-				.create();
-		// cacheMapMem = cacheMapDiskMem;
-		cacheMapMem = cacheDBMem.hashMap("ScaledRegionCache" + System.identityHashCode(this), Serializer.JAVA, Serializer.JAVA)
-				// .expireStoreSize(1)
-				.expireMaxSize(512)
-				.expireAfterCreate()
-				.expireAfterUpdate()
-				// .expireAfterGet()
-				.expireAfterCreate(30, TimeUnit.SECONDS)
-				.expireAfterUpdate(30, TimeUnit.SECONDS)
-				.expireAfterGet(60, TimeUnit.SECONDS)
-				// .expireOverflow(cacheMapDisk)
-				.expireExecutor(executor)
-				.expireExecutorPeriod(10000)
-				.create();
-		cacheMapDisk.checkThreadSafe();
-		cacheMapDiskMem.checkThreadSafe();
-		cacheMapMem.checkThreadSafe();
 		clearReload(Collections.emptyList());
 	}
 
 	public void close() {
 		clearReload(Collections.emptyList());
-		cacheMapDiskMem.close();
-		cacheMapMem.close();
-		cacheMapDisk.close();
-		cacheDBMem.close();
-		cacheDBDisk.close();
-	}
-
-	public void evictCache() {
-		cacheMapDiskMem.expireEvict();
-		cacheMapMem.expireEvict();
-		cacheMapDisk.expireEvict();
 	}
 
 	public void clearReload(Collection<Vector2ic> positions) {
-		cacheMapDisk.clear();
-		cacheMapDiskMem.clear();
-		cacheMapMem.clear();
 		regions.clear();
 		plainRegions.clear();
 		regions.put(0, plainRegions);
@@ -246,14 +130,6 @@ public class RenderedMap {
 		if (isNothingLoaded())
 			return 1;
 		return (float) regionsRendered / regionsCount;
-	}
-
-	public RenderedImage createImage(RenderedRegion r) {
-		return new RenderedImage(this, r.level <= 0 ? cacheMapDiskMem : cacheMapMem, new Vector3i(r.position.x(), r.position.y(), r.level));
-	}
-
-	protected boolean isImageLoaded(Vector3ic key) {
-		return !unloaded.contains(key);
 	}
 
 	public RenderedRegion get(int level, Vector2ic position, boolean create) {

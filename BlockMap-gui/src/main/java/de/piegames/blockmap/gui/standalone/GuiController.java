@@ -11,6 +11,7 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,7 +30,6 @@ import org.controlsfx.control.StatusBar;
 import org.controlsfx.control.textfield.AutoCompletionBinding;
 import org.controlsfx.control.textfield.TextFields;
 import org.controlsfx.dialog.ExceptionDialog;
-import org.eclipse.collections.impl.block.factory.Comparators;
 import org.joml.Vector2ic;
 
 import com.google.common.collect.Streams;
@@ -194,7 +194,7 @@ public class GuiController implements Initializable {
 									imageURL = save.resolve("icon.png").toUri().toString();
 								return new HistoryItem(false, name, save.toAbsolutePath().toString(), imageURL, timestamp);
 							})
-							.sorted(Comparators.byLongFunction(HistoryItem::lastAccessed).reversed())
+							.sorted(Comparator.comparingLong(HistoryItem::lastAccessed).reversed())
 							.collect(Collectors.toList());
 					Platform.runLater(() -> otherWorlds.addAll(toAdd));
 				} catch (IOException e) {
@@ -212,11 +212,11 @@ public class GuiController implements Initializable {
 								.sorted()
 								.limit(5)
 								.map(BoundExtractedResult::getReferent)
-								.sorted(Comparators.byLongFunction(HistoryItem::lastAccessed).reversed()),
+								.sorted(Comparator.comparingLong(HistoryItem::lastAccessed).reversed()),
 						FuzzySearch.extractAll(text, otherWorlds, HistoryItem::getName, 50)
 								.stream()
 								.map(BoundExtractedResult::getReferent)
-								.sorted(Comparators.byLongFunction(HistoryItem::lastAccessed).reversed()))
+								.sorted(Comparator.comparingLong(HistoryItem::lastAccessed).reversed()))
 						.collect(Collectors.toList());
 			},
 					new StringConverter<HistoryItem>() {

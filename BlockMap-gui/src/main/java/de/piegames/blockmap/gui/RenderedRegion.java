@@ -27,7 +27,7 @@ public class RenderedRegion {
 	}
 
 	protected final RenderedMap						map;
-	protected final RenderedImage					image;
+	protected WritableImage							image;
 	public final int								level;
 	public final Vector2ic							position;
 	public final AtomicReference<RenderingState>	valid	= new AtomicReference<>(RenderingState.INVALID);
@@ -40,14 +40,14 @@ public class RenderedRegion {
 		this.map = map;
 		this.level = level;
 		this.position = new Vector2i(position);
-		this.image = map.createImage(this);
+		this.image = null;
 		// setImage(null);
 	}
 
 	public void setImage(WritableImage image) {
 		Objects.requireNonNull(image);
 		invalidateTree(true);
-		this.image.setImage(image);
+		this.image = image;
 		valid.set(RenderingState.VALID);
 	}
 
@@ -62,7 +62,7 @@ public class RenderedRegion {
 				above.invalidateTree(keepImage);
 		}
 		if (!keepImage)
-			this.image.setImage(null);
+			this.image = null;
 	}
 
 	public RenderedRegion[] getBelow(boolean create) {
@@ -80,11 +80,6 @@ public class RenderedRegion {
 	public boolean updateImage() {
 		boolean changed = false;
 
-		if (!this.image.isImageLoaded())
-			changed = true;
-		// This will load an image back from cache if needed
-		WritableImage image = this.image.getImage(true);
-
 		if (level != 0 && (image == null || valid.get().isInvalid())) {
 			if (level < 0) {
 				// check below
@@ -93,14 +88,13 @@ public class RenderedRegion {
 					if (r != null)
 						changed |= r.updateImage();
 				// get below images
-				WritableImage topLeft = below[0] == null ? null : below[0].getImage(true);
-				WritableImage topRight = below[1] == null ? null : below[1].getImage(true);
-				WritableImage bottomLeft = below[2] == null ? null : below[2].getImage(true);
-				WritableImage bottomRight = below[3] == null ? null : below[3].getImage(true);
+				WritableImage topLeft = below[0] == null ? null : below[0].getImage();
+				WritableImage topRight = below[1] == null ? null : below[1].getImage();
+				WritableImage bottomLeft = below[2] == null ? null : below[2].getImage();
+				WritableImage bottomRight = below[3] == null ? null : below[3].getImage();
 				// downscale images
 				image = RenderedMap.halfSize(image, topLeft, topRight, bottomLeft, bottomRight);
 			}
-			this.image.setImage(image);
 			valid.set(RenderingState.VALID);
 			if (image != null)
 				changed = true;
@@ -109,8 +103,8 @@ public class RenderedRegion {
 		return changed;
 	}
 
-	public WritableImage getImage(boolean force) {
-		return image.getImage(force);
+	public WritableImage getImage() {
+		return image;
 	}
 
 	public boolean isVisible(AABBd frustum) {
@@ -128,8 +122,6 @@ public class RenderedRegion {
 
 		int size = WorldRendererCanvas.pow2(512, -this.level);
 		final int overDraw = 3; // TODO make setting
-
-		WritableImage image = this.image.getImage(false);
 
 		if (image != null) {
 			if (drawingLevel <= this.level && this.level > 0)
@@ -158,7 +150,7 @@ public class RenderedRegion {
 
 	public void drawForeground(GraphicsContext gc, AABBd frustum, double scale) {
 		int size = 512;// WorldRendererFX.pow2(512, -this.level);
-		if (valid.get().isInvalid() && image.isImageSet()) {// reduce brightness
+		if (valid.get().isInvalid() && image != null) {// reduce brightness
 			gc.setFill(new Color(0f, 0f, 0f, 0.5f));
 			gc.fillRect(position.x() * size, position.y() * size, size, size);
 		}

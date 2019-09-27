@@ -168,7 +168,7 @@ public class Generator {
 		for (int z = -SIZE; z < SIZE; z++)
 			for (int x = -SIZE; x < SIZE; x++)
 				chunks.add(new Vector2i(x, z));
-		MinecraftLandGenerator.forceloadChunks(server, world, chunks, Dimension.OVERWORLD, true, 64 * 64, true);
+		MinecraftLandGenerator.forceloadChunks(server, world, chunks, Dimension.OVERWORLD, true, 1024, true);
 		world.resetChanges();
 
 		processResources();

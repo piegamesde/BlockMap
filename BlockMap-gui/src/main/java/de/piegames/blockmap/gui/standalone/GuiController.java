@@ -134,7 +134,7 @@ public class GuiController implements Initializable {
 	@FXML
 	private CheckBox										scaleBox;
 	@FXML
-	private CheckBox										pinBox;
+	public CheckBox											pinBox;
 	@FXML
 	public CheckTreeView<PinType>							pinView;
 	public Map<PinType, TreeItem<PinType>>					checkedPins			= new HashMap<>();
@@ -463,8 +463,8 @@ public class GuiController implements Initializable {
 		dialog.setResult(serverSettingsController.lastBrowsedURL);
 		dialog.showAndWait().ifPresent(s -> {
 			try {
-				serverSettingsController.lastBrowsedURL = s;
 				loadRemote(new URI(s));
+				serverSettingsController.lastBrowsedURL = s;
 				worldInput.setText(s);
 			} catch (URISyntaxException | IllegalArgumentException e) {
 				log.warn("Malformed input uri", e);
@@ -523,7 +523,7 @@ public class GuiController implements Initializable {
 		regionFolder.bind(serverSettingsController.folderProperty());
 		loaded = WorldType.REMOTE;
 
-		{ /* Update history */
+		if (serverSettingsController.getMetadata() != null) { /* Update history */
 			recentWorlds.removeIf(w -> w.path.equals(file.toString()));
 			String name = serverSettingsController.getMetadata().name.orElse("<unknown server>");
 			String imageURL = serverSettingsController.getMetadata().iconLocation.orElse(null);

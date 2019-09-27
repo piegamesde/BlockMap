@@ -30,13 +30,6 @@ task generateScreenshots(type: JavaExec) {
 	args = ['generateTestWorld', 'generateScreenshots']
 }
 
-task run2(type: JavaExec) {
-	group 'Application'
-	description 'Task run may fail due to a JavaFX bug, use this as a workaround'
-	classpath = sourceSets.main.runtimeClasspath
-	main = "de.piegames.blockmap.gui.standalone.GuiMainLauncher"
-}
-
 dependencies {
 	testCompile 'junit:junit:4.12'
 

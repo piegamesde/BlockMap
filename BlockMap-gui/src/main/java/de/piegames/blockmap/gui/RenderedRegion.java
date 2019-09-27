@@ -86,18 +86,7 @@ public class RenderedRegion {
 		WritableImage image = this.image.getImage(true);
 
 		if (level != 0 && (image == null || valid.get().isInvalid())) {
-			if (level > 0) {
-				// check above
-				// get above image
-				RenderedRegion above = getGround(true);
-				if (above != null) {
-					WritableImage aboveImage = above.getImage(true);
-					// upscale image
-					if (aboveImage != null)
-						image = RenderedMap.doubleSize(image, aboveImage, level, new Vector2i(position.x() & ((1 << level) - 1), position.y() & ((1 << level)
-								- 1)));
-				}
-			} else if (level < 0) {
+			if (level < 0) {
 				// check below
 				RenderedRegion[] below = getBelow(true);
 				for (RenderedRegion r : below)
@@ -135,6 +124,7 @@ public class RenderedRegion {
 
 	public void draw(GraphicsContext gc, int drawingLevel, AABBd frustum, double scale) {
 		// bounds must have been checked here
+		gc.setImageSmoothing(false);
 
 		int size = WorldRendererCanvas.pow2(512, -this.level);
 		final int overDraw = 3; // TODO make setting

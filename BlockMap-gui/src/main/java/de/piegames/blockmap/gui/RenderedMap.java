@@ -1,11 +1,17 @@
 package de.piegames.blockmap.gui;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.ConcurrentModificationException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import org.joml.AABBd;
 import org.joml.Vector2i;
@@ -346,29 +352,6 @@ public class RenderedMap {
 		// blue
 		ret |= ((((c1 & 0x000000FF) * a1 + (c2 & 0x000000FF) * a2 + (c3 & 0x000000FF) * a3 + (c4 & 0x000000FF) * a4) / 255) >> 2) & 0x000000FF;
 		return (int) ret;
-	}
-
-	public static WritableImage doubleSize(WritableImage old, WritableImage input, int levelDiff, Vector2i subTile) {
-		WritableImage output = old != null ? old : new WritableImage(512, 512);
-
-		PixelReader reader = input.getPixelReader();
-		PixelWriter writer = output.getPixelWriter();
-
-		int tileSize = 512 >> levelDiff;
-		int scaleFactor = 1 << levelDiff;
-
-		int[] pixels = genBuffer(tileSize * tileSize);
-		int[] pixel = genBuffer(scaleFactor * scaleFactor);
-		reader.getPixels(subTile.x * tileSize, subTile.y * tileSize, tileSize, tileSize, PixelFormat.getIntArgbInstance(), pixels, 0, tileSize);
-
-		for (int y = 0; y < tileSize; y++) {
-			for (int x = 0; x < tileSize; x++) {
-				final int argb = pixels[y * tileSize + x];
-				Arrays.fill(pixel, argb);
-				writer.setPixels(x * scaleFactor, y * scaleFactor, scaleFactor, scaleFactor, PixelFormat.getIntArgbInstance(), pixel, 0, scaleFactor);
-			}
-		}
-		return output;
 	}
 
 	/** Test how much time this takes to see if object pooling is needed. */

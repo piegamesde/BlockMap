@@ -1,237 +1,161 @@
 package de.piegames.blockmap.gui;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.ConcurrentModificationException;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.joml.AABBd;
+import org.joml.Vector2dc;
 import org.joml.Vector2i;
 import org.joml.Vector2ic;
+import org.joml.Vector3d;
 
+import de.piegames.blockmap.world.ChunkMetadata;
+import de.piegames.blockmap.world.Region;
+import de.piegames.blockmap.world.RegionFolder;
+import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyFloatProperty;
+import javafx.beans.property.ReadOnlyFloatWrapper;
+import javafx.beans.property.ReadOnlyMapProperty;
+import javafx.beans.property.ReadOnlyMapWrapper;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlySetProperty;
+import javafx.beans.property.ReadOnlySetWrapper;
+import javafx.collections.FXCollections;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.image.PixelFormat;
-import javafx.scene.image.PixelReader;
-import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 
-public class RenderedMap {
+public class RenderedMap implements Runnable {
 
-	private Map<Vector2ic, RenderedRegion>					plainRegions		= new HashMap<>();
-	private Map<Integer, Map<Vector2ic, RenderedRegion>>	regions				= new HashMap<>();
-	private int														regionsCount, regionsRendered;
+	private RegionFolder													regionFolder;
+	private Map<Vector2ic, RenderedRegion>									plainRegions	= new HashMap<>();
+	private Set<RenderedRegion>												notRendered		= ConcurrentHashMap.newKeySet();
+	private Map<Integer, Map<Vector2ic, RenderedRegion>>					regions			= new HashMap<>();
+	private int																regionsCount, regionsRendered;
+	protected ReadOnlyFloatWrapper											progress		= new ReadOnlyFloatWrapper();
+	protected ReadOnlyMapWrapper<Vector2ic, Map<Vector2ic, ChunkMetadata>>	chunkMetadata	= new ReadOnlyMapWrapper<>(FXCollections.observableHashMap());
+	protected ReadOnlySetWrapper<Vector2ic>									rendering		= new ReadOnlySetWrapper<>(FXCollections.observableSet());
+	/** Where the mouse currently points to, in world coordinates */
+	protected ReadOnlyObjectProperty<Vector2dc>								mouseWorldProperty;
 
-	@SuppressWarnings("unchecked")
-	public RenderedMap(ScheduledExecutorService executor) {
-		clearReload(Collections.emptyList());
-	}
+	public RenderedMap(RegionFolder regionFolder, ExecutorService executor, ReadOnlyObjectProperty<Vector2dc> mouseWorldProperty) {
+		this.regionFolder = Objects.requireNonNull(regionFolder);
+		this.mouseWorldProperty = Objects.requireNonNull(mouseWorldProperty);
+		Collection<Vector2ic> regions = regionFolder.listRegions();
+		if (regions.isEmpty())
+			throw new IllegalArgumentException("World can not be empty");
+		regionFolder.listRegions().stream().map(r -> new RenderedRegion(this, r)).forEach(r -> plainRegions.put(r.position, r));
 
-	public void close() {
-		clearReload(Collections.emptyList());
-	}
+		this.regions.put(0, plainRegions);
+		for (int i = 1; i <= DisplayViewport.MAX_ZOOM_LEVEL; i++) {
+			int j = i;
+			this.regions.put(i, this.regions.get(i - 1)
+					.keySet()
+					.stream()
+					.map(v -> new Vector2i(v.x() >> 1, v.y() >> 1))
+					.distinct()
+					.collect(Collectors.toMap(Function.identity(), k -> new RenderedRegion(this, j, k))));
+		}
 
-	public void clearReload(Collection<Vector2ic> positions) {
-		regions.clear();
-		plainRegions.clear();
-		regions.put(0, plainRegions);
-		positions.stream().map(r -> new RenderedRegion(this, r)).forEach(r -> plainRegions.put(r.position, r));
 		regionsRendered = 0;
-		regionsCount = positions.size();
-	}
-
-	public void invalidateAll() {
-		regionsRendered = 0;
-		plainRegions.values().forEach(r -> r.invalidateTree(true));
-	}
-
-	public boolean isNothingLoaded() {
-		return get(0).isEmpty();
+		regionsCount = regions.size();
+		notRendered.addAll(plainRegions.values());
+		/* Create one task per region file. Don't specify which one yet, this will be determined later on the fly */
+		for (int i = 0; i < regionsCount; i++)
+			executor.submit(this);
 	}
 
 	public void draw(GraphicsContext gc, int level, AABBd frustum, double scale) {
-		Map<Vector2ic, RenderedRegion> map = get(level > 0 ? 0 : level);
-		gc.setFill(new Color(0.3f, 0.3f, 0.9f, 1.0f)); // Background color
+		/* Draw background */
+		gc.setFill(new Color(0.3f, 0.3f, 0.9f, 1.0f));
 		plainRegions.values().stream()
 				.filter(r -> r.isVisible(frustum))
 				.forEach(r -> r.drawBackground(gc, scale));
-		map.entrySet().stream()
-				.filter(e -> RenderedRegion.isVisible(e.getKey(), level > 0 ? 0 : level, frustum))
-				.map(e -> {
-					RenderedRegion r = e.getValue();
-					if (e.getValue() == null)
-						r = get(level, e.getKey(), true);
-					return r;
-				})
-				.forEach(r -> r.draw(gc, level, frustum, scale));
-		plainRegions.values().stream()
+
+		/* Draw images */
+		Map<Vector2ic, RenderedRegion> map = regions.get(level);
+		map.values().stream()
+				.filter(r -> r.isVisible(frustum))
+				.forEach(r -> r.draw(gc, frustum, scale));
+
+		/* Draw currently rendering */
+		gc.setFill(new Color(0.9f, 0.9f, 0.15f, 1.0f));
+		rendering.stream()
+				.map(plainRegions::get)
 				.filter(r -> r.isVisible(frustum))
 				.forEach(r -> r.drawForeground(gc, frustum, scale));
 	}
 
-	public boolean updateImage(int level, AABBd frustum) {
+	@Override
+	public void run() {
+		RenderedRegion region = nextRegion();
+		Platform.runLater(() -> rendering.getValue().add(region.position));
 		try {
-			Thread current = Thread.currentThread();
-			if (regions.isEmpty()) {
-				// Race hazard: updateImage() is called while clearReload() is reloading all the chunks
-				return false;
-			}
-			return get(level)
-					.values()
-					.stream()
-					.filter(Objects::nonNull)
-					.filter(r -> r.isVisible(frustum))
-					.filter(r -> !current.isInterrupted() && r.updateImage())
-					.limit(10).count() != 0;
-		} catch (ConcurrentModificationException e) {
-			// System.out.println(e);
-			return true;
+			Vector2ic position = region.position;
+			Region renderedRegion = regionFolder.render(position);
+			WritableImage texture = SwingFXUtils.toFXImage(renderedRegion.getImage(), null);
+			region.setImage(texture);
+			updateMipMaps(position, texture);
+
+			Platform.runLater(() -> chunkMetadata.put(position, Collections.unmodifiableMap(renderedRegion.getChunkMetadata())));
+			Platform.runLater(() -> progress.set((float) regionsRendered++ / regionsCount));
+		} catch (Throwable e) {
+			e.printStackTrace();
+		} finally {
+			Platform.runLater(() -> rendering.getValue().remove(region.position));
 		}
 	}
 
-	public Map<Vector2ic, RenderedRegion> get(int level) {
-		Map<Vector2ic, RenderedRegion> ret = regions.get(level);
+	private void updateMipMaps(Vector2ic position, WritableImage image) {
+		for (int i = 1; i <= DisplayViewport.MAX_ZOOM_LEVEL; i++) {
+			int dstX = (position.x() & 1) * 256;
+			int dstY = (position.y() & 1) * 256;
+			position = new Vector2i(position.x() >> 1, position.y() >> 1);
+			RenderedRegion region = regions.get(i).get(position);
+			region.setSubImage(image, dstX, dstY);
+			image = region.getImage();
+		}
+	}
+
+	/** Returns the next Region to render */
+	protected synchronized RenderedRegion nextRegion() {
 		try {
-			// the bug might be when requesting values on level 0 that are null (not calculated)
-			if (ret == null && level != 0) {
-				Map<Vector2ic, RenderedRegion> ret2 = new HashMap<>();
-				ret = ret2;
-				// the bug might be to using abovePos() regardless of the level being zoomed in or out
-				get(level < 0 ? level + 1 : level - 1).keySet().stream().map(RenderedMap::abovePos).map(v -> new Vector2i(v)).distinct().forEach(v -> ret2.put(
-						v, null));
+			// In region coordinates
+			Vector3d cursorPos = new Vector3d(mouseWorldProperty.get(), 0).div(512).sub(.5, .5, 0);
 
-				regions.put(level, ret);
-			}
-		} catch (StackOverflowError e) {
-			System.out.println(level + " " + ret);
-			throw e;
+			Comparator<RenderedRegion> comp = (a, b) -> Double.compare(new Vector3d(a.position.x(), a.position.y(), 0).sub(cursorPos).length(),
+					new Vector3d(b.position.x(), b.position.y(), 0).sub(cursorPos).length());
+			RenderedRegion min = null;
+			for (RenderedRegion r : notRendered)
+				if (r.getImage() == null && (min == null || comp.compare(min, r) > 0))
+					min = r;
+			notRendered.remove(min);
+			return min;
+		} catch (Throwable e) {
+			e.printStackTrace();
+			throw new Error(e);
 		}
-		return ret;
 	}
 
-	public void putImage(Vector2ic pos, WritableImage image) {
-		if (!plainRegions.containsKey(pos))
-			throw new IllegalArgumentException("Position out of bounds");
-		plainRegions.get(pos).setImage(image);
+	public ReadOnlyFloatProperty getProgress() {
+		return progress.getReadOnlyProperty();
 	}
 
-	public void updateCounter(RenderedRegion r) {
-		if (get(0).containsValue(r))
-			regionsRendered++;
-		else
-			System.out.println("[RenderedMap] NOT FOUND"); // TODO what is this
+	public ReadOnlyMapProperty<Vector2ic, Map<Vector2ic, ChunkMetadata>> getChunkMetadata() {
+		return chunkMetadata.getReadOnlyProperty();
 	}
 
-	public float getProgress() {
-		if (isNothingLoaded())
-			return 1;
-		return (float) regionsRendered / regionsCount;
-	}
-
-	public RenderedRegion get(int level, Vector2ic position, boolean create) {
-		Map<Vector2ic, RenderedRegion> map = get(level);
-		RenderedRegion r = map.get(new Vector2i(position));
-		if (create && r == null && level != 0 && ((level > 0 /* && plainRegions.containsKey(new Vector2i(position.x() >> level, position.y() >>
-																 * level).toImmutable()) */) || map.containsKey(position))) {
-			r = new RenderedRegion(this, level, position);
-			if (level < 0)
-				Arrays.stream(belowPos(position)).forEach(pos -> get(level + 1, position, true));
-			if (level > 0)
-				get(level - 1, abovePos(position), true);
-			map.put(position, r);
-		}
-		return r;
-	}
-
-	public RenderedRegion[] get(int level, Vector2ic[] belowPos, boolean create) {
-		RenderedRegion[] ret = new RenderedRegion[belowPos.length];
-		for (int i = 0; i < belowPos.length; i++)
-			ret[i] = get(level, belowPos[i], create);
-		return ret;
-	}
-
-	public static Vector2ic abovePos(Vector2ic pos) {
-		return groundPos(pos, 1);
-	}
-
-	public static Vector2ic groundPos(Vector2ic pos, int levelDiff) {
-		return new Vector2i(pos.x() >> levelDiff, pos.y() >> levelDiff);
-	}
-
-	public static Vector2ic[] belowPos(Vector2ic pos) {
-		Vector2ic belowPos = new Vector2i(pos.x() << 1, pos.y() << 1);
-		return new Vector2ic[] {
-				new Vector2i(0, 0).add(belowPos),
-				new Vector2i(1, 0).add(belowPos),
-				new Vector2i(0, 1).add(belowPos),
-				new Vector2i(1, 1).add(belowPos)
-		};
-	}
-
-	public static WritableImage halfSize(WritableImage old, WritableImage topLeft, WritableImage topRight, WritableImage bottomLeft, WritableImage bottomRight) {
-		WritableImage output = old != null ? old : new WritableImage(512, 512);
-
-		PixelReader topLeftReader = topLeft != null ? topLeft.getPixelReader() : null;
-		PixelReader topRightReader = topRight != null ? topRight.getPixelReader() : null;
-		PixelReader bottomLeftReader = bottomLeft != null ? bottomLeft.getPixelReader() : null;
-		PixelReader bottomRightReader = bottomRight != null ? bottomRight.getPixelReader() : null;
-
-		int[] topLeftPixels = genBuffer(512 * 512);
-		int[] topRightPixels = genBuffer(512 * 512);
-		int[] bottomLeftPixels = genBuffer(512 * 512);
-		int[] bottomRightPixels = genBuffer(512 * 512);
-
-		if (topLeftReader != null)
-			topLeftReader.getPixels(0, 0, 512, 512, PixelFormat.getIntArgbInstance(), topLeftPixels, 0, 512);
-		if (topRightReader != null)
-			topRightReader.getPixels(0, 0, 512, 512, PixelFormat.getIntArgbInstance(), topRightPixels, 0, 512);
-		if (bottomLeftReader != null)
-			bottomLeftReader.getPixels(0, 0, 512, 512, PixelFormat.getIntArgbInstance(), bottomLeftPixels, 0, 512);
-		if (bottomRightReader != null)
-			bottomRightReader.getPixels(0, 0, 512, 512, PixelFormat.getIntArgbInstance(), bottomRightPixels, 0, 512);
-
-		PixelWriter writer = output.getPixelWriter();
-
-		// TODO optimize with buffers
-		for (int y = 0; y < 256; y++) {
-			for (int x = 0; x < 256; x++) {
-				int rx = x * 2;
-				int ry = y * 2;
-				writer.setArgb(x, y, topLeftReader != null ? sampleColor(rx, ry, topLeftPixels) : 0);
-				writer.setArgb(x + 256, y, topRightReader != null ? sampleColor(rx, ry, topRightPixels) : 0);
-				writer.setArgb(x, y + 256, bottomLeftReader != null ? sampleColor(rx, ry, bottomLeftPixels) : 0);
-				writer.setArgb(x + 256, y + 256, bottomRightReader != null ? sampleColor(rx, ry, bottomRightPixels) : 0);
-			}
-		}
-		return output;
-	}
-
-	private static int sampleColor(int x, int y, int[] colors) {
-		// Image image = new Image(is, requestedWidth, requestedHeight, preserveRatio, smooth)
-		// int[] colors = genBuffer(4);
-		// reader.getPixels(x, y, 2, 2, WritablePixelFormat.getIntArgbInstance(), colors, 0, 2);
-
-		int c1 = colors[y * 512 + x], c2 = colors[y * 512 + x + 1], c3 = colors[y * 512 + x + 512], c4 = colors[y * 512 + x + 513];
-		// TODO premultiply alpha to avoid dark edges
-		long ret = 0;// use long against overflow
-		long a1 = c1 >>> 24, a2 = c2 >>> 24, a3 = c3 >>> 24, a4 = c4 >>> 24;
-		// alpha
-		ret |= ((a1 + a2 + a3 + a4) << 22) & 0xFF000000;
-		// red
-		ret |= ((((c1 & 0x00FF0000) * a1 + (c2 & 0x00FF0000) * a2 + (c3 & 0x00FF0000) * a3 + (c4 & 0x00FF0000) * a4) / 255) >> 2) & 0x00FF0000;
-		// green
-		ret |= ((((c1 & 0x0000FF00) * a1 + (c2 & 0x0000FF00) * a2 + (c3 & 0x0000FF00) * a3 + (c4 & 0x0000FF00) * a4) / 255) >> 2) & 0x0000FF00;
-		// blue
-		ret |= ((((c1 & 0x000000FF) * a1 + (c2 & 0x000000FF) * a2 + (c3 & 0x000000FF) * a3 + (c4 & 0x000000FF) * a4) / 255) >> 2) & 0x000000FF;
-		return (int) ret;
-	}
-
-	/** Test how much time this takes to see if object pooling is needed. */
-	private static int[] genBuffer(int length) {
-		return new int[length];
+	public ReadOnlySetProperty<Vector2ic> getCurrentlyRendering() {
+		return rendering.getReadOnlyProperty();
 	}
 }

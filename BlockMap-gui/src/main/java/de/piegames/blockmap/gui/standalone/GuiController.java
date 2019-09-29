@@ -153,7 +153,7 @@ public class GuiController implements Initializable {
 	public void initialize(URL location, ResourceBundle resources) {
 		log.debug("Initializing GUI");
 
-		renderer = new WorldRendererCanvas(null);
+		renderer = new WorldRendererCanvas();
 		root.setCenter(pane = new MapPane(renderer));
 		pane.decorationLayers.add(new DragScrollDecoration(renderer.viewport));
 		{
@@ -333,11 +333,6 @@ public class GuiController implements Initializable {
 				this.pins.loadWorld(Collections.emptyList(), Collections.emptyList());
 		});
 		renderer.getChunkMetadata().addListener((MapChangeListener<Vector2ic, Map<Vector2ic, ChunkMetadata>>) change -> {
-			/*
-			 * This works because the only operations are clear() and additions. There are no put operations that overwrite a previously existing item.
-			 */
-			if (change.getValueRemoved() != null)
-				GuiController.this.pins.reloadWorld();
 			if (change.getValueAdded() != null)
 				GuiController.this.pins.loadRegion(change.getKey(), Pin.convertDynamic(change.getValueAdded(), renderer.viewport));
 		});

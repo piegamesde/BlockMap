@@ -5,12 +5,12 @@ import org.joml.Rectangled;
 import org.joml.Vector2d;
 import org.joml.Vector2dc;
 
-import de.piegames.blockmap.gui.CanvasHelper;
+import de.piegames.blockmap.gui.ResizableCanvas;
 import de.piegames.blockmap.gui.DisplayViewport;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 
-public class SelectRectangleDecoration extends CanvasHelper {
+public class SelectRectangleDecoration extends ResizableCanvas {
 
 	protected final DisplayViewport	frustum;
 

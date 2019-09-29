@@ -2,7 +2,7 @@ package de.piegames.blockmap.gui.decoration;
 
 import java.util.Objects;
 
-import de.piegames.blockmap.gui.CanvasHelper;
+import de.piegames.blockmap.gui.ResizableCanvas;
 import de.piegames.blockmap.gui.DisplayViewport;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
@@ -12,7 +12,7 @@ import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.LinearGradient;
 import javafx.scene.paint.Stop;
 
-public class ScaleDecoration extends CanvasHelper {
+public class ScaleDecoration extends ResizableCanvas {
 
 	protected final DisplayViewport viewport;
 

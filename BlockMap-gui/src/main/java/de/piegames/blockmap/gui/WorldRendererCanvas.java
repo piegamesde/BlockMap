@@ -21,11 +21,10 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
-import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
-public class WorldRendererCanvas extends Canvas {
+public class WorldRendererCanvas extends ResizableCanvas {
 
 	public static final int													THREAD_COUNT	= 4;
 
@@ -68,6 +67,7 @@ public class WorldRendererCanvas extends Canvas {
 		viewport.widthProperty.bind(widthProperty());
 		viewport.heightProperty.bind(heightProperty());
 		viewport.frustumProperty.addListener(e -> repaint());
+
 		repaint();
 	}
 
@@ -82,17 +82,8 @@ public class WorldRendererCanvas extends Canvas {
 		status.set("Stopped");
 	}
 
-	/** Queues in a repaint event calling {@link renderWorld} from the JavaFX Application Thread */
-	public void repaint() {
-		if (Platform.isFxApplicationThread())
-			renderWorld();
-		else
-			Platform.runLater(this::renderWorld);
-	}
-
-	/** Requires to be called from the JavaFX Application Thread. */
-	public void renderWorld() {
-		gc = getGraphicsContext2D();
+	@Override
+	public void render() {
 		gc.setImageSmoothing(false);
 		// gc.setStroke(Color.GREEN.deriveColor(0, 1, 1, .2));y
 		gc.setLineWidth(10);

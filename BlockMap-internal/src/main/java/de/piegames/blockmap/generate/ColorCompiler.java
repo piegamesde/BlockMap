@@ -46,7 +46,7 @@ public class ColorCompiler {
 		log.info("Compiling " + colorInstructions.toAbsolutePath() + " to color maps");
 		log.debug("Minecraft jar: " + minecraftJar.toAbsolutePath());
 
-		FileSystem jarFile = FileSystems.newFileSystem(minecraftJar);
+		FileSystem jarFile = FileSystems.newFileSystem(minecraftJar, (ClassLoader) null);
 
 		Map<String, BlockColorMap> colorMaps = new HashMap<>();
 		Map<String, ColorMapBuilder> colorMapHelpers = new HashMap<>();
@@ -152,7 +152,7 @@ public class ColorCompiler {
 	public static BiomeColorMap compileBiomeColors(Path minecraftJar, Path colorInstructions) throws IOException {
 		log.info("Compiling " + colorInstructions.toAbsolutePath() + " to color map");
 		log.debug("Minecraft jar: " + minecraftJar.toAbsolutePath());
-		FileSystem jarFile = FileSystems.newFileSystem(minecraftJar);
+		FileSystem jarFile = FileSystems.newFileSystem(minecraftJar, (ClassLoader) null);
 
 		Map<Integer, BiomeColor> colorMap = new HashMap<>();
 

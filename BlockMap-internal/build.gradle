@@ -87,6 +87,10 @@ sourceSets {
 
 test {
 	exclude 'de/piegames/blockmap/AllTests.class'
+
+	testLogging {
+		exceptionFormat = 'full'
+	}
 }
 
 jmh {

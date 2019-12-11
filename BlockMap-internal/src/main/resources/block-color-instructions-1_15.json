@@ -66,7 +66,7 @@
 			"beetroots,age=1": "beetroots_stage1.png",
 			"beetroots,age=2": "beetroots_stage2.png",
 			"beetroots,age=3": "beetroots_stage3.png",
-			"bell,facing=*,attachment=*": "bell_top.png",
+			"bell,facing=*,attachment=*,powered=*": "bell_top.png",
 			"blast_furnace,facing=*,lit=*": "blast_furnace_top.png",
 			
 			"${color}_banner,rotation=*": ["transparent"],
@@ -513,7 +513,12 @@
 			"${brick_stair}_brick_stairs,facing=*,half=*,shape=*,waterlogged=*": "${brick_stair}_bricks.png",
 
 			"smooth_${smooth_slab}_slab,type=*,waterlogged=*": "${smooth_slab}_top.png",
-			"smooth_${smooth_stair}_stairs,facing=*,half=*,shape=*,waterlogged=*": "${smooth_stair}_top.png"
+			"smooth_${smooth_stair}_stairs,facing=*,half=*,shape=*,waterlogged=*": "${smooth_stair}_top.png",
+			
+			"bee_nest,facing=*,honey_level=*": "bee_nest_top.png",
+			"honey_block": "honey_block_top.png",
+			"honeycomb_block": "honeycomb_block.png",
+			"beehive,facing=*,honey_level=*": "beehive_end.png"
 		}
 	},
     "foliage": {

@@ -100,7 +100,7 @@ public class ColorMapTest {
 	/** Test against each single state specified in Minecraft. */
 	@Test
 	public void testDetailed() {
-		List<Block> missing = new ArrayList<>();
+		List<String> missing = new ArrayList<>();
 		Map<String, Map<BitSet, BlockColor>> colors = map.getBlockColors().entrySet().stream()
 				.collect(Collectors.toMap(Map.Entry::getKey, e -> {
 					if (e.getValue() instanceof SingleStateColors)
@@ -115,7 +115,7 @@ public class ColorMapTest {
 				BitSet compiledState = new BitSet(states.getSize());
 				state.getProperties().entrySet().forEach(e -> compiledState.set(states.getProperty(e.getKey(), e.getValue())));
 				if (!colors.containsKey(block.getKey()) || colors.get(block.getKey()).remove(compiledState) == null)
-					missing.add(new Block(block.getKey(), compiledState));
+					missing.add(block.getKey() + " " + state.getProperties());
 			}
 		}
 		assertTrue("The following states are missing in the color map: " + missing, missing.isEmpty());

@@ -33,12 +33,13 @@ public class RegionRenderer {
 	private static Log			log	= LogFactory.getLog(RegionRenderer.class);
 
 	public final RenderSettings	settings;
-	private final ChunkRenderer	renderer13, renderer14;
+	private final ChunkRenderer	renderer13, renderer14, renderer15;
 
 	public RegionRenderer(RenderSettings settings) {
 		this.settings = Objects.requireNonNull(settings);
 		renderer13 = new ChunkRenderer_1_13(settings);
 		renderer14 = new ChunkRenderer_1_14(settings);
+		renderer15 = new ChunkRenderer_1_15(settings);
 	}
 
 	/**
@@ -132,6 +133,8 @@ public class RegionRenderer {
 					metadata.put(chunkPos, renderer13.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
 				} else if (version >= MinecraftVersion.MC_1_14.minVersion && version < MinecraftVersion.MC_1_14.maxVersion) {
 					metadata.put(chunkPos, renderer14.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
+				} else if (version >= MinecraftVersion.MC_1_15.minVersion && version < MinecraftVersion.MC_1_15.maxVersion) {
+					metadata.put(chunkPos, renderer15.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
 				} else {
 					metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "Could not find a chunk rendering engine for this version", version));
 				}

@@ -36,7 +36,7 @@ class ChunkRenderer_1_15 extends ChunkRenderer {
 	private static Log log = LogFactory.getLog(ChunkRenderer_1_15.class);
 
 	public ChunkRenderer_1_15(RenderSettings settings) {
-		super(MinecraftVersion.MC_1_14, settings);
+		super(MinecraftVersion.MC_1_15, settings);
 	}
 
 	@Override

@@ -15,8 +15,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.flowpowered.nbt.regionfile.RegionFile;
-
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RenderSettings;
 import de.piegames.blockmap.standalone.PostProcessing;
@@ -25,6 +23,7 @@ import de.piegames.blockmap.world.RegionFolder.CachedRegionFolder;
 import de.piegames.blockmap.world.RegionFolder.LocalRegionFolder;
 import de.piegames.blockmap.world.RegionFolder.RemoteRegionFolder;
 import de.piegames.blockmap.world.RegionFolder.WorldRegionFolder;
+import de.piegames.nbt.regionfile.RegionFile;
 
 public class RegionFolderTest {
 	/* The region coordinates that exist in the test world */

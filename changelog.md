@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 1.6.1
+### Changes
+- Performance optimizations
+
 ## Version 1.5.1
 ### Changes
 

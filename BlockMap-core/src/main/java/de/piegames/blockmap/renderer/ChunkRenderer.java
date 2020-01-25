@@ -5,14 +5,13 @@ import java.util.Map.Entry;
 
 import org.joml.Vector2ic;
 
-import com.flowpowered.nbt.CompoundTag;
-import com.flowpowered.nbt.StringTag;
-import com.flowpowered.nbt.Tag;
-
 import de.piegames.blockmap.MinecraftVersion;
 import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.color.Color;
 import de.piegames.blockmap.world.ChunkMetadata;
+import de.piegames.nbt.CompoundTag;
+import de.piegames.nbt.StringTag;
+import de.piegames.nbt.Tag;
 
 abstract class ChunkRenderer {
 

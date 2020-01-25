@@ -22,15 +22,19 @@ import de.piegames.blockmap.world.WorldPins;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Help.Visibility;
-import picocli.CommandLine.HelpCommand;
+import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
+import picocli.CommandLine.ParameterException;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.ParentCommand;
-import picocli.CommandLine.RunLast;
+import picocli.CommandLine.Spec;
 
-@Command(name = "blockmap-cli",
+@Command(name = "blockmap",
 		versionProvider = VersionProvider.class,
-		subcommands = { CommandRender.class, HelpCommand.class })
+		synopsisSubcommandLabel = "COMMAND",
+		subcommands = { CommandRender.class },
+		footerHeading = "%n",
+		footer = "This is the command line interface of blockmap. To access the GUI (if installed), run `blockmap-gui`.")
 public class CommandLineMain implements Runnable {
 
 	private static Log	log	= null;
@@ -45,20 +49,39 @@ public class CommandLineMain implements Runnable {
 			versionHelp = true,
 			description = "Print version information and exit.")
 	boolean				versionRequested;
+	@Option(names = { "-h", "--help" }, usageHelp = true, description = "Print this help message and exit")
+	boolean		usageHelpRequested;
 
 	@Option(names = { "--verbose", "-v" }, description = "Be chatty")
 	boolean				verbose;
 
+	@Spec
+	CommandSpec	spec;
+
+	public void runAll() {
+		if (verbose) {
+			Configurator.setRootLevel(Level.DEBUG);
+		}
+	}
+
+	@Override
+	public void run() {
+		runAll();
+		throw new ParameterException(spec.commandLine(), "Missing required subcommand");
+	}
+
 	@Command(name = "render",
 			sortOptions = false,
 			description = "Render a folder containing region files to another folder through the command line interface",
-			footer = "Please don't forget that you can use global options too, which can be accessed through `BlockMap help`."
-					+ " These have to be put before the render command.",
-			subcommands = { HelpCommand.class })
+			footerHeading = "%n",
+			footer = "Please don't forget that you can use global options too, which can be accessed through `blockmap help`."
+					+ " These have to be put before the render command.")
 	public static class CommandRender implements Runnable {
 
 		@ParentCommand
 		private CommandLineMain		main;
+		@Option(names = { "-h", "--help" }, usageHelp = true, description = "Print this help message and exit")
+		boolean						usageHelpRequested;
 
 		@Option(names = { "--output", "-o" },
 				description = "The location of the output images. Must not be a file. Non-existant folders will be created.",
@@ -180,23 +203,10 @@ public class CommandLineMain implements Runnable {
 		}
 	}
 
-	public void runAll() {
-		if (verbose) {
-			Configurator.setRootLevel(Level.DEBUG);
-		}
-	}
-
-	@Override
-	public void run() {
-		runAll();
-	}
-
 	public static void main(String... args) {
 		/* Without this, JOML will print vectors out in scientific notation which isn't the most human readable thing in the world */
 		System.setProperty("joml.format", "false");
 
-		CommandLine cli = new CommandLine(new CommandLineMain());
-		cli.parseWithHandler(new RunLast(), args);
+		System.exit(new CommandLine(new CommandLineMain()).execute(args));
 	}
-
 }

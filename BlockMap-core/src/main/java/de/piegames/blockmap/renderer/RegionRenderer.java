@@ -1,6 +1,7 @@
 package de.piegames.blockmap.renderer;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
 import java.util.Arrays;
@@ -14,11 +15,6 @@ import org.apache.commons.logging.LogFactory;
 import org.joml.Vector2i;
 import org.joml.Vector2ic;
 
-import com.flowpowered.nbt.CompoundTag;
-import com.flowpowered.nbt.Tag;
-import com.flowpowered.nbt.regionfile.Chunk;
-import com.flowpowered.nbt.regionfile.RegionFile;
-
 import de.piegames.blockmap.MinecraftVersion;
 import de.piegames.blockmap.color.Color;
 import de.piegames.blockmap.world.ChunkMetadata;
@@ -26,18 +22,24 @@ import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataCulled;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataFailed;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataVersion;
 import de.piegames.blockmap.world.Region;
+import de.piegames.nbt.CompoundTag;
+import de.piegames.nbt.Tag;
+import de.piegames.nbt.regionfile.Chunk;
+import de.piegames.nbt.regionfile.RegionFile;
+import de.piegames.nbt.stream.NBTInputStream;
 
 public class RegionRenderer {
 
 	private static Log			log	= LogFactory.getLog(RegionRenderer.class);
 
 	public final RenderSettings	settings;
-	private final ChunkRenderer	renderer13, renderer14;
+	private final ChunkRenderer	renderer13, renderer14, renderer15;
 
 	public RegionRenderer(RenderSettings settings) {
 		this.settings = Objects.requireNonNull(settings);
 		renderer13 = new ChunkRenderer_1_13(settings);
 		renderer14 = new ChunkRenderer_1_14(settings);
+		renderer15 = new ChunkRenderer_1_15(settings);
 	}
 
 	/**
@@ -109,8 +111,9 @@ public class RegionRenderer {
 			}
 
 			CompoundTag root;
-			try {
-				root = chunk.readTag();
+			try (NBTInputStream nbtIn = new NBTInputStream(new ByteArrayInputStream(chunk.getData().array(), 5, chunk.getRealLength()), chunk
+					.getCompression(), true);) {
+				root = new CompoundTag("chunk", ((CompoundTag) nbtIn.readTag()).getValue());
 			} catch (IOException e) {
 				log.warn("Failed to load chunk " + chunkPosRegion, e);
 				metadata.put(chunkPos, new ChunkMetadataFailed(chunkPos, e));
@@ -130,6 +133,8 @@ public class RegionRenderer {
 					metadata.put(chunkPos, renderer13.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
 				} else if (version >= MinecraftVersion.MC_1_14.minVersion && version < MinecraftVersion.MC_1_14.maxVersion) {
 					metadata.put(chunkPos, renderer14.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
+				} else if (version >= MinecraftVersion.MC_1_15.minVersion && version < MinecraftVersion.MC_1_15.maxVersion) {
+					metadata.put(chunkPos, renderer15.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
 				} else {
 					metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "Could not find a chunk rendering engine for this version", version));
 				}

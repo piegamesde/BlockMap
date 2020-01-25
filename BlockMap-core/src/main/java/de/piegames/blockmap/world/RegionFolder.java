@@ -38,7 +38,6 @@ import org.joml.Vector3dc;
 import org.joml.Vector3i;
 import org.joml.Vector3ic;
 
-import com.flowpowered.nbt.regionfile.RegionFile;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 
@@ -46,6 +45,7 @@ import de.piegames.blockmap.MinecraftDimension;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkRenderState;
 import de.piegames.blockmap.world.RegionFolder.SavedRegionHelper.RegionHelper;
+import de.piegames.nbt.regionfile.RegionFile;
 import io.gsonfire.GsonFireBuilder;
 import io.gsonfire.annotations.Exclude;
 import io.gsonfire.annotations.ExposeMethodParam;

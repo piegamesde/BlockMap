@@ -42,21 +42,21 @@ import picocli.CommandLine.Command;
 @Command
 public class Generator {
 
-	private static Log			log						= LogFactory.getLog(Generator.class);
+	private static Log			log							= LogFactory.getLog(Generator.class);
 
 	/*
 	 * All output paths are listed here. They are split into three categories: main-resources, test-resources, other. The resources get copied
 	 * to the runtime resources folder through #processResources(). Those are in OUTPUTS.
 	 */
 
-	static final Path			OUTPUT					= Paths.get("./build/generated-resources");
-	static final Path			OUTPUT_CORE				= OUTPUT.resolve("BlockMap-core/generated-resources-main");
-	static final Path			OUTPUT_INTERNAL_MAIN	= OUTPUT.resolve("BlockMap-internal/generated-resources-main");
-	static final Path			OUTPUT_INTERNAL_TEST	= OUTPUT.resolve("BlockMap-internal/generated-resources-test");
-	static final Path			OUTPUT_INTERNAL_CACHE	= OUTPUT.resolve("BlockMap-internal/generated-resources-cache");
-	static final Path			OUTPUT_STANDALONE		= OUTPUT.resolve("BlockMap-cli/generated-resources-main");
-	static final Path			OUTPUT_GUI				= OUTPUT.resolve("BlockMap-gui/generated-resources-main");
-	static final Path			OUTPUT_SCREENSHOTS		= Paths.get("../screenshots");
+	static final Path			OUTPUT						= Paths.get("./build/generated-resources");
+	static final Path			OUTPUT_CORE					= OUTPUT.resolve("BlockMap-core/generated-resources-main");
+	static final Path			OUTPUT_INTERNAL_MAIN		= OUTPUT.resolve("BlockMap-internal/generated-resources-main");
+	static final Path			OUTPUT_INTERNAL_TEST		= OUTPUT.resolve("BlockMap-internal/generated-resources-test");
+	static final Path			OUTPUT_INTERNAL_CACHE		= OUTPUT.resolve("BlockMap-internal/generated-resources-cache");
+	static final Path			OUTPUT_STANDALONE			= OUTPUT.resolve("BlockMap-cli/generated-resources-main");
+	static final Path			OUTPUT_GUI					= OUTPUT.resolve("BlockMap-gui/generated-resources-main");
+	static final Path			OUTPUT_SCREENSHOTS			= Paths.get("../screenshots");
 	private static final Path[]	OUTPUTS					= { OUTPUT_CORE, OUTPUT_INTERNAL_MAIN, OUTPUT_INTERNAL_TEST, OUTPUT_STANDALONE, OUTPUT_GUI };
 
 	@Command

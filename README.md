@@ -7,18 +7,18 @@
 *This started as fork of [TMCMR](https://github.com/TOGoS/TMCMR), but has been almost completely rewritten due to the update. If you want something stable that works with 1.12 and before worlds, go check it out.*
 
 ## Features:
+- Really fast (>700 chunks/s on my system)
+- Works with huge worlds
+- Works on servers
+- Rendering scale: 1 pixel : 1 block
 - An interactive GUI viewer made with JavaFX
 - Pins on the map show additional information like players and villages
 - Different color maps and shaders that highlight exactly what you are looking for (including an underground caves and an ocean ground view)
 - A gui library to include maps into your own JavaFX applications (but not released yet)
 - A command line interface to render your worlds from scripts
-- The core rendering code as library to use in your own projects (releasing soon)
-- Rendering scale: 1 pixel : 1 block
-- Really fast
-- Works with huge worlds
-- Works on servers
+- The core rendering code as library to use in your own projects (releasing soon™)
 - Gamma corrected rendering
-- Works with both 1.13 and 1.14
+- Works with both 1.13 and 1.14 worlds
 
 ## Gallery
 
@@ -95,6 +95,26 @@ If this fails, try `./gradlew run2`\*. If you want to create a release jar and r
 ./gradlew release
 ```
 This will create two executable fat (=containing all needed dependencies) jars in `./BlockMap-{gui,cli}/build/libs/fat/`.
+
+## Update to newer BlockMap version
+
+- Update and start Minecraft. Create a new debug world. Copy it to `BlockMap/BlockMap-internal/src/test/resources`.
+- Copy the current block color instructions in `BlockMap/BlockMap-internal/src/main/resources/` to match the new Minecraft version.
+- Copy the current `ChunkRenderer` in `de.piegames.blockmap.renderer` to match the new Minecraft version.
+- *Commit as update preparation*
+- Start off updating `de.piegames.blockmap.MinecraftVersion`
+- Update the Minecraft version of `ChunkRenderer`
+- Update `de.piegames.blockmap.renderer.RegionRenderer` to use the new `ChunkRenderer`
+- Run `./gradlew regenerate` and make it work
+- Run all the tests and make them work
+	- If Minecraft changed something on the save format, the `ChunkRenderer` will fail
+	- If Minecraft added new blocks, the color map needs to be updated. The failing tests will tell which blocks are missing. Additional information can be retrieved from the default resource pack.
+	- If Minecraft added or changed biomes, manual checking and updating is required
+- Generate a Minecraft vanilla world and test the GUI
+- Implement any new features of the update (e.g. new data that can be shown as GUI pin)
+- Regenerate the screenshots
+	- Optimize the BlockMapWorld in Minecraft
+	- `./gradlew clear && ./gradlew regenerate && ./gradlew generateScreenshots`
 
 ## Troubleshooting
 

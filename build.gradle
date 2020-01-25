@@ -50,7 +50,7 @@ subprojects {
 
 	def jacocoExecutionDataFiles = fileTree(buildDir).include("/jacoco/*.exec")
 	jacocoTestReport {
-		executionData = jacocoExecutionDataFiles
+		executionData.from = jacocoExecutionDataFiles
 	}
 }
 
@@ -59,13 +59,13 @@ project.tasks["sonarqube"].dependsOn "jacocoRootReport"
 task jacocoRootReport(type: JacocoReport) {
 	group 'verification'
 	description = 'Generates an aggregate report from all subprojects'
+	additionalSourceDirs.from = subprojects.sourceSets.main.allSource.srcDirs
+	sourceDirectories.from = subprojects.sourceSets.main.allSource.srcDirs
+	classDirectories.from = subprojects.sourceSets.main.output
+	executionData.from = subprojects.jacocoTestReport.executionData
 	reports {
 		xml.enabled = true
 	}
-	additionalSourceDirs = files(subprojects.sourceSets.main.allSource.srcDirs)
-	sourceDirectories = files(subprojects.sourceSets.main.allSource.srcDirs)
-	classDirectories = files(subprojects.sourceSets.main.output)
-	executionData = files(subprojects.jacocoTestReport.executionData)
 }
 
 task regenerate(type: GradleBuild) {

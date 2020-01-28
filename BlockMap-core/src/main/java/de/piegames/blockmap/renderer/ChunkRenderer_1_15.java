@@ -153,6 +153,8 @@ class ChunkRenderer_1_15 extends ChunkRenderer {
 
 					/* Once the height calculation is completed (we found a non-translucent block), set this flag to stop searching. */
 					boolean heightSet = false;
+					/* If we discard all solid block until we hit a translucent one, we'll get a nice cave view effect */
+					boolean discardTop = blockColors.isCaveView();
 					ColorColumn color = new ColorColumn();
 					height: for (byte s = 15; s >= 0; s--) {
 						if ((s << 4) > settings.maxY)
@@ -172,6 +174,7 @@ class ChunkRenderer_1_15 extends ChunkRenderer {
 						if (loadedSections[s] == null) {
 							/* Sector is full of air. It is assumed that the air color is not biome dependent */
 							color.putColor(blockColors.getAirColor(), 16, 0);
+							discardTop = false;
 							continue;
 						}
 						for (int y = 15; y >= 0; y--) {
@@ -185,13 +188,16 @@ class ChunkRenderer_1_15 extends ChunkRenderer {
 							int xzy = xz | y << 8;
 
 							BlockColor colorData = loadedSections[s][xzy];
-							if (!colorData.isTranslucent && !heightSet) {
+							if (discardTop && colorData.isTranslucent)
+								discardTop = false;
+							if (!discardTop && !colorData.isTranslucent && !heightSet) {
 								height[regionXZ] = h;
 								heightSet = true;
 							}
 
 							int biomeXYZ = (h >> 2) << 4 | biomeXZ;
-							color.putColor(colorData, 1, biomes[biomeXYZ]);
+							if (!discardTop)
+								color.putColor(colorData, 1, biomes[biomeXYZ]);
 							if (color.needStop)
 								break height;
 						}

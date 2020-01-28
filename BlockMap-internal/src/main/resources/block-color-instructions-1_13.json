@@ -1,6 +1,7 @@
 {
 	"default": {
         "__comment": "The default block map covering all blocks.",
+        "discardTop": "false",
         "placeholders": {
             "__comment": "Since I'm too lazy to copy-paste 16 lines per wood type and 12 lines per color (amongst others), place in here some values that will be replaced while loading.",
             "log": ["acacia", "birch", "dark_oak", "jungle", "oak", "spruce"],
@@ -511,6 +512,10 @@
         }
     },
     "caves": {
+        "inherit": "default",
+        "discardTop": "true"
+    },
+    "x-ray": {
         "__comment": "This color map makes all blocks transparent except ores and caves",
         "override": ["default", "fixed", "0x0C000000", "translucent=true"],
         "colormap": {

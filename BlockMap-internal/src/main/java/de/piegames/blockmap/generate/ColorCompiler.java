@@ -93,6 +93,8 @@ public class ColorCompiler {
 						colorMap.addBlock(new ColorInstruction(e.getKey(), colorInfo));
 					}
 				}
+				if (data.has("discardTop"))
+					colorMap.discardTop = data.get("discardTop").getAsBoolean();
 				colorMapHelpers.put(map.getKey(), colorMap);
 
 				/* Take in the parsed color maps and actually compile the colors to real color maps */

@@ -191,9 +191,10 @@
 							<items>
 								<FXCollections fx:factory="observableArrayList">
 									<String fx:value="Default" />
-									<String fx:value="Caves" />
-									<String fx:value="No foliage" />
 									<String fx:value="Ocean ground" />
+									<String fx:value="No foliage" />
+									<String fx:value="Caves" />
+									<String fx:value="X-Ray" />
 								</FXCollections>
 							</items>
 						</ChoiceBox>

@@ -25,6 +25,7 @@ public class ColorMapBuilder {
 
 	private static Log					log				= LogFactory.getLog(ColorMapBuilder.class);
 
+	public boolean						discardTop;
 	public Map<String, List<String>>	placeholders	= new HashMap<>();
 	/* (block name, block state) -> color generation info */
 	public Map<Block, List<String>>		blocks			= new HashMap<>();
@@ -40,12 +41,14 @@ public class ColorMapBuilder {
 	public void inherit(ColorMapBuilder inherit) {
 		placeholders.putAll(inherit.placeholders);
 		blocks.putAll(inherit.blocks);
+		discardTop = inherit.discardTop;
 	}
 
 	public void override(ColorMapBuilder override, List<String> overrideWith) {
 		placeholders.putAll(override.placeholders);
 		/* Take all keys, map them to overrideWith and add them to the map. */
 		blocks.putAll(override.blocks.keySet().stream().collect(Collectors.toMap(b -> b, b -> overrideWith)));
+		discardTop = override.discardTop;
 	}
 
 	public void addBlock(ColorInstruction entry) {
@@ -110,7 +113,7 @@ public class ColorMapBuilder {
 		map.putAll(blockColors.entrySet().stream()
 				.filter(e -> !map.containsKey(e.getKey()))
 				.collect(Collectors.toMap(e -> e.getKey(), e -> new BlockColorMap.NormalStateColors(e.getValue()))));
-		return new BlockColorMap(map);
+		return new BlockColorMap(map, discardTop);
 	}
 
 	private boolean isAllStates(String blockName, Collection<BitSet> states) {

@@ -188,6 +188,8 @@ public final class Color {
 	}
 
 	public static final Color alphaOver(Color dst, Color src, int times) {
+		if (src.a >= 0.99999)
+			return src;
 		double pow = Math.pow(1 - src.a, times);
 		double alpha = 1 - (1 - dst.a) * pow;
 		double alphaDst = dst.a * pow;
@@ -211,6 +213,8 @@ public final class Color {
 	public static final Color alphaUnder(Color dst, Color src, int times) {
 		if (times == 1)
 			return alphaUnder(dst, src);
+		if (src.a >= 0.99999)
+			return src;
 		double pow = Math.pow(1 - src.a, times);
 		double alpha = 1 - (1 - dst.a) * pow;
 		double alphaDst = dst.a * pow;

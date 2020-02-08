@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.collections.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.controlsfx.control.*?>
+<?import javafx.geometry.Insets?>
+<?import de.piegames.blockmap.MinecraftDimension?>
+
+<TitledPane
+	text="World"
+	expanded="false"
+	disable="true"
+	xmlns="http://javafx.com/javafx/8"
+	xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="de.piegames.blockmap.gui.standalone.GuiControllerWorld">
+	<content>
+		<GridPane
+			id="world-settings">
+			<children>
+				<Label
+					text="Dimension:"
+					GridPane.rowIndex="1"
+					GridPane.columnIndex="0" />
+				<ChoiceBox
+					fx:id="dimensionBox"
+					maxWidth="Infinity"
+					GridPane.rowIndex="1"
+					GridPane.columnIndex="1">
+					<items>
+						<FXCollections fx:factory="observableArrayList">
+							<MinecraftDimension fx:value="OVERWORLD" />
+							<MinecraftDimension fx:value="NETHER" />
+							<MinecraftDimension fx:value="END" />
+						</FXCollections>
+					</items>
+				</ChoiceBox>
+
+				<Label
+					text="Color pack:"
+					GridPane.rowIndex="2"
+					GridPane.columnIndex="0" />
+				<ChoiceBox
+					value="Default"
+					fx:id="colorBox"
+					maxWidth="Infinity"
+					GridPane.rowIndex="2"
+					GridPane.columnIndex="1">
+					<items>
+						<FXCollections fx:factory="observableArrayList">
+							<String fx:value="Default" />
+							<String fx:value="Caves" />
+							<String fx:value="No foliage" />
+							<String fx:value="Ocean ground" />
+						</FXCollections>
+					</items>
+				</ChoiceBox>
+
+				<Label
+					text="Shading:"
+					GridPane.rowIndex="3"
+					GridPane.columnIndex="0" />
+				<ChoiceBox
+					value="Relief"
+					fx:id="shadingBox"
+					maxWidth="Infinity"
+					GridPane.rowIndex="3"
+					GridPane.columnIndex="1">
+					<items>
+						<FXCollections fx:factory="observableArrayList">
+							<String fx:value="Flat" />
+							<String fx:value="Relief" />
+							<String fx:value="Biome color" />
+							<String fx:value="Height map" />
+						</FXCollections>
+					</items>
+				</ChoiceBox>
+
+				<Label
+					text="Min. height:"
+					GridPane.rowIndex="4"
+					GridPane.columnIndex="0" />
+				<TextField
+					text="0"
+					fx:id="minHeight"
+					GridPane.rowIndex="4"
+					GridPane.columnIndex="1" />
+
+				<Label
+					text="Max. height:"
+					GridPane.rowIndex="5"
+					GridPane.columnIndex="0" />
+				<TextField
+					text="255"
+					fx:id="maxHeight"
+					GridPane.rowIndex="5"
+					GridPane.columnIndex="1" />
+			</children>
+			<columnConstraints>
+				<ColumnConstraints hgrow="ALWAYS" />
+				<ColumnConstraints hgrow="ALWAYS" />
+			</columnConstraints>
+		</GridPane>
+	</content>
+</TitledPane>

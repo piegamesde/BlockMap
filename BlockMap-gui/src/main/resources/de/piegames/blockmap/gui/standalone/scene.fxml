@@ -8,273 +8,166 @@
 <?import javafx.scene.layout.*?>
 <?import org.controlsfx.control.*?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Menu?>
 <?import org.controlsfx.control.CheckListView?>
-<?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.RowConstraints?>
-<?import javafx.scene.control.TreeItem?>
-<?import javafx.scene.control.CheckBoxTreeItem?>
 <?import javafx.scene.input.KeyCodeCombination?>
-<?import de.piegames.blockmap.MinecraftDimension?>
 
-<BorderPane
+<VBox
 	maxHeight="0"
 	maxWidth="0"
 	minHeight="0"
 	minWidth="0"
 	xmlns="http://javafx.com/javafx/8"
 	xmlns:fx="http://javafx.com/fxml/1"
-	fx:controller="de.piegames.blockmap.gui.standalone.GuiController"
-	fx:id="root">
-	<top>
-		<MenuBar>
-			<menus>
-				<Menu text="_File">
-					<items>
-						<MenuItem
-							text="Load world..."
-							onAction="#browseFolder">
-							<accelerator>
-								<KeyCodeCombination
-									code="O"
-									alt="UP"
-									control="DOWN"
-									meta="UP"
-									shift="UP"
-									shortcut="UP" />
-							</accelerator>
-						</MenuItem>
-						<MenuItem
-							text="Load rendered world..."
-							onAction="#browseFile" />
-						<MenuItem
-							text="Load remote world..."
-							onAction="#loadRemote" />
-						<MenuItem
-							text="Reload"
-							onAction="#reloadWorld">
-							<accelerator>
-								<KeyCodeCombination
-									code="R"
-									alt="UP"
-									control="DOWN"
-									meta="UP"
-									shift="UP"
-									shortcut="UP" />
-							</accelerator>
-						</MenuItem>
-						<MenuItem
-							text="Unload"
-							onAction="#unload">
-							<accelerator>
-								<KeyCodeCombination
-									code="W"
-									alt="UP"
-									control="DOWN"
-									meta="UP"
-									shift="UP"
-									shortcut="UP" />
-							</accelerator>
-						</MenuItem>
-						<MenuItem
-							text="Save current view"
-							onAction="#save">
-							<accelerator>
-								<KeyCodeCombination
-									code="S"
-									alt="UP"
-									control="DOWN"
-									meta="UP"
-									shift="UP"
-									shortcut="UP" />
-							</accelerator>
-						</MenuItem>
-						<MenuItem
-							text="Quit"
-							onAction="#exit">
-							<accelerator>
-								<KeyCodeCombination
-									code="Q"
-									alt="UP"
-									control="DOWN"
-									meta="UP"
-									shift="UP"
-									shortcut="UP" />
-							</accelerator>
-						</MenuItem>
-					</items>
-				</Menu>
-				<Menu text="_Help">
-					<items>
-						<MenuItem
-							text="About"
-							onAction="#showAbout" />
-					</items>
-				</Menu>
-			</menus>
-		</MenuBar>
-	</top>
-	<left>
-		<HBox
-			spacing="4"
-			id="left">
-			<children>
-				<VBox
-					spacing="10"
-					id="left-height"
-					alignment="CENTER"
-					HBox.hgrow="NEVER">
-					<children>
-						<Label fx:id="maxHeight" />
-						<RangeSlider
-							fx:id="heightSlider"
-							VBox.vgrow="ALWAYS"
-							orientation="VERTICAL"
-							min="0"
-							lowValue="0"
-							max="255"
-							highValue="255"
-							blockIncrement="1"
-							majorTickUnit="16"
-							minorTickCount="16"
-							snapToTicks="true"
-							showTickLabels="true"
-							showTickMarks="true" />
-						<Label fx:id="minHeight" />
-					</children>
-				</VBox>
-				<GridPane
-					hgap="6"
-					vgap="3"
-					id="left-settings">
-					<children>
-						<Label
-							text="World"
-							GridPane.rowIndex="0"
-							GridPane.columnIndex="0" />
-						<ChoiceBox
-							fx:id="worldBox"
-							maxWidth="Infinity"
-							GridPane.rowIndex="0"
-							GridPane.columnIndex="1" />
+	fx:controller="de.piegames.blockmap.gui.standalone.GuiController">
+	<MenuBar>
+		<menus>
+			<Menu text="_File">
+				<items>
+					<MenuItem
+						text="Load world..."
+						onAction="#showFolderDialog">
+						<accelerator>
+							<KeyCodeCombination
+								code="O"
+								alt="UP"
+								control="DOWN"
+								meta="UP"
+								shift="UP"
+								shortcut="UP" />
+						</accelerator>
+					</MenuItem>
+					<MenuItem
+						text="Load from server..."
+						onAction="#showUrlDialog">
+						<accelerator>
+							<KeyCodeCombination
+								code="O"
+								alt="UP"
+								control="DOWN"
+								meta="UP"
+								shift="DOWN"
+								shortcut="UP" />
+						</accelerator>
+					</MenuItem>
+					<MenuItem
+						text="Reload"
+						onAction="#reloadWorld">
+						<accelerator>
+							<KeyCodeCombination
+								code="R"
+								alt="UP"
+								control="DOWN"
+								meta="UP"
+								shift="UP"
+								shortcut="UP" />
+						</accelerator>
+					</MenuItem>
+					<MenuItem
+						text="Unload"
+						onAction="#unload">
+						<accelerator>
+							<KeyCodeCombination
+								code="W"
+								alt="UP"
+								control="DOWN"
+								meta="UP"
+								shift="UP"
+								shortcut="UP" />
+						</accelerator>
+					</MenuItem>
+					<MenuItem
+						text="Quit"
+						onAction="#exit">
+						<accelerator>
+							<KeyCodeCombination
+								code="Q"
+								alt="UP"
+								control="DOWN"
+								meta="UP"
+								shift="UP"
+								shortcut="UP" />
+						</accelerator>
+					</MenuItem>
+				</items>
+			</Menu>
+			<Menu text="_Help">
+				<items>
+					<MenuItem
+						text="About"
+						onAction="#showAbout" />
+				</items>
+			</Menu>
+		</menus>
+	</MenuBar>
+	<BorderPane
+		fx:id="root"
+		VBox.vgrow="ALWAYS">
+		<top>
+			<HBox id="top">
+				<children>
+					<TextField
+						editable="true"
+						onAction="#load"
+						promptText="Enter path to world or server URL"
+						fx:id="worldInput"
+						maxWidth="Infinity"
+						HBox.hgrow="ALWAYS"/>
+					<Button
+						text="Load"
+						onAction="#load" />
+				</children>
+			</HBox>
+		</top>
+		<left>
+			<VBox>
+				<children>
+					<fx:include
+						fx:id="serverSettings"
+						source="scene-serversettings.fxml" />
+					<fx:include
+						fx:id="worldSettings"
+						source="scene-worldsettings.fxml" />
+					<TitledPane
+						text="View"
+						expanded="true"
+						fx:id="viewSettings"
+						id="view-settings">
+						<content>
+							<VBox styleClass="list">
+								<children>
+									<CheckBox
+										text="Show grid"
+										fx:id="gridBox">
+									</CheckBox>
 
-						<Label
-							text="Dimension"
-							GridPane.rowIndex="1"
-							GridPane.columnIndex="0" />
-						<ChoiceBox
-							fx:id="dimensionBox"
-							maxWidth="Infinity"
-							GridPane.rowIndex="1"
-							GridPane.columnIndex="1">
-							<items>
-								<FXCollections fx:factory="observableArrayList">
-									<MinecraftDimension fx:value="OVERWORLD" />
-									<MinecraftDimension fx:value="NETHER" />
-									<MinecraftDimension fx:value="END" />
-								</FXCollections>
-							</items>
-						</ChoiceBox>
+									<CheckBox
+										text="Show scale bar"
+										fx:id="scaleBox">
+									</CheckBox>
 
-						<Label
-							text="Color pack:"
-							GridPane.rowIndex="2"
-							GridPane.columnIndex="0" />
-						<ChoiceBox
-							value="Default"
-							fx:id="colorBox"
-							maxWidth="Infinity"
-							GridPane.rowIndex="2"
-							GridPane.columnIndex="1">
-							<items>
-								<FXCollections fx:factory="observableArrayList">
-									<String fx:value="Default" />
-									<String fx:value="Ocean ground" />
-									<String fx:value="No foliage" />
-									<String fx:value="Caves" />
-									<String fx:value="X-Ray" />
-								</FXCollections>
-							</items>
-						</ChoiceBox>
+									<CheckBox
+										text="Show pins"
+										fx:id="pinBox"
+										selected="true">
+									</CheckBox>
 
-						<Label
-							text="Shading:"
-							GridPane.rowIndex="3"
-							GridPane.columnIndex="0" />
-						<ChoiceBox
-							value="Relief"
-							fx:id="shadingBox"
-							maxWidth="Infinity"
-							GridPane.rowIndex="3"
-							GridPane.columnIndex="1">
-							<items>
-								<FXCollections fx:factory="observableArrayList">
-									<String fx:value="Flat" />
-									<String fx:value="Relief" />
-									<String fx:value="Biome color" />
-									<String fx:value="Height map" />
-								</FXCollections>
-							</items>
-						</ChoiceBox>
-
-						<CheckBox
-							text="Show grid"
-							fx:id="gridBox"
-							GridPane.rowIndex="4"
-							GridPane.columnIndex="0"
-							GridPane.columnSpan="2">
-						</CheckBox>
-
-						<CheckBox
-							text="Show scale bar"
-							fx:id="scaleBox"
-							GridPane.rowIndex="5"
-							GridPane.columnIndex="0"
-							GridPane.columnSpan="2">
-						</CheckBox>
-
-						<CheckBox
-							text="Show pins"
-							fx:id="pinBox"
-							selected="true"
-							GridPane.rowIndex="6"
-							GridPane.columnIndex="0"
-							GridPane.columnSpan="2">
-						</CheckBox>
-
-						<CheckTreeView
-							showRoot="false"
-							id="pin-tree"
-							fx:id="pinView"
-							GridPane.rowIndex="7"
-							GridPane.columnIndex="0"
-							GridPane.columnSpan="2"
-							GridPane.vgrow="ALWAYS">
-						</CheckTreeView>
-					</children>
-					<columnConstraints>
-						<ColumnConstraints hgrow="ALWAYS" />
-						<ColumnConstraints hgrow="ALWAYS" />
-					</columnConstraints>
-					<rowConstraints>
-						<RowConstraints />
-						<RowConstraints />
-						<RowConstraints />
-						<RowConstraints />
-						<RowConstraints />
-						<RowConstraints />
-						<RowConstraints />
-						<RowConstraints vgrow="ALWAYS" />
-					</rowConstraints>
-				</GridPane>
-			</children>
-		</HBox>
-	</left>
-	<center>
-	</center>
-	<bottom>
-		<StatusBar fx:id="statusBar" />
-	</bottom>
-</BorderPane>
+									<CheckTreeView
+										showRoot="false"
+										id="pin-tree"
+										fx:id="pinView"
+										VBox.vgrow="ALWAYS">
+									</CheckTreeView>
+								</children>
+							</VBox>
+						</content>
+					</TitledPane>
+				</children>
+			</VBox>
+		</left>
+		<center>
+		</center>
+		<bottom>
+			<StatusBar fx:id="statusBar" />
+		</bottom>
+	</BorderPane>
+</VBox>

@@ -2,7 +2,7 @@
 
 [![Build Status](https://saibotk.de/buildstatus.php)]()
 
-<img src="BlockMap-standalone/src/main/resources/de/piegames/blockmap/guistandalone/icon.png" width=150/>
+<img src="icon/blockmap-256.png" width=150/>
 
 *This started as fork of [TMCMR](https://github.com/TOGoS/TMCMR), but has been almost completely rewritten due to the update. If you want something stable that works with 1.12 and before worlds, go check it out.*
 
@@ -84,18 +84,17 @@ The bash script [server.sh](server.sh) is an example of how this could be used i
 
 Due to technical, legal and performance reasons, some resources required to run and test BlockMap are not included in this repository, but generated locally. The Gradle task `regenerate` will download all required files (you only need an internet connection the first time and after a `clean`) and generate and compile a bunch of stuff. Without this, nothing will work. On a freshly cloned repository, use `initEclipse` or `initIdea` to transform the repository into a project you can simply open in your favorite IDE. (Warning: The `eclipse` and `idea` tasks have to be called each time some dependencies changed. Furthermore, they link to some folders in the build directory. This means that they won't work as intended until `regenerate` has been called.)
 
-All screenshots from aboce are generated automatically through the Gradle task `generateScreenshots`. This way, they are always up to date with the latest version. Be aware that this task needs to generate a fairly large Minecraft world first and then render it, which takes both time and space and will cause Gradle to slow down a lot.
+All screenshots from above are generated automatically through the Gradle task `generateScreenshots`. This way, they are always up to date with the latest version. Be aware that this task needs to generate a fairly large Minecraft world first and then render it, which takes both time and space and will cause Gradle to slow down a lot.
 
 ## Run it:
 
 To run from code:
 ```sh
 ./gradlew regenerate
-./gradlew run
+./gradlew :BlockMap-cli:run
+./gradlew :BlockMap-gui:run
 ```
-If this fails, try `./gradlew run2`\*. If you want to create a release jar and run it, use `./gradlew :BlockMap-gui:runShadow` and `./gradlew :BlockMap-cli:runShadow`.
-
-\* There is a bug in JavaFX that currently prevents the `run` task to work, so as a workaround use `./gradlew run2` for now.
+If you want to create a release jar and run it, use `./gradlew :BlockMap-gui:runShadow` and `./gradlew :BlockMap-cli:runShadow`.
 
 ## Update and Release BlockMap:
 
@@ -140,11 +139,6 @@ If this fails, try `./gradlew run2`\*. If you want to create a release jar and r
 - Release it 🎉
 
 ## Troubleshooting
-
-If you cannot start the GUI and you get errors similar to
-
-    java.lang.IllegalAccessError: superclass access check failed: class impl.org.controlsfx.behavior.RangeSliderBehavior (in unnamed module @0xa1d113b) cannot access class com.sun.javafx.scene.control.behavior.BehaviorBase (in module javafx.controls) because module javafx.controls does not export com.sun.javafx.scene.control.behavior to unnamed module @0xa1d113b
-please try the *Quick start* section above. This is a known JavaFX bug, please try the workaround before reporting.
 
 ## Mod support:
 

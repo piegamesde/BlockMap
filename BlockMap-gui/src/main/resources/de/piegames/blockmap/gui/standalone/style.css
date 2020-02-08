@@ -1,17 +1,28 @@
+/* The top bar where the user chooses the world to show */
+#top {
+	-fx-spacing: 3;
+}
+
 /* The complete left side */
 #left {
 }
 
-/* The pane with the slider for the height settings */
-#left-height {
-	-fx-padding: 5 0 5 3;
+#server-settings {
+	
+}
+
+#server-settings #server-name {
+	-fx-font-size: 200%
 }
 
 /* The settings combo- and checkboxes in a GridPane */
-#left-settings {
-	-fx-padding: 5 3 0 3;
+#world-settings {
 	-fx-hgap: 6;
 	-fx-vgap: 3;
+}
+
+#view-settings .list {
+	-fx-spacing: 3;
 }
 
 /* The right items of the status bar */

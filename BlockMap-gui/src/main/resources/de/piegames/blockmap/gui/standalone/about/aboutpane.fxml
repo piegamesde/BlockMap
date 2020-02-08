@@ -25,8 +25,9 @@
 		<VBox>
 			<children>
 				<Label
-					text="BlockMap 1.4.0"
+					text="BlockMap $VERSION"
 					id="about-title"
+					fx:id="aboutTitle"
 					alignment="CENTER"
 					maxWidth="Infinity"
 					maxHeight="Infinity"

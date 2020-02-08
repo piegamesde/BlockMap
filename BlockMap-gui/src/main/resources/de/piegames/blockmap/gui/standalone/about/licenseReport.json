@@ -214,86 +214,6 @@
         "dependency": "io.github.soc:directories:11"
     },
     {
-        "project": "Eclipse Collections API",
-        "description": null,
-        "version": null,
-        "developers": [
-            
-        ],
-        "url": null,
-        "year": null,
-        "licenses": [
-            {
-                "license": "Eclipse Public License - v 1.0",
-                "license_url": "https://www.eclipse.org/legal/epl-v10.html"
-            },
-            {
-                "license": "Eclipse Distribution License - v 1.0",
-                "license_url": "https://www.eclipse.org/licenses/edl-v10.html"
-            }
-        ],
-        "dependency": "org.eclipse.collections:eclipse-collections-api:10.0.0"
-    },
-    {
-        "project": "Eclipse Collections Fork Join Utilities",
-        "description": null,
-        "version": null,
-        "developers": [
-            
-        ],
-        "url": null,
-        "year": null,
-        "licenses": [
-            {
-                "license": "Eclipse Public License - v 1.0",
-                "license_url": "https://www.eclipse.org/legal/epl-v10.html"
-            },
-            {
-                "license": "Eclipse Distribution License - v 1.0",
-                "license_url": "https://www.eclipse.org/licenses/edl-v10.html"
-            }
-        ],
-        "dependency": "org.eclipse.collections:eclipse-collections-forkjoin:10.0.0"
-    },
-    {
-        "project": "Eclipse Collections Main Library",
-        "description": null,
-        "version": null,
-        "developers": [
-            
-        ],
-        "url": null,
-        "year": null,
-        "licenses": [
-            {
-                "license": "Eclipse Public License - v 1.0",
-                "license_url": "https://www.eclipse.org/legal/epl-v10.html"
-            },
-            {
-                "license": "Eclipse Distribution License - v 1.0",
-                "license_url": "https://www.eclipse.org/licenses/edl-v10.html"
-            }
-        ],
-        "dependency": "org.eclipse.collections:eclipse-collections:10.0.0"
-    },
-    {
-        "project": "Elsa Serialization",
-        "description": "Java serialization alternative. Its faster, more efficient and compatible.",
-        "version": "3.0.0-M5",
-        "developers": [
-            "Jan Kotek"
-        ],
-        "url": "http://www.mapdb.org",
-        "year": null,
-        "licenses": [
-            {
-                "license": "The Apache Software License, Version 2.0",
-                "license_url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
-            }
-        ],
-        "dependency": "org.mapdb:elsa:3.0.0-M5"
-    },
-    {
         "project": "Error-prone annotations",
         "description": null,
         "version": null,
@@ -326,6 +246,23 @@
             }
         ],
         "dependency": "com.google.code.findbugs:jsr305:3.0.2"
+    },
+    {
+        "project": "Fuzzywuzzy",
+        "description": "Fuzzy string searching implementation of the well-known fuzzywuzzy algorithm in Java",
+        "version": "1.2.0",
+        "developers": [
+            "Panayiotis P"
+        ],
+        "url": "https://github.com/xdrop/fuzzywuzzy",
+        "year": null,
+        "licenses": [
+            {
+                "license": "GPL 3",
+                "license_url": "https://www.gnu.org/licenses/gpl-3.0.en.html"
+            }
+        ],
+        "dependency": "me.xdrop:fuzzywuzzy:1.2.0"
     },
     {
         "project": "Gson",
@@ -413,23 +350,6 @@
         "dependency": "com.google.guava:guava:27.1-jre"
     },
     {
-        "project": "IntelliJ IDEA Annotations",
-        "description": "A set of annotations used for code inspection support and code documentation.",
-        "version": "13.0",
-        "developers": [
-            "JetBrains Team"
-        ],
-        "url": "http://www.jetbrains.org",
-        "year": null,
-        "licenses": [
-            {
-                "license": "The Apache Software License, Version 2.0",
-                "license_url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
-            }
-        ],
-        "dependency": "org.jetbrains:annotations:13.0"
-    },
-    {
         "project": "J2ObjC Annotations",
         "description": "A set of annotations that provide additional information to the J2ObjC\n    translator to modify the result of translation.",
         "version": "1.1",
@@ -465,24 +385,6 @@
         "dependency": "org.joml:joml:1.9.14"
     },
     {
-        "project": "JOML",
-        "description": "Java OpenGL Math Library",
-        "version": "1.9.14",
-        "developers": [
-            "Richard Greenlees",
-            "Kai Burjack"
-        ],
-        "url": "http://joml.org",
-        "year": "2015",
-        "licenses": [
-            {
-                "license": "MIT License",
-                "license_url": "http://www.opensource.org/licenses/mit-license.php"
-            }
-        ],
-        "dependency": "org.joml:joml-jdk8:1.9.14"
-    },
-    {
         "project": "Java8 data type moudle(DateTime and Optional) for gson",
         "description": null,
         "version": "1.1.0",
@@ -502,7 +404,7 @@
     {
         "project": "Javafx-base",
         "description": null,
-        "version": "12",
+        "version": "13",
         "developers": [
             
         ],
@@ -514,12 +416,12 @@
                 "license_url": "https://openjdk.java.net/legal/gplv2+ce.html"
             }
         ],
-        "dependency": "org.openjfx:javafx-base:12"
+        "dependency": "org.openjfx:javafx-base:13"
     },
     {
         "project": "Javafx-controls",
         "description": null,
-        "version": "12",
+        "version": "13",
         "developers": [
             
         ],
@@ -531,12 +433,12 @@
                 "license_url": "https://openjdk.java.net/legal/gplv2+ce.html"
             }
         ],
-        "dependency": "org.openjfx:javafx-controls:12"
+        "dependency": "org.openjfx:javafx-controls:13"
     },
     {
         "project": "Javafx-fxml",
         "description": null,
-        "version": "12",
+        "version": "13",
         "developers": [
             
         ],
@@ -548,12 +450,12 @@
                 "license_url": "https://openjdk.java.net/legal/gplv2+ce.html"
             }
         ],
-        "dependency": "org.openjfx:javafx-fxml:12"
+        "dependency": "org.openjfx:javafx-fxml:13"
     },
     {
         "project": "Javafx-graphics",
         "description": null,
-        "version": "12",
+        "version": "13",
         "developers": [
             
         ],
@@ -565,7 +467,7 @@
                 "license_url": "https://openjdk.java.net/legal/gplv2+ce.html"
             }
         ],
-        "dependency": "org.openjfx:javafx-graphics:12"
+        "dependency": "org.openjfx:javafx-graphics:13"
     },
     {
         "project": "Javafx-media",
@@ -587,7 +489,7 @@
     {
         "project": "Javafx-swing",
         "description": null,
-        "version": "12",
+        "version": "13",
         "developers": [
             
         ],
@@ -599,7 +501,7 @@
                 "license_url": "https://openjdk.java.net/legal/gplv2+ce.html"
             }
         ],
-        "dependency": "org.openjfx:javafx-swing:12"
+        "dependency": "org.openjfx:javafx-swing:13"
     },
     {
         "project": "Javafx-web",
@@ -619,57 +521,23 @@
         "dependency": "org.openjfx:javafx-web:11"
     },
     {
-        "project": "LZ4 and xxHash",
-        "description": "Java ports and bindings of the LZ4 compression algorithm and the xxHash hashing algorithm",
-        "version": "1.3.0",
+        "project": "Minecraft-Technik-Wiki/MinecraftLandGenerator",
+        "description": "Automatically generate loads of chunks",
+        "version": "3.1.1",
         "developers": [
-            "Adrien Grand"
+            "Minecraft Technik Wiki"
         ],
-        "url": "https://github.com/jpountz/lz4-java",
-        "year": null,
-        "licenses": [
-            {
-                "license": "The Apache Software License, Version 2.0",
-                "license_url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
-            }
-        ],
-        "dependency": "net.jpountz.lz4:lz4:1.3.0"
-    },
-    {
-        "project": "Mapdb",
-        "description": "MapDB provides concurrent Maps, Sets and Queues backed by disk storage or off-heap memory. It is a fast, scalable and easy to use embedded Java database.",
-        "version": "3.0.7",
-        "developers": [
-            "Jan Kotek"
-        ],
-        "url": "http://www.mapdb.org",
-        "year": null,
-        "licenses": [
-            {
-                "license": "The Apache Software License, Version 2.0",
-                "license_url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
-            }
-        ],
-        "dependency": "org.mapdb:mapdb:3.0.7"
-    },
-    {
-        "project": "MinecraftLandGenerator",
-        "description": null,
-        "version": "3.1.0",
-        "developers": [
-            
-        ],
-        "url": null,
-        "year": null,
+        "url": "https://github.com/Minecraft-Technik-Wiki/MinecraftLandGenerator",
+        "year": "2018",
         "licenses": [
             
         ],
-        "dependency": "com.github.Minecraft-Technik-Wiki:MinecraftLandGenerator:3.1.0"
+        "dependency": "com.github.Minecraft-Technik-Wiki:MinecraftLandGenerator:3.1.1"
     },
     {
         "project": "Nbt",
         "description": null,
-        "version": "9cfb01465b",
+        "version": "fd6d00577b1ae1f2c90dc1328fcf2b46c700e67d",
         "developers": [
             
         ],
@@ -678,7 +546,7 @@
         "licenses": [
             
         ],
-        "dependency": "com.github.piegamesde:nbt:9cfb01465b"
+        "dependency": "com.github.piegamesde:nbt:fd6d00577b1ae1f2c90dc1328fcf2b46c700e67d"
     },
     {
         "project": "OkHttp",
@@ -715,43 +583,9 @@
         "dependency": "com.squareup.okio:okio:1.15.0"
     },
     {
-        "project": "Org.jetbrains.kotlin:kotlin-stdlib",
-        "description": "Kotlin Standard Library for JVM",
-        "version": "1.2.71",
-        "developers": [
-            "Kotlin Team"
-        ],
-        "url": "https://kotlinlang.org/",
-        "year": null,
-        "licenses": [
-            {
-                "license": "The Apache License, Version 2.0",
-                "license_url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
-            }
-        ],
-        "dependency": "org.jetbrains.kotlin:kotlin-stdlib:1.2.71"
-    },
-    {
-        "project": "Org.jetbrains.kotlin:kotlin-stdlib-common",
-        "description": "Kotlin Common Standard Library",
-        "version": "1.2.71",
-        "developers": [
-            "Kotlin Team"
-        ],
-        "url": "https://kotlinlang.org/",
-        "year": null,
-        "licenses": [
-            {
-                "license": "The Apache License, Version 2.0",
-                "license_url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
-            }
-        ],
-        "dependency": "org.jetbrains.kotlin:kotlin-stdlib-common:1.2.71"
-    },
-    {
         "project": "Picocli - a mighty tiny Command Line Interface",
         "description": "Java command line parser with both an annotations API and a programmatic API. Usage help with ANSI styles and colors. Autocomplete. Nested subcommands. Easily included as source to avoid adding a dependency.",
-        "version": "3.7.0",
+        "version": "4.0.4",
         "developers": [
             "Remko Popma"
         ],
@@ -763,7 +597,7 @@
                 "license_url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         ],
-        "dependency": "info.picocli:picocli:3.7.0"
+        "dependency": "info.picocli:picocli:4.0.4"
     },
     {
         "project": "Protonpack",

@@ -550,8 +550,8 @@ public class GuiController implements Initializable {
 		} catch (Exception e) {
 			log.error("Could not show 'about' dialog, please file a bug report", e);
 			ExceptionDialog d = new ExceptionDialog(e);
-			d.setTitle("Could not load dialog");
-			d.setHeaderText("Please file a bug report");
+			d.setTitle("Error");
+			d.setHeaderText("Could not show 'about' dialog, please file a bug report");
 			d.showAndWait();
 		}
 	}

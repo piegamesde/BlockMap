@@ -29,12 +29,22 @@
 
 ## Requirements:
 
-- Java 12+
 - Minecraft 1.13+ worlds. Chunks from before the release (even from 1.13 snapshots) will be ignored. Please optimize your worlds in Minecraft before rendering them
+- Java 12+
+	- While BlockMap should run on any Java, using the [OpenJDK](https://adoptopenjdk.net/) is recommended.
+	- If won't hack on BlockMap, the JRE should suffice (in the downloads section, choose JRE over JDK)
 
-## Get it:
+## Get it / Installation:
 
 Download the latest version from the [Release page](https://github.com/piegamesde/BlockMap/releases).
+
+### AUR package
+
+Arch Linux users can install BlockMap directly from the [AUR](https://aur.archlinux.org/packages/blockmap-git/).
+
+### Other distros
+
+BlockMap hasn't been packaged for other distros yet (looking for maintainers).
 
 ## Use it (GUI):
 
@@ -42,7 +52,7 @@ The GUI version should just run by (double)clicking it. Otherwise run it through
 
     java -jar BlockMap-gui-1.6.0.jar
 
-to start.
+to start. If you installed BlockMap through a package manager, search for it in your launcher or menu.
 
 ### GUI controls:
 

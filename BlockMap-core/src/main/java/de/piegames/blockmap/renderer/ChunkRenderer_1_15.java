@@ -70,10 +70,11 @@ class ChunkRenderer_1_15 extends ChunkRenderer {
 						}
 					});
 
+			/* 1024 integers. Each value is the biome ID for a 4x4x4 subvolume in the chunk. The sub-chunks are in ZXY-order */
 			int[] biomes = level.getIntArrayValue("Biomes")
 					/* For some curious reason, Minecraft sometimes saves the biomes as empty array. 'cause, why not? */
 					.filter(b -> b.length > 0)
-					.orElse(new int[256]);
+					.orElse(new int[1024]);
 
 			/*
 			 * The height of the lowest section that has already been loaded. Section are loaded lazily from top to bottom and this value gets decreased
@@ -98,21 +99,20 @@ class ChunkRenderer_1_15 extends ChunkRenderer {
 			class ColorColumn {
 				Color		color			= Color.TRANSPARENT;
 				BlockColor	lastColor		= BlockColor.TRANSPARENT;
-				int			biome;
+				int			lastBiome		= -1;
 				int			lastColorTimes	= 0;
 				boolean		needStop		= false;
 
-				ColorColumn(int biome) {
-					this.biome = biome;
+				ColorColumn() {
 				}
 
-				void putColor(BlockColor currentColor, int times) {
+				void putColor(BlockColor currentColor, int times, int biome) {
 					// if (currentColor.equals(lastColor))
-					if (currentColor == lastColor)
+					if (currentColor == lastColor && biome == lastBiome)
 						lastColorTimes += times;
 					else {
 						Color color = lastColor.color;
-						BiomeColor biomeColor = settings.biomeColors.getBiomeColor(biome);
+						BiomeColor biomeColor = settings.biomeColors.getBiomeColor(lastBiome);
 						if (lastColor.isGrass)
 							color = Color.multiplyRGB(color, biomeColor.grassColor);
 						if (lastColor.isFoliage)
@@ -122,6 +122,7 @@ class ChunkRenderer_1_15 extends ChunkRenderer {
 						this.color = Color.alphaUnder(this.color, color, lastColorTimes);
 						lastColorTimes = times;
 						lastColor = currentColor;
+						lastBiome = biome;
 						if (currentColor.color.a > 0.9999)
 							needStop = true;
 					}
@@ -133,7 +134,7 @@ class ChunkRenderer_1_15 extends ChunkRenderer {
 					 * latest results. Putting a different color (transparent here) will trigger it to apply the last remaining color. If the last color is
 					 * already transparent, this will do nothing which doesn't matter since it wouldn't make any effect anyway.
 					 */
-					putColor(BlockColor.TRANSPARENT, 1);
+					putColor(BlockColor.TRANSPARENT, 1, 0);
 					return color;
 				}
 			}
@@ -146,11 +147,15 @@ class ChunkRenderer_1_15 extends ChunkRenderer {
 
 					/* xz index relative to the chunk */
 					int xz = x | z << 4;
-					regionBiomes[chunkPosRegion.x() << 4 | x | chunkPosRegion.y() << 13 | z << 9] = biomes[xz];
+					/* Index of the biome information, but without y coordinate yet */
+					int biomeXZ = (z & 12) | (x >> 2);
+					int regionXZ = chunkPosRegion.x() << 4 | x | chunkPosRegion.y() << 13 | z << 9;
 
 					/* Once the height calculation is completed (we found a non-translucent block), set this flag to stop searching. */
 					boolean heightSet = false;
-					ColorColumn color = new ColorColumn(biomes[xz & 0xFF]);
+					/* If we discard all solid block until we hit a translucent one, we'll get a nice cave view effect */
+					boolean discardTop = blockColors.isCaveView();
+					ColorColumn color = new ColorColumn();
 					height: for (byte s = 15; s >= 0; s--) {
 						if ((s << 4) > settings.maxY)
 							continue;
@@ -167,8 +172,9 @@ class ChunkRenderer_1_15 extends ChunkRenderer {
 							lowestLoadedSection = s;
 						}
 						if (loadedSections[s] == null) {
-							// Sector is full of air
-							color.putColor(blockColors.getAirColor(), 16);
+							/* Sector is full of air. It is assumed that the air color is not biome dependent */
+							color.putColor(blockColors.getAirColor(), 16, 0);
+							discardTop = false;
 							continue;
 						}
 						for (int y = 15; y >= 0; y--) {
@@ -182,17 +188,22 @@ class ChunkRenderer_1_15 extends ChunkRenderer {
 							int xzy = xz | y << 8;
 
 							BlockColor colorData = loadedSections[s][xzy];
-							if (!colorData.isTranslucent && !heightSet) {
-								height[chunkPosRegion.x() << 4 | x | chunkPosRegion.y() << 13 | z << 9] = h;
+							if (discardTop && colorData.isTranslucent)
+								discardTop = false;
+							if (!discardTop && !colorData.isTranslucent && !heightSet) {
+								height[regionXZ] = h;
 								heightSet = true;
 							}
 
-							color.putColor(colorData, 1);
+							int biomeXYZ = (h >> 2) << 4 | biomeXZ;
+							if (!discardTop)
+								color.putColor(colorData, 1, biomes[biomeXYZ]);
 							if (color.needStop)
 								break height;
 						}
 					}
-					map[chunkPosRegion.x() << 4 | x | chunkPosRegion.y() << 13 | z << 9] = color.getFinal();
+					regionBiomes[regionXZ] = biomes[(height[regionXZ] >> 2) << 4 | biomeXZ];
+					map[regionXZ] = color.getFinal();
 				}
 			return new ChunkMetadataRendered(chunkPosWorld, generationStatus, structureCenters);
 		} catch (Exception e) {

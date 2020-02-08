@@ -41,7 +41,8 @@ import io.gsonfire.annotations.PostSerialize;
 public class BlockColorMap {
 
 	public enum InternalColorMap {
-		DEFAULT("default"), CAVES("caves"), NO_FOLIAGE("foliage"), OCEAN_GROUND("water"), RAILS("rails");
+		DEFAULT("default"), OCEAN_GROUND("water"), NO_FOLIAGE("foliage"), CAVES("caves"), X_RAY("x-ray");
+
 		private String fileName;
 
 		InternalColorMap(String fileName) {
@@ -264,6 +265,8 @@ public class BlockColorMap {
 		}
 	}
 
+	/** Enable this for cave view */
+	protected boolean						discardTop;
 	protected Map<String, StateColors>		blockColors;
 	protected transient BlockColor			airColor;
 	protected final transient StateColors	missing	= new SingleStateColors(BlockColor.MISSING) {
@@ -275,7 +278,12 @@ public class BlockColorMap {
 													};
 
 	public BlockColorMap(Map<String, StateColors> blockColors) {
+		this(blockColors, false);
+	}
+
+	public BlockColorMap(Map<String, StateColors> blockColors, boolean discardTop) {
 		this.blockColors = Objects.requireNonNull(blockColors);
+		this.discardTop = discardTop;
 	}
 
 	public BlockColor getBlockColor(String blockName, BitSet blockState) {
@@ -295,14 +303,16 @@ public class BlockColorMap {
 		HashMap<String, StateColors> blockColors = new HashMap<>(this.blockColors.size() * 2, 0.51f);
 		blockColors.putAll(this.blockColors);
 		this.blockColors = blockColors;
+		airColor = getBlockColor("minecraft:air", Block.STATE_NONE);
 	}
 
 	/** This is a common operation so avoid retrieving it from the map every time. */
 	public BlockColor getAirColor() {
-		if (airColor == null)
-			return airColor = getBlockColor("minecraft:air", Block.STATE_NONE);
-		else
-			return airColor;
+		return airColor;
+	}
+
+	public boolean isCaveView() {
+		return discardTop;
 	}
 
 	/** Use for testing only */

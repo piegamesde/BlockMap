@@ -1,4 +1,4 @@
-# BlockMap - A Minecraft 1.13/1.14 world viewer
+# BlockMap – A Minecraft 1.13-1.15 world viewer
 
 [![Build Status](https://saibotk.de/buildstatus.php)]()
 
@@ -14,11 +14,10 @@
 - An interactive GUI viewer made with JavaFX
 - Pins on the map show additional information like players and villages
 - Different color maps and shaders that highlight exactly what you are looking for (including an underground caves and an ocean ground view)
-- A gui library to include maps into your own JavaFX applications (but not released yet)
 - A command line interface to render your worlds from scripts
 - The core rendering code as library to use in your own projects (releasing soon™)
 - Gamma corrected rendering
-- Works with both 1.13 and 1.14 worlds
+- Works with both 1.13+ worlds (currently: 1.15)
 
 ## Gallery
 
@@ -41,7 +40,7 @@ Download the latest version from the [Release page](https://github.com/piegamesd
 
 The GUI version should just run by (double)clicking it. Otherwise run it through:
 
-    java -jar BlockMap-gui-1.5.0.jar
+    java -jar BlockMap-gui-1.6.0.jar
 
 to start.
 
@@ -59,9 +58,9 @@ to start.
 If you want to use BlockMap through the command line without,
 
     # For general usage help
-    java -jar BlockMap-cli-1.5.0.jar help
+    java -jar BlockMap-cli-1.6.0.jar help
     # For help about rendering worlds to a folder
-    java -jar BlockMap-cli-1.5.0.jar help render
+    java -jar BlockMap-cli-1.6.0.jar help render
 
 will get you started. On Linux even with colors!
 
@@ -88,15 +87,28 @@ If this fails, try `./gradlew run2`\*. If you want to create a release jar and r
 
 \* There is a bug in JavaFX that currently prevents the `run` task to work, so as a workaround use `./gradlew run2` for now.
 
-## Release it:
+## Update and Release BlockMap:
 
 ```sh
 ./gradlew regenerate
+./gradlew generateScreenshots # Optional
 ./gradlew release
 ```
-This will create two executable fat (=containing all needed dependencies) jars in `./BlockMap-{gui,cli}/build/libs/fat/`.
 
-## Update to newer BlockMap version
+- Bump the version in `build.gradle`
+- Update `README.md`
+	- Bump the version information in file paths
+	- Bump the Minecraft version (if applicable)
+	- Check the feature list and read through it
+- Update the `changelog.md`
+- Regenerate all resources
+	- If something in the UI changed, regenerate the screenshots
+- Generate the release binaries (need to be called on each target platform)
+	- This will create two executable fat (=containing all needed dependencies) jars in `./BlockMap-{gui,cli}/build/libs/fat/`.
+- Release on GitHub
+- Update all packaged versions (currently only AUR)
+
+## Update to newer Minecraft version
 
 - Update and start Minecraft. Create a new debug world. Copy it to `BlockMap/BlockMap-internal/src/test/resources`.
 - Copy the current block color instructions in `BlockMap/BlockMap-internal/src/main/resources/` to match the new Minecraft version.
@@ -115,6 +127,7 @@ This will create two executable fat (=containing all needed dependencies) jars i
 - Regenerate the screenshots
 	- Optimize the BlockMapWorld in Minecraft
 	- `./gradlew clear && ./gradlew regenerate && ./gradlew generateScreenshots`
+- Release it 🎉
 
 ## Troubleshooting
 

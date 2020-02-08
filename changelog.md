@@ -1,8 +1,14 @@
 # Changelog
 
-## Version 1.6.1
+## Version 1.6.0
 ### Changes
+- Added proper caves view
+- Renamed old cave view into X-ray view
 - Performance optimizations
+- Update for Minecraft 1.15
+- Changed image filtering in HTML view (#32, thanks @rasmusolle)
+- Fixed compiling under Java 13
+- Internal changes and documentation
 
 ## Version 1.5.1
 ### Changes

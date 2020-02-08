@@ -131,9 +131,9 @@ public class RegionRenderer {
 					continue;
 				} else if (version <= MinecraftVersion.MC_1_13.maxVersion) {
 					metadata.put(chunkPos, renderer13.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
-				} else if (version >= MinecraftVersion.MC_1_14.minVersion && version < MinecraftVersion.MC_1_14.maxVersion) {
+				} else if (version >= MinecraftVersion.MC_1_14.minVersion && version <= MinecraftVersion.MC_1_14.maxVersion) {
 					metadata.put(chunkPos, renderer14.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
-				} else if (version >= MinecraftVersion.MC_1_15.minVersion && version < MinecraftVersion.MC_1_15.maxVersion) {
+				} else if (version >= MinecraftVersion.MC_1_15.minVersion && version <= MinecraftVersion.MC_1_15.maxVersion) {
 					metadata.put(chunkPos, renderer15.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
 				} else {
 					metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "Could not find a chunk rendering engine for this version", version));

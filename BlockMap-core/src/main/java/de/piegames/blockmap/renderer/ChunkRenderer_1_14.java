@@ -138,11 +138,20 @@ class ChunkRenderer_1_14 extends ChunkRenderer {
 				}
 			}
 
-			// Traverse the chunk in YXZ order
+			boolean mayCull = (chunkPosWorld.x() << 4) < settings.minX
+					|| (chunkPosWorld.x() << 4) + 16 > settings.maxX
+					|| (chunkPosWorld.y() << 4) < settings.minZ
+					|| (chunkPosWorld.y() << 4) + 16 > settings.maxZ;
+			/* Traverse the chunk in YXZ order */
 			for (byte z = 0; z < 16; z++)
 				for (byte x = 0; x < 16; x++) {
-					if (x < settings.minX || x > settings.maxX || z < settings.minZ || z > settings.maxZ)
-						continue;
+					if (mayCull) {
+						if (x + (chunkPosWorld.x() << 4) < settings.minX
+								|| x + (chunkPosWorld.x() << 4) > settings.maxX
+								|| z + (chunkPosWorld.y() << 4) < settings.minZ
+								|| z + (chunkPosWorld.y() << 4) > settings.maxZ)
+							continue;
+					}
 
 					/* xz index relative to the chunk */
 					int xz = x | z << 4;

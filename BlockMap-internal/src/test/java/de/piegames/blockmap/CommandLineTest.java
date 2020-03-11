@@ -47,9 +47,17 @@ public class CommandLineTest {
 				"--max-X=1024", "--min-Z=-1024", "--max-Z=1024",
 				"--dimension=OVERWORLD"));
 
-		assertEquals(0, CommandLineMain.mainWithoutQuit("-v", "render", "--create-tile-html", "--lazy", "-o=" + out2 + "/", "./src/main/resources/BlockMapWorld/", "--min-X=1024",
+		assertEquals(2, CommandLineMain.mainWithoutQuit("-v", "render", "--create-tile-html", "--lazy", "-o=" + out2 + "/", "./src/main/resources/BlockMapWorld/", "--min-X=1024",
 				"--max-X=1024", "--min-Z=1024", "--max-Z=1024",
 				"--dimension=OVERWORLD"));
+	}
+
+	/** Regression test for {@link https://github.com/Minecraft-Technik-Wiki/BlockMap/issues/36} */
+	@Test
+	public void test2() throws IOException {
+		File out3 = folder.newFolder();
+		assertEquals(0, CommandLineMain.mainWithoutQuit("-v", "render", "--create-tile-html", "-o", out3.toString(), "./src/main/resources/BlockMapWorld2/",
+				"-d", "OVERWORLD"));
 	}
 
 	/**

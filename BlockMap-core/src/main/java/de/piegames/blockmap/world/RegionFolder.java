@@ -312,7 +312,10 @@ public abstract class RegionFolder {
 		}
 
 		public Path getPath(Vector2ic pos) {
-			return getSibling(basePath, regions.get(pos).image);
+			if (regions.containsKey(pos))
+				return getSibling(basePath, regions.get(pos).image);
+			else
+				return null;
 		}
 	}
 

@@ -17,7 +17,7 @@
 - A command line interface to render your worlds from scripts
 - The core rendering code as library to use in your own projects (releasing soon™)
 - Gamma corrected rendering
-- Works with both 1.13+ worlds (currently: 1.15)
+- Works with both 1.13+ worlds (currently: up to 1.15)
 
 ## Gallery
 
@@ -40,7 +40,7 @@ Download the latest version from the [Release page](https://github.com/piegamesd
 
 The GUI version should just run by (double)clicking it. Otherwise run it through:
 
-    java -jar BlockMap-gui-1.6.0.jar
+    java -jar BlockMap-gui-1.6.1.jar
 
 to start.
 
@@ -58,9 +58,9 @@ to start.
 If you want to use BlockMap through the command line without,
 
     # For general usage help
-    java -jar BlockMap-cli-1.6.0.jar help
+    java -jar BlockMap-cli-1.6.1.jar help
     # For help about rendering worlds to a folder
-    java -jar BlockMap-cli-1.6.0.jar help render
+    java -jar BlockMap-cli-1.6.1.jar help render
 
 will get you started. On Linux even with colors!
 
@@ -81,7 +81,10 @@ All screenshots from aboce are generated automatically through the Gradle task `
 To run from code:
 ```sh
 ./gradlew regenerate
+# For the CLI
 ./gradlew run
+# For the GUI
+./gradlew BlockMap-gui:run
 ```
 If this fails, try `./gradlew run2`\*. If you want to create a release jar and run it, use `./gradlew :BlockMap-gui:runShadow` and `./gradlew :BlockMap-cli:runShadow`.
 

@@ -25,31 +25,39 @@ public class CommandLineTest {
 	 */
 	@Test
 	public void test() throws IOException {
+		assertEquals(0, CommandLineMain.mainWithoutQuit("-v", "-V"));
 		for (MinecraftVersion version : MinecraftVersion.values()) {
 			File out1 = folder.newFolder();
 			String path = "./src/test/resources/Debug-" + version.fileSuffix + "/region/";
-			CommandLineMain.main("-v", "-V");
-			CommandLineMain.main("render", "-o=" + out1 + "", path);
-			CommandLineMain.main("render", "--create-tile-html", "--lazy", "-o=" + out1 + "", path);
-			CommandLineMain.main("render", "--create-big-image", "-o=" + out1 + "", "--shader=RELIEF", "--color-map=OCEAN_GROUND", path);
+			assertEquals(0, CommandLineMain.mainWithoutQuit("render", "-o=" + out1 + "", path));
+			assertEquals(0, CommandLineMain.mainWithoutQuit("render", "--create-tile-html", "--lazy", "-o=" + out1 + "", path));
+			assertEquals(0, CommandLineMain.mainWithoutQuit("render", "--create-big-image", "-o=" + out1 + "", "--shader=RELIEF", "--color-map=OCEAN_GROUND", path));
 		}
 		File out2 = folder.newFolder();
 
-		CommandLineMain.main("-v", "render", "-o=" + out2 + "", "--min-X=-1024", "--max-X=1024", "--min-Z=-1024", "--max-Z=1024",
-				"./src/main/resources/BlockMapWorld/region/");
-		CommandLineMain.main("-v", "render", "--create-tile-html", "--lazy", "-o=" + out2 + "/", "--min-X=-1024", "--max-X=1024", "--min-Z=-1024",
-				"--max-Z=1024", "./src/main/resources/BlockMapWorld/region/");
-		CommandLineMain.main("-v", "render", "--create-big-image", "-o=" + out2 + "", "--shader=RELIEF", "--color-map=OCEAN_GROUND", "--min-X=-1024",
+		assertEquals(0, CommandLineMain.mainWithoutQuit("-v", "render", "-o=" + out2 + "", "--min-X=-1024", "--max-X=1024", "--min-Z=-1024", "--max-Z=1024",
+				"./src/main/resources/BlockMapWorld/region/"));
+		assertEquals(0, CommandLineMain.mainWithoutQuit("-v", "render", "--create-tile-html", "--lazy", "-o=" + out2 + "/", "--min-X=-1024", "--max-X=1024", "--min-Z=-1024",
+				"--max-Z=1024", "./src/main/resources/BlockMapWorld/region/"));
+		assertEquals(0, CommandLineMain.mainWithoutQuit("-v", "render", "--create-big-image", "-o=" + out2 + "", "--shader=RELIEF", "--color-map=OCEAN_GROUND", "--min-X=-1024",
 				"--max-X=1024", "--min-Z=-1024", "--max-Z=1024",
-				"./src/main/resources/BlockMapWorld/region/");
+				"./src/main/resources/BlockMapWorld/"));
 
-		CommandLineMain.main("-v", "render", "--create-tile-html", "--lazy", "-o=" + out2 + "/", "./src/main/resources/BlockMapWorld/", "--min-X=-1024",
+		assertEquals(0, CommandLineMain.mainWithoutQuit("-v", "render", "--create-tile-html", "--lazy", "-o=" + out2 + "/", "./src/main/resources/BlockMapWorld/", "--min-X=-1024",
 				"--max-X=1024", "--min-Z=-1024", "--max-Z=1024",
-				"--dimension=OVERWORLD");
+				"--dimension=OVERWORLD"));
 
-		CommandLineMain.main("-v", "render", "--create-tile-html", "--lazy", "-o=" + out2 + "/", "./src/main/resources/BlockMapWorld/", "--min-X=1024",
+		assertEquals(2, CommandLineMain.mainWithoutQuit("-v", "render", "--create-tile-html", "--lazy", "-o=" + out2 + "/", "./src/main/resources/BlockMapWorld/", "--min-X=1024",
 				"--max-X=1024", "--min-Z=1024", "--max-Z=1024",
-				"--dimension=OVERWORLD");
+				"--dimension=OVERWORLD"));
+	}
+
+	/** Regression test for {@link https://github.com/Minecraft-Technik-Wiki/BlockMap/issues/36} */
+	@Test
+	public void test2() throws IOException {
+		File out3 = folder.newFolder();
+		assertEquals(0, CommandLineMain.mainWithoutQuit("-v", "render", "--create-tile-html", "-o", out3.toString(), "./src/main/resources/BlockMapWorld2/",
+				"-d", "OVERWORLD"));
 	}
 
 	/**

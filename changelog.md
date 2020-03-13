@@ -1,5 +1,10 @@
 # Changelog
 
+## Version 1.6.1
+### Changes
+
+- Fixed a bug
+
 ## Version 1.6.0
 ### Changes
 - Added proper caves view

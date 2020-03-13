@@ -104,8 +104,8 @@ public class RegionRenderer {
 			Vector2ic chunkPosRegion = new Vector2i(chunk.x, chunk.z);
 			Vector2ic chunkPos = new Vector2i(chunkX, chunkZ);
 
-			if ((chunkX + 16 < settings.minX || chunkX > settings.maxX)
-					&& (chunkZ + 16 < settings.minZ || chunkZ > settings.maxZ)) {
+			if (((chunkX << 4) + 16 < settings.minX || (chunkX << 4) > settings.maxX)
+					&& ((chunkZ << 4) + 16 < settings.minZ || (chunkZ << 4) > settings.maxZ)) {
 				metadata.put(chunkPos, new ChunkMetadataCulled(chunkPos));
 				continue;
 			}

@@ -1,5 +1,11 @@
 # Changelog
 
+## Version 1.6.2
+### Changes
+
+- Added a color map that shows only rails (#38, thanks gobo7793)
+- Fixed a bug (#36, thanks jedenastka)
+
 ## Version 1.6.1
 ### Changes
 

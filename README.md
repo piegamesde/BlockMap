@@ -40,7 +40,7 @@ Download the latest version from the [Release page](https://github.com/piegamesd
 
 The GUI version should just run by (double)clicking it. Otherwise run it through:
 
-    java -jar BlockMap-gui-1.6.1.jar
+    java -jar BlockMap-gui-1.6.2.jar
 
 to start.
 
@@ -58,9 +58,9 @@ to start.
 If you want to use BlockMap through the command line without,
 
     # For general usage help
-    java -jar BlockMap-cli-1.6.1.jar help
+    java -jar BlockMap-cli-1.6.2.jar help
     # For help about rendering worlds to a folder
-    java -jar BlockMap-cli-1.6.1.jar help render
+    java -jar BlockMap-cli-1.6.2.jar help render
 
 will get you started. On Linux even with colors!
 

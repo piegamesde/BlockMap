@@ -526,5 +526,20 @@
             "diamond_ore": "diamond_block.png",
             "bedrock": "bedrock.png"
         }
+    },
+    "rails": {
+        "__comment": "This color map makes all blocks transparent except rails",
+        "override": ["default", "fixed", "0x00000000", "translucent=true"],
+        "colormap": {
+            "air": ["fixed", "0x00000000", "translucent=true"],
+            "cave_air": ["fixed", "0x00000000", "translucent=true"],
+            "activator_rail,powered=false,shape=*,": "activator_rail.png",
+            "activator_rail,powered=true,shape=*,": "activator_rail_on.png",
+            "detector_rail,powered=false,shape=*": "detector_rail.png",
+            "detector_rail,powered=true,shape=*": "detector_rail_on.png",
+            "powered_rail,powered=false,shape=*,": "powered_rail.png",
+            "powered_rail,powered=true,shape=*,": "powered_rail_on.png",
+            "rail,shape=*": "rail.png"
+        }
     }
 }

@@ -96,7 +96,7 @@ public class CommandLineMain implements Callable<Integer> {
 						+ "world folder instead (the one with the level.dat in it)")
 		private Path				input;
 		@Option(names = { "-c", "--color-map" },
-				paramLabel = "{DEFAULT|CAVES|NO_FOLIAGE|OCEAN_GROUND}",
+				paramLabel = "{DEFAULT|CAVES|NO_FOLIAGE|OCEAN_GROUND|RAILS}",
 				description = "Load a built-in color map.",
 				defaultValue = "DEFAULT")
 		private InternalColorMap	colorMap;

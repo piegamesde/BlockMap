@@ -195,6 +195,7 @@
 									<String fx:value="No foliage" />
 									<String fx:value="Caves" />
 									<String fx:value="X-Ray" />
+									<String fx:value="Rails" />
 								</FXCollections>
 							</items>
 						</ChoiceBox>

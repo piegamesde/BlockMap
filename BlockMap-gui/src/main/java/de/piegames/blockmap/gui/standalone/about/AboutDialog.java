@@ -9,10 +9,12 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 
+import de.piegames.blockmap.gui.VersionProvider;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
@@ -22,7 +24,7 @@ import net.dongliu.gson.GsonJava8TypeAdapterFactory;
 public class AboutDialog extends Alert {
 	private static final String	LICENSE_TEXT	= "MIT License\n" +
 			"\n" +
-			"Copyright (c) 2018 piegames\n" +
+			"Copyright (c) 2020 piegames\n" +
 			"\n" +
 			"Permission is hereby granted, free of charge, to any person obtaining a copy\n" +
 			"of this software and associated documentation files (the \"Software\"), to deal\n" +
@@ -44,6 +46,8 @@ public class AboutDialog extends Alert {
 			"";
 
 	@FXML
+	Label						aboutTitle;
+	@FXML
 	VBox						dependencies;
 	@FXML
 	ScrollPane					dependencyContainer;
@@ -60,6 +64,8 @@ public class AboutDialog extends Alert {
 		loader.setController(this);
 		getDialogPane().setContent(loader.load());
 		getDialogPane().getStylesheets().add("/de/piegames/blockmap/gui/standalone/about/style.css");
+
+		aboutTitle.setText("BlockMap " + VersionProvider.VERSION);
 
 		@SuppressWarnings("serial")
 		List<Dependency> dependencies = new GsonBuilder().registerTypeAdapterFactory(new GsonJava8TypeAdapterFactory()).create().fromJson(

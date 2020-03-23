@@ -139,16 +139,24 @@ public class Generator {
 	@Command
 	public void generateVersion(String version) throws Exception {
 		log.info("Generating VersionProvider for version " + version);
-		Path versionProvider = Paths.get("../BlockMap-cli/", "src/main/java", "de/piegames/blockmap/standalone", "VersionProvider.java");
-		List<String> file = Files.readAllLines(versionProvider);
+		generateVersion(
+				Paths.get("../BlockMap-cli/", "src/main/java", "de/piegames/blockmap/standalone", "VersionProvider.java"),
+				version);
+		generateVersion(
+				Paths.get("../BlockMap-gui/", "src/main/java", "de/piegames/blockmap/gui", "VersionProvider.java"),
+				version);
+	}
+
+	private void generateVersion(Path path, String version) throws IOException {
+		List<String> file = Files.readAllLines(path);
 		int line = 0;
 		while (!file.get(line).contains("$REPLACE_START"))
 			line++;
 		line++;
 		while (!file.get(line).contains("$REPLACE_END"))
 			file.remove(line);
-		file.add(line, "\t\treturn new String[] { \"" + version + "\" };");
-		Files.write(versionProvider, file);
+		file.add(line, "\tpublic static final String VERSION = \"" + version + "\";");
+		Files.write(path, file);
 	}
 
 	@Command
@@ -168,7 +176,7 @@ public class Generator {
 		for (int z = -SIZE; z < SIZE; z++)
 			for (int x = -SIZE; x < SIZE; x++)
 				chunks.add(new Vector2i(x, z));
-		MinecraftLandGenerator.forceloadChunks(server, world, chunks, Dimension.OVERWORLD, true, 64 * 64, true);
+		MinecraftLandGenerator.forceloadChunks(server, world, chunks, Dimension.OVERWORLD, true, 1024, true);
 		world.resetChanges();
 
 		processResources();

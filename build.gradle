@@ -3,6 +3,9 @@ apply plugin:'base'
 buildscript {
 	repositories {
 		jcenter()
+		maven {
+			url "https://plugins.gradle.org/m2/"
+		}
 	}
 
 	dependencies {
@@ -10,6 +13,7 @@ buildscript {
 		classpath "com.github.ben-manes:gradle-versions-plugin:0.21.0"
 		classpath 'com.github.jengelman.gradle.plugins:shadow:5.0.0'
 		classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.7.1"
+		classpath "org.javamodularity:moduleplugin:1.6.0"
 	}
 }
 
@@ -28,11 +32,11 @@ allprojects {
 	apply plugin: 'idea'
 	apply plugin: 'org.sonarqube'
 	apply plugin: 'jacoco'
-
 }
 
 subprojects {
 	apply plugin: 'java'
+//	apply plugin: "org.javamodularity.moduleplugin"
 	sourceCompatibility = 12
 	targetCompatibility = 12
 	compileJava.options.encoding = 'UTF-8'

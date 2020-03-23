@@ -1,7 +1,13 @@
 package de.piegames.blockmap.standalone;
 
 import java.io.IOException;
+import java.io.Writer;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.concurrent.Callable;
 
 import org.apache.commons.logging.Log;
@@ -10,6 +16,12 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.joml.Vector2ic;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+
 import de.piegames.blockmap.MinecraftDimension;
 import de.piegames.blockmap.color.BiomeColorMap;
 import de.piegames.blockmap.color.BlockColorMap.InternalColorMap;
@@ -17,9 +29,13 @@ import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RegionShader.DefaultShader;
 import de.piegames.blockmap.renderer.RenderSettings;
 import de.piegames.blockmap.standalone.CommandLineMain.CommandRender;
+import de.piegames.blockmap.standalone.CommandLineMain.CommandServer;
+import de.piegames.blockmap.world.LevelMetadata;
 import de.piegames.blockmap.world.RegionFolder.CachedRegionFolder;
 import de.piegames.blockmap.world.RegionFolder.WorldRegionFolder;
-import de.piegames.blockmap.world.WorldPins;
+import de.piegames.blockmap.world.ServerMetadata;
+import io.gsonfire.GsonFireBuilder;
+import net.dongliu.gson.GsonJava8TypeAdapterFactory;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Help.Visibility;
@@ -33,12 +49,32 @@ import picocli.CommandLine.Spec;
 @Command(name = "blockmap",
 		versionProvider = VersionProvider.class,
 		synopsisSubcommandLabel = "COMMAND",
-		subcommands = { CommandRender.class },
+		subcommands = { CommandRender.class, CommandServer.class },
 		footerHeading = "%n",
 		footer = "This is the command line interface of blockmap. To access the GUI (if installed), run `blockmap-gui`.")
 public class CommandLineMain implements Callable<Integer> {
 
-	private static Log	log	= null;
+	private static Log			log		= null;
+
+	public static final Gson	GSON	= new GsonFireBuilder()
+			.enableExposeMethodParam()
+			.createGsonBuilder()
+			.registerTypeAdapterFactory(new GsonJava8TypeAdapterFactory())
+			.registerTypeHierarchyAdapter(Path.class, new TypeAdapter<Path>() {
+
+													@Override
+													public void write(JsonWriter out, Path value) throws IOException {
+														out.value(value.toString());
+													}
+
+													@Override
+													public Path read(JsonReader in) throws IOException {
+														return Paths.get(in.nextString());
+													}
+												})
+			.disableHtmlEscaping()
+			.setPrettyPrinting()
+			.create();
 
 	/** Lazily initialize the logger to avoid loading Log4j too early (startup performance). */
 	private static void checkLogger() {
@@ -49,12 +85,12 @@ public class CommandLineMain implements Callable<Integer> {
 	@Option(names = { "-V", "--version" },
 			versionHelp = true,
 			description = "Print version information and exit.")
-	boolean				versionRequested;
+	boolean		versionRequested;
 	@Option(names = { "-h", "--help" }, usageHelp = true, description = "Print this help message and exit")
 	boolean		usageHelpRequested;
 
 	@Option(names = { "--verbose", "-v" }, description = "Be chatty")
-	boolean				verbose;
+	boolean		verbose;
 
 	@Spec
 	CommandSpec	spec;
@@ -75,7 +111,7 @@ public class CommandLineMain implements Callable<Integer> {
 			sortOptions = false,
 			description = "Render a folder containing region files to another folder through the command line interface",
 			footerHeading = "%n",
-			footer = "Please don't forget that you can use global options too, which can be accessed through `blockmap help`."
+			footer = "Please don't forget that you can use global options too, which can be listed through `blockmap --help`."
 					+ " These have to be put before the render command.")
 	public static class CommandRender implements Callable<Integer> {
 
@@ -92,8 +128,7 @@ public class CommandLineMain implements Callable<Integer> {
 		private Path				output;
 		@Parameters(index = "0",
 				paramLabel = "INPUT",
-				description = "Path to the world data. Normally, this should point to a 'region/' of a world. If --dimension is set, this must point to a "
-						+ "world folder instead (the one with the level.dat in it)")
+				description = "Path to the world data. This should be a folder containing a level.dat. A path to the level.dat itself is valid too.")
 		private Path				input;
 		@Option(names = { "-c", "--color-map" },
 				paramLabel = "{DEFAULT|CAVES|NO_FOLIAGE|OCEAN_GROUND|RAILS}",
@@ -108,7 +143,9 @@ public class CommandLineMain implements Callable<Integer> {
 		private DefaultShader		shader;
 		@Option(names = { "-d", "--dim", "--dimension" },
 				paramLabel = "{OVERWORLD|NETHER|END}",
-				description = "The dimension of the world to render. If this is set, INPUT must point to a world folder instead of a region folder")
+				defaultValue = "OVERWORLD",
+				showDefaultValue = Visibility.ALWAYS,
+				description = "The dimension of the world to render.")
 		private MinecraftDimension	dimension;
 
 		@Option(names = { "--min-Y", "--min-height" }, description = "Don't draw blocks lower than this height.", defaultValue = "0")
@@ -123,9 +160,19 @@ public class CommandLineMain implements Callable<Integer> {
 		private int					minZ;
 		@Option(names = "--max-Z", description = "Don't draw blocks to the south of this coordinate.", defaultValue = "2147483647")
 		private int					maxZ;
+		/**
+		 * Lazy is the default now. This option will thus be ignored.
+		 * 
+		 * @see CommandLineMain#force
+		 */
 		@Option(names = { "-l", "--lazy" },
-				description = "Don't render region files if there is already an up to date. This saves time when rendering the same world regularly with the same settings.")
+				description = "Don't render region files if there is already an up to date. This saves time when rendering the same world regularly with the same settings.",
+				hidden = true)
+		@Deprecated
 		private boolean				lazy;
+		@Option(names = { "-f", "--force" },
+				description = "Re-render region files even if they are up to date (based on their timestamp)")
+		private boolean				force;
 		@Option(names = { "-p", "--pins" }, description = "Load pin data from the world. This requires the use of the --dimension option")
 		private boolean				pins;
 
@@ -139,6 +186,7 @@ public class CommandLineMain implements Callable<Integer> {
 		@Override
 		public Integer call() {
 			main.runAll();
+			checkLogger();
 
 			/* Initialize settings */
 
@@ -155,16 +203,34 @@ public class CommandLineMain implements Callable<Integer> {
 
 			RegionRenderer renderer = new RegionRenderer(settings);
 			Path input = this.input;
-			if (dimension != null)
-				input = input.resolve(dimension.getRegionPath());
-			checkLogger();
-			log.debug("Input " + input.normalize().toAbsolutePath());
+			if (Files.isDirectory(input)) {
+				if (!Files.exists(input.resolve("level.dat")))
+					/* Don't exit, this is fine as long as the region folders are present */
+					log.warn("World folders normally contain a file called `level.dat`");
+			} else {
+				if (input.getFileName().toString().equals("level.dat"))
+					input = input.getParent();
+				else {
+					log.error("Input path must either point to a folder or to the `level.dat`");
+					return 2;
+				}
+			}
+			Path inputRegion = input.resolve(dimension.getRegionPath());
+			log.debug("Input: " + input.normalize().toAbsolutePath());
 			log.debug("Output: " + output.normalize().toAbsolutePath());
+			if (!Files.exists(inputRegion)) {
+				log.error("Specified region folder does not exist");
+				return 2;
+			}
+			if (!Files.isDirectory(inputRegion)) {
+				log.error("Specified region folder is not a directory");
+				return 2;
+			}
 			WorldRegionFolder world;
 			CachedRegionFolder cached;
 			try {
-				world = WorldRegionFolder.load(input, renderer);
-				cached = CachedRegionFolder.create(world, lazy, output);
+				world = WorldRegionFolder.load(inputRegion, renderer);
+				cached = CachedRegionFolder.create(world, !force, output);
 			} catch (IOException e) {
 				log.error("Could not load region folder", e);
 				return 1;
@@ -186,7 +252,7 @@ public class CommandLineMain implements Callable<Integer> {
 			/* Post-processing, saving */
 
 			if (pins) {
-				world.setPins(WorldPins.loadFromWorld(input, dimension));
+				world.setPins(LevelMetadata.loadFromWorld(input, dimension));
 			}
 
 			try {
@@ -200,6 +266,129 @@ public class CommandLineMain implements Callable<Integer> {
 				return PostProcessing.createBigImage(cached, output, settings);
 			if (createHtml)
 				return PostProcessing.createTileHtml(cached, output, settings);
+			return 0;
+		}
+	}
+
+	@Command(name = "render-many",
+			sortOptions = false,
+			description = "Render multiple worlds using a configuration file for usage in servers",
+			footerHeading = "%n",
+			footer = "Please don't forget that you can use global options too, which can be listed through `blockmap --help`."
+					+ " These have to be put before the render command.")
+	/* TODO configuration file man page / help */
+	public static class CommandServer implements Callable<Integer> {
+		@ParentCommand
+		private CommandLineMain	main;
+
+		@Parameters(index = "0",
+				paramLabel = "CONFIG",
+				description = "Path to the config.json")
+		private Path			input;
+
+		@Option(names = { "--server-name" })
+		private String			name;
+		@Option(names = { "--server-description" })
+		private String			description;
+		@Option(names = { "--server-address" })
+		private String			ipAddress;
+		@Option(names = { "--server-icon" })
+		private String			iconLocation;
+		@Option(names = { "--online-players" }, description = "The UUIDs of all players to be shown as 'online'")
+		private String			online;
+
+		@Override
+		public Integer call() {
+			main.runAll();
+			checkLogger();
+
+			ServerSettings settings;
+			try {
+				/* TODO add more error handling regarding missing values (Required values will simply throw a NullPointerException) */
+				settings = GSON.fromJson(new String(Files.readAllBytes(input)), ServerSettings.class);
+			} catch (JsonSyntaxException | IOException e) {
+				log.error("Could not parse the settings file", e);
+				return 2;
+			}
+
+			ServerMetadata metadata = new ServerMetadata(name, description, ipAddress, iconLocation);
+			metadata.levels = new ArrayList<>(settings.worlds.length);
+
+			/* Render all worlds */
+			for (ServerSettings.RegionFolderSettings folderSettings : settings.worlds) {
+				log.info("Rendering world " + folderSettings.name);
+				metadata.levels.add(new ServerMetadata.ServerLevel(folderSettings.name,
+						/* https://stackoverflow.com/questions/4737841/urlencoder-not-able-to-translate-space-character TODO use Guava */
+						URLEncoder.encode(folderSettings.name, Charset.defaultCharset()).replace("+", "%20") + "/rendered.json.gz"));
+
+				RegionRenderer renderer = new RegionRenderer(folderSettings.renderSettings);
+
+				Path input = folderSettings.inputDir;
+				if (Files.isDirectory(input)) {
+					if (!Files.exists(input.resolve("level.dat")))
+						/* Don't exit, this is fine as long as the region folders are present */
+						log.warn("World folders normally contain a file called `level.dat`");
+				} else {
+					if (input.getFileName().toString().equals("level.dat"))
+						input = input.getParent();
+					else {
+						log.error("Input path must either point to a folder or to the `level.dat`");
+						return 2;
+					}
+				}
+				Path inputRegion = input.resolve(folderSettings.dimension.getRegionPath());
+				if (!Files.exists(inputRegion)) {
+					log.error("Specified region folder does not exist");
+					return 2;
+				}
+				if (!Files.isDirectory(inputRegion)) {
+					log.error("Specified region folder is not a directory");
+					return 2;
+				}
+				WorldRegionFolder world;
+				CachedRegionFolder cached;
+				try {
+					world = WorldRegionFolder.load(inputRegion, renderer);
+					cached = CachedRegionFolder.create(world, !folderSettings.force, settings.outputDir.resolve(folderSettings.name));
+				} catch (IOException e) {
+					log.error("Could not load region folder", e);
+					return 1;
+				}
+
+				/* Actual rendering */
+
+				for (Vector2ic pos : world.listRegions()) {
+					if (!PostProcessing.inBounds(pos.x(), folderSettings.renderSettings.minX, folderSettings.renderSettings.maxX)
+							|| !PostProcessing.inBounds(pos.y(), folderSettings.renderSettings.minZ, folderSettings.renderSettings.maxZ))
+						continue;
+					try {
+						cached.render(pos);
+					} catch (IOException e) {
+						log.error("Could not render region file", e);
+					}
+				}
+
+				/* Post-processing, saving */
+
+				world.setPins(LevelMetadata.loadFromWorld(input, folderSettings.dimension));
+
+				try {
+					cached.save();
+				} catch (IOException e) {
+					log.error("Could not save the rendered world", e);
+					return 1;
+				}
+			}
+
+			/* Save the index file */
+			// TODO sanitize user input
+			try (Writer writer = Files.newBufferedWriter(settings.outputDir.resolve("index.json"));) {
+				GSON.toJson(metadata, ServerMetadata.class, writer);
+			} catch (IOException e) {
+				log.error("Could not save the index file");
+				return 1;
+			}
+
 			return 0;
 		}
 	}

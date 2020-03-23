@@ -5,11 +5,11 @@ import java.util.Objects;
 import org.joml.AABBd;
 import org.joml.Vector2dc;
 
-import de.piegames.blockmap.gui.CanvasHelper;
+import de.piegames.blockmap.gui.ResizableCanvas;
 import de.piegames.blockmap.gui.DisplayViewport;
 import javafx.scene.paint.Color;
 
-public class GridDecoration extends CanvasHelper {
+public class GridDecoration extends ResizableCanvas {
 
 	protected final DisplayViewport viewport;
 

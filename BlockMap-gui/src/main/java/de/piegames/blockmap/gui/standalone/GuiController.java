@@ -2,13 +2,21 @@ package de.piegames.blockmap.gui.standalone;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -18,28 +26,33 @@ import java.util.stream.Collectors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.controlsfx.control.CheckTreeView;
-import org.controlsfx.control.RangeSlider;
 import org.controlsfx.control.StatusBar;
+import org.controlsfx.control.textfield.AutoCompletionBinding;
+import org.controlsfx.control.textfield.TextFields;
 import org.controlsfx.dialog.ExceptionDialog;
-import org.controlsfx.dialog.ProgressDialog;
 import org.joml.Vector2ic;
 
+import com.google.common.collect.Streams;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import de.piegames.blockmap.DotMinecraft;
-import de.piegames.blockmap.MinecraftDimension;
 import de.piegames.blockmap.gui.MapPane;
 import de.piegames.blockmap.gui.WorldRendererCanvas;
 import de.piegames.blockmap.gui.decoration.DragScrollDecoration;
 import de.piegames.blockmap.gui.decoration.GridDecoration;
 import de.piegames.blockmap.gui.decoration.Pin;
 import de.piegames.blockmap.gui.decoration.Pin.PinType;
-import de.piegames.blockmap.gui.standalone.about.AboutDialog;
 import de.piegames.blockmap.gui.decoration.PinDecoration;
 import de.piegames.blockmap.gui.decoration.ScaleDecoration;
+import de.piegames.blockmap.gui.standalone.about.AboutDialog;
 import de.piegames.blockmap.world.ChunkMetadata;
+import de.piegames.blockmap.world.LevelMetadata;
 import de.piegames.blockmap.world.RegionFolder;
-import de.piegames.blockmap.world.RegionFolder.CachedRegionFolder;
+import de.piegames.nbt.CompoundTag;
+import de.piegames.nbt.stream.NBTInputStream;
+import impl.org.controlsfx.skin.AutoCompletePopup;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
@@ -47,73 +60,91 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
-import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.CheckBoxTreeItem;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.TitledPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
+import javafx.util.Callback;
+import javafx.util.Duration;
 import javafx.util.Pair;
 import javafx.util.StringConverter;
+import me.xdrop.fuzzywuzzy.FuzzySearch;
+import me.xdrop.fuzzywuzzy.model.BoundExtractedResult;
 
 public class GuiController implements Initializable {
 
-	private static Log								log						= LogFactory.getLog(GuiController.class);
+	private static Log log = LogFactory.getLog(GuiController.class);
 
-	public WorldRendererCanvas						renderer;
-	protected ObjectProperty<RegionFolder>			regionFolder			= new SimpleObjectProperty<>();
-	protected ObjectProperty<RegionFolderProvider>	regionFolderProvider	= new SimpleObjectProperty<>();
+	static enum WorldType {
+		LOCAL, REMOTE, NONE;
+	}
 
-	protected Path									lastBrowsedPath;
-	protected String								lastBrowsedURL;
+	public WorldRendererCanvas								renderer;
+	protected WorldType										loaded				= WorldType.NONE;
+	protected ObjectProperty<Pair<String, RegionFolder>>	regionFolder		= new SimpleObjectProperty<>();
+	protected ObjectProperty<RegionFolder>					regionFolderCached	= new SimpleObjectProperty<>();
 
 	@FXML
-	private BorderPane								root;
-	@FXML
-	private Button									browseButton;
-	@FXML
-	private StatusBar								statusBar;
-	@FXML
-	private Label									minHeight, maxHeight;
-	@FXML
-	RangeSlider										heightSlider;
-	@FXML
-	ChoiceBox<String>								shadingBox;
-	@FXML
-	ChoiceBox<String>								colorBox;
-	@FXML
-	ChoiceBox<MinecraftDimension>					dimensionBox;
-	@FXML
-	ChoiceBox<String>								worldBox;
-	@FXML
-	private CheckBox								gridBox;
-	@FXML
-	private CheckBox								scaleBox;
-	@FXML
-	private CheckBox								pinBox;
-	@FXML
-	public CheckTreeView<PinType>					pinView;
-	public Map<PinType, TreeItem<PinType>>			checkedPins				= new HashMap<>();
+	private BorderPane										root;
 
-	protected MapPane								pane;
-	protected ObjectProperty<Path>					currentPath				= new SimpleObjectProperty<>();
-	public PinDecoration							pins;
+	/* Top */
 
-	protected ScheduledExecutorService				backgroundThread		= Executors.newSingleThreadScheduledExecutor(
+	@FXML
+	protected TextField										worldInput;
+	/** Recently loaded worlds and servers */
+	private List<HistoryItem>								recentWorlds		= new LinkedList<>();
+	/** Whatever found in {@code .minecraft} for autocomplete purposes */
+	private List<HistoryItem>								otherWorlds			= new LinkedList<>();
+
+	/* Bottom */
+
+	@FXML
+	private StatusBar										statusBar;
+
+	/* Other (external) settings */
+	@FXML
+	protected TitledPane									worldSettings;
+	@FXML
+	protected GuiControllerWorld							worldSettingsController;
+	@FXML
+	protected TitledPane									serverSettings;
+	@FXML
+	protected GuiControllerServer							serverSettingsController;
+
+	/* View settings */
+
+	@FXML
+	private TitledPane										viewSettings;
+	@FXML
+	private CheckBox										gridBox;
+	@FXML
+	private CheckBox										scaleBox;
+	@FXML
+	public CheckBox											pinBox;
+	@FXML
+	public CheckTreeView<PinType>							pinView;
+	public Map<PinType, TreeItem<PinType>>					checkedPins			= new HashMap<>();
+
+	protected MapPane										pane;
+	public PinDecoration									pins;
+
+	protected ScheduledExecutorService						backgroundThread	= Executors.newSingleThreadScheduledExecutor(
 			new ThreadFactoryBuilder().setNameFormat("pin-background-thread-%d").build());
-	RegionFolderCache								cache					= new RegionFolderCache();
+	RegionFolderCache										cache				= new RegionFolderCache();
 
 	public GuiController() {
 	}
@@ -122,7 +153,7 @@ public class GuiController implements Initializable {
 	public void initialize(URL location, ResourceBundle resources) {
 		log.debug("Initializing GUI");
 
-		renderer = new WorldRendererCanvas(null);
+		renderer = new WorldRendererCanvas();
 		root.setCenter(pane = new MapPane(renderer));
 		pane.decorationLayers.add(new DragScrollDecoration(renderer.viewport));
 		{
@@ -138,18 +169,102 @@ public class GuiController implements Initializable {
 		pins = new PinDecoration(renderer.viewport);
 		pane.pinLayers.add(pins);
 
+		/* Load list of worlds in .minecraft/saves (in background) */
+		backgroundThread.execute(() -> {
+			Path saves = DotMinecraft.DOTMINECRAFT.resolve("saves");
+			if (Files.exists(saves) && Files.isDirectory(saves))
+				try {
+					List<HistoryItem> toAdd = Files.list(saves)
+							.filter(Files::exists)
+							.filter(Files::isDirectory)
+							.filter(p -> Files.exists(p.resolve("level.dat")))
+							.map(save -> {
+								String name = save.getFileName().toString();
+								long timestamp = 0;
+								try (NBTInputStream in = new NBTInputStream(Files.newInputStream(save.resolve("level.dat")), NBTInputStream.GZIP_COMPRESSION)) {
+									Optional<CompoundTag> data = in.readTag().getAsCompoundTag().flatMap(t -> t.getAsCompoundTag("Data"));
+									name = data.flatMap(t -> t.getStringValue("LevelName")).orElse(null);
+									timestamp = data.flatMap(t -> t.getLongValue("LastPlayed")).orElse(0L);
+								} catch (IOException e) {
+									log.warn("Could not read world name for " + save, e);
+								}
+
+								String imageURL = null;
+								if (Files.exists(save.resolve("icon.png")))
+									imageURL = save.resolve("icon.png").toUri().toString();
+								return new HistoryItem(false, name, save.toAbsolutePath().toString(), imageURL, timestamp);
+							})
+							.sorted(Comparator.comparingLong(HistoryItem::lastAccessed).reversed())
+							.collect(Collectors.toList());
+					Platform.runLater(() -> otherWorlds.addAll(toAdd));
+				} catch (IOException e) {
+					log.warn("Could not load worlds from saves folder", e);
+				}
+		});
+		{/* Input auto completion */
+			/* TODO tweak once history saving is implemented */
+			AutoCompletionBinding<HistoryItem> autoComplete = TextFields.bindAutoCompletion(worldInput, request -> {
+				String text = request.getUserText();
+				if (text.length() < 3)
+					return Streams.concat(recentWorlds.stream().limit(5), otherWorlds.stream()).collect(Collectors.toList());
+				return Streams.concat(
+						FuzzySearch.extractAll(text, recentWorlds, HistoryItem::getName, 20).stream()
+								.sorted()
+								.limit(5)
+								.map(BoundExtractedResult::getReferent)
+								.sorted(Comparator.comparingLong(HistoryItem::lastAccessed).reversed()),
+						FuzzySearch.extractAll(text, otherWorlds, HistoryItem::getName, 50)
+								.stream()
+								.map(BoundExtractedResult::getReferent)
+								.sorted(Comparator.comparingLong(HistoryItem::lastAccessed).reversed()))
+						.collect(Collectors.toList());
+			},
+					new StringConverter<HistoryItem>() {
+
+						@Override
+						public String toString(HistoryItem object) {
+							return object.path;
+						}
+
+						@Override
+						public HistoryItem fromString(String string) {
+							return null;
+						}
+					});
+			try {
+				/* Access a private field (the actual popup) to set a custom skin */
+				Field field = AutoCompletionBinding.class.getDeclaredField("autoCompletionPopup");
+				field.setAccessible(true);
+				@SuppressWarnings("unchecked")
+				AutoCompletePopup<HistoryItem> popup = (AutoCompletePopup<HistoryItem>) field.get(autoComplete);
+				popup.setSkin(new AutoCompletePopupSkin2<HistoryItem>(popup, new Callback<ListView<HistoryItem>, ListCell<HistoryItem>>() {
+
+					@Override
+					public ListCell<HistoryItem> call(ListView<HistoryItem> param) {
+						return new AutoCompleteItem();
+					}
+				}));
+			} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e1) {
+				e1.printStackTrace();
+			}
+
+			autoComplete.maxWidthProperty().bind(worldInput.widthProperty());
+			autoComplete.prefWidthProperty().bind(worldInput.widthProperty());
+
+			worldInput.focusedProperty().addListener((property, old, val) -> {
+				if (!old && val && worldInput.getText().isBlank())
+					new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+						if (worldInput.isFocused())
+							autoComplete.setUserInput("");
+					})).play();
+			});
+		}
+
 		{ /* Status bar initialization */
 			statusBar.setSkin(new StatusBarSkin2(statusBar));
 			statusBar.progressProperty().bind(renderer.getProgress());
 			statusBar.setText(null);
 			statusBar.textProperty().bind(renderer.getStatus());
-
-			Label pathLabel = new Label();
-			pathLabel.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-			pathLabel.textProperty().bind(Bindings.createStringBinding(
-					() -> regionFolderProvider.get() == null ? "" : regionFolderProvider.get().getLocation(),
-					regionFolderProvider));
-			statusBar.getLeftItems().add(pathLabel);
 
 			Label zoomLabel = new Label();
 			zoomLabel.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
@@ -176,21 +291,6 @@ public class GuiController implements Initializable {
 			statusBar.getRightItems().add(mouseLabel);
 		}
 
-		minHeight.textProperty().bind(Bindings.format("Min: %3.0f", heightSlider.lowValueProperty()));
-		maxHeight.textProperty().bind(Bindings.format("Max: %3.0f", heightSlider.highValueProperty()));
-		dimensionBox.setConverter(new StringConverter<MinecraftDimension>() {
-
-			@Override
-			public String toString(MinecraftDimension object) {
-				return object.displayName;
-			}
-
-			@Override
-			public MinecraftDimension fromString(String string) {
-				return null;
-			}
-		});
-
 		{ /* Pin checkbox icon */
 			ImageView image = new ImageView(PinType.ANY_PIN.image);
 			image.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> pinBox.getFont().getSize() * 1.5, pinBox.fontProperty()));
@@ -213,45 +313,18 @@ public class GuiController implements Initializable {
 					.disabledProperty()));
 		}
 
-		{
-			ChangeListener<? super Pair<String, RegionFolder>> regionFolderListener = (e, old, val) -> {
-				if (old != null)
-					cache.releaseCache(old.getKey());
-				if (val != null)
-					regionFolder.set(cache.cache(val.getValue(), val.getKey()));
-				else
-					regionFolder.set(null);
-			};
+		/* Cache wrapper */
+		regionFolder.addListener((ChangeListener<? super Pair<String, RegionFolder>>) (e, old, val) -> {
+			if (old != null)
+				cache.releaseCache(old.getKey());
+			if (val != null)
+				regionFolderCached.set(cache.cache(val.getValue(), val.getKey()));
+			else
+				regionFolderCached.set(null);
+			renderer.repaint();
+		});
 
-			ChangeListener<? super RegionFolderProvider> regionFolderProviderListener = (observable, old, val) -> {
-				if (old != null)
-					old.folderProperty().removeListener(regionFolderListener);
-				if (val != null)
-					val.folderProperty().addListener(regionFolderListener);
-				/* Force listener update */
-				regionFolderListener.changed(null,
-						old != null ? old.folderProperty().get() : null,
-						val != null ? val.folderProperty().get() : null);
-
-				byte mask = val == null ? 0 : val.getGuiBitmask();
-				heightSlider.setDisable((mask & RegionFolderProvider.BIT_HEIGHT) == 0);
-				colorBox.setDisable((mask & RegionFolderProvider.BIT_COLOR) == 0);
-				shadingBox.setDisable((mask & RegionFolderProvider.BIT_SHADING) == 0);
-				dimensionBox.setDisable((mask & RegionFolderProvider.BIT_DIMENSION) == 0);
-				worldBox.setDisable((mask & RegionFolderProvider.BIT_WORLD) == 0);
-
-				pinBox.setDisable(val == null);
-				gridBox.setDisable(val == null);
-				scaleBox.setDisable(val == null);
-
-				renderer.repaint();
-			};
-			regionFolderProvider.addListener(regionFolderProviderListener);
-			/* Force listener update */
-			regionFolderProviderListener.changed(regionFolderProvider, null, null);
-		}
-
-		renderer.regionFolder.bind(regionFolder);
+		renderer.regionFolder.bind(regionFolderCached);
 		renderer.regionFolder.addListener((observable, previous, val) -> {
 			if (val != null)
 				this.pins.loadWorld(val.listRegions(), val.getPins().map(pins -> Pin.convertStatic(pins, backgroundThread, renderer.viewport)).orElse(
@@ -260,11 +333,6 @@ public class GuiController implements Initializable {
 				this.pins.loadWorld(Collections.emptyList(), Collections.emptyList());
 		});
 		renderer.getChunkMetadata().addListener((MapChangeListener<Vector2ic, Map<Vector2ic, ChunkMetadata>>) change -> {
-			/*
-			 * This works because the only operations are clear() and additions. There are no put operations that overwrite a previously existing item.
-			 */
-			if (change.getValueRemoved() != null)
-				GuiController.this.pins.reloadWorld();
 			if (change.getValueAdded() != null)
 				GuiController.this.pins.loadRegion(change.getKey(), Pin.convertDynamic(change.getValueAdded(), renderer.viewport));
 		});
@@ -309,10 +377,65 @@ public class GuiController implements Initializable {
 		checkedPins.put(type, ret);
 	}
 
+	public void load() {
+		String input = worldInput.getText();
+		if (input.isBlank()) {
+			unload();
+			return;
+		}
+
+		/* Try to load it as local world first */
+		try {
+			/* Try parsing as local world folder */
+			Path path = Paths.get(input);
+			/* Make sure path is an existing directory containing a level.dat. Show an error message otherwise. */
+			if (Files.exists(path)) {
+				if (!Files.isDirectory(path)) {
+					if (path.getFileName().toString().equals("level.dat"))
+						path = path.getParent();
+					else {
+						Alert alert = new Alert(AlertType.ERROR, "Path to a world must either be a folder or a level.dat file", ButtonType.OK);
+						alert.showAndWait();
+						worldInput.selectAll();
+						return;
+					}
+				} else if (!Files.exists(path.resolve("level.dat"))) {
+					Alert alert = new Alert(AlertType.ERROR, "A world folder must contain a level.dat", ButtonType.OK);
+					alert.showAndWait();
+					worldInput.selectAll();
+					return;
+				}
+				/* Load the world */
+				try {
+					loadLocal(path);
+				} catch (RuntimeException e) {
+					Alert alert = new Alert(AlertType.ERROR, "Failed to load world – " + e.getMessage(), ButtonType.OK);
+					alert.showAndWait();
+					worldInput.selectAll();
+				}
+				return;
+			}
+		} catch (InvalidPathException e) {
+		}
+
+		/* Try to parse as server URI */
+		try {
+			loadRemote(new URI(input));
+			return;
+		} catch (URISyntaxException e) {
+		}
+
+		/* Total failure */
+		Alert alert = new Alert(AlertType.ERROR, "Please specify the path to a world or the URL to a server", ButtonType.OK);
+		alert.showAndWait();
+		worldInput.selectAll();
+	}
+
 	@FXML
-	public void browseFolder() {
+	public void showFolderDialog() {
 		DirectoryChooser dialog = new DirectoryChooser();
-		File f = (lastBrowsedPath == null) ? DotMinecraft.DOTMINECRAFT.resolve("saves").toFile() : lastBrowsedPath.getParent().toFile();
+		File f = (worldSettingsController.lastBrowsedPath == null) ? DotMinecraft.DOTMINECRAFT.resolve("saves").toFile()
+				: worldSettingsController.lastBrowsedPath.getParent().toFile();
 		if (!f.isDirectory())
 			f = DotMinecraft.DOTMINECRAFT.resolve("saves").toFile();
 		if (!f.isDirectory())
@@ -320,44 +443,24 @@ public class GuiController implements Initializable {
 		dialog.setInitialDirectory(f);
 		f = dialog.showDialog(null);
 		if (f != null) {
-			lastBrowsedPath = f.toPath();
-			regionFolderProvider.set(RegionFolderProvider.create(this, lastBrowsedPath));
+			worldSettingsController.lastBrowsedPath = f.toPath();
+			loadLocal(worldSettingsController.lastBrowsedPath);
+			worldInput.setText(f.toString());
 		}
 	}
 
 	@FXML
-	public void browseFile() {
-		FileChooser dialog = new FileChooser();
-		File f = (lastBrowsedPath == null) ? DotMinecraft.DOTMINECRAFT.resolve("saves").toFile() : lastBrowsedPath.getParent().toFile();
-		if (!f.isDirectory())
-			f = DotMinecraft.DOTMINECRAFT.resolve("saves").toFile();
-		if (!f.isDirectory())
-			f = null;
-		dialog.setInitialDirectory(f);
-		f = dialog.showOpenDialog(null);
-		if (f != null) {
-			lastBrowsedPath = f.toPath();
-			regionFolderProvider.set(RegionFolderProvider.create(this, lastBrowsedPath));
-		}
-	}
-
-	@FXML
-	public void loadRemote() {
+	public void showUrlDialog() {
 		TextInputDialog dialog = new TextInputDialog();
 		dialog.setTitle("Load remote world");
 		dialog.setHeaderText("Enter the URL to the remote world you want to load");
 		dialog.setGraphic(null);
-		dialog.setResult(lastBrowsedURL);
+		dialog.setResult(serverSettingsController.lastBrowsedURL);
 		dialog.showAndWait().ifPresent(s -> {
 			try {
-				lastBrowsedURL = s;
-				RegionFolderProvider provider = RegionFolderProvider.create(this, new URI(s));
-				if (provider != null)
-					regionFolderProvider.set(provider);
-				else {
-					Alert alert = new Alert(AlertType.ERROR, "Invalid URL", ButtonType.OK);
-					alert.showAndWait();
-				}
+				loadRemote(new URI(s));
+				serverSettingsController.lastBrowsedURL = s;
+				worldInput.setText(s);
 			} catch (URISyntaxException | IllegalArgumentException e) {
 				log.warn("Malformed input uri", e);
 				ExceptionDialog d = new ExceptionDialog(e);
@@ -368,63 +471,71 @@ public class GuiController implements Initializable {
 	}
 
 	@FXML
-	public void save() {
-		DirectoryChooser dialog = new DirectoryChooser();
-		File f = dialog.showDialog(null);
-		if (f != null) {
-			try {
-				CachedRegionFolder cached = CachedRegionFolder.create(regionFolder.get(), true, f.toPath());
-				Task<Void> task = new Task<Void>() {
+	public void reloadWorld() {
+		switch (loaded) {
+		case LOCAL:
+			worldSettingsController.reload();
+			break;
+		case REMOTE:
+			serverSettingsController.reload();
+			break;
+		default:
+		}
+	}
 
-					@Override
-					protected Void call() throws IOException {
-						int count = 0, amount = cached.listRegions().size();
-						updateProgress(count, amount);
-						for (Vector2ic v : cached.listRegions()) {
-							if (Thread.interrupted())
-								break;
-							updateMessage("Rendering " + v);
-							cached.render(v);
-							count++;
-							updateProgress(count, amount);
-						}
-						updateProgress(count, amount);
-						cached.save();
-						return null;
-					}
-				};
-				backgroundThread.execute(task);
-				ProgressDialog p = new ProgressDialog(task);
-				p.setTitle("Saving world");
-				p.setHeaderText("Rendering " + cached.listRegions().size() + " region files");
-				p.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
-				p.setOnCloseRequest(e -> {
-					task.cancel(true);
-					p.close();
-				});
-				p.showAndWait();
-			} catch (IOException e) {
-				log.error("Failed to save", e);
-				ExceptionDialog d = new ExceptionDialog(e);
-				d.setTitle("Could not save world");
-				d.showAndWait();
-			}
+	public void loadLocal(Path path) {
+		worldSettingsController.load(path);
+
+		worldSettings.setDisable(false);
+		serverSettings.setExpanded(false);
+		worldSettings.setExpanded(true);
+		serverSettings.setDisable(true);
+
+		regionFolder.bind(worldSettingsController.folderProperty());
+		loaded = WorldType.LOCAL;
+
+		{ /* Update history */
+			recentWorlds.removeIf(w -> w.path.equals(path.toAbsolutePath().toString()));
+			String name = regionFolderCached.get()
+					.getPins()
+					.flatMap(LevelMetadata::getWorldName)
+					.orElse(path.getFileName().toString());
+			String imageURL = null;
+			if (Files.exists(path.resolve("icon.png")))
+				imageURL = path.resolve("icon.png").toUri().toString();
+			recentWorlds.add(0, new HistoryItem(false, name, path.toAbsolutePath().toString(), imageURL, System.currentTimeMillis()));
+		}
+	}
+
+	public void loadRemote(URI file) {
+		serverSettingsController.load(file);
+
+		serverSettings.setDisable(false);
+		worldSettings.setExpanded(false);
+		serverSettings.setExpanded(true);
+		worldSettings.setDisable(true);
+
+		regionFolder.bind(serverSettingsController.folderProperty());
+		loaded = WorldType.REMOTE;
+
+		if (serverSettingsController.getMetadata() != null) { /* Update history */
+			recentWorlds.removeIf(w -> w.path.equals(file.toString()));
+			String name = serverSettingsController.getMetadata().name.orElse("<unknown server>");
+			String imageURL = serverSettingsController.getMetadata().iconLocation.orElse(null);
+			recentWorlds.add(0, new HistoryItem(true, name, file.toString(), imageURL, System.currentTimeMillis()));
 		}
 	}
 
 	@FXML
-	public void reloadWorld() {
-		if (regionFolderProvider.get() != null)
-			regionFolderProvider.get().reload();
-	}
-
-	@FXML
 	public void unload() {
-		regionFolderProvider.set(null);
-	}
+		serverSettings.setDisable(true);
+		serverSettings.setExpanded(false);
+		worldSettings.setDisable(true);
+		worldSettings.setExpanded(false);
 
-	public void load(RegionFolderProvider world) {
-		regionFolderProvider.set(world);
+		loaded = WorldType.NONE;
+		regionFolder.unbind();
+		regionFolder.setValue(null);
 	}
 
 	@FXML
@@ -439,8 +550,8 @@ public class GuiController implements Initializable {
 		} catch (Exception e) {
 			log.error("Could not show 'about' dialog, please file a bug report", e);
 			ExceptionDialog d = new ExceptionDialog(e);
-			d.setTitle("Could not load dialog");
-			d.setHeaderText("Please file a bug report");
+			d.setTitle("Error");
+			d.setHeaderText("Could not show 'about' dialog, please file a bug report");
 			d.showAndWait();
 		}
 	}

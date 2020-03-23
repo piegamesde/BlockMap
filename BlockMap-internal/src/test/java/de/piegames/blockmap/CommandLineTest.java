@@ -28,26 +28,29 @@ public class CommandLineTest {
 		assertEquals(0, CommandLineMain.mainWithoutQuit("-v", "-V"));
 		for (MinecraftVersion version : MinecraftVersion.values()) {
 			File out1 = folder.newFolder();
-			String path = "./src/test/resources/Debug-" + version.fileSuffix + "/region/";
-			assertEquals(0, CommandLineMain.mainWithoutQuit("render", "-o=" + out1 + "", path));
-			assertEquals(0, CommandLineMain.mainWithoutQuit("render", "--create-tile-html", "--lazy", "-o=" + out1 + "", path));
-			assertEquals(0, CommandLineMain.mainWithoutQuit("render", "--create-big-image", "-o=" + out1 + "", "--shader=RELIEF", "--color-map=OCEAN_GROUND", path));
+			String path = "./src/test/resources/Debug-" + version.fileSuffix;
+			assertEquals(0, CommandLineMain.mainWithoutQuit("render", "--force", "-o=" + out1 + "", path));
+			assertEquals(0, CommandLineMain.mainWithoutQuit("render", "--create-tile-html", "-o=" + out1 + "", path));
+			assertEquals(0, CommandLineMain.mainWithoutQuit("render", "--create-big-image", "-o=" + out1 + "", "--force", "--shader=RELIEF",
+					"--color-map=OCEAN_GROUND", path));
 		}
 		File out2 = folder.newFolder();
 
-		assertEquals(0, CommandLineMain.mainWithoutQuit("-v", "render", "-o=" + out2 + "", "--min-X=-1024", "--max-X=1024", "--min-Z=-1024", "--max-Z=1024",
-				"./src/main/resources/BlockMapWorld/region/"));
-		assertEquals(0, CommandLineMain.mainWithoutQuit("-v", "render", "--create-tile-html", "--lazy", "-o=" + out2 + "/", "--min-X=-1024", "--max-X=1024", "--min-Z=-1024",
-				"--max-Z=1024", "./src/main/resources/BlockMapWorld/region/"));
-		assertEquals(0, CommandLineMain.mainWithoutQuit("-v", "render", "--create-big-image", "-o=" + out2 + "", "--shader=RELIEF", "--color-map=OCEAN_GROUND", "--min-X=-1024",
+		assertEquals(0, CommandLineMain.mainWithoutQuit("-v", "render", "-o=" + out2 + "", "--force", "--min-X=-1024", "--max-X=1024", "--min-Z=-1024", "--max-Z=1024",
+				"./src/main/resources/BlockMapWorld/"));
+		assertEquals(0, CommandLineMain.mainWithoutQuit("-v", "render", "--create-tile-html", "-o=" + out2 + "/", "--min-X=-1024", "--max-X=1024", "--min-Z=-1024",
+				"--max-Z=1024", "./src/main/resources/BlockMapWorld/"));
+		assertEquals(0, CommandLineMain.mainWithoutQuit("-v", "render", "--create-big-image", "-o=" + out2 + "", "--force", "--shader=RELIEF", "--color-map=OCEAN_GROUND",
+				"--min-X=-1024",
 				"--max-X=1024", "--min-Z=-1024", "--max-Z=1024",
 				"./src/main/resources/BlockMapWorld/"));
 
-		assertEquals(0, CommandLineMain.mainWithoutQuit("-v", "render", "--create-tile-html", "--lazy", "-o=" + out2 + "/", "./src/main/resources/BlockMapWorld/", "--min-X=-1024",
+		assertEquals(0, CommandLineMain.mainWithoutQuit("-v", "render", "--create-tile-html", "-o=" + out2 + "/", "./src/main/resources/BlockMapWorld/", "--min-X=-1024",
 				"--max-X=1024", "--min-Z=-1024", "--max-Z=1024",
 				"--dimension=OVERWORLD"));
 
-		assertEquals(2, CommandLineMain.mainWithoutQuit("-v", "render", "--create-tile-html", "--lazy", "-o=" + out2 + "/", "./src/main/resources/BlockMapWorld/", "--min-X=1024",
+		assertEquals(2, CommandLineMain.mainWithoutQuit("-v", "render", "--create-tile-html", "-o=" + out2 + "/", "./src/main/resources/BlockMapWorld/",
+				"--min-X=1024",
 				"--max-X=1024", "--min-Z=1024", "--max-Z=1024",
 				"--dimension=OVERWORLD"));
 	}

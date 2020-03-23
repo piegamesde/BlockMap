@@ -1,36 +1,20 @@
 package de.piegames.blockmap.gui;
 
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
-
 import org.joml.AABBd;
 import org.joml.Vector2i;
 import org.joml.Vector2ic;
 
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.PixelReader;
+import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
-import javafx.scene.paint.Color;
 
 public class RenderedRegion {
 
-	public enum RenderingState {
-		VALID, // Don't touch
-		INVALID, // Recalculate please
-		DRAWING, // Recalculating
-		REDRAW; // Aborted while recalculating, re-recalculate
-		// ABORT; // World changed, abort calculation
-
-		public boolean isInvalid() {
-			return this != VALID;
-		}
-	}
-
-	protected final RenderedMap						map;
-	protected final RenderedImage					image;
-	public final int								level;
-	public final Vector2ic							position;
-	public final AtomicReference<RenderingState>	valid	= new AtomicReference<>(RenderingState.INVALID);
+	protected final RenderedMap	map;
+	protected WritableImage		image;
+	public final int			level;
+	public final Vector2ic		position;
 
 	public RenderedRegion(RenderedMap map, Vector2ic pos) {
 		this(map, 0, pos);
@@ -40,155 +24,80 @@ public class RenderedRegion {
 		this.map = map;
 		this.level = level;
 		this.position = new Vector2i(position);
-		this.image = map.createImage(this);
-		// setImage(null);
+		setImage(null);
 	}
 
 	public void setImage(WritableImage image) {
-		Objects.requireNonNull(image);
-		invalidateTree(true);
-		this.image.setImage(image);
-		valid.set(RenderingState.VALID);
+		this.image = image;
 	}
 
-	public void invalidateTree(boolean keepImage) {
-		if (!valid.compareAndSet(RenderingState.DRAWING, RenderingState.REDRAW))
-			valid.set(RenderingState.INVALID);
-		if (level >= 0)
-			Arrays.stream(getBelow(false)).filter(__ -> __ != null).forEach(r -> r.invalidateTree(keepImage));
-		if (level <= 0) {
-			RenderedRegion above = getAbove(false);
-			if (above != null)
-				above.invalidateTree(keepImage);
-		}
-		if (!keepImage)
-			this.image.setImage(null);
-	}
+	public void setSubImage(WritableImage sub, int dstX, int dstY) {
+		if (image == null)
+			image = new WritableImage(512, 512);
+		PixelWriter writer = image.getPixelWriter();
+		PixelReader reader = sub.getPixelReader();
+		for (int y = 0; y < 256; y++)
+			for (int x = 0; x < 256; x++) {
+				int c1 = reader.getArgb(x << 1, y << 1),
+						c2 = reader.getArgb((x == 256 ? 255 : x << 1) + 1, y << 1),
+						c3 = reader.getArgb(x << 1, (y == 256 ? 255 : y << 1) + 1),
+						c4 = reader.getArgb((x == 256 ? 255 : x << 1) + 1, (y == 256 ? 255 : y << 1) + 1);
+				// TODO premultiply alpha to avoid dark edges
+				long argb = 0;// use long against overflow
+				long a1 = c1 >>> 24, a2 = c2 >>> 24, a3 = c3 >>> 24, a4 = c4 >>> 24;
+				// alpha
+				argb |= ((a1 + a2 + a3 + a4) << 22) & 0xFF000000;
+				// red
+				argb |= ((((c1 & 0x00FF0000) * a1 + (c2 & 0x00FF0000) * a2 + (c3 & 0x00FF0000) * a3 + (c4 & 0x00FF0000) * a4) / 255) >> 2) & 0x00FF0000;
+				// green
+				argb |= ((((c1 & 0x0000FF00) * a1 + (c2 & 0x0000FF00) * a2 + (c3 & 0x0000FF00) * a3 + (c4 & 0x0000FF00) * a4) / 255) >> 2) & 0x0000FF00;
+				// blue
+				argb |= ((((c1 & 0x000000FF) * a1 + (c2 & 0x000000FF) * a2 + (c3 & 0x000000FF) * a3 + (c4 & 0x000000FF) * a4) / 255) >> 2) & 0x000000FF;
 
-	public RenderedRegion[] getBelow(boolean create) {
-		return map.get(level + 1, RenderedMap.belowPos(position), create);
-	}
-
-	public RenderedRegion getAbove(boolean create) {
-		return map.get(level - 1, RenderedMap.abovePos(position), create);
-	}
-
-	public RenderedRegion getGround(boolean create) {
-		return map.get(0, RenderedMap.groundPos(position, level), create);
-	}
-
-	public boolean updateImage() {
-		boolean changed = false;
-
-		if (!this.image.isImageLoaded())
-			changed = true;
-		// This will load an image back from cache if needed
-		WritableImage image = this.image.getImage(true);
-
-		if (level != 0 && (image == null || valid.get().isInvalid())) {
-			if (level > 0) {
-				// check above
-				// get above image
-				RenderedRegion above = getGround(true);
-				if (above != null) {
-					WritableImage aboveImage = above.getImage(true);
-					// upscale image
-					if (aboveImage != null)
-						image = RenderedMap.doubleSize(image, aboveImage, level, new Vector2i(position.x() & ((1 << level) - 1), position.y() & ((1 << level)
-								- 1)));
-				}
-			} else if (level < 0) {
-				// check below
-				RenderedRegion[] below = getBelow(true);
-				for (RenderedRegion r : below)
-					if (r != null)
-						changed |= r.updateImage();
-				// get below images
-				WritableImage topLeft = below[0] == null ? null : below[0].getImage(true);
-				WritableImage topRight = below[1] == null ? null : below[1].getImage(true);
-				WritableImage bottomLeft = below[2] == null ? null : below[2].getImage(true);
-				WritableImage bottomRight = below[3] == null ? null : below[3].getImage(true);
-				// downscale images
-				image = RenderedMap.halfSize(image, topLeft, topRight, bottomLeft, bottomRight);
+				writer.setArgb(dstX + x, dstY + y, (int) argb);
 			}
-			this.image.setImage(image);
-			valid.set(RenderingState.VALID);
-			if (image != null)
-				changed = true;
-		}
-
-		return changed;
 	}
 
-	public WritableImage getImage(boolean force) {
-		return image.getImage(force);
+	public WritableImage getImage() {
+		return image;
 	}
 
 	public boolean isVisible(AABBd frustum) {
-		return isVisible(position, level, frustum);
-	}
-
-	public static boolean isVisible(Vector2ic position, int level, AABBd frustum) {
-		int size = WorldRendererCanvas.pow2(512, -level);
+		int size = 512 << level;
 		return frustum.testAABB(new AABBd(position.x() * size, position.y() * size, 0, (position.x() + 1) * size, (position.y() + 1) * size, 0));
 	}
 
-	public void draw(GraphicsContext gc, int drawingLevel, AABBd frustum, double scale) {
-		// bounds must have been checked here
-
-		int size = WorldRendererCanvas.pow2(512, -this.level);
-		final int overDraw = 3; // TODO make setting
-
-		WritableImage image = this.image.getImage(false);
-
+	public void draw(GraphicsContext gc, AABBd frustum, double scale) {
 		if (image != null) {
-			if (drawingLevel <= this.level && this.level > 0)
-				// Fill background to prevent bleeding from lower levels of detail
-				gc.fillRect(position.x() * size + 1 / scale, position.y() * size + 1 / scale, size - 2 / scale, size - 2 / scale);
-			// Draw that image
+			int size = 512 << this.level;
 			gc.drawImage(image, position.x() * size, position.y() * size, size, size);
-		}
-
-		// Draw below if needed (check bounds)
-		if (drawingLevel > this.level || ((this.level < 0 || drawingLevel > (this.level - overDraw)) && image == null)) {
-			Arrays.stream(RenderedMap.belowPos(position))
-					.filter(v -> isVisible(v, this.level + 1, frustum))
-					.map(v -> map.get(this.level + 1, v, true))
-					.filter(r -> r != null)
-					.forEach(r -> r.draw(gc, drawingLevel, frustum, scale));
 		}
 	}
 
 	/** This method assumes the appropriate fill is already set */
 	public void drawBackground(GraphicsContext gc, double scale) {
-		int size = 512;// WorldRendererFX.pow2(512, -this.level);
-		// gc.translate(region.coordinates.x * 512, region.coordinates.y * 512);
+		if (this.level != 0)
+			throw new IllegalStateException("Only the base level can draw the background");
+		int size = 512;
 		gc.fillRect(position.x() * size - 1 / scale, position.y() * size - 1 / scale, size + 2 / scale, size + 2 / scale);
 	}
 
 	public void drawForeground(GraphicsContext gc, AABBd frustum, double scale) {
-		int size = 512;// WorldRendererFX.pow2(512, -this.level);
-		if (valid.get().isInvalid() && image.isImageSet()) {// reduce brightness
-			gc.setFill(new Color(0f, 0f, 0f, 0.5f));
-			gc.fillRect(position.x() * size, position.y() * size, size, size);
-		}
-		if (valid.get() == RenderingState.DRAWING || valid.get() == RenderingState.REDRAW) {
-			gc.setFill(new Color(0.9f, 0.9f, 0.15f, 1.0f));
+		if (this.level != 0)
+			throw new IllegalStateException("Only the base level can draw the foreground");
 
-			double x = position.x() * 512, y = position.y() * 512, w = 512, h = 512, m = Math.min(6 / scale, 35);
+		double x = position.x() * 512, y = position.y() * 512, w = 512, h = 512, m = Math.min(6 / scale, 35);
+		double xw = Math.min(frustum.maxX, x + w);
+		double yh = Math.min(frustum.maxY, y + h);
+		x = Math.max(frustum.minX, x);
+		y = Math.max(frustum.minY, y);
+		w = xw - x;
+		h = yh - y;
 
-			double xw = Math.min(frustum.maxX, x + w);
-			double yh = Math.min(frustum.maxY, y + h);
-			x = Math.max(frustum.minX, x);
-			y = Math.max(frustum.minY, y);
-			w = xw - x;
-			h = yh - y;
-
-			// gc.translate(x, y);
-			gc.fillRect(x, y, w, m);
-			gc.fillRect(x, y + h - m, w, m);
-			gc.fillRect(x, y, m, h);
-			gc.fillRect(x + w - m, y, m, h);
-		}
+		// gc.translate(x, y);
+		gc.fillRect(x, y, w, m);
+		gc.fillRect(x, y + h - m, w, m);
+		gc.fillRect(x, y, m, h);
+		gc.fillRect(x + w - m, y, m, h);
 	}
 }

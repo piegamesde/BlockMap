@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.collections.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.controlsfx.control.*?>
+<?import javafx.geometry.Insets?>
+
+<TitledPane
+	text="Server"
+	disable="true"
+	expanded="false"
+	xmlns="http://javafx.com/javafx/8"
+	xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="de.piegames.blockmap.gui.standalone.GuiControllerServer">
+	<content>
+		<VBox
+			id="server-settings"
+			alignment="TOP_CENTER">
+			<children>
+				<HBox
+					spacing="4"
+					alignment="CENTER">
+					<children>
+						<Label text="World:" />
+						<ChoiceBox
+							fx:id="worldBox"
+							maxWidth="Infinity"
+							HBox.hgrow="ALWAYS" />
+					</children>
+				</HBox>
+				<Label
+					text="Server name"
+					fx:id="serverName"
+					id="server-name"
+					maxWidth="Infinity"
+					alignment="CENTER" />
+				<ImageView fx:id="serverIcon" />
+				<Label
+					fx:id="serverDescription"
+					text="Server description" />
+				<Label text="Players online: 0/30" />
+			</children>
+		</VBox>
+	</content>
+</TitledPane>

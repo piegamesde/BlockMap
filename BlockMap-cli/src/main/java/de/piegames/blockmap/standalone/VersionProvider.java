@@ -4,11 +4,13 @@ import picocli.CommandLine.IVersionProvider;
 
 public class VersionProvider implements IVersionProvider {
 
+	/* This part of the code gets generated automatically through `gradle generateSources`. Do not modify! */
+	// $REPLACE_START
+	public static final String VERSION = "1.6.0";
+	// $REPLACE_END
+
 	@Override
 	public String[] getVersion() throws Exception {
-		/* This part of the code gets generated automatically through `gradle generateSources`. Do not modify! */
-		// $REPLACE_START
-		return new String[] { "1.6.2" };
-		// $REPLACE_END
+		return new String[] { VERSION };
 	}
 }

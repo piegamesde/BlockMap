@@ -25,7 +25,6 @@ import org.joml.Vector2i;
 import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.gui.decoration.Pin.PinType;
 import de.piegames.blockmap.gui.standalone.GuiMain;
-import de.piegames.blockmap.gui.standalone.RegionFolderProvider.LocalRegionFolderProvider;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RegionShader;
 import de.piegames.blockmap.renderer.RenderSettings;
@@ -108,14 +107,8 @@ public class Screenshots {
 						GuiMain.instance.stage.setHeight(720);
 						GuiMain.instance.stage.hide();
 						GuiMain.instance.stage.show();
-						GuiMain.instance.controller.load(
-								new LocalRegionFolderProvider(GuiMain.instance.controller, Generator.OUTPUT_INTERNAL_CACHE.resolve("BlockMapWorld/region")) {
-									/** Override this method to hide the file structure of the local system from the screenshots */
-									@Override
-									public String getLocation() {
-										return "";
-									}
-								});
+						GuiMain.instance.controller.loadLocal(Generator.OUTPUT_INTERNAL_CACHE.resolve("BlockMapWorld"));
+						GuiMain.instance.controller.pinBox.requestFocus();
 						GuiMain.instance.controller.renderer.viewport.translationProperty.set(new Vector2d(512, -512));
 						log.debug("Initialized GUI");
 						return true;

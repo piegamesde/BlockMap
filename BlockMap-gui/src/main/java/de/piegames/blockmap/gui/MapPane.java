@@ -70,6 +70,6 @@ public class MapPane extends StackPane {
 			}
 		});
 
-		decorationLayers.add(new CanvasContainer(renderer));
+		decorationLayers.add(renderer);
 	}
 }

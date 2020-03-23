@@ -7,7 +7,7 @@ plugins {
 }
 
 javafx {
-    version = "12"
+    version = "13"
     modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.swing' ]
     //configuration = 'compileOnly'
 }
@@ -15,23 +15,29 @@ javafx {
 dependencies {
     implementation project(':BlockMap-core')
 	// GUI dependencies
-	implementation 'org.mapdb:mapdb:3.0.7'
 	implementation 'org.controlsfx:controlsfx:11.0.0'
+	implementation 'com.github.piegamesde:gson-fire:9210521426'
 	implementation group: 'com.github.haifengl', name: 'smile-core', version: '1.5.2'
 	implementation group: 'com.codepoetics', name: 'protonpack', version: '1.15'
     implementation 'com.github.saibotk:JMAW:0.1'
     
     // GUI standalone dependencies
-	implementation 'org.controlsfx:controlsfx:11.0.0'
 	implementation 'com.google.guava:guava:27.1-jre'
 	implementation 'net.dongliu:gson-java8-datatype:1.1.0'
 	implementation 'io.github.soc:directories:11'
+    implementation 'me.xdrop:fuzzywuzzy:1.2.0'
 	implementation 'org.apache.logging.log4j:log4j-core:2.11.2'
 	implementation 'org.apache.logging.log4j:log4j-jcl:2.11.2'
 }
 
 application {
 	mainClassName = "de.piegames.blockmap.gui.standalone.GuiMainLauncher"
+	applicationDefaultJvmArgs = ['--add-exports=javafx.base/com.sun.javafx.event=org.controlsfx.controls']
+}
+
+run {
+    jvmArgs = ['--add-exports=javafx.base/com.sun.javafx.event=ALL-UNNAMED']
+//	jvmArgs = ['--add-exports=javafx.base/com.sun.javafx.event=org.controlsfx.controls']
 }
 
 // Hide tasks

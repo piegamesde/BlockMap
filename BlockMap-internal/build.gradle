@@ -5,7 +5,7 @@ plugins {
 }
 
 javafx {
-    version = "12"
+    version = "13"
     modules = [ 'javafx.controls', 'javafx.graphics', 'javafx.fxml', 'javafx.swing' ]
 }
 
@@ -28,13 +28,6 @@ task generateScreenshots(type: JavaExec) {
 	classpath = sourceSets.main.runtimeClasspath
 	main = "de.piegames.blockmap.generate.Generator"
 	args = ['generateTestWorld', 'generateScreenshots']
-}
-
-task run2(type: JavaExec) {
-	group 'Application'
-	description 'Task run may fail due to a JavaFX bug, use this as a workaround'
-	classpath = sourceSets.main.runtimeClasspath
-	main = "de.piegames.blockmap.gui.standalone.GuiMainLauncher"
 }
 
 dependencies {

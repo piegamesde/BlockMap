@@ -56,6 +56,7 @@
 							<String fx:value="No foliage" />
 							<String fx:value="Ocean ground" />
 							<String fx:value="X-ray" />
+							<String fx:value="Rails" />
 						</FXCollections>
 					</items>
 				</ChoiceBox>

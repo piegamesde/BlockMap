@@ -8,8 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.apache.commons.logging.Log;
@@ -299,7 +299,7 @@ public class CommandLineMain implements Callable<Integer> {
 		@Option(names = { "--server-icon" })
 		private String			iconLocation;
 		@Option(names = { "--online-players" }, description = "The UUIDs of all players to be shown as 'online'")
-		private List<UUID> online;
+		private Set<String> online = Collections.emptySet();
 		@Option(names = { "--max-players" }, description = "The number of total slots on the servers")
 		private int maxPlayers;
 
@@ -376,7 +376,16 @@ public class CommandLineMain implements Callable<Integer> {
 
 				/* Post-processing, saving */
 
-				world.setPins(LevelMetadata.loadFromWorld(input, folderSettings.dimension));
+				var levelMetadata = LevelMetadata.loadFromWorld(input, folderSettings.dimension);
+				if (settings.hideOfflinePlayers)
+					levelMetadata.getPlayers().ifPresent(
+							players -> players.removeIf(
+									/*
+									 * Remove all player pins that have a UUID but are not marked as online. Players without UUID won't
+									 * be removed
+									 */
+									player -> !player.getUUID().map(online::contains).orElse(true)));
+				world.setPins(levelMetadata);
 
 				try {
 					cached.save();

@@ -6,24 +6,28 @@ import com.google.gson.annotations.SerializedName;
 
 import de.piegames.blockmap.MinecraftDimension;
 import de.piegames.blockmap.renderer.RenderSettings;
+import de.piegames.blockmap.standalone.DeserializeNullChecker.DeserializeNonNull;
 
 public class ServerSettings {
 
-	public RegionFolderSettings[]	worlds;
+	public RegionFolderSettings[] worlds = new RegionFolderSettings[0];
 	@SerializedName("output dir")
-	public Path						outputDir;
+	@DeserializeNonNull
+	public Path outputDir;
 	@SerializedName("hide offline players")
-	public boolean					hideOfflinePlayers;
+	public boolean hideOfflinePlayers;
 
 	public static class RegionFolderSettings {
 
-		public String				name;
+		@DeserializeNonNull
+		public String name;
 		@SerializedName("input dir")
-		public Path					inputDir;
-		public MinecraftDimension	dimension		= MinecraftDimension.OVERWORLD;
-		public boolean				force			= false;
-		public boolean				pins			= true;
+		@DeserializeNonNull
+		public Path inputDir;
+		public MinecraftDimension dimension = MinecraftDimension.OVERWORLD;
+		public boolean force = false;
+		public boolean pins = true;
 		@SerializedName("render settings")
-		public RenderSettings		renderSettings	= new RenderSettings();
+		public RenderSettings renderSettings = new RenderSettings();
 	}
 }

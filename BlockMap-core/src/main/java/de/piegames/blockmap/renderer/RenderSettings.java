@@ -8,6 +8,7 @@ import de.piegames.blockmap.MinecraftVersion;
 import de.piegames.blockmap.color.BiomeColorMap;
 import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.color.BlockColorMap.InternalColorMap;
+import de.piegames.blockmap.renderer.RegionShader.DefaultShader;
 import de.piegames.blockmap.renderer.RegionShader.ReliefShader;
 import io.gsonfire.annotations.ExposeMethodParam;
 
@@ -22,14 +23,14 @@ public class RenderSettings {
 
 	public Map<MinecraftVersion, BlockColorMap>	blockColors;
 	public BiomeColorMap						biomeColors;
-	public RegionShader							shader	= new ReliefShader();
+	public RegionShader regionShader = new ReliefShader();
 
 	public RenderSettings() {
 		loadDefaultColors();
 	}
 
 	public RenderSettings(int minX, int maxX, int minY, int maxY, int minZ, int maxZ, Map<MinecraftVersion, BlockColorMap> blockColors,
-			BiomeColorMap biomeColors, RegionShader shader) {
+			BiomeColorMap biomeColors, RegionShader regionShader) {
 		this.minX = minX;
 		this.maxX = maxX;
 		this.minY = minY;
@@ -38,7 +39,7 @@ public class RenderSettings {
 		this.maxZ = maxZ;
 		this.blockColors = blockColors;
 		this.biomeColors = biomeColors;
-		this.shader = shader;
+		this.regionShader = regionShader;
 	}
 
 	public void loadDefaultColors() {
@@ -49,6 +50,11 @@ public class RenderSettings {
 	@ExposeMethodParam("block colors")
 	public void loadBlockColors(String name) {
 		blockColors = InternalColorMap.valueOf(name).getColorMap();
+	}
+
+	@ExposeMethodParam("shader")
+	public void loadShader(DefaultShader shader) {
+		this.regionShader = shader.getShader();
 	}
 
 	@Override
@@ -63,7 +69,7 @@ public class RenderSettings {
 				blockColors.entrySet()
 						.stream()
 						.collect(Collectors.toMap(e -> e.getKey().ordinal(), Map.Entry::getValue)),
-				maxX, maxY, maxZ, minX, minY, minZ, shader);
+				maxX, maxY, maxZ, minX, minY, minZ, regionShader);
 	}
 
 	@Override
@@ -76,6 +82,6 @@ public class RenderSettings {
 			return false;
 		RenderSettings other = (RenderSettings) obj;
 		return Objects.equals(biomeColors, other.biomeColors) && Objects.equals(blockColors, other.blockColors) && maxX == other.maxX && maxY == other.maxY
-				&& maxZ == other.maxZ && minX == other.minX && minY == other.minY && minZ == other.minZ && Objects.equals(shader, other.shader);
+				&& maxZ == other.maxZ && minX == other.minX && minY == other.minY && minZ == other.minZ && Objects.equals(regionShader, other.regionShader);
 	}
 }

@@ -3,6 +3,7 @@ package de.piegames.blockmap.world;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public class ServerMetadata {
 	/** This will be used in the future to keep track of old serialized files. */
@@ -11,17 +12,19 @@ public class ServerMetadata {
 	public Optional<String>		description;
 	public Optional<String>		ipAddress;
 	public Optional<String>		iconLocation;
+	public Optional<List<UUID>> onlinePlayers;
 	public List<ServerLevel>	levels	= new ArrayList<>();
 
 	public ServerMetadata() {
-		this(null, null, null, null);
+		this(null, null, null, null, null);
 	}
 
-	public ServerMetadata(String name, String description, String ipAddress, String iconLocation) {
+	public ServerMetadata(String name, String description, String ipAddress, String iconLocation, List<UUID> onlinePlayers) {
 		this.name = Optional.ofNullable(name);
 		this.description = Optional.ofNullable(description);
 		this.ipAddress = Optional.ofNullable(ipAddress);
 		this.iconLocation = Optional.ofNullable(iconLocation);
+		this.onlinePlayers = Optional.ofNullable(onlinePlayers);
 	}
 
 	public static class ServerLevel {

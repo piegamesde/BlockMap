@@ -68,12 +68,12 @@ public class Screenshots {
 		{ /* Shaders */
 			log.info("Generating shader screenshots");
 			BufferedImage img1 = generateScreenshot(renderer, settings, new Vector2i(-1, 1), BlockColorMap.InternalColorMap.DEFAULT);
-			settings.shader = RegionShader.DefaultShader.RELIEF.getShader();
-			settings.shader = RegionShader.DefaultShader.FLAT.getShader();
+			settings.regionShader = RegionShader.DefaultShader.RELIEF.getShader();
+			settings.regionShader = RegionShader.DefaultShader.FLAT.getShader();
 			BufferedImage img2 = generateScreenshot(renderer, settings, new Vector2i(0, 1), BlockColorMap.InternalColorMap.DEFAULT);
-			settings.shader = RegionShader.DefaultShader.HEIGHTMAP.getShader();
+			settings.regionShader = RegionShader.DefaultShader.HEIGHTMAP.getShader();
 			BufferedImage img3 = generateScreenshot(renderer, settings, new Vector2i(-1, 2), BlockColorMap.InternalColorMap.OCEAN_GROUND);
-			settings.shader = RegionShader.DefaultShader.BIOMES.getShader();
+			settings.regionShader = RegionShader.DefaultShader.BIOMES.getShader();
 			BufferedImage img4 = generateScreenshot(renderer, settings, new Vector2i(0, 2), BlockColorMap.InternalColorMap.DEFAULT);
 			BufferedImage img = new BufferedImage(1024, 1024, BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g = img.createGraphics();

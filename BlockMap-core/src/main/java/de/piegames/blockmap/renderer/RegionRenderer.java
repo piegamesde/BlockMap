@@ -144,7 +144,7 @@ public class RegionRenderer {
 				continue;
 			}
 		}
-		settings.shader.shade(map, height, regionBiomes, settings.biomeColors);
+		settings.regionShader.shade(map, height, regionBiomes, settings.biomeColors);
 		return map;
 	}
 }

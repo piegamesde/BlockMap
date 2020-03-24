@@ -132,7 +132,7 @@ public class ColorMapTest {
 	public void testDebugWorld() throws IOException, URISyntaxException, InterruptedException {
 		Set<Block> missingBlocks = new HashSet<>();
 		RenderSettings settings = new RenderSettings();
-		settings.shader = RegionShader.DefaultShader.FLAT.getShader();
+		settings.regionShader = RegionShader.DefaultShader.FLAT.getShader();
 		settings.blockColors = new HashMap<>();
 		settings.blockColors.put(version, new BlockColorMap(map.getBlockColors()) {
 			@Override

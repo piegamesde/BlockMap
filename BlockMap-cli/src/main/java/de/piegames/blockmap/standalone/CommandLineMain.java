@@ -8,6 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import org.apache.commons.logging.Log;
@@ -17,7 +19,7 @@ import org.apache.logging.log4j.core.config.Configurator;
 import org.joml.Vector2ic;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
+import com.google.gson.JsonParseException;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
@@ -58,6 +60,8 @@ public class CommandLineMain implements Callable<Integer> {
 
 	public static final Gson	GSON	= new GsonFireBuilder()
 			.enableExposeMethodParam()
+			.registerPostProcessor(ServerSettings.class, new DeserializeNullChecker())
+			.registerPostProcessor(ServerSettings.RegionFolderSettings.class, new DeserializeNullChecker())
 			.createGsonBuilder()
 			.registerTypeAdapterFactory(new GsonJava8TypeAdapterFactory())
 			.registerTypeHierarchyAdapter(Path.class, new TypeAdapter<Path>() {
@@ -199,7 +203,7 @@ public class CommandLineMain implements Callable<Integer> {
 			settings.maxZ = maxZ;
 			settings.blockColors = colorMap.getColorMap();
 			settings.biomeColors = BiomeColorMap.loadDefault();
-			settings.shader = shader.getShader();
+			settings.regionShader = shader.getShader();
 
 			RegionRenderer renderer = new RegionRenderer(settings);
 			Path input = this.input;

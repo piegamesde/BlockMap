@@ -299,7 +299,9 @@ public class CommandLineMain implements Callable<Integer> {
 		@Option(names = { "--server-icon" })
 		private String			iconLocation;
 		@Option(names = { "--online-players" }, description = "The UUIDs of all players to be shown as 'online'")
-		private String			online;
+		private List<UUID> online;
+		@Option(names = { "--max-players" }, description = "The number of total slots on the servers")
+		private int maxPlayers;
 
 		@Override
 		public Integer call() {
@@ -309,13 +311,13 @@ public class CommandLineMain implements Callable<Integer> {
 			ServerSettings settings;
 			try {
 				/* TODO add more error handling regarding missing values (Required values will simply throw a NullPointerException) */
-				settings = GSON.fromJson(new String(Files.readAllBytes(input)), ServerSettings.class);
-			} catch (JsonSyntaxException | IOException e) {
+				settings = GSON.fromJson(new String(Files.readAllBytes(input.toAbsolutePath())), ServerSettings.class);
+			} catch (JsonParseException | IOException e) {
 				log.error("Could not parse the settings file", e);
 				return 2;
 			}
 
-			ServerMetadata metadata = new ServerMetadata(name, description, ipAddress, iconLocation);
+			ServerMetadata metadata = new ServerMetadata(name, description, ipAddress, iconLocation, online, maxPlayers);
 			metadata.levels = new ArrayList<>(settings.worlds.length);
 
 			/* Render all worlds */

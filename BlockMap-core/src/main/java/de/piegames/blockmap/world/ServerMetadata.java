@@ -14,17 +14,19 @@ public class ServerMetadata {
 	public Optional<String>		iconLocation;
 	public Optional<List<UUID>> onlinePlayers;
 	public List<ServerLevel>	levels	= new ArrayList<>();
+	public int maxPlayers;
 
 	public ServerMetadata() {
-		this(null, null, null, null, null);
+		this(null, null, null, null, null, -1);
 	}
 
-	public ServerMetadata(String name, String description, String ipAddress, String iconLocation, List<UUID> onlinePlayers) {
+	public ServerMetadata(String name, String description, String ipAddress, String iconLocation, List<UUID> onlinePlayers, int maxPlayers) {
 		this.name = Optional.ofNullable(name);
 		this.description = Optional.ofNullable(description);
 		this.ipAddress = Optional.ofNullable(ipAddress);
 		this.iconLocation = Optional.ofNullable(iconLocation);
 		this.onlinePlayers = Optional.ofNullable(onlinePlayers);
+		this.maxPlayers = maxPlayers;
 	}
 
 	public static class ServerLevel {

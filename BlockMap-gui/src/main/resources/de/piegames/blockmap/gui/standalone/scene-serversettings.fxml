@@ -42,7 +42,9 @@
 				<Label
 					fx:id="serverDescription"
 					text="Server description" />
-				<Label text="Players online: 0/30" />
+				<Label
+					fx:id="onlinePlayers"
+					text="Players online: -/-" />
 			</children>
 		</VBox>
 	</content>

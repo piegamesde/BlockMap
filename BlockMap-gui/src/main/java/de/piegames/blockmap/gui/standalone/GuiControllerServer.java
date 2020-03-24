@@ -62,7 +62,7 @@ public class GuiControllerServer implements Initializable {
 			.setPrettyPrinting()
 			.create();
 	@FXML
-	Label														serverName, serverDescription;
+	Label serverName, serverDescription, onlinePlayers;
 	@FXML
 	ImageView													serverIcon;
 	@FXML
@@ -125,6 +125,9 @@ public class GuiControllerServer implements Initializable {
 
 			serverName.setText(metadata.name.orElse("(unknown server)"));
 			serverDescription.setText(metadata.description.orElse("(unknown description)"));
+			onlinePlayers.setText("Players online: " +
+					metadata.onlinePlayers.map(List::size).map(Object::toString).orElse("? ") +
+					(metadata.maxPlayers == -1 ? "" : "/" + metadata.maxPlayers));
 
 			serverIcon.setImage(metadata.iconLocation.map(url -> new Image(url)).orElse(new Image(getClass().getResourceAsStream("/unknown_server.png"))));
 

@@ -1,0 +1,36 @@
+{
+	"output dir": "./rendered-web",
+	"hide offline players": false,
+	"worlds": [
+		{
+			"name": "Overworld",
+			"input dir": "WORLD_PATH",
+			"dimension": "OVERWORLD",
+			"force": false,
+			"pins": true
+		},
+		{
+			"name": "Oceans",
+			"input dir": "WORLD_PATH",
+			"dimension": "OVERWORLD",
+			"force": false,
+			"pins": true,
+			"render settings": {
+				"block colors": "OCEAN_GROUND",
+				"shader": "RELIEF"
+			}
+		},
+		{
+			"name": "Nether",
+			"input dir": "WORLD_PATH",
+			"dimension": "NETHER",
+			"render settings": {
+				"block colors": "X_RAY",
+				"shader": "FLAT",
+				"maxY": "80"
+			},
+			"force": false,
+			"pins": true
+		}
+	]
+}

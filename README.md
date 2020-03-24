@@ -80,6 +80,19 @@ If your world has been created before the Minecraft 1.13 release, please optimiz
 
 The bash script [server.sh](server.sh) is an example of how this could be used in a server environment. Simply set the paths at the top of the file and call this script regularly on the server. It has a few different render settings pre-configured, but they are easy to adapt to your needs.
 
+
+### 2.0 server usage:
+
+*This is experimental and may change at any time! Please try it out and take the time to provide feedback if you run into issues.*
+
+The new server mode is based around the following concept:
+
+- Declare a configuration file with all your worlds and how you want to render them. An example configuration can be found [here](server-settings.json).
+- Call `blockmap render-many` and pass the configuration file as argument. You can add dynamic server information like online plyers etc. via more command line options.
+- An output directory will be created with all the rendered files. You can view them in BlockMap.
+- Host that folder using the web server of your choice (e.g. [`miniserve`](https://github.com/svenstaro/miniserve)). Clients will now be able to view your worlds across the Internet.
+- Call this on a scheduled basis. Subsequent runs will update the folder without re-rendering everything.
+
 ## Build it:
 
 Due to technical, legal and performance reasons, some resources required to run and test BlockMap are not included in this repository, but generated locally. The Gradle task `regenerate` will download all required files (you only need an internet connection the first time and after a `clean`) and generate and compile a bunch of stuff. Without this, nothing will work. On a freshly cloned repository, use `initEclipse` or `initIdea` to transform the repository into a project you can simply open in your favorite IDE. (Warning: The `eclipse` and `idea` tasks have to be called each time some dependencies changed. Furthermore, they link to some folders in the build directory. This means that they won't work as intended until `regenerate` has been called.)

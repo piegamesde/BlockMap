@@ -32,7 +32,7 @@
 - Minecraft 1.13+ worlds. Chunks from before the release (even from 1.13 snapshots) will be ignored. Please optimize your worlds in Minecraft before rendering them
 - Java 12+
 	- While BlockMap should run on any Java, using the [OpenJDK](https://adoptopenjdk.net/) is recommended.
-	- If won't hack on BlockMap, the JRE should suffice (in the downloads section, choose JRE over JDK)
+	- If you won't hack on the code itself, the JRE should suffice (in the downloads section, choose JRE over JDK)
 
 ## Get it / Installation:
 

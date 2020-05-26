@@ -51,6 +51,7 @@
 					GridPane.columnIndex="1">
 					<items>
 						<FXCollections fx:factory="observableArrayList">
+							<!-- Keep same order as in InternalColorMap -->
 							<String fx:value="Default" />
 							<String fx:value="Caves" />
 							<String fx:value="No foliage" />

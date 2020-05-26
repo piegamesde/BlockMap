@@ -930,11 +930,11 @@ public class Pin {
 				pins.add(new PlayerSpawnpointPin(player, viewport));
 		}
 		for (LevelMetadata.VillageObjectPin villageObject : pin.getVillageObjects().orElse(Collections.emptyList())) {
-			try {
+			if (PinType.VILLAGE_MAPPING.containsKey(villageObject.getType())) {
 				pins.add(new VillageObjectPin(villageObject, viewport));
-			} catch (NullPointerException e) {
-				log.warn("Nullpointer. Type: " + villageObject.getType());
-				throw e;
+			} else {
+				log.warn("Invalid type for village pin: '" + villageObject.getType() + "' at position " + villageObject.getPosition()
+						+ ". Allowed values: " + PinType.VILLAGE_MAPPING.keySet());
 			}
 		}
 

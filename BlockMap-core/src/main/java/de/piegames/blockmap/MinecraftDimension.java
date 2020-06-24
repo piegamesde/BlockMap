@@ -28,6 +28,19 @@ public enum MinecraftDimension {
 		return villagePath;
 	}
 
+	public static MinecraftDimension byName(String uuid) {
+		switch (uuid) {
+		case "minecraft:overworld":
+			return OVERWORLD;
+		case "minecraft:the_nether":
+			return NETHER;
+		case "minecraft:the_end":
+			return END;
+		default:
+			throw new IllegalArgumentException("Unknown dimension ID '" + uuid + "'");
+		}
+	}
+
 	public static MinecraftDimension byID(int id) {
 		switch (id) {
 		case -1:

@@ -364,8 +364,12 @@ public class LevelMetadata {
 					CompoundMap map = (CompoundMap) in.readTag().getValue();
 					List<DoubleTag> pos = ((ListTag<DoubleTag>) map.get("Pos")).getValue();
 					Vector3d position = new Vector3d(pos.get(0).getValue(), pos.get(1).getValue(), pos.get(2).getValue());
-					int dimension = ((IntTag) map.get("Dimension")).getValue();
-					if (filterDimension != null && dimension != filterDimension.index)
+
+					var dimension = map.get("Dimension").getAsStringTag()
+							.map(tag -> MinecraftDimension.byName(tag.getValue()))
+							/* The dimension is an int in pre-1.16 */
+							.orElseGet(() -> MinecraftDimension.byID(map.get("Dimension").getAsIntTag().get().getValue()));
+					if (filterDimension != null && dimension != filterDimension)
 						continue;
 					String UUID = BigInteger.valueOf(((LongTag) map.get("UUIDMost")).getValue())
 							.and(new BigInteger("FFFFFFFFFFFFFFFF", 16))
@@ -379,7 +383,7 @@ public class LevelMetadata {
 								((IntTag) map.get("SpawnY")).getValue(),
 								((IntTag) map.get("SpawnZ")).getValue());
 					int gamemode = ((IntTag) map.get("playerGameType")).getValue();
-					players.add(new PlayerPin(position, MinecraftDimension.byID(dimension), UUID, spawnpoint, gamemode));
+					players.add(new PlayerPin(position, dimension, UUID, spawnpoint, gamemode));
 				}
 			}
 		} catch (IOException e) {

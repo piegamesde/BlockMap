@@ -50,7 +50,7 @@ BlockMap hasn't been packaged for other distros yet (looking for maintainers).
 
 The GUI version should just run by (double)clicking it. Otherwise run it through:
 
-    java -jar BlockMap-gui-1.6.2.jar
+    java -jar BlockMap-gui-2.0.0.jar
 
 to start. If you installed BlockMap through a package manager, search for it in your launcher or menu.
 
@@ -68,9 +68,9 @@ to start. If you installed BlockMap through a package manager, search for it in 
 If you want to use BlockMap through the command line without,
 
     # For general usage help
-    java -jar BlockMap-cli-1.6.2.jar help
+    java -jar BlockMap-cli-2.0.0.jar help
     # For help about rendering worlds to a folder
-    java -jar BlockMap-cli-1.6.2.jar help render
+    java -jar BlockMap-cli-2.0.0.jar help render
 
 will get you started. On Linux even with colors!
 
@@ -78,12 +78,7 @@ If your world has been created before the Minecraft 1.13 release, please optimiz
 
 ### Server usage:
 
-The bash script [server.sh](server.sh) is an example of how this could be used in a server environment. Simply set the paths at the top of the file and call this script regularly on the server. It has a few different render settings pre-configured, but they are easy to adapt to your needs.
-
-
-### 2.0 server usage:
-
-*This is experimental and may change at any time! Please try it out and take the time to provide feedback if you run into issues.*
+*This feature is not stailized yet. Backwards-incompatible changes may occur even on minor releases. Any feedback welcome.*
 
 The new server mode is based around the following concept:
 
@@ -92,6 +87,13 @@ The new server mode is based around the following concept:
 - An output directory will be created with all the rendered files. You can view them in BlockMap.
 - Host that folder using the web server of your choice (e.g. [`miniserve`](https://github.com/svenstaro/miniserve)). Clients will now be able to view your worlds across the Internet.
 - Call this on a scheduled basis. Subsequent runs will update the folder without re-rendering everything.
+
+### Old server usage:
+
+*The "old" way of doing server support: a simple shell script that calls the CLI.*
+
+The bash script [server.sh](server.sh) is an example of how this could be used in a server environment. Simply set the paths at the top of the file and call this script regularly on the server. It has a few different render settings pre-configured, but they are easy to adapt to your needs.
+
 
 ## Build it:
 

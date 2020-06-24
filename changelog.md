@@ -1,5 +1,42 @@
 # Changelog
 
+## Version 2.0.0
+
+***breaking*** news for ***breaking*** changes! Long overdue, a rewrite/overhaul of quite a few components. No Minecraft 1.16 support yet.
+
+### Changes
+
+- GUI redesign:
+	- **Autocomplete!**
+	- Better support for viewing worlds on servers.
+	- Rewrite of the map rendering engine
+		- Much cleaner code, probably removed a lot of bugs
+		- Removed caching (may increase memory usage in large worlds)
+	- Removed saving support. Use the CLI instead.
+- ***breaking*** World representation has been changed. Previously, every folder containing region files would count as world. Now, a world always is a folder containing a `level.dat` together with a dimension (defaulting to the overworld).
+	- For the CLI, a few paths will have to be changed. `--dimension` is now always used, but defaults to `OVERWORLD`.
+	- For the GUI, nothing much will change except you cannot open a single region folder anymore (which probably nobody did anyways)
+- New server mode using `render-many`:
+	- **It is not declared stable yet, to allow breaking changes even on minor version bumps.**
+	- Declare a configuration file with all your worlds and how you want to render them. An example configuration can be found [here](server-settings.json).
+	- Call `blockmap render-many` and pass the configuration file as argument. You can add dynamic server information like online plyers etc. via more command line options.
+	- An output directory will be created with all the rendered files. You can view them in BlockMap.
+	- Host that folder using the web server of your choice (e.g. [`miniserve`](https://github.com/svenstaro/miniserve)). Clients will now be able to view your worlds across the Internet.
+	- Call this on a scheduled basis. Subsequent runs will update the folder without re-rendering everything.
+- Other CLI changes:
+	- ***breaking*** The `--lazy` option has been removed and is no enabled by default. Use `--force` to disable it manually.
+	- Proper exit code handling. When using BlockMap in scripts, you'll know when it fails.
+- Java 13 support
+
+### Bug fixes
+
+- Color map selection in the GUI has gone wrong a few times
+- Some bounds checks when rendering part of the world are notoriously wrong
+
+### Backwards-compatibility
+
+All changes that potentially require manual intervention are marked with "***breaking***" in the changelog above.
+
 ## Version 1.6.2
 ### Changes
 

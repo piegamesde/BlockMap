@@ -268,7 +268,7 @@
 			
 			"jack_o_lantern,facing=*": "pumpkin_top.png",
 			"jukebox,has_record=*": "jukebox_top.png",
-			"jigsaw,facing=*": "jigsaw_top.png",
+			"jigsaw,orientation=*": "jigsaw_side.png",
 			
 			"kelp,age=*": "kelp.png",
 			"kelp_plant": "kelp_plant.png",

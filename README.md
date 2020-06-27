@@ -17,7 +17,7 @@
 - A command line interface to render your worlds from scripts
 - The core rendering code as library to use in your own projects (releasing soon™)
 - Gamma corrected rendering
-- Works with both 1.13+ worlds (currently: up to 1.15)
+- Works with 1.13+ worlds (currently: up to 1.15. Rudimentary 1.16 support on the master branch)
 
 ## Gallery
 
@@ -78,7 +78,7 @@ If your world has been created before the Minecraft 1.13 release, please optimiz
 
 ### Server usage:
 
-*This feature is not stailized yet. Backwards-incompatible changes may occur even on minor releases. Any feedback welcome.*
+*This feature is not stabilized yet. Backwards-incompatible changes may occur even on minor releases. Any feedback welcome.*
 
 The new server mode is based around the following concept:
 
@@ -136,12 +136,12 @@ If you want to create a release jar and run it, use `./gradlew :BlockMap-gui:run
 
 ## Update to newer Minecraft version
 
-- Update and start Minecraft. Create a new debug world. Copy it to `BlockMap/BlockMap-internal/src/test/resources`.
-- Copy the current block color instructions in `BlockMap/BlockMap-internal/src/main/resources/` to match the new Minecraft version.
-- Copy the current `ChunkRenderer` in `de.piegames.blockmap.renderer` to match the new Minecraft version.
-- *Commit as update preparation*
+- Update and start Minecraft. Create a new debug world. Copy it to `./BlockMap-internal/src/test/resources`. Delete the `playerdata`, `stats` and `advancements` folders in it.
+- Copy the current block color instructions in `./BlockMap-internal/src/main/resources/` to match the new Minecraft version.
+- Copy the current `ChunkRenderer` in `de.piegames.blockmap.renderer` (in `BlockMap-core`) to match the new Minecraft version.
+- Commit as `Minecraft $VERSION: Update preparation`
 - Start off updating `de.piegames.blockmap.MinecraftVersion`
-- Update the Minecraft version of `ChunkRenderer`
+- Update the Minecraft version of `ChunkRenderer_$VERSION` in the constructor
 - Update `de.piegames.blockmap.renderer.RegionRenderer` to use the new `ChunkRenderer`
 - Run `./gradlew regenerate` and make it work
 - Run all the tests and make them work
@@ -150,6 +150,7 @@ If you want to create a release jar and run it, use `./gradlew :BlockMap-gui:run
 	- If Minecraft added or changed biomes, manual checking and updating is required
 - Generate a Minecraft vanilla world and test the GUI
 - Implement any new features of the update (e.g. new data that can be shown as GUI pin)
+	- Don't forget `./BlockMap-internal/src/main/resources/biome-color-instructions.json`
 - Regenerate the screenshots
 	- Optimize the BlockMapWorld in Minecraft
 	- `./gradlew clear && ./gradlew regenerate && ./gradlew generateScreenshots`

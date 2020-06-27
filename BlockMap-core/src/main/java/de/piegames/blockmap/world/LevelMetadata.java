@@ -34,6 +34,7 @@ import de.piegames.nbt.ByteTag;
 import de.piegames.nbt.CompoundMap;
 import de.piegames.nbt.CompoundTag;
 import de.piegames.nbt.DoubleTag;
+import de.piegames.nbt.IntArrayTag;
 import de.piegames.nbt.IntTag;
 import de.piegames.nbt.ListTag;
 import de.piegames.nbt.LongTag;
@@ -360,6 +361,7 @@ public class LevelMetadata {
 			for (Path p : d) {
 				if (!p.getFileName().toString().endsWith(".dat"))
 					continue;
+				log.info("Loading metadata for " + p.toAbsolutePath());
 				try (NBTInputStream in = new NBTInputStream(Files.newInputStream(p), NBTInputStream.GZIP_COMPRESSION)) {
 					CompoundMap map = (CompoundMap) in.readTag().getValue();
 					List<DoubleTag> pos = ((ListTag<DoubleTag>) map.get("Pos")).getValue();
@@ -371,11 +373,27 @@ public class LevelMetadata {
 							.orElseGet(() -> MinecraftDimension.byID(map.get("Dimension").getAsIntTag().get().getValue()));
 					if (filterDimension != null && dimension != filterDimension)
 						continue;
-					String UUID = BigInteger.valueOf(((LongTag) map.get("UUIDMost")).getValue())
+					
+					String UUID;
+					if (map.containsKey("UUID")) {
+						int[] uuid = ((IntArrayTag) map.get("UUID")).getValue();
+						UUID = BigInteger.valueOf(uuid[0]).and(new BigInteger("FFFFFFFF", 16))
+								.shiftLeft(32)
+								.or(BigInteger.valueOf(uuid[1]).and(new BigInteger("FFFFFFFF", 16)))
+								.shiftLeft(32)
+								.or(BigInteger.valueOf(uuid[2]).and(new BigInteger("FFFFFFFF", 16)))
+								.shiftLeft(32)
+								.or(BigInteger.valueOf(uuid[3]).and(new BigInteger("FFFFFFFF", 16)))
+								.toString(16);
+					} else {
+						/* Pre 1.16 */
+						UUID = BigInteger.valueOf(((LongTag) map.get("UUIDMost"))
+									.getValue())
 							.and(new BigInteger("FFFFFFFFFFFFFFFF", 16))
 							.shiftLeft(64)
 							.or(BigInteger.valueOf(((LongTag) map.get("UUIDLeast")).getValue()).and(new BigInteger("FFFFFFFFFFFFFFFF", 16)))
 							.toString(16);
+					}
 					Vector3i spawnpoint = null;
 					if (map.containsKey("SpawnX"))
 						spawnpoint = new Vector3i(

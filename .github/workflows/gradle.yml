@@ -31,7 +31,7 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build with Gradle
-      run: ./gradlew regenerate && ./gradlew build
+      run: ./gradlew regenerate && ./gradlew assemble
     - name: Generate jar files
       run: ./gradlew previewRelease
     - name: Upload GUI jar as artifact
@@ -44,3 +44,5 @@ jobs:
       with:
         name: BlockMap-cli-${{ matrix.os }}-$GITHUB_SHA
         path: BlockMap-cli/build/libs/fat/BlockMap-*
+    - name: Execute tests
+      run: ./gradlew test

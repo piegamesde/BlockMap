@@ -34,15 +34,10 @@ jobs:
       run: ./gradlew regenerate && ./gradlew assemble
     - name: Generate jar files
       run: ./gradlew previewRelease
-    - name: Upload GUI jar as artifact
+    - name: Upload jars as artifact
       uses: actions/upload-artifact@v2
       with:
-        name: BlockMap-gui-${{ matrix.os }}-$GITHUB_SHA
-        path: BlockMap-gui/build/libs/fat/BlockMap-*
-    - name: Upload CLI jar as artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: BlockMap-cli-${{ matrix.os }}-$GITHUB_SHA
-        path: BlockMap-cli/build/libs/fat/BlockMap-*
+        name: BlockMap-${{ matrix.os }}-${{ github.sha }}
+        path: BlockMap-*/build/libs/fat/BlockMap-*
     - name: Execute tests
       run: ./gradlew test

@@ -1,6 +1,6 @@
 # BlockMap – A Minecraft 1.13-1.15 world viewer
 
-![Build](https://github.com/Minecraft-Technik-Wiki/BlockMap/workflows/Java%20CI%20with%20Gradle/badge.svg)
+[![Build Status](https://github.com/Minecraft-Technik-Wiki/BlockMap/workflows/Java%20CI%20with%20Gradle/badge.svg)](https://github.com/Minecraft-Technik-Wiki/BlockMap/actions)
 
 <img src="icon/blockmap-256.png" width=150/>
 

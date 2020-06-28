@@ -1,6 +1,6 @@
 # BlockMap – A Minecraft 1.13-1.15 world viewer
 
-[![Build Status](https://saibotk.de/buildstatus.php)]()
+[![Build Status](https://github.com/Minecraft-Technik-Wiki/BlockMap/workflows/Build/badge.svg)](https://github.com/Minecraft-Technik-Wiki/BlockMap/actions)
 
 <img src="icon/blockmap-256.png" width=150/>
 

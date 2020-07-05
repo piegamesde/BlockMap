@@ -361,7 +361,7 @@ public class LevelMetadata {
 			for (Path p : d) {
 				if (!p.getFileName().toString().endsWith(".dat"))
 					continue;
-				log.info("Loading metadata for " + p.toAbsolutePath());
+				log.debug("Loading player metadata from " + p.toAbsolutePath());
 				try (NBTInputStream in = new NBTInputStream(Files.newInputStream(p), NBTInputStream.GZIP_COMPRESSION)) {
 					CompoundMap map = (CompoundMap) in.readTag().getValue();
 					List<DoubleTag> pos = ((ListTag<DoubleTag>) map.get("Pos")).getValue();
@@ -402,6 +402,8 @@ public class LevelMetadata {
 								((IntTag) map.get("SpawnZ")).getValue());
 					int gamemode = ((IntTag) map.get("playerGameType")).getValue();
 					players.add(new PlayerPin(position, dimension, UUID, spawnpoint, gamemode));
+				} catch (IOException e) {
+					log.warn("Could not load player metadata from " + p.toAbsolutePath());
 				}
 			}
 		} catch (IOException e) {
@@ -414,6 +416,7 @@ public class LevelMetadata {
 			for (Path p : d) {
 				if (!p.toString().endsWith(".mca"))
 					continue;
+				log.debug("Loading village metadata from " + p.toAbsolutePath());
 
 				try (RegionFile file = new RegionFile(p);) {
 					for (int i : file.listChunks()) {
@@ -444,6 +447,11 @@ public class LevelMetadata {
 							}
 						}
 					}
+				} catch (RuntimeException | IOException e) {
+					if (Files.size(p) == 0)
+						log.warn(p.getFileName() + " is empty?!");
+					else
+						log.warn("Could not load village data from " + p.getFileName(), e);
 				}
 			}
 		} catch (IOException | RuntimeException e) {
@@ -457,6 +465,7 @@ public class LevelMetadata {
 				if (!p.getFileName().toString().endsWith(".dat")
 						|| !p.getFileName().toString().startsWith("map_"))
 					continue;
+				log.debug("Loading map metadata from" + p.toAbsolutePath());
 				try (NBTInputStream in = new NBTInputStream(Files.newInputStream(p), NBTInputStream.GZIP_COMPRESSION)) {
 					CompoundMap map = (CompoundMap) ((CompoundMap) in.readTag().getValue()).get("data").getValue();
 					byte scale = ((ByteTag) map.get("scale")).getValue();

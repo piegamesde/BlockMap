@@ -110,10 +110,6 @@ public class LevelMetadata {
 		return maps;
 	}
 
-	public Optional<List<VillageObjectPin>> getVillages() {
-		return villageObjects;
-	}
-
 	public Optional<List<ChunkPin>> getSlimeChunks() {
 		return slimeChunks;
 	}
@@ -274,11 +270,14 @@ public class LevelMetadata {
 
 	public static class VillageObjectPin {
 		Vector3ic	position;
+		MinecraftDimension dimension;
+
 		int			freeTickets;
 		String		type;
 
-		public VillageObjectPin(Vector3ic position, int freeTickets, String type) {
+		public VillageObjectPin(Vector3ic position, MinecraftDimension dimension, int freeTickets, String type) {
 			this.position = position;
+			this.dimension = dimension;
 			this.freeTickets = freeTickets;
 			this.type = type;
 		}
@@ -411,51 +410,55 @@ public class LevelMetadata {
 		}
 
 		// Village 2.0
-		ArrayList<VillageObjectPin> villageObjects = new ArrayList<>();
-		try (DirectoryStream<Path> d = Files.newDirectoryStream(worldPath.resolve("poi"))) {
-			for (Path p : d) {
-				if (!p.toString().endsWith(".mca"))
-					continue;
-				log.debug("Loading village metadata from " + p.toAbsolutePath());
+		List<VillageObjectPin> villageObjects = new ArrayList<>();
+		for (MinecraftDimension dimension : MinecraftDimension.values()) {
+			if (filterDimension != null && dimension != filterDimension)
+				continue;
+			try (DirectoryStream<Path> d = Files.newDirectoryStream(worldPath.resolve(dimension.getPoiPath()))) {
+				for (Path p : d) {
+					if (!p.toString().endsWith(".mca"))
+						continue;
+					log.debug("Loading village metadata from " + p.toAbsolutePath());
 
-				try (RegionFile file = new RegionFile(p);) {
-					for (int i : file.listChunks()) {
-						for (CompoundTag section : (Iterable<CompoundTag>) file.loadChunk(i)
-								.readTag().getAsCompoundTag("Sections")
-								.map(tag -> tag.getValue().values())
-								.stream().flatMap(Collection::stream)
-								.map(t -> (CompoundTag) t)::iterator) {
+					try (RegionFile file = new RegionFile(p);) {
+						for (int i : file.listChunks()) {
+							for (CompoundTag section : (Iterable<CompoundTag>) file.loadChunk(i)
+									.readTag().getAsCompoundTag("Sections")
+									.map(tag -> tag.getValue().values())
+									.stream().flatMap(Collection::stream)
+									.map(t -> (CompoundTag) t)::iterator) {
 
-							if (section.getByteValue("Valid").orElse((byte) 0) != 1) {
-								log.warn("Found invalid records during village loading in region file " + file.getPath().toString() + " in chunk " + i);
-								continue;
-							}
+								if (section.getByteValue("Valid").orElse((byte) 0) != 1) {
+									log.warn("Found invalid records during village loading in region file " + file.getPath().toString() + " in chunk " + i);
+									continue;
+								}
 
-							List<CompoundTag> records = section.getAsListTag("Records")
-									.flatMap(ListTag::getAsCompoundTagList)
-									.map(Tag::getValue)
-									.orElse(Collections.emptyList());
+								List<CompoundTag> records = section.getAsListTag("Records")
+										.flatMap(ListTag::getAsCompoundTagList)
+										.map(Tag::getValue)
+										.orElse(Collections.emptyList());
 
-							for (CompoundTag j : records) {
-								int freeTickets = j.getIntValue("free_tickets").orElse(-1);
-								String type = j.getStringValue("type").orElse("<unknown>");
-								int[] pos = j.getIntArrayValue("pos").orElse(new int[] { 0, 0, 0, });
+								for (CompoundTag j : records) {
+									int freeTickets = j.getIntValue("free_tickets").orElse(-1);
+									String type = j.getStringValue("type").orElse("<unknown>");
+									int[] pos = j.getIntArrayValue("pos").orElse(new int[] { 0, 0, 0, });
 
-								Vector3ic position = new Vector3i(pos[0], pos[1], pos[2]);
+									Vector3ic position = new Vector3i(pos[0], pos[1], pos[2]);
 
-								villageObjects.add(new VillageObjectPin(position, freeTickets, type));
+									villageObjects.add(new VillageObjectPin(position, dimension, freeTickets, type));
+								}
 							}
 						}
+					} catch (RuntimeException | IOException e) {
+						if (Files.size(p) == 0)
+							log.warn(p.getFileName() + " is empty?!");
+						else
+							log.warn("Could not load village data from " + p.getFileName(), e);
 					}
-				} catch (RuntimeException | IOException e) {
-					if (Files.size(p) == 0)
-						log.warn(p.getFileName() + " is empty?!");
-					else
-						log.warn("Could not load village data from " + p.getFileName(), e);
 				}
+			} catch (IOException | RuntimeException e) {
+				log.warn("Could not access village data", e);
 			}
-		} catch (IOException | RuntimeException e) {
-			log.warn("Could not access village data", e);
 		}
 
 		List<MapPin> maps = new ArrayList<>();

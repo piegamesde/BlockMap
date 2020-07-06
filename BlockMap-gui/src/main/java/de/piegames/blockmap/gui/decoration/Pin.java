@@ -124,8 +124,8 @@ public class Pin {
 		public static final PinType		VILLAGE_BUTCHER				= new PinType("Butcher", VILLAGE, true, false, "textures/villages/butcher.png");
 		public static final PinType		VILLAGE_FISHERMAN			= new PinType("Fisherman", VILLAGE, true, false, "textures/villages/fisherman.png");
 		// TODO add texture
-		public static final PinType VILLAGE_BEENEST = new PinType("Bee nest", VILLAGE, true, false, "textures/pins/spawn_map.png");
-		public static final PinType VILLAGE_PORTAL = new PinType("Portal", VILLAGE, true, false, "textures/pins/spawn_map.png");
+		public static final PinType VILLAGE_BEENEST = new PinType("Bee nest", VILLAGE, true, false, "textures/structures/bee_hive.png");
+		public static final PinType VILLAGE_PORTAL = new PinType("Portal", VILLAGE, true, false, "textures/structures/nether_portal.png");
 
 		// Intellectual
 		public static final PinType		VILLAGE_CLERIC				= new PinType("Cleric", VILLAGE, true, false, "textures/villages/cleric.png");
@@ -153,9 +153,9 @@ public class Pin {
 		public static final PinType		STRUCTURE_WITCH_HUT			= new PinType("Witch hut", STRUCTURE, true, false, "textures/structures/swamp_hut.png");
 		public static final PinType		STRUCTURE_OUTPOST			= new PinType("Pillager outpost", STRUCTURE, true, false,
 				"textures/structures/outpost.png");
-		public static final PinType STRUCTURE_RUINED_PORTAL = new PinType("Ruined portal", STRUCTURE, true, false, "textures/structures/outpost.png");
-		public static final PinType STRUCTURE_NETHER_FOSSIL = new PinType("Nether fossil", STRUCTURE, true, false, "textures/structures/outpost.png");
-		public static final PinType STRUCTURE_BASTION_REMNANT = new PinType("Bastion remnant", STRUCTURE, true, false, "textures/structures/outpost.png");
+		public static final PinType STRUCTURE_RUINED_PORTAL = new PinType("Ruined portal", STRUCTURE, true, false, "textures/structures/ruined_portal.png");
+		public static final PinType STRUCTURE_NETHER_FOSSIL = new PinType("Nether fossil", STRUCTURE, true, false, "textures/structures/fossil.png");
+		public static final PinType STRUCTURE_BASTION_REMNANT = new PinType("Bastion remnant", STRUCTURE, true, false, "textures/structures/bastion_remnant.png");
 
 		protected final List<PinType>	children					= new ArrayList<>();
 		private final String			name;
@@ -1076,7 +1076,7 @@ public class Pin {
 
 	/**
 	 * Takes in a set of chunk positions and identifies all connected subsets.
-	 * 
+	 *
 	 * @param chunks
 	 *            A set of chunk positions. This will be emptied during the calculation.
 	 */
@@ -1103,7 +1103,7 @@ public class Pin {
 
 	/**
 	 * Takes in a map of chunk positions and identifies all connected subsets.
-	 * 
+	 *
 	 * @param chunks
 	 *            A map of chunk positions. This will be emptied during the calculation.
 	 */
@@ -1137,7 +1137,7 @@ public class Pin {
 	 * This method takes in a set of four-connected chunk coordinates (as {@link #splitChunks(Set)} would output) and calculates its outline.
 	 * The outline is a set of vertices that when taken together as a polygon result in a shape exactly covering the input set. The input may
 	 * have concavities, but no enclaves.<br />
-	 * 
+	 *
 	 * The algorithm starts by picking out a random point on the set. It then looks at the 2×2 coordinates next to it (where the current
 	 * position is at the bottom-right corner of that sample) and depending on which of these pixels are part of the input set the position will
 	 * be moved. This way, the algorithm will walk the outline of the set clock-wise and output a vertex at each direction change.

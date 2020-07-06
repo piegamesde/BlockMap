@@ -48,10 +48,10 @@
 		"biomeColor": { "r":0, "g":0, "b":255 }
 	},
 	"8": {
-		"waterColor": "0xFF3F76E4",
+		"waterColor": "0xFFFF00FF",
 		"rainfall": "0.0",
 		"temperature": "2.0",
-		"biomeColor": { "r":255, "g":0, "b":0 }
+		"biomeColor": { "r":191, "g":59, "b":59 }
 	},
 	"9": {
 		"waterColor": "0xFF3F76E4",
@@ -448,5 +448,29 @@
 		"rainfall": "0.9",
 		"temperature": "0.95",
 		"biomeColor": { "r":59, "g":71, "b":10 }
+	},
+	"170": {
+		"waterColor": "0xFFFF00FF",
+		"rainfall": "0.0",
+		"temperature": "2.0",
+		"biomeColor": { "r":94, "g":56, "b":48 }
+	},
+	"171": {
+		"waterColor": "0xFFFF00FF",
+		"rainfall": "0.0",
+		"temperature": "2.0",
+		"biomeColor": { "r":221, "g":8, "b":8 }
+	},
+	"172": {
+		"waterColor": "0xFFFF00FF",
+		"rainfall": "0.0",
+		"temperature": "2.0",
+		"biomeColor": { "r":73, "g":144, "b":123 }
+	},
+	"173": {
+		"waterColor": "0xFFFF00FF",
+		"rainfall": "0.0",
+		"temperature": "2.0",
+		"biomeColor": { "r":64, "g":54, "b":54 }
 	}
 }

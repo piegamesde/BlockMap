@@ -83,76 +83,69 @@ import javafx.util.Duration;
 public class Pin {
 
 	public static class PinType {
-		public static final PinType		MERGED_PIN					= new PinType("Merged pin", null, false, false, "/tmp.png");
-		public static final PinType		ANY_PIN						= new PinType("Show pins", null, false, true, "textures/pins/pins.png");
+		public static final PinType MERGED_PIN = new PinType("Merged pin", null, false, false, "/tmp.png");
+		public static final PinType ANY_PIN = new PinType("Show pins", null, false, true, "textures/pins/pins.png");
 
-		public static final PinType		CHUNK_PIN					= new PinType("Chunks", ANY_PIN, false, false, "textures/overlays/pin_chunks.png");
-		public static final PinType		CHUNK_UNFINISHED			= new PinType("Unfinished chunk", CHUNK_PIN, false, false,
-				"textures/overlays/pin_chunk_unfinished.png");
-		public static final PinType		CHUNK_FAILED				= new PinType("Corrupt chunk", CHUNK_PIN, true, false,
-				"textures/overlays/pin_chunk_corrupted.png");
-		public static final PinType		CHUNK_OLD					= new PinType("Old chunk", CHUNK_PIN, true, false,
-				"textures/overlays/pin_chunk_outdated.png");
+		public static final PinType CHUNK_PIN = new PinType("Chunks", ANY_PIN, false, false, "textures/overlays/pin_chunks.png");
+		public static final PinType CHUNK_UNFINISHED = new PinType("Unfinished chunk", CHUNK_PIN, false, false, "textures/overlays/pin_chunk_unfinished.png");
+		public static final PinType CHUNK_FAILED = new PinType("Corrupt chunk", CHUNK_PIN, true, false, "textures/overlays/pin_chunk_corrupted.png");
+		public static final PinType CHUNK_OLD = new PinType("Old chunk", CHUNK_PIN, true, false, "textures/overlays/pin_chunk_outdated.png");
 
-		public static final PinType		PLAYER						= new PinType("Player", ANY_PIN, true, false, "textures/pins/player.png");
-		public static final PinType		PLAYER_POSITION				= new PinType("Player position", PLAYER, true, false, "textures/pins/player.png");
-		public static final PinType		PLAYER_SPAWN				= new PinType("Player spawnpoint", PLAYER, true, false, "textures/pins/spawn_player.png");
+		public static final PinType PLAYER = new PinType("Player", ANY_PIN, true, false, "textures/pins/player.png");
+		public static final PinType PLAYER_POSITION = new PinType("Player position", PLAYER, true, false, "textures/pins/player.png");
+		public static final PinType PLAYER_SPAWN = new PinType("Player spawnpoint", PLAYER, true, false, "textures/pins/spawn_player.png");
 
-		public static final PinType		MAP							= new PinType("Map", ANY_PIN, true, false, "textures/pins/map.png");
-		public static final PinType		MAP_POSITION				= new PinType("Map position", MAP, true, false, "textures/pins/map.png");
-		public static final PinType		MAP_BANNER					= new PinType("Map banner", MAP, true, false, "textures/pins/banner.png");
+		public static final PinType MAP = new PinType("Map", ANY_PIN, true, false, "textures/pins/map.png");
+		public static final PinType MAP_POSITION = new PinType("Map position", MAP, true, false, "textures/pins/map.png");
+		public static final PinType MAP_BANNER = new PinType("Map banner", MAP, true, false, "textures/pins/banner.png");
 
-		public static final PinType		VILLAGE						= new PinType("Village", ANY_PIN, true, false, "textures/structures/village.png");
+		public static final PinType VILLAGE = new PinType("Village", ANY_PIN, true, false, "textures/structures/village.png");
 
 		// Village structure
-		public static final PinType		VILLAGE_HOME				= new PinType("Village home", VILLAGE, true, false, "textures/villages/home.png");
-		public static final PinType		VILLAGE_MEETING				= new PinType("Meetingpoint", VILLAGE, true, false, "textures/villages/bell.png");
+		public static final PinType VILLAGE_HOME = new PinType("Village home", VILLAGE, true, false, "textures/villages/home.png");
+		public static final PinType VILLAGE_MEETING = new PinType("Meetingpoint", VILLAGE, true, false, "textures/villages/bell.png");
 
 		// Village crafting
-		public static final PinType		VILLAGE_LEATHERWORKER		= new PinType("Leatherworker", VILLAGE, true, false, "textures/villages/leatherworker.png");
-		public static final PinType		VILLAGE_MASON				= new PinType("Mason", VILLAGE, true, false, "textures/villages/mason.png");
-		public static final PinType		VILLAGE_FLETCHER			= new PinType("Fletcher", VILLAGE, true, false, "textures/villages/fletcher.png");
+		public static final PinType VILLAGE_LEATHERWORKER = new PinType("Leatherworker", VILLAGE, true, false, "textures/villages/leatherworker.png");
+		public static final PinType VILLAGE_MASON = new PinType("Mason", VILLAGE, true, false, "textures/villages/mason.png");
+		public static final PinType VILLAGE_FLETCHER = new PinType("Fletcher", VILLAGE, true, false, "textures/villages/fletcher.png");
 
 		// Ironworks
-		public static final PinType		VILLAGE_TOOLSMITH			= new PinType("Toolsmith", VILLAGE, true, false, "textures/villages/toolsmith.png");
-		public static final PinType		VILLAGE_WEAPONSMITH			= new PinType("Weaponsmith", VILLAGE, true, false, "textures/villages/weaponsmith.png");
-		public static final PinType		VILLAGE_ARMORER				= new PinType("Armorer", VILLAGE, true, false, "textures/villages/armorer.png");
+		public static final PinType VILLAGE_TOOLSMITH = new PinType("Toolsmith", VILLAGE, true, false, "textures/villages/toolsmith.png");
+		public static final PinType VILLAGE_WEAPONSMITH = new PinType("Weaponsmith", VILLAGE, true, false, "textures/villages/weaponsmith.png");
+		public static final PinType VILLAGE_ARMORER = new PinType("Armorer", VILLAGE, true, false, "textures/villages/armorer.png");
 
 		// Food
-		public static final PinType		VILLAGE_FARMER				= new PinType("Farmer", VILLAGE, true, false, "textures/villages/farmer.png");
-		public static final PinType		VILLAGE_SHEPHERD			= new PinType("Shepherd", VILLAGE, true, false, "textures/villages/shepherd.png");
-		public static final PinType		VILLAGE_BUTCHER				= new PinType("Butcher", VILLAGE, true, false, "textures/villages/butcher.png");
-		public static final PinType		VILLAGE_FISHERMAN			= new PinType("Fisherman", VILLAGE, true, false, "textures/villages/fisherman.png");
+		public static final PinType VILLAGE_FARMER = new PinType("Farmer", VILLAGE, true, false, "textures/villages/farmer.png");
+		public static final PinType VILLAGE_SHEPHERD = new PinType("Shepherd", VILLAGE, true, false, "textures/villages/shepherd.png");
+		public static final PinType VILLAGE_BUTCHER = new PinType("Butcher", VILLAGE, true, false, "textures/villages/butcher.png");
+		public static final PinType VILLAGE_FISHERMAN = new PinType("Fisherman", VILLAGE, true, false, "textures/villages/fisherman.png");
 		// TODO add texture
 		public static final PinType VILLAGE_BEENEST = new PinType("Bee nest", VILLAGE, true, false, "textures/structures/bee_hive.png");
 		public static final PinType VILLAGE_PORTAL = new PinType("Portal", VILLAGE, true, false, "textures/structures/nether_portal.png");
 
 		// Intellectual
-		public static final PinType		VILLAGE_CLERIC				= new PinType("Cleric", VILLAGE, true, false, "textures/villages/cleric.png");
-		public static final PinType		VILLAGE_CARTOGRAPHER		= new PinType("Cartographer", VILLAGE, true, false, "textures/villages/cartographer.png");
-		public static final PinType		VILLAGE_LIBRARIAN			= new PinType("Librarian", VILLAGE, true, false, "textures/villages/librarian.png");
+		public static final PinType VILLAGE_CLERIC = new PinType("Cleric", VILLAGE, true, false, "textures/villages/cleric.png");
+		public static final PinType VILLAGE_CARTOGRAPHER = new PinType("Cartographer", VILLAGE, true, false, "textures/villages/cartographer.png");
+		public static final PinType VILLAGE_LIBRARIAN = new PinType("Librarian", VILLAGE, true, false, "textures/villages/librarian.png");
 
-		public static final PinType		WORLD_SPAWN					= new PinType("Spawnpoint", ANY_PIN, true, false, "textures/pins/spawn_map.png");
+		public static final PinType WORLD_SPAWN = new PinType("Spawnpoint", ANY_PIN, true, false, "textures/pins/spawn_map.png");
 
-		public static final PinType		STRUCTURE					= new PinType("Structures", ANY_PIN, false, true, "textures/pins/structures.png");
-		public static final PinType		STRUCTURE_TREASURE			= new PinType("Treasure", STRUCTURE, true, false,
-				"textures/structures/buried_treasure.png");
-		public static final PinType		STRUCTURE_PYRAMID			= new PinType("Pyramid", STRUCTURE, true, false, "textures/structures/desert_pyramid.png");
-		public static final PinType		STRUCTURE_END_CITY			= new PinType("End city", STRUCTURE, true, false, "textures/structures/end_city.png");
-		public static final PinType		STRUCTURE_FORTRESS			= new PinType("Nether Fortress", STRUCTURE, true, false,
-				"textures/structures/fortress.png");
-		public static final PinType		STRUCTURE_IGLOO				= new PinType("Igloo", STRUCTURE, true, false, "textures/structures/igloo.png");
-		public static final PinType		STRUCTURE_JUNGLE_TEMPLE		= new PinType("Jungle temple", STRUCTURE, true, false,
-				"textures/structures/jungle_pyramid.png");
-		public static final PinType		STRUCTURE_MANSION			= new PinType("Mansion", STRUCTURE, true, false, "textures/structures/mansion.png");
-		public static final PinType		STRUCTURE_MINESHAFT			= new PinType("Mineshaft", STRUCTURE, false, false, "textures/structures/mineshaft.png");
-		public static final PinType		STRUCTURE_OCEAN_MONUMENT	= new PinType("Ocean monument", STRUCTURE, true, false, "textures/structures/monument.png");
-		public static final PinType		STRUCTURE_OCEAN_RUIN		= new PinType("Ocean ruin", STRUCTURE, false, false, "textures/structures/ocean_ruin.png");
-		public static final PinType		STRUCTURE_SHIPWRECK			= new PinType("Shipwreck", STRUCTURE, false, false, "textures/structures/shipwreck.png");
-		public static final PinType		STRUCTURE_STRONGHOLD		= new PinType("Stronghold", STRUCTURE, true, false, "textures/structures/stronghold.png");
-		public static final PinType		STRUCTURE_WITCH_HUT			= new PinType("Witch hut", STRUCTURE, true, false, "textures/structures/swamp_hut.png");
-		public static final PinType		STRUCTURE_OUTPOST			= new PinType("Pillager outpost", STRUCTURE, true, false,
-				"textures/structures/outpost.png");
+		public static final PinType STRUCTURE = new PinType("Structures", ANY_PIN, false, true, "textures/pins/structures.png");
+		public static final PinType STRUCTURE_TREASURE = new PinType("Treasure", STRUCTURE, true, false, "textures/structures/buried_treasure.png");
+		public static final PinType STRUCTURE_PYRAMID = new PinType("Pyramid", STRUCTURE, true, false, "textures/structures/desert_pyramid.png");
+		public static final PinType STRUCTURE_END_CITY = new PinType("End city", STRUCTURE, true, false, "textures/structures/end_city.png");
+		public static final PinType STRUCTURE_FORTRESS = new PinType("Nether Fortress", STRUCTURE, true, false, "textures/structures/fortress.png");
+		public static final PinType STRUCTURE_IGLOO = new PinType("Igloo", STRUCTURE, true, false, "textures/structures/igloo.png");
+		public static final PinType STRUCTURE_JUNGLE_TEMPLE = new PinType("Jungle temple", STRUCTURE, true, false, "textures/structures/jungle_pyramid.png");
+		public static final PinType STRUCTURE_MANSION = new PinType("Mansion", STRUCTURE, true, false, "textures/structures/mansion.png");
+		public static final PinType STRUCTURE_MINESHAFT = new PinType("Mineshaft", STRUCTURE, false, false, "textures/structures/mineshaft.png");
+		public static final PinType STRUCTURE_OCEAN_MONUMENT = new PinType("Ocean monument", STRUCTURE, true, false, "textures/structures/monument.png");
+		public static final PinType STRUCTURE_OCEAN_RUIN = new PinType("Ocean ruin", STRUCTURE, false, false, "textures/structures/ocean_ruin.png");
+		public static final PinType STRUCTURE_SHIPWRECK = new PinType("Shipwreck", STRUCTURE, false, false, "textures/structures/shipwreck.png");
+		public static final PinType STRUCTURE_STRONGHOLD = new PinType("Stronghold", STRUCTURE, true, false, "textures/structures/stronghold.png");
+		public static final PinType STRUCTURE_WITCH_HUT = new PinType("Witch hut", STRUCTURE, true, false, "textures/structures/swamp_hut.png");
+		public static final PinType STRUCTURE_OUTPOST = new PinType("Pillager outpost", STRUCTURE, true, false, "textures/structures/outpost.png");
 		public static final PinType STRUCTURE_RUINED_PORTAL = new PinType("Ruined portal", STRUCTURE, true, false, "textures/structures/ruined_portal.png");
 		public static final PinType STRUCTURE_NETHER_FOSSIL = new PinType("Nether fossil", STRUCTURE, true, false, "textures/structures/fossil.png");
 		public static final PinType STRUCTURE_BASTION_REMNANT = new PinType("Bastion remnant", STRUCTURE, true, false, "textures/structures/bastion_remnant.png");
@@ -220,9 +213,11 @@ public class Pin {
 			structureTypes.put("minecraft:stronghold", STRUCTURE_STRONGHOLD);
 			structureTypes.put("minecraft:swamp_hut", STRUCTURE_WITCH_HUT);
 			structureTypes.put("minecraft:end_city", STRUCTURE_END_CITY);
+			structureTypes.put("minecraft:endcity", STRUCTURE_END_CITY);
 			structureTypes.put("minecraft:fortress", STRUCTURE_FORTRESS);
 			structureTypes.put("minecraft:pillager_outpost", STRUCTURE_OUTPOST);
 			structureTypes.put("minecraft:village", VILLAGE);
+			/* Minecraft 1.16+ */
 			structureTypes.put("minecraft:ruined_portal", STRUCTURE_RUINED_PORTAL);
 			structureTypes.put("minecraft:nether_fossil", STRUCTURE_NETHER_FOSSIL);
 			structureTypes.put("minecraft:bastion_remnant", STRUCTURE_BASTION_REMNANT);
@@ -257,26 +252,26 @@ public class Pin {
 		}
 	}
 
-	private static Log				log		= LogFactory.getLog(Pin.class);
+	private static Log log = LogFactory.getLog(Pin.class);
 
 	/* Pin specific */
 
-	public final PinType			type;
-	protected final Vector2dc		position;
-	protected final DisplayViewport	viewport;
+	public final PinType type;
+	protected final Vector2dc position;
+	protected final DisplayViewport viewport;
 
 	/* GUI specific */
 
-	private Node					topGui, bottomGui;
-	protected Button				button;
-	protected PopOver				info;
+	private Node topGui, bottomGui;
+	protected Button button;
+	protected PopOver info;
 
 	/* Animation specific */
 
-	private List<KeyValue>			animShow, animHide;
-	private Timeline				timeline;
-	private boolean					added	= false, visible = false;
-	double							minHeight, maxHeight;
+	private List<KeyValue> animShow, animHide;
+	private Timeline timeline;
+	private boolean added = false, visible = false;
+	double minHeight, maxHeight;
 
 	public Pin(Vector2dc position, PinType type, DisplayViewport viewport) {
 		this.type = Objects.requireNonNull(type);
@@ -1279,20 +1274,20 @@ public class Pin {
 		return outline;
 	}
 
-	private static final double			EPSILON				= 1e-12;
+	private static final double EPSILON = 1e-12;
 	/**
-	 * Modification of the {@link Interpolator#DISCRETE} interpolation. Instead of jumping to 1 at the end of the animation, this one does so at
-	 * the beginning.
+	 * Modification of the {@link Interpolator#DISCRETE} interpolation. Instead of jumping to 1 at the
+	 * end of the animation, this one does so at the beginning.
 	 */
-	private static final Interpolator	DISCRETE_INSTANT	= new Interpolator() {
-																@Override
-																protected double curve(double t) {
-																	return (t < EPSILON) ? 0.0 : 1.0;
-																}
+	private static final Interpolator DISCRETE_INSTANT = new Interpolator() {
+		@Override
+		protected double curve(double t) {
+			return (t < EPSILON) ? 0.0 : 1.0;
+		}
 
-																@Override
-																public String toString() {
-																	return "Interpolator.DISCRETE_INSTANT";
-																}
-															};
+		@Override
+		public String toString() {
+			return "Interpolator.DISCRETE_INSTANT";
+		}
+	};
 }

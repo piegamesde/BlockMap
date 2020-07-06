@@ -27,12 +27,12 @@ import io.github.soc.directories.ProjectDirectories;
 
 public class RegionFolderCache {
 
-	private static final Gson						GSON		= new GsonBuilder().setPrettyPrinting().create();
-	private static Log								log			= LogFactory.getLog(RegionFolderCache.class);
+	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+	private static Log log = LogFactory.getLog(RegionFolderCache.class);
 
-	private final ProjectDirectories				directories	= ProjectDirectories.from("de", "piegames", "blockmap");
-	private final Path								cacheDir	= Paths.get(directories.cacheDir);
-	private final Path								cacheIndex	= cacheDir.resolve("cache.json");
+	private final ProjectDirectories directories = ProjectDirectories.from("de", "piegames", "blockmap");
+	private final Path cacheDir = Paths.get(directories.cacheDir);
+	private final Path cacheIndex = cacheDir.resolve("cache.json");
 
 	private final Map<String, CachedRegionFolder>	inUse		= new HashMap<>();
 

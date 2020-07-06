@@ -59,18 +59,18 @@ import io.gsonfire.annotations.PostSerialize;
  */
 public class LevelMetadata {
 
-	private static Log					log		= LogFactory.getLog(LevelMetadata.class);
+	private static Log log = LogFactory.getLog(LevelMetadata.class);
 
 	/** This will be used in the future to keep track of old serialized files. */
-	int									version	= 0;
+	int version = 0;
 	/** The world's name as stored in the {@code level.dat} */
-	Optional<String>					worldName;
-	Optional<List<PlayerPin>>			players;
-	Optional<List<MapPin>>				maps;
-	Optional<List<VillageObjectPin>>	villageObjects;
-	Optional<List<ChunkPin>>			slimeChunks, loadedChunks;
-	Optional<BorderPin>					barrier;
-	Optional<WorldSpawnPin>				worldSpawn;
+	Optional<String> worldName;
+	Optional<List<PlayerPin>> players;
+	Optional<List<MapPin>> maps;
+	Optional<List<VillageObjectPin>> villageObjects;
+	Optional<List<ChunkPin>> slimeChunks, loadedChunks;
+	Optional<BorderPin> barrier;
+	Optional<WorldSpawnPin> worldSpawn;
 
 	@SuppressWarnings("unused")
 	private LevelMetadata() {
@@ -131,12 +131,12 @@ public class LevelMetadata {
 	}
 
 	public static class PlayerPin {
-		Vector3dc			position;
-		MinecraftDimension	dimension;
+		Vector3dc position;
+		MinecraftDimension dimension;
 
-		Optional<String>	UUID;
-		Optional<Vector3ic>	spawnpoint;
-		Optional<Integer>	gamemode;
+		Optional<String> UUID;
+		Optional<Vector3ic> spawnpoint;
+		Optional<Integer> gamemode;
 
 		@SuppressWarnings("unused")
 		private PlayerPin() {
@@ -177,13 +177,13 @@ public class LevelMetadata {
 	}
 
 	public static class MapPin {
-		Vector2ic					position;
-		MinecraftDimension			dimension;
-		byte						scale;
+		Vector2ic position;
+		MinecraftDimension dimension;
+		byte scale;
 
-		Optional<List<BannerPin>>	banners;
+		Optional<List<BannerPin>> banners;
 		@Exclude
-		Optional<byte[]>			colors;
+		Optional<byte[]> colors;
 
 		@SuppressWarnings("unused")
 		private MapPin() {
@@ -235,9 +235,9 @@ public class LevelMetadata {
 		}
 
 		public static class BannerPin {
-			Vector3ic			position;
-			Optional<String>	color;
-			Optional<String>	name;
+			Vector3ic position;
+			Optional<String> color;
+			Optional<String> name;
 
 			@SuppressWarnings("unused")
 			private BannerPin() {
@@ -269,11 +269,11 @@ public class LevelMetadata {
 	}
 
 	public static class VillageObjectPin {
-		Vector3ic	position;
+		Vector3ic position;
 		MinecraftDimension dimension;
 
-		int			freeTickets;
-		String		type;
+		int freeTickets;
+		String type;
 
 		public VillageObjectPin(Vector3ic position, MinecraftDimension dimension, int freeTickets, String type) {
 			this.position = position;

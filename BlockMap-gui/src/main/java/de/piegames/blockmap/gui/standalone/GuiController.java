@@ -93,58 +93,59 @@ public class GuiController implements Initializable {
 		LOCAL, REMOTE, NONE;
 	}
 
-	public WorldRendererCanvas								renderer;
-	protected WorldType										loaded				= WorldType.NONE;
-	protected ObjectProperty<Pair<String, RegionFolder>>	regionFolder		= new SimpleObjectProperty<>();
-	protected ObjectProperty<RegionFolder>					regionFolderCached	= new SimpleObjectProperty<>();
+	public WorldRendererCanvas renderer;
+	protected WorldType loaded = WorldType.NONE;
+	protected ObjectProperty<Pair<String, RegionFolder>> regionFolder = new SimpleObjectProperty<>();
+	protected ObjectProperty<RegionFolder> regionFolderCached = new SimpleObjectProperty<>();
 
 	@FXML
-	private BorderPane										root;
+	private BorderPane root;
 
 	/* Top */
 
 	@FXML
-	protected TextField										worldInput;
+	protected TextField worldInput;
 	/** Recently loaded worlds and servers */
-	private List<HistoryItem>								recentWorlds		= new LinkedList<>();
+	private List<HistoryItem> recentWorlds = new LinkedList<>();
 	/** Whatever found in {@code .minecraft} for autocomplete purposes */
-	private List<HistoryItem>								otherWorlds			= new LinkedList<>();
+	private List<HistoryItem> otherWorlds = new LinkedList<>();
 
 	/* Bottom */
 
 	@FXML
-	private StatusBar										statusBar;
+	private StatusBar statusBar;
 
 	/* Other (external) settings */
 	@FXML
-	protected TitledPane									worldSettings;
+	protected TitledPane worldSettings;
 	@FXML
-	protected GuiControllerWorld							worldSettingsController;
+	protected GuiControllerWorld worldSettingsController;
 	@FXML
-	protected TitledPane									serverSettings;
+	protected TitledPane serverSettings;
 	@FXML
-	protected GuiControllerServer							serverSettingsController;
+	protected GuiControllerServer serverSettingsController;
 
 	/* View settings */
 
 	@FXML
-	private TitledPane										viewSettings;
+	private TitledPane viewSettings;
 	@FXML
-	private CheckBox										gridBox;
+	private CheckBox gridBox;
 	@FXML
-	private CheckBox										scaleBox;
+	private CheckBox scaleBox;
 	@FXML
-	public CheckBox											pinBox;
+	public CheckBox pinBox;
 	@FXML
-	public CheckTreeView<PinType>							pinView;
-	public Map<PinType, TreeItem<PinType>>					checkedPins			= new HashMap<>();
+	public CheckTreeView<PinType> pinView;
+	public Map<PinType, TreeItem<PinType>> checkedPins = new HashMap<>();
 
-	protected MapPane										pane;
-	public PinDecoration									pins;
+	protected MapPane pane;
+	public PinDecoration pins;
 
-	protected ScheduledExecutorService						backgroundThread	= Executors.newSingleThreadScheduledExecutor(
+	protected ScheduledExecutorService backgroundThread = Executors
+			.newSingleThreadScheduledExecutor(
 			new ThreadFactoryBuilder().setNameFormat("pin-background-thread-%d").build());
-	RegionFolderCache										cache				= new RegionFolderCache();
+	RegionFolderCache cache = new RegionFolderCache();
 
 	public GuiController() {
 	}

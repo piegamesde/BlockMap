@@ -122,7 +122,10 @@ public class Pin {
 		public static final PinType		VILLAGE_FARMER				= new PinType("Farmer", VILLAGE, true, false, "textures/villages/farmer.png");
 		public static final PinType		VILLAGE_SHEPHERD			= new PinType("Shepherd", VILLAGE, true, false, "textures/villages/shepherd.png");
 		public static final PinType		VILLAGE_BUTCHER				= new PinType("Butcher", VILLAGE, true, false, "textures/villages/butcher.png");
-		public static final PinType		VILLAGE_FISHERMAN			= new PinType("Fisherman,", VILLAGE, true, false, "textures/villages/fisherman.png");
+		public static final PinType		VILLAGE_FISHERMAN			= new PinType("Fisherman", VILLAGE, true, false, "textures/villages/fisherman.png");
+		// TODO add texture
+		public static final PinType VILLAGE_BEENEST = new PinType("Bee nest", VILLAGE, true, false, "textures/pins/spawn_map.png");
+		public static final PinType VILLAGE_PORTAL = new PinType("Portal", VILLAGE, true, false, "textures/pins/spawn_map.png");
 
 		// Intellectual
 		public static final PinType		VILLAGE_CLERIC				= new PinType("Cleric", VILLAGE, true, false, "textures/villages/cleric.png");
@@ -150,6 +153,9 @@ public class Pin {
 		public static final PinType		STRUCTURE_WITCH_HUT			= new PinType("Witch hut", STRUCTURE, true, false, "textures/structures/swamp_hut.png");
 		public static final PinType		STRUCTURE_OUTPOST			= new PinType("Pillager outpost", STRUCTURE, true, false,
 				"textures/structures/outpost.png");
+		public static final PinType STRUCTURE_RUINED_PORTAL = new PinType("Ruined portal", STRUCTURE, true, false, "textures/structures/outpost.png");
+		public static final PinType STRUCTURE_NETHER_FOSSIL = new PinType("Nether fossil", STRUCTURE, true, false, "textures/structures/outpost.png");
+		public static final PinType STRUCTURE_BASTION_REMNANT = new PinType("Bastion remnant", STRUCTURE, true, false, "textures/structures/outpost.png");
 
 		protected final List<PinType>	children					= new ArrayList<>();
 		private final String			name;
@@ -201,7 +207,7 @@ public class Pin {
 			structureTypes.put("EndCity", STRUCTURE_END_CITY);
 			structureTypes.put("Fortress", STRUCTURE_FORTRESS);
 			structureTypes.put("Village", VILLAGE);
-			/* Minecraft 1.14 */
+			/* Minecraft 1.14+ */
 			structureTypes.put("minecraft:buried_treasure", STRUCTURE_TREASURE);
 			structureTypes.put("minecraft:desert_pyramid", STRUCTURE_PYRAMID);
 			structureTypes.put("minecraft:igloo", STRUCTURE_IGLOO);
@@ -217,6 +223,9 @@ public class Pin {
 			structureTypes.put("minecraft:fortress", STRUCTURE_FORTRESS);
 			structureTypes.put("minecraft:pillager_outpost", STRUCTURE_OUTPOST);
 			structureTypes.put("minecraft:village", VILLAGE);
+			structureTypes.put("minecraft:ruined_portal", STRUCTURE_RUINED_PORTAL);
+			structureTypes.put("minecraft:nether_fossil", STRUCTURE_NETHER_FOSSIL);
+			structureTypes.put("minecraft:bastion_remnant", STRUCTURE_BASTION_REMNANT);
 			STRUCTURE_TYPES = Collections.unmodifiableMap(structureTypes);
 
 			Map<String, PinType> villageMapping = new HashMap<>();
@@ -236,6 +245,9 @@ public class Pin {
 			villageMapping.put("minecraft:shepherd", VILLAGE_SHEPHERD);
 			villageMapping.put("minecraft:butcher", VILLAGE_BUTCHER);
 			villageMapping.put("minecraft:fisherman", VILLAGE_FISHERMAN);
+
+			villageMapping.put("minecraft:bee_nest", VILLAGE_BEENEST);
+			villageMapping.put("minecraft:nether_portal", VILLAGE_PORTAL);
 
 			villageMapping.put("minecraft:cleric", VILLAGE_CLERIC);
 			villageMapping.put("minecraft:cartographer", VILLAGE_CARTOGRAPHER);

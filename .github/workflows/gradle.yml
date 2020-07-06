@@ -40,5 +40,6 @@ jobs:
       with:
         name: BlockMap-${{ matrix.os }}-${{ github.sha }}
         path: BlockMap-*/build/libs/fat/BlockMap-*
+      continue-on-error: true
     - name: Execute tests
       run: ./gradlew test

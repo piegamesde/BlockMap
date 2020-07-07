@@ -233,7 +233,7 @@ public class ChunkRenderer_1_13 extends ChunkRenderer {
 		Block[] ret = new Block[16 * 16 * 16];
 
 		for (int i = 0; i < 4096; i++) {
-			long blockIndex = Chunk.extractFromLong(blocks, i, bitsPerIndex);
+			long blockIndex = Chunk.extractFromLong1_13(blocks, i, bitsPerIndex);
 
 			if (blockIndex >= palette.size()) {
 				log.warn("Block " + i + " " + blockIndex + " was out of bounds, is this world corrupt?");

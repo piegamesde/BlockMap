@@ -24,7 +24,7 @@ import de.piegames.nbt.CompoundMap;
 import de.piegames.nbt.CompoundTag;
 import de.piegames.nbt.ListTag;
 import de.piegames.nbt.Tag;
-import de.piegames.nbt.regionfile.Palette;
+import de.piegames.nbt.regionfile.Palette1_13;
 
 /**
  * Use this class to transform a Minecraft region file into a top-down image view of it.
@@ -245,7 +245,7 @@ class ChunkRenderer_1_15 extends ChunkRenderer {
 
 		BlockColor[] ret = new BlockColor[4096];
 
-		Palette p = new Palette(blocks);
+		Palette1_13 p = new Palette1_13(blocks);
 		for (int i = 0; i < 4096; i += 64) {
 			long[] output = p.next64();
 			for (int j = 0; j < 64; j++) {

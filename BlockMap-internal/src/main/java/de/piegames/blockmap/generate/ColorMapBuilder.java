@@ -118,6 +118,8 @@ public class ColorMapBuilder {
 
 	private boolean isAllStates(String blockName, Collection<BitSet> states) {
 		MinecraftBlocks.Block block = minecraftBlocks.states.get(blockName);
+		if (block == null)
+			throw new NullPointerException("No block known for name " + blockName);
 		for (MinecraftBlocks.Block.State state : block.states) {
 			BitSet compiledState = new BitSet(this.states.getSize());
 			state.getProperties().entrySet().forEach(e -> compiledState.set(this.states.getProperty(e.getKey(), e.getValue())));

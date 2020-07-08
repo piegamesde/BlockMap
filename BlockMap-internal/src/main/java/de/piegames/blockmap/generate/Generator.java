@@ -15,6 +15,8 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -64,7 +66,9 @@ public class Generator {
 		/* Download stuff */
 		VersionManifest manifest = Downloader.downloadManifest();
 
-		for (MinecraftVersion version : MinecraftVersion.values()) {
+		var versions = Arrays.asList(MinecraftVersion.values());
+		Collections.reverse(versions); // Cause there is no better way to reverse arrays in Java -.-
+		for (MinecraftVersion version : versions) {
 
 			boolean needsUpdate = Downloader.downloadMinecraft(manifest, version);
 

@@ -1,5 +1,21 @@
 # Changelog
 
+## Version 2.1.0
+### Changes
+
+- Minecraft 1.16 support
+	- Renderer supports the new save format
+	- Added all new nether blocks to the color maps
+	- Added biome colors for the new Nether biomes
+	- Added new village pins: `bee_nest`, `nether_portal`
+	- Added new Nether pins: `bastion_remnant`, `nether_fossil`
+- Reordered a few of the pins (among other tweaks)
+
+### Bug fixes
+
+- Fixed village pins showing up in the wrong dimension
+- Fixed a few minor errors in the color maps
+
 ## Version 2.0.0
 
 ***breaking*** news for ***breaking*** changes! Long overdue, a rewrite/overhaul of quite a few components. No Minecraft 1.16 support yet.

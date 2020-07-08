@@ -1,23 +1,22 @@
-# BlockMap – A Minecraft 1.13-1.15 world viewer
+# BlockMap – A Minecraft 1.16 world viewer
 
 [![Build Status](https://github.com/Minecraft-Technik-Wiki/BlockMap/workflows/Build/badge.svg)](https://github.com/Minecraft-Technik-Wiki/BlockMap/actions)
 
 <img src="icon/blockmap-256.png" width=150/>
 
-*This started as fork of [TMCMR](https://github.com/TOGoS/TMCMR), but has been almost completely rewritten due to the update. If you want something stable that works with 1.12 and before worlds, go check it out.*
-
 ## Features:
+
+- Beautiful, realistic renders
 - Really fast (>700 chunks/s on my system)
 - Works with huge worlds
 - Works on servers
 - Rendering scale: 1 pixel : 1 block
 - An interactive GUI viewer made with JavaFX
-- Pins on the map show additional information like players and villages
+- Pins on the map show points of interest like players, generated structures and villages
 - Different color maps and shaders that highlight exactly what you are looking for (including an underground caves and an ocean ground view)
 - A command line interface to render your worlds from scripts
 - The core rendering code as library to use in your own projects (releasing soon™)
-- Gamma corrected rendering
-- Works with 1.13+ worlds (currently: up to 1.15. Rudimentary 1.16 support on the master branch)
+- Works with 1.16 worlds (with limited support down to 1.13)
 
 ## Gallery
 
@@ -29,10 +28,11 @@
 
 ## Requirements:
 
-- Minecraft 1.13+ worlds. Chunks from before the release (even from 1.13 snapshots) will be ignored. Please optimize your worlds in Minecraft before rendering them
+- Minecraft 1.13+ worlds. Chunks from before the release (even from 1.13 snapshots) will be ignored. Please optimize your worlds in Minecraft before rendering them (or use other map viewer, like [TMCMR](https://github.com/TOGoS/TMCMR)).
 - Java 12+
 	- While BlockMap should run on any Java, using the [OpenJDK](https://adoptopenjdk.net/) is recommended.
 	- If you won't hack on the code itself, the JRE should suffice (in the downloads section, choose JRE over JDK)
+	- Past experience has shown that Java updates are not as backwards-compatible as they could be. So while any newer Java version **should** work just fine, it has currently only been tested up to Java 14. If you encounter any problems that go away by downgrading Java, please open up an issue.
 
 ## Get it / Installation:
 
@@ -50,7 +50,7 @@ BlockMap hasn't been packaged for other distros yet (looking for maintainers).
 
 The GUI version should just run by (double)clicking it. Otherwise run it through:
 
-    java -jar BlockMap-gui-2.0.0.jar
+    java -jar BlockMap-gui-2.1.0.jar
 
 to start. If you installed BlockMap through a package manager, search for it in your launcher or menu.
 
@@ -68,9 +68,9 @@ to start. If you installed BlockMap through a package manager, search for it in 
 If you want to use BlockMap through the command line without,
 
     # For general usage help
-    java -jar BlockMap-cli-2.0.0.jar help
+    java -jar BlockMap-cli-2.1.0.jar help
     # For help about rendering worlds to a folder
-    java -jar BlockMap-cli-2.0.0.jar help render
+    java -jar BlockMap-cli-2.1.0.jar help render
 
 will get you started. On Linux even with colors!
 

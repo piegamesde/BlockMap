@@ -29,6 +29,8 @@ import java.util.zip.GZIPOutputStream;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.joml.Vector2d;
 import org.joml.Vector2dc;
 import org.joml.Vector2i;
@@ -56,6 +58,8 @@ import io.gsonfire.annotations.ExposeMethodResult;
  * is up to the implementation.
  */
 public abstract class RegionFolder {
+
+	private static Log log = LogFactory.getLog(RegionFolder.class);
 
 	public static final Gson GSON = new GsonFireBuilder()
 			.enableExposeMethodParam()
@@ -146,9 +150,18 @@ public abstract class RegionFolder {
 
 		@Override
 		public Region render(Vector2ic pos) throws IOException {
-			if (regions.containsKey(pos))
-				return renderer.render(pos, new RegionFile(regions.get(pos)));
-			else
+			if (regions.containsKey(pos)) {
+				var path = regions.get(pos);
+				try (RegionFile file = new RegionFile(path, StandardOpenOption.READ)) {
+					return renderer.render(pos, file);
+				} catch (RuntimeException | IOException e) {
+					if (Files.size(path) == 0) {
+						log.warn(path.getFileName() + " is empty?!");
+						return new Region(pos, new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB), new HashMap<>());
+					} else
+						throw e;
+				}
+			} else
 				return null;
 		}
 

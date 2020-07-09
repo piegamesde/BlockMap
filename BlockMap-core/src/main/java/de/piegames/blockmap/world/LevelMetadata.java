@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
@@ -420,7 +421,7 @@ public class LevelMetadata {
 						continue;
 					log.debug("Loading village metadata from " + p.toAbsolutePath());
 
-					try (RegionFile file = new RegionFile(p);) {
+					try (RegionFile file = new RegionFile(p, StandardOpenOption.READ);) {
 						for (int i : file.listChunks()) {
 							for (CompoundTag section : (Iterable<CompoundTag>) file.loadChunk(i)
 									.readTag().getAsCompoundTag("Sections")

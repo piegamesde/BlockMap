@@ -51,6 +51,12 @@ dependencies {
     jmh group: 'org.openjdk.jmh', name: 'jmh-generator-annprocess', version: '1.12'
 }
 
+configurations.all {
+	resolutionStrategy {
+		force 'com.github.piegamesde:nbt:d8b74bdb09babeb15244154ed88b45ce9eb4c2d3'
+	}
+}
+
 sourceSets {
 	main {
 		java {

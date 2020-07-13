@@ -76,6 +76,7 @@ import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.DirectoryChooser;
 import javafx.util.Callback;
@@ -156,7 +157,7 @@ public class GuiController implements Initializable {
 
 		renderer = new WorldRendererCanvas();
 		root.setCenter(pane = new MapPane(renderer));
-		pane.decorationLayers.add(new DragScrollDecoration(renderer.viewport));
+		pane.decorationLayers.add(new DragScrollDecoration(renderer.viewport, MouseButton.PRIMARY, 0.01d));
 		{
 			GridDecoration grid = new GridDecoration(renderer.viewport);
 			pane.decorationLayers.add(grid);

@@ -68,6 +68,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
@@ -313,6 +314,11 @@ public class Pin {
 		button.setTooltip(new Tooltip(type.toString()));
 		img.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> button.getFont().getSize() * 2, button.fontProperty()));
 
+		button.setOnMouseDragged(e -> {
+			/* Avoid opening pins when dragging */
+			if (e.getButton() == MouseButton.PRIMARY)
+				button.disarm();
+		});
 		button.setOnAction(mouseEvent -> getInfo().show(button));
 		return wrapGui(button, position, viewport);
 	}
@@ -922,6 +928,11 @@ public class Pin {
 			button = new Button(null, box);
 			button.getStyleClass().add("pin");
 			button.setOnAction(mouseEvent -> getInfo().show(button));
+			button.setOnMouseDragged(e -> {
+				/* Avoid opening pins when dragging */
+				if (e.getButton() == MouseButton.PRIMARY)
+					button.disarm();
+			});
 
 			DoubleBinding scale = Bindings.createDoubleBinding(
 					() -> 1.0 * Math.min(1 / viewport.scaleProperty.get(), 4) * Math.pow(pinCount.size(), -0.3),

@@ -57,9 +57,9 @@ to start. If you installed BlockMap through a package manager, search for it in 
 ### GUI controls:
 
 - Mouse wheel to zoom in and out
-- Drag with the right mouse button to pan the view
-  - This will very likely change in the future
-  - If you drag to the edge, the mouse will wrap around so you can drag indefinitely. Blender users will appreciate this
+- Drag with the left mouse button to pan the view
+  - ~~If you drag to the edge, the mouse will wrap around so you can drag indefinitely. Blender users will appreciate this~~
+    - Currently broken, sorry
 - When loading a world, you can select either a world folder, a region folder or a single region file
 - You can only load remote worlds (from servers) if the server owner supports it.
 

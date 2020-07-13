@@ -672,7 +672,7 @@ public class Pin {
 		protected ScheduledExecutorService	backgroundThread;
 
 		public PlayerPin(LevelMetadata.PlayerPin player, ScheduledExecutorService backgroundThread, DisplayViewport viewport) {
-			super(new Vector2d(player.getPosition().x(), player.getPosition().z()), PinType.PLAYER_POSITION, viewport);
+			super(convertEntityPosition(player.getPosition()), PinType.PLAYER_POSITION, viewport);
 			this.player = player;
 			this.backgroundThread = Objects.requireNonNull(backgroundThread);
 		}
@@ -762,7 +762,7 @@ public class Pin {
 		protected LevelMetadata.PlayerPin player;
 
 		public PlayerSpawnpointPin(PlayerPin playerPin, DisplayViewport viewport) {
-			super(new Vector2d(playerPin.player.getSpawnpoint().get().x(), playerPin.player.getSpawnpoint().get().z()), PinType.PLAYER_SPAWN, viewport);
+			super(convertBlockPosition(playerPin.player.getSpawnpoint().get()), PinType.PLAYER_SPAWN, viewport);
 			this.playerPin = Objects.requireNonNull(playerPin);
 			this.player = Objects.requireNonNull(playerPin.player);
 		}
@@ -804,9 +804,7 @@ public class Pin {
 		protected LevelMetadata.VillageObjectPin villageObjectPin;
 
 		public VillageObjectPin(LevelMetadata.VillageObjectPin villageObjectPin, DisplayViewport viewport) {
-			super(new Vector2d(villageObjectPin.getPosition().x(), villageObjectPin.getPosition().z()), PinType.POI_MAPPING.get(villageObjectPin
-					.getType()),
-					viewport);
+			super(convertBlockPosition(villageObjectPin.getPosition()), PinType.POI_MAPPING.get(villageObjectPin.getType()), viewport);
 			this.villageObjectPin = Objects.requireNonNull(villageObjectPin);
 		}
 
@@ -833,7 +831,7 @@ public class Pin {
 		protected Vector3ic spawn;
 
 		public WorldSpawnPin(Vector3ic spawn, DisplayViewport viewport) {
-			super(new Vector2d(spawn.x(), spawn.z()), PinType.WORLD_SPAWN, viewport);
+			super(convertBlockPosition(spawn), PinType.WORLD_SPAWN, viewport);
 			this.spawn = spawn;
 		}
 
@@ -1061,7 +1059,7 @@ public class Pin {
 						return false;
 					}
 				})
-				.map(e -> new Pin(new Vector2d(e.getValue().x(), e.getValue().z()), PinType.STRUCTURE_TYPES.get(e.getKey()), viewport))
+				.map(e -> new Pin(convertBlockPosition(e.getValue()), PinType.STRUCTURE_TYPES.get(e.getKey()), viewport))
 				.collect(Collectors.toList()));
 		return pins;
 	}
@@ -1095,6 +1093,16 @@ public class Pin {
 		stack.setPickOnBounds(false);
 		stack.setOpacity(0.0);
 		return stack;
+	}
+
+	/** Convert block coordinates into a pin position */
+	static Vector2dc convertBlockPosition(Vector3ic position) {
+		return new Vector2d(position.x() + 0.5, position.z() + 0.5);
+	}
+
+	/** Project 3D entity coordinates onto the map */
+	static Vector2dc convertEntityPosition(Vector3dc position) {
+		return new Vector2d(position.x(), position.z());
 	}
 
 	/**

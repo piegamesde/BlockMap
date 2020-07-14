@@ -73,6 +73,16 @@ public class GuiMain extends Application {
 			log.fatal("Cannot start BlockMap", t);
 			System.exit(-1);
 		}
+
+		/* Load a world on start if specified on the command line */
+		getParameters().getUnnamed().stream()
+				.findFirst()
+				.ifPresent(world -> {
+					checkLogger();
+					log.info("Loading path specified on command line");
+					controller.worldInput.setText(world);
+					controller.load();
+				});
 	}
 
 	@Override

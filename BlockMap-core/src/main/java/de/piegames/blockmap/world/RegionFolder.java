@@ -454,7 +454,7 @@ public abstract class RegionFolder {
 
 	}
 
-	/** Object representation of the content of the {@code rendered.json} metadata file.< */
+	/** Object representation of the content of the {@code rendered.json} metadata file. */
 	static class SavedRegionHelper {
 		Collection<RegionHelper>	regions;
 		LevelMetadata					pins;

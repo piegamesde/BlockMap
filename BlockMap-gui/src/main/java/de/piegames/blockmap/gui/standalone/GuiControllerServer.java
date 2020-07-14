@@ -136,9 +136,9 @@ public class GuiControllerServer implements Initializable {
 			listener.changed(worldBox.valueProperty(), null, worldBox.getValue());
 		} catch (RuntimeException | IOException e) {
 			folder.set(null);
-			log.warn("Could not load server world " + file, e);
+			log.warn("Could not load server world at '" + file + "'", e);
 			ExceptionDialog d = new ExceptionDialog(e);
-			d.setTitle("Could not load server world");
+			d.setHeaderText("Could not load server world at '" + file + "'");
 			d.showAndWait();
 		}
 	}

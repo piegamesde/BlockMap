@@ -10,7 +10,7 @@
 			"pins": true
 		},
 		{
-			"name": "Oceans",
+			"name": "Overworld – Oceans",
 			"input dir": "WORLD_PATH",
 			"dimension": "OVERWORLD",
 			"force": false,
@@ -25,7 +25,7 @@
 			"input dir": "WORLD_PATH",
 			"dimension": "NETHER",
 			"render settings": {
-				"block colors": "X_RAY",
+				"block colors": "CAVES",
 				"shader": "FLAT",
 				"maxY": "80"
 			},

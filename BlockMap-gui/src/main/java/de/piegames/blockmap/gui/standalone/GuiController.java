@@ -379,12 +379,14 @@ public class GuiController implements Initializable {
 		checkedPins.put(type, ret);
 	}
 
+	@FXML
 	public void load() {
 		String input = worldInput.getText();
 		if (input.isBlank()) {
 			unload();
 			return;
 		}
+		log.info("Loading world from '" + input + "'");
 
 		/* Try to load it as local world first */
 		try {
@@ -397,12 +399,14 @@ public class GuiController implements Initializable {
 						path = path.getParent();
 					else {
 						Alert alert = new Alert(AlertType.ERROR, "Path to a world must either be a folder or a level.dat file", ButtonType.OK);
+						alert.setHeaderText("Could not load world at '" + input + "'");
 						alert.showAndWait();
 						worldInput.selectAll();
 						return;
 					}
 				} else if (!Files.exists(path.resolve("level.dat"))) {
 					Alert alert = new Alert(AlertType.ERROR, "A world folder must contain a level.dat", ButtonType.OK);
+					alert.setHeaderText("Could not load world at '" + input + "'");
 					alert.showAndWait();
 					worldInput.selectAll();
 					return;
@@ -412,6 +416,7 @@ public class GuiController implements Initializable {
 					loadLocal(path);
 				} catch (RuntimeException e) {
 					Alert alert = new Alert(AlertType.ERROR, "Failed to load world – " + e.getMessage(), ButtonType.OK);
+					alert.setHeaderText("Could not load world at '" + input + "'");
 					alert.showAndWait();
 					worldInput.selectAll();
 				}
@@ -429,6 +434,7 @@ public class GuiController implements Initializable {
 
 		/* Total failure */
 		Alert alert = new Alert(AlertType.ERROR, "Please specify the path to a world or the URL to a server", ButtonType.OK);
+		alert.setHeaderText("Could not load world at '" + input + "'");
 		alert.showAndWait();
 		worldInput.selectAll();
 	}
@@ -530,6 +536,7 @@ public class GuiController implements Initializable {
 
 	@FXML
 	public void unload() {
+		log.info("Unloading current world");
 		serverSettings.setDisable(true);
 		serverSettings.setExpanded(false);
 		worldSettings.setDisable(true);

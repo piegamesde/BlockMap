@@ -209,13 +209,13 @@ public class CommandLineMain implements Callable<Integer> {
 			Path input = this.input;
 			if (Files.isDirectory(input)) {
 				if (!Files.exists(input.resolve("level.dat")))
-					/* Don't exit, this is fine as long as the region folders are present */
-					log.warn("World folders normally contain a file called `level.dat`");
+					/* This is fine as long as the region folders are present. */
+					log.warn("World folders normally contain a file called `level.dat`. Sure you got the right folder?");
 			} else {
 				if (input.getFileName().toString().equals("level.dat"))
 					input = input.getParent();
 				else {
-					log.error("Input path must either point to a folder or to the `level.dat`");
+					log.error("Input path must either point to a folder or to the `level.dat`, but was " + input.toAbsolutePath());
 					return 2;
 				}
 			}
@@ -332,13 +332,13 @@ public class CommandLineMain implements Callable<Integer> {
 				Path input = folderSettings.inputDir;
 				if (Files.isDirectory(input)) {
 					if (!Files.exists(input.resolve("level.dat")))
-						/* Don't exit, this is fine as long as the region folders are present */
-						log.warn("World folders normally contain a file called `level.dat`");
+						/* This is fine as long as the region folders are present. */
+						log.warn("World folders normally contain a file called `level.dat`. Sure you got the right folder?");
 				} else {
 					if (input.getFileName().toString().equals("level.dat"))
 						input = input.getParent();
 					else {
-						log.error("Input path must either point to a folder or to the `level.dat`");
+						log.error("Input path must either point to a folder or to the `level.dat`, but was " + input.toAbsolutePath());
 						return 2;
 					}
 				}

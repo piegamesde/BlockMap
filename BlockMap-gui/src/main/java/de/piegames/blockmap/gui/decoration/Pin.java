@@ -720,9 +720,12 @@ public class Pin {
 
 		private ImageView getSkin(String url) {
 			log.debug("Loading player skin from: " + url);
-			Image image = new Image(url);
+			// Download the image and set the requested size to 64 * 16, as 64 is the original image size and we need to
+			// scale this by 16 to extract the 8 pixels (8 of the original 64, now 8 * 16 pixels) from the scaled image,
+			// to reach 128 pixels in the extracted result.
+			Image image = new Image(url, 64 * 16, 64 * 16, true, false);
 			PixelReader reader = image.getPixelReader();
-			image = new WritableImage(reader, 8, 8, 8, 8);
+			image = new WritableImage(reader, 8 * 16, 8 * 16, 8 * 16, 8 * 16);
 
 			ImageView graphic = new ImageView(image);
 			graphic.setSmooth(false);

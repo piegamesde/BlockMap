@@ -41,59 +41,59 @@ import net.dongliu.gson.GsonJava8TypeAdapterFactory;
 
 public class GuiControllerServer implements Initializable {
 
-	private static Log											log			= LogFactory.getLog(GuiControllerServer.class);
+	private static Log log = LogFactory.getLog(GuiControllerServer.class);
 
-	public static final Gson									GSON		= new GsonFireBuilder()
+	public static final Gson GSON = new GsonFireBuilder()
 			.enableExposeMethodParam()
 			.createGsonBuilder()
 			.registerTypeAdapterFactory(new GsonJava8TypeAdapterFactory())
 			.registerTypeHierarchyAdapter(Path.class, new TypeAdapter<Path>() {
 
-																						@Override
-																						public void write(JsonWriter out, Path value) throws IOException {
-																							out.value(value.toString());
-																						}
+				@Override
+				public void write(JsonWriter out, Path value) throws IOException {
+					out.value(value.toString());
+				}
 
-																						@Override
-																						public Path read(JsonReader in) throws IOException {
-																							return Paths.get(in.nextString());
-																						}
-																					})
+				@Override
+				public Path read(JsonReader in) throws IOException {
+					return Paths.get(in.nextString());
+				}
+			})
 			.disableHtmlEscaping()
 			.setPrettyPrinting()
 			.create();
 	@FXML
 	Label serverName, serverDescription, onlinePlayers;
 	@FXML
-	ImageView													serverIcon;
+	ImageView serverIcon;
 	@FXML
-	ChoiceBox<String>											worldBox;
+	ChoiceBox<String> worldBox;
 
 	/* The String is a hash code used for caching */
-	protected ReadOnlyObjectWrapper<Pair<String, RegionFolder>>	folder		= new ReadOnlyObjectWrapper<>();
-	protected URI												file;
-	protected ServerMetadata									metadata;
-	protected List<ServerLevel>									worlds;
-	protected String											lastBrowsedURL;
+	protected ReadOnlyObjectWrapper<Pair<String, RegionFolder>> folder = new ReadOnlyObjectWrapper<>();
+	protected URI file;
+	protected ServerMetadata metadata;
+	protected List<ServerLevel> worlds;
+	protected String lastBrowsedURL;
 
-	private ChangeListener<String>								listener	= (o, old, val) -> {
-																				try {
-																					String path = worlds.stream()
-																							.filter(p -> p.name.equals(val))
-																							.findFirst()
-																							.get().path;
-																					folder.set(new Pair<String, RegionFolder>(
-																							Integer.toHexString(Objects.hash(file.toString(),
-																									worldBox.getValue())),
-																							new RegionFolder.RemoteRegionFolder(file.resolve(path))));
-																				} catch (IOException e) {
-																					folder.set(null);
-																					log.warn("Could not load world " + val + " from remote file " + file);
-																					ExceptionDialog d = new ExceptionDialog(e);
-																					d.setTitle("Could not load world from remote file " + file);
-																					d.showAndWait();
-																				}
-																			};
+	private ChangeListener<String> listener = (o, old, val) -> {
+		try {
+			String path = worlds.stream()
+					.filter(p -> p.name.equals(val))
+					.findFirst()
+					.get().path;
+			folder.set(new Pair<String, RegionFolder>(
+					Integer.toHexString(Objects.hash(file.toString(),
+							worldBox.getValue())),
+					new RegionFolder.RemoteRegionFolder(file.resolve(path))));
+		} catch (IOException e) {
+			folder.set(null);
+			log.warn("Could not load world " + val + " from remote file " + file);
+			ExceptionDialog d = new ExceptionDialog(e);
+			d.setTitle("Could not load world from remote file " + file);
+			d.showAndWait();
+		}
+	};
 
 	public ReadOnlyObjectProperty<Pair<String, RegionFolder>> folderProperty() {
 		return folder.getReadOnlyProperty();

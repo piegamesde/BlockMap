@@ -54,8 +54,8 @@ import io.gsonfire.annotations.ExposeMethodParam;
 import io.gsonfire.annotations.ExposeMethodResult;
 
 /**
- * This class represents a mapping from region file positions in a world to {@link BufferedImage}s of that rendered region. How this is done
- * is up to the implementation.
+ * This class represents a mapping from region file positions in a world to {@link BufferedImage}s
+ * of that rendered region. How this is done is up to the implementation.
  */
 public abstract class RegionFolder {
 
@@ -78,28 +78,29 @@ public abstract class RegionFolder {
 			.create();
 
 	/**
-	 * Lists all existing region file in this RegionFolder. If one of the returned positions is passed to {@link #render(Vector2ic)}, it must
-	 * not return {@code null}.
+	 * Lists all existing region file in this RegionFolder. If one of the returned positions is passed
+	 * to {@link #render(Vector2ic)}, it must not return {@code null}.
 	 */
 	public abstract Set<Vector2ic> listRegions();
 
 	/**
-	 * Generates an image of the region file at the given position, however this might be done. Will return {@code null} if the passed position
-	 * is not contained in {@link #listRegions()}. This method will block until the image data is retrieved and may throw an exception if it
-	 * fails to do so.
+	 * Generates an image of the region file at the given position, however this might be done. Will
+	 * return {@code null} if the passed position is not contained in {@link #listRegions()}. This
+	 * method will block until the image data is retrieved and may throw an exception if it fails to do
+	 * so.
 	 * 
 	 * @param pos
 	 *            the position of the region file to render
-	 * @return the rendered region file as {@link BufferedImage} or {@code null} if {@code listRegions().contains(pos)} evaluates to
-	 *         {@code false}
+	 * @return the rendered region file as {@link BufferedImage} or {@code null} if
+	 *         {@code listRegions().contains(pos)} evaluates to {@code false}
 	 * @throws IOException
 	 *             if the image could not be retrieved
 	 */
 	public abstract Region render(Vector2ic pos) throws IOException;
 
 	/**
-	 * Get the time the region file at {@code pos} was last modified. This will be used to determine if a cached rendered image of that file is
-	 * still valid or not.
+	 * Get the time the region file at {@code pos} was last modified. This will be used to determine if
+	 * a cached rendered image of that file is still valid or not.
 	 * 
 	 * @see Files#getLastModifiedTime(Path, java.nio.file.LinkOption...)
 	 */
@@ -114,21 +115,22 @@ public abstract class RegionFolder {
 	public abstract boolean needsCaching();
 
 	/**
-	 * This {@link RegionFolder} implementation will render region files using a {@link RegionRenderer}. Calling {@link #render(Vector2ic)}
-	 * repeatedly on the same location will render the same image multiple times.
+	 * This {@link RegionFolder} implementation will render region files using a {@link RegionRenderer}.
+	 * Calling {@link #render(Vector2ic)} repeatedly on the same location will render the same image
+	 * multiple times.
 	 */
 	public static class WorldRegionFolder extends RegionFolder {
 
-		static final Pattern					rfpat	= Pattern.compile("^r\\.(-?\\d+)\\.(-?\\d+)\\.mca$");
+		static final Pattern rfpat = Pattern.compile("^r\\.(-?\\d+)\\.(-?\\d+)\\.mca$");
 
-		protected final Map<Vector2ic, Path>	regions;
-		protected final RegionRenderer			renderer;
-		protected LevelMetadata						pins;
+		protected final Map<Vector2ic, Path> regions;
+		protected final RegionRenderer renderer;
+		protected LevelMetadata pins;
 
 		/**
 		 * @param file
-		 *            map region coordinates to paths, which point to the respective file. Those are treated as the "world" represented by this
-		 *            RegionFolder. May not be {@code null}.
+		 *            map region coordinates to paths, which point to the respective file. Those are treated
+		 *            as the "world" represented by this RegionFolder. May not be {@code null}.
 		 * @param pins
 		 *            The pins of this world. May not be {@code null}.
 		 * @param renderer
@@ -188,10 +190,11 @@ public abstract class RegionFolder {
 		 * Loads a region folder from a given world path.
 		 * 
 		 * @param world
-		 *            the path to the world folder. It has to be a directory pointing to a valid Minecraft world. World folders usually contain a
-		 *            {@code level.dat} file.
+		 *            the path to the world folder. It has to be a directory pointing to a valid Minecraft
+		 *            world. World folders usually contain a {@code level.dat} file.
 		 * @param dimension
-		 *            the Minecraft dimension to render. It will be used to resolve the region folder path from the world path.
+		 *            the Minecraft dimension to render. It will be used to resolve the region folder path
+		 *            from the world path.
 		 * @param loadPins
 		 *            if the pins should be loaded too
 		 * @see #load(Path, MinecraftDimension, RegionRenderer)
@@ -204,13 +207,16 @@ public abstract class RegionFolder {
 		}
 
 		/**
-		 * Loads a region folder from a given path. All region files found in this folder (not searching recursively) will be added to the returned
-		 * object. Files added later on won't be recognized. Removing files will lead to errors when trying to render them. All files whose name
-		 * matches {@code ^r\.(-?\d+)\.(-?\d+)\.mca$} are taken. If one of them isn't a proper region file, rendering it will fail.
+		 * Loads a region folder from a given path. All region files found in this folder (not searching
+		 * recursively) will be added to the returned object. Files added later on won't be recognized.
+		 * Removing files will lead to errors when trying to render them. All files whose name matches
+		 * {@code ^r\.(-?\d+)\.(-?\d+)\.mca$} are taken. If one of them isn't a proper region file,
+		 * rendering it will fail.
 		 * 
 		 * @param regionFolder
-		 *            the path to the folder containing all region files. This folder is commonly called {@code region} and is situated inside a
-		 *            Minecraft world, but this is not a hard requirement. It has to be a directory.
+		 *            the path to the folder containing all region files. This folder is commonly called
+		 *            {@code region} and is situated inside a Minecraft world, but this is not a hard
+		 *            requirement. It has to be a directory.
 		 */
 		public static WorldRegionFolder load(Path regionFolder, RegionRenderer renderer) throws IOException {
 			Map<Vector2ic, Path> files = new HashMap<>();
@@ -226,8 +232,9 @@ public abstract class RegionFolder {
 	}
 
 	/**
-	 * A RegionFolder implementation that loads already rendered images from the disk. To find them, a save file is passed in the constructor.
-	 * It is abstract to work on local systems as well as on remote servers.
+	 * A RegionFolder implementation that loads already rendered images from the disk. To find them, a
+	 * save file is passed in the constructor. It is abstract to work on local systems as well as on
+	 * remote servers.
 	 * 
 	 * @see LocalRegionFolder LocalRegionFolder for loading files on your hard drive
 	 * @see RemoteRegionFolder RemoteRegionFolder for loading files via uri, either local or on servers
@@ -237,9 +244,9 @@ public abstract class RegionFolder {
 	public static abstract class SavedRegionFolder<T> extends RegionFolder {
 
 		/** The path to the metadata.json file. All paths are relative to this. */
-		protected final T								basePath;
-		protected final Map<Vector2ic, RegionHelper>	regions;
-		protected final Optional<LevelMetadata>				pins;
+		protected final T basePath;
+		protected final Map<Vector2ic, RegionHelper> regions;
+		protected final Optional<LevelMetadata> pins;
 
 		/**
 		 * Loads a json file that contains the information about all rendered files.
@@ -292,9 +299,10 @@ public abstract class RegionFolder {
 	}
 
 	/**
-	 * An implementation of {@link SavedRegionFolder} based on the Java {@link Path} API. Use it for accessing files from your local file
-	 * system, but Java paths work with other URI schemata as well. Check {@link FileSystemProvider#installedProviders()} for more information.
-	 * (There is even an URLSystemProvider somewhere on GitHub …)
+	 * An implementation of {@link SavedRegionFolder} based on the Java {@link Path} API. Use it for
+	 * accessing files from your local file system, but Java paths work with other URI schemata as well.
+	 * Check {@link FileSystemProvider#installedProviders()} for more information. (There is even an
+	 * URLSystemProvider somewhere on GitHub …)
 	 */
 	public static class LocalRegionFolder extends SavedRegionFolder<Path> {
 
@@ -333,8 +341,8 @@ public abstract class RegionFolder {
 	}
 
 	/**
-	 * An implementation of {@link SavedRegionFolder} based on URIs. It is intended for primary use on remote servers, but with the {@code file}
-	 * schema it can open local files as well.
+	 * An implementation of {@link SavedRegionFolder} based on URIs. It is intended for primary use on
+	 * remote servers, but with the {@code file} schema it can open local files as well.
 	 */
 	public static class RemoteRegionFolder extends SavedRegionFolder<URI> {
 
@@ -366,20 +374,22 @@ public abstract class RegionFolder {
 	}
 
 	/**
-	 * This {@link RegionFolder} wraps a {@link WorldRegionFolder} in a way that each rendered image will be written to disk to avoid
-	 * re-rendering. It can be used to create save files to load in {@link SavedRegionFolder}s.
+	 * This {@link RegionFolder} wraps a {@link WorldRegionFolder} in a way that each rendered image
+	 * will be written to disk to avoid re-rendering. It can be used to create save files to load in
+	 * {@link SavedRegionFolder}s.
 	 */
 	public static class CachedRegionFolder extends LocalRegionFolder {
 
-		protected RegionFolder	world;
-		protected boolean		lazy;
+		protected RegionFolder world;
+		protected boolean lazy;
 
 		/**
 		 * @param cached
 		 *            the renderer used to create images of region files if they haven't been rendered yet
 		 * @param lazy
-		 *            if set to false, no cached files will be returned for re-rendering. If set to true, a re-render will load the image from disk
-		 *            if the respective region file has not been modified since then (based on the timestamp). Laziness has the effect that changing
+		 *            if set to false, no cached files will be returned for re-rendering. If set to true, a
+		 *            re-render will load the image from disk if the respective region file has not been
+		 *            modified since then (based on the timestamp). Laziness has the effect that changing
 		 *            the render settings will not cause already rendered files to be updated.
 		 * @throws IOException
 		 */
@@ -390,9 +400,9 @@ public abstract class RegionFolder {
 		}
 
 		/**
-		 * If the image folder already contains a matching image for this position <b>and</b> the {@code lazy} flag was set in the constructor
-		 * <b>and</b> the saved file is newer than the region file, this image will be returned. Otherwise, it will be rendered again and written to
-		 * disk.
+		 * If the image folder already contains a matching image for this position <b>and</b> the
+		 * {@code lazy} flag was set in the constructor <b>and</b> the saved file is newer than the region
+		 * file, this image will be returned. Otherwise, it will be rendered again and written to disk.
 		 * 
 		 * @see SavedRegionFolder#render(Vector2ic)
 		 */
@@ -456,8 +466,8 @@ public abstract class RegionFolder {
 
 	/** Object representation of the content of the {@code rendered.json} metadata file. */
 	static class SavedRegionHelper {
-		Collection<RegionHelper>	regions;
-		LevelMetadata					pins;
+		Collection<RegionHelper> regions;
+		LevelMetadata pins;
 
 		public SavedRegionHelper(Collection<RegionHelper> regions, LevelMetadata pins) {
 			this.regions = regions;
@@ -465,11 +475,11 @@ public abstract class RegionFolder {
 		}
 
 		static class RegionHelper {
-			int										x, z;
-			long									lastModified;
-			String									image;
+			int x, z;
+			long lastModified;
+			String image;
 			@Exclude
-			Map<? extends Vector2ic, ChunkMetadata>	metadata;
+			Map<? extends Vector2ic, ChunkMetadata> metadata;
 
 			RegionHelper() {
 

@@ -52,6 +52,7 @@ import io.gsonfire.GsonFireBuilder;
 import io.gsonfire.annotations.Exclude;
 import io.gsonfire.annotations.ExposeMethodParam;
 import io.gsonfire.annotations.ExposeMethodResult;
+import net.dongliu.gson.GsonJava8TypeAdapterFactory;
 
 /**
  * This class represents a mapping from region file positions in a world to {@link BufferedImage}s
@@ -73,6 +74,8 @@ public abstract class RegionFolder {
 			.registerTypeSelector(Vector3dc.class, e -> Vector3d.class)
 			.registerTypeSelector(ChunkMetadata.class, e -> ChunkRenderState.valueOf(e.getAsJsonObject().getAsJsonPrimitive("renderState").getAsString()).clazz)
 			.createGsonBuilder()
+			.registerTypeAdapterFactory(
+					new GsonJava8TypeAdapterFactory())
 			.disableHtmlEscaping()
 			// .setPrettyPrinting()
 			.create();

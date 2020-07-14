@@ -4,6 +4,7 @@ dependencies {
 	// Core dependencies
 	api 'com.github.piegamesde:nbt:d8b74bdb09babeb15244154ed88b45ce9eb4c2d3'
 	api 'com.google.code.gson:gson:2.8.5'
+	implementation 'net.dongliu:gson-java8-datatype:1.1.0'
 //    implementation 'io.gsonfire:gson-fire:1.8.3'
 	implementation 'com.github.piegamesde:gson-fire:9210521426'
 	api 'commons-logging:commons-logging:1.2'

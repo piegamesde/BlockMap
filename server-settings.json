@@ -1,20 +1,23 @@
 {
 	"output dir": "./rendered-web",
-	"hide offline players": false,
+	"server": {
+		"server name": "Minecraaaaaaft",
+		"server description": "The best server in the world",
+		"server address": "127.0.0.1",
+		"max players": 5
+	},
 	"worlds": [
 		{
 			"name": "Overworld",
 			"input dir": "WORLD_PATH",
 			"dimension": "OVERWORLD",
-			"force": false,
-			"pins": true
+			"force": false
 		},
 		{
 			"name": "Overworld – Oceans",
 			"input dir": "WORLD_PATH",
 			"dimension": "OVERWORLD",
 			"force": false,
-			"pins": true,
 			"render settings": {
 				"block colors": "OCEAN_GROUND",
 				"shader": "RELIEF"
@@ -29,8 +32,7 @@
 				"shader": "RELIEF",
 				"maxY": "80"
 			},
-			"force": false,
-			"pins": true
+			"force": false
 		}
 	]
 }

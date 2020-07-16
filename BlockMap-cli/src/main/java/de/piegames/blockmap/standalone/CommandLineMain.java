@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.apache.commons.logging.Log;
@@ -56,9 +55,9 @@ import picocli.CommandLine.Spec;
 		footer = "This is the command line interface of blockmap. To access the GUI (if installed), run `blockmap-gui`.")
 public class CommandLineMain implements Callable<Integer> {
 
-	private static Log			log		= null;
+	private static Log log = null;
 
-	public static final Gson	GSON	= new GsonFireBuilder()
+	public static final Gson GSON = new GsonFireBuilder()
 			.enableExposeMethodParam()
 			.registerPostProcessor(ServerSettings.class, new DeserializeNullChecker())
 			.registerPostProcessor(ServerSettings.RegionFolderSettings.class, new DeserializeNullChecker())
@@ -66,16 +65,16 @@ public class CommandLineMain implements Callable<Integer> {
 			.registerTypeAdapterFactory(new GsonJava8TypeAdapterFactory())
 			.registerTypeHierarchyAdapter(Path.class, new TypeAdapter<Path>() {
 
-													@Override
-													public void write(JsonWriter out, Path value) throws IOException {
-														out.value(value.toString());
-													}
+				@Override
+				public void write(JsonWriter out, Path value) throws IOException {
+					out.value(value.toString());
+				}
 
-													@Override
-													public Path read(JsonReader in) throws IOException {
-														return Paths.get(in.nextString());
-													}
-												})
+				@Override
+				public Path read(JsonReader in) throws IOException {
+					return Paths.get(in.nextString());
+				}
+			})
 			.disableHtmlEscaping()
 			.setPrettyPrinting()
 			.create();
@@ -288,20 +287,7 @@ public class CommandLineMain implements Callable<Integer> {
 		@Parameters(index = "0",
 				paramLabel = "CONFIG",
 				description = "Path to the config.json")
-		private Path			input;
-
-		@Option(names = { "--server-name" })
-		private String			name;
-		@Option(names = { "--server-description" })
-		private String			description;
-		@Option(names = { "--server-address" })
-		private String			ipAddress;
-		@Option(names = { "--server-icon" })
-		private String			iconLocation;
-		@Option(names = { "--online-players" }, description = "The UUIDs of all players to be shown as 'online'")
-		private Set<String> online = Collections.emptySet();
-		@Option(names = { "--max-players" }, description = "The number of total slots on the servers")
-		private int maxPlayers;
+		private Path input;
 
 		@Override
 		public Integer call() {
@@ -317,13 +303,13 @@ public class CommandLineMain implements Callable<Integer> {
 				return 2;
 			}
 
-			ServerMetadata metadata = new ServerMetadata(name, description, ipAddress, iconLocation, online, maxPlayers);
-			metadata.levels = new ArrayList<>(settings.worlds.length);
+			ServerMetadata serverMetadata = settings.serverMetadata.orElse(new ServerMetadata());
+			serverMetadata.levels = new ArrayList<>(settings.worlds.length);
 
 			/* Render all worlds */
 			for (ServerSettings.RegionFolderSettings folderSettings : settings.worlds) {
 				log.info("Rendering world " + folderSettings.name);
-				metadata.levels.add(new ServerMetadata.ServerLevel(folderSettings.name,
+				serverMetadata.levels.add(new ServerMetadata.ServerLevel(folderSettings.name,
 						/* https://stackoverflow.com/questions/4737841/urlencoder-not-able-to-translate-space-character TODO use Guava */
 						URLEncoder.encode(folderSettings.name, Charset.defaultCharset()).replace("+", "%20") + "/rendered.json.gz"));
 
@@ -376,15 +362,13 @@ public class CommandLineMain implements Callable<Integer> {
 
 				/* Post-processing, saving */
 
+				var online = serverMetadata.onlinePlayers.orElse(Collections.emptySet());
 				var levelMetadata = LevelMetadata.loadFromWorld(input, folderSettings.dimension);
-				if (settings.hideOfflinePlayers)
-					levelMetadata.getPlayers().ifPresent(
-							players -> players.removeIf(
-									/*
-									 * Remove all player pins that have a UUID but are not marked as online. Players without UUID won't
-									 * be removed
-									 */
-									player -> !player.getUUID().map(online::contains).orElse(true)));
+				if (settings.pinSettings.isPresent()) {
+					var pinSettings = settings.pinSettings.get();
+					levelMetadata = pinSettings.apply(levelMetadata, online);
+					pinSettings.showStructures.ifPresent(cached::filterStructures);
+				}
 				world.setPins(levelMetadata);
 
 				try {
@@ -398,7 +382,7 @@ public class CommandLineMain implements Callable<Integer> {
 			/* Save the index file */
 			// TODO sanitize user input
 			try (Writer writer = Files.newBufferedWriter(settings.outputDir.resolve("index.json"));) {
-				GSON.toJson(metadata, ServerMetadata.class, writer);
+				GSON.toJson(serverMetadata, ServerMetadata.class, writer);
 			} catch (IOException e) {
 				log.error("Could not save the index file");
 				return 1;

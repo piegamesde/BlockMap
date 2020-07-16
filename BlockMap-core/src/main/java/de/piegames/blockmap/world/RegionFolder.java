@@ -45,6 +45,11 @@ import com.google.gson.JsonElement;
 
 import de.piegames.blockmap.MinecraftDimension;
 import de.piegames.blockmap.renderer.RegionRenderer;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataCulled;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataFailed;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataRendered;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataVersion;
+import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataVisitor;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkRenderState;
 import de.piegames.blockmap.world.RegionFolder.SavedRegionHelper.RegionHelper;
 import de.piegames.nbt.regionfile.RegionFile;
@@ -465,6 +470,40 @@ public abstract class RegionFolder {
 			return world.getTimestamp();
 		}
 
+		/**
+		 * Remove all information about generated structures that are not in the set
+		 */
+		public void filterStructures(Set<String> allowedStructs) {
+			regions.values()
+					.stream()
+					.flatMap(regionHelper -> regionHelper.metadata.values().stream())
+					.forEach(metadata -> metadata.visit(new ChunkMetadataVisitor<Void>() {
+						@Override
+						public Void rendered(ChunkMetadataRendered metadata) {
+							metadata.structures.keySet().retainAll(allowedStructs);
+							return null;
+						}
+
+						@Override
+						public Void failed(ChunkMetadataFailed metadata) {
+							return null;
+						}
+
+						@Override
+						public Void culled(ChunkMetadataCulled metadata) {
+							return null;
+						}
+
+						@Override
+						public Void version(ChunkMetadataVersion metadata) {
+							return null;
+						}
+					}));
+		}
+
+		/**
+		 * Saves the current rendering state of the world, including metadata, back to the provided path.
+		 */
 		public void save() throws IOException {
 			synchronized (regions) {
 				try (Writer writer = new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(basePath,

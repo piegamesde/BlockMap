@@ -109,6 +109,11 @@ public abstract class RegionFolder {
 	 */
 	public abstract long getTimestamp(Vector2ic pos) throws IOException;
 
+	/**
+	 * Get a timestamp that represents when the world was rendered.
+	 */
+	public abstract long getTimestamp();
+
 	/** Returns the pins of this specific world or {@code Optional.empty()} if they are not loaded. */
 	public abstract Optional<LevelMetadata> getPins();
 
@@ -129,6 +134,7 @@ public abstract class RegionFolder {
 		protected final Map<Vector2ic, Path> regions;
 		protected final RegionRenderer renderer;
 		protected LevelMetadata pins;
+		protected final long timestamp;
 
 		/**
 		 * @param file
@@ -146,6 +152,7 @@ public abstract class RegionFolder {
 		public WorldRegionFolder(Map<Vector2ic, Path> files, RegionRenderer renderer) {
 			this.regions = Objects.requireNonNull(files);
 			this.renderer = Objects.requireNonNull(renderer);
+			this.timestamp = System.currentTimeMillis();
 		}
 
 		@Override
@@ -173,6 +180,11 @@ public abstract class RegionFolder {
 		@Override
 		public long getTimestamp(Vector2ic pos) throws IOException {
 			return Files.getLastModifiedTime(regions.get(pos)).toMillis();
+		}
+
+		@Override
+		public long getTimestamp() {
+			return timestamp;
 		}
 
 		@Override
@@ -250,6 +262,7 @@ public abstract class RegionFolder {
 		protected final T basePath;
 		protected final Map<Vector2ic, RegionHelper> regions;
 		protected final Optional<LevelMetadata> pins;
+		protected final long timestamp;
 
 		/**
 		 * Loads a json file that contains the information about all rendered files.
@@ -263,7 +276,7 @@ public abstract class RegionFolder {
 			regions = Optional.ofNullable(helper.regions)
 					.stream().flatMap(Collection::stream)
 					.collect(Collectors.toMap(r -> new Vector2i(r.x, r.z), Function.identity()));
-
+			timestamp = helper.timestamp;
 		}
 
 		@Override
@@ -293,6 +306,11 @@ public abstract class RegionFolder {
 		@Override
 		public long getTimestamp(Vector2ic pos) throws IOException {
 			return regions.get(pos).lastModified;
+		}
+
+		@Override
+		public long getTimestamp() {
+			return timestamp;
 		}
 
 		@Override
@@ -442,11 +460,16 @@ public abstract class RegionFolder {
 			return world.getPins();
 		}
 
+		@Override
+		public long getTimestamp() {
+			return world.getTimestamp();
+		}
+
 		public void save() throws IOException {
 			synchronized (regions) {
 				try (Writer writer = new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(basePath,
 						StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING), 8192, true))) {
-					GSON.toJson(new SavedRegionHelper(regions.values(), getPins().orElse(null)), writer);
+					GSON.toJson(new SavedRegionHelper(regions.values(), getPins().orElse(null), getTimestamp()), writer);
 					writer.flush();
 				}
 			}
@@ -471,10 +494,12 @@ public abstract class RegionFolder {
 	static class SavedRegionHelper {
 		Collection<RegionHelper> regions;
 		LevelMetadata pins;
+		long timestamp;
 
-		public SavedRegionHelper(Collection<RegionHelper> regions, LevelMetadata pins) {
+		public SavedRegionHelper(Collection<RegionHelper> regions, LevelMetadata pins, long timestamp) {
 			this.regions = regions;
 			this.pins = pins;
+			this.timestamp = timestamp;
 		}
 
 		static class RegionHelper {

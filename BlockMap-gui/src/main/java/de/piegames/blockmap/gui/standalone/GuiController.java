@@ -31,7 +31,6 @@ import org.controlsfx.control.StatusBar;
 import org.controlsfx.control.textfield.AutoCompletionBinding;
 import org.controlsfx.control.textfield.TextFields;
 import org.controlsfx.dialog.ExceptionDialog;
-import org.joml.Vector2i;
 import org.joml.Vector2ic;
 
 import com.google.common.collect.Streams;
@@ -76,7 +75,6 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.TitledPane;
-import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
@@ -272,19 +270,13 @@ public class GuiController implements Initializable {
 			statusBar.textProperty().bind(renderer.getStatus());
 			
 			Label timestampLabel = new Label();
-			timestampLabel.setTooltip(new Tooltip("When the hovered region file was last modified"));
 			timestampLabel.textProperty().bind(Bindings.createStringBinding(() -> {
-				// TODO performance could be better
-				var mouseWorld = renderer.viewport.mouseWorldProperty.get();
-				var regionFile = new Vector2i((int) (mouseWorld.x() / 512), (int) (mouseWorld.y() / 512));
-				if (regionFolder.get() != null && regionFolder.get().getValue().listRegions().contains(regionFile)) {
-					var timestamp = regionFolder.get().getValue().getTimestamp(regionFile);
+				if (regionFolder.get() != null) {
 					// TODO convert to human readable string
-					return Instant.ofEpochMilli(timestamp).toString();
+					return "Rendered at " + Instant.ofEpochMilli(regionFolder.get().getValue().getTimestamp()).toString();
 				} else
 					return "";
-			},
-			renderer.viewport.mouseWorldProperty, regionFolder));
+			}, regionFolder));
 			statusBar.getRightItems().add(timestampLabel);
 
 			Label zoomLabel = new Label();

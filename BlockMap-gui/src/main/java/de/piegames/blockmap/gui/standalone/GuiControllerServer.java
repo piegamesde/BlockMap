@@ -105,6 +105,9 @@ public class GuiControllerServer implements Initializable {
 	}
 
 	public void load(URI file) {
+		if ("blockmap".equals(file.getScheme())) {
+			file = URI.create(file.getSchemeSpecificPart());
+		}
 		this.file = file;
 		reload();
 	}

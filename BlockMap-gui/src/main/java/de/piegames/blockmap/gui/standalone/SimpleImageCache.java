@@ -55,7 +55,7 @@ public class SimpleImageCache implements IImageCache {
     public Image fresh(String url) {
         String fileName = getFileName(url);
 
-        Image result = new Image(url);
+        Image result = new Image(url, 0, 0, true, false);
         log.info("Fetched new image: " + fileName);
 
         if (!result.isError()) {

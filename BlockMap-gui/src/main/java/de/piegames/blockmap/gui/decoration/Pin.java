@@ -1,5 +1,8 @@
 package de.piegames.blockmap.gui.decoration;
 
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -23,6 +26,8 @@ import de.piegames.blockmap.gui.standalone.IImageCache;
 import de.piegames.blockmap.gui.standalone.IPlayerProfileCache;
 import de.piegames.blockmap.gui.standalone.SimpleImageCache;
 import de.piegames.blockmap.gui.standalone.SimplePlayerProfileCache;
+import javafx.embed.swing.SwingFXUtils;
+import javafx.scene.image.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.controlsfx.control.PopOver;
@@ -67,9 +72,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.control.Tooltip;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
@@ -723,22 +725,29 @@ public class Pin {
 			return info;
 		}
 
+		private Image scaleUp(Image input) {
+			BufferedImage img = SwingFXUtils.fromFXImage(input, null);
+
+			AffineTransform at = new AffineTransform();
+			at.scale(16.0, 16.0);
+			AffineTransformOp scaleOp = new AffineTransformOp(at, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
+			BufferedImage after = scaleOp.filter(img, null);
+
+			return SwingFXUtils.toFXImage(after, null);
+		}
+
 		private ImageView getSkin(String url) {
 			log.debug("Loading player skin from: " + url);
-			// Download the image and set the requested size to 64 * 16, as 64 is the original image size and we need to
-			// scale this by 16 to extract the 8 pixels (8 of the original 64, now 8 * 16 pixels) from the scaled image,
-			// to reach 128 pixels in the extracted result.
-			Image image = new Image(url, 64 * 16, 64 * 16, true, false);
-			PixelReader reader = image.getPixelReader();
-			image = new WritableImage(reader, 8 * 16, 8 * 16, 8 * 16, 8 * 16);
 
-			Image image = image = imageCache.get(url);
-			image = new WritableImage(image.getPixelReader(), 8, 8, 8, 8);
+			Image image = imageCache.get(url);
+			image = scaleUp(image);
+			image = new WritableImage(image.getPixelReader(), 8 * 16, 8 * 16, 8 * 16, 8 * 16);
 
 			ImageView graphic = new ImageView(image);
 			graphic.setSmooth(false);
 			graphic.setPreserveRatio(true);
 			graphic.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> button.getFont().getSize() * 2, button.fontProperty()));
+
 			return graphic;
 		}
 

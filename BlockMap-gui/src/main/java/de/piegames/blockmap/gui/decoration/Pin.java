@@ -19,6 +19,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import de.piegames.blockmap.gui.standalone.IImageCache;
+import de.piegames.blockmap.gui.standalone.IPlayerProfileCache;
+import de.piegames.blockmap.gui.standalone.SimpleImageCache;
+import de.piegames.blockmap.gui.standalone.SimplePlayerProfileCache;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.controlsfx.control.PopOver;
@@ -44,7 +48,6 @@ import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataVersion;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataVisitor;
 import de.piegames.blockmap.world.LevelMetadata;
 import de.saibotk.jmaw.ApiResponseException;
-import de.saibotk.jmaw.MojangAPI;
 import de.saibotk.jmaw.PlayerProfile;
 import de.saibotk.jmaw.PlayerSkinTexture;
 import de.saibotk.jmaw.PlayerTexturesProperty;
@@ -66,7 +69,6 @@ import javafx.scene.control.Separator;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.image.PixelReader;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
@@ -667,11 +669,8 @@ public class Pin {
 
 	private static class PlayerPin extends Pin implements Runnable {
 
-		/*
-		 * Cache the API object because even if the API itself is stateless, there is still some initialization (HTTP client, GSON type adapters)
-		 * done at the beginning.
-		 */
-		private static MojangAPI			api;
+		private final IImageCache imageCache = new SimpleImageCache();
+		private final IPlayerProfileCache playerProfileCache = new SimplePlayerProfileCache();
 
 		protected LevelMetadata.PlayerPin		player;
 		protected StringProperty			playerName	= new SimpleStringProperty("loading…");
@@ -733,6 +732,9 @@ public class Pin {
 			PixelReader reader = image.getPixelReader();
 			image = new WritableImage(reader, 8 * 16, 8 * 16, 8 * 16, 8 * 16);
 
+			Image image = image = imageCache.get(url);
+			image = new WritableImage(image.getPixelReader(), 8, 8, 8, 8);
+
 			ImageView graphic = new ImageView(image);
 			graphic.setSmooth(false);
 			graphic.setPreserveRatio(true);
@@ -742,12 +744,9 @@ public class Pin {
 
 		@Override
 		public void run() {
-			/* This does not need to be thread safe */
-			if (api == null)
-				api = new MojangAPI();
 			Optional<PlayerProfile> playerInfo = player.getUUID().flatMap(uuid -> {
 				try {
-					return api.getPlayerProfile(uuid);
+					return playerProfileCache.get(uuid);
 				} catch (TooManyRequestsException e) {
 					log.warn("Too many requests, trying again later…");
 					backgroundThread.schedule(this, 61, TimeUnit.SECONDS);

@@ -82,14 +82,18 @@ public class RegionFolderCache {
 
 	/** Wrap a given {@link RegionFolder} in a {@link RegionFolderCache} if needed and mark this cache id as used. */
 	public synchronized RegionFolder cache(RegionFolder input, String id) {
-		if (input == null || !input.needsCaching())
+		if (input == null || !input.needsCaching()) {
+			if (input != null)
+				log.debug("No caching needed for the world (id: " + id + ")");
 			return input;
+		}
 		if (inUse.containsKey(id)) {
 			log.warn("Could not cache world with id '" + id + "' because it is already in use");
 			return input;
 		}
 
 		try {
+			log.debug("Caching world with id: " + id);
 			@SuppressWarnings("serial")
 			Map<String, Long> cache = GSON.fromJson(Files.newBufferedReader(cacheIndex), new TypeToken<Map<String, Long>>() {
 			}.getType());

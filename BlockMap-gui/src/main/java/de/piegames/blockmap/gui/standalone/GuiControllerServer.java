@@ -22,6 +22,7 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+import de.piegames.blockmap.gui.VersionProvider;
 import de.piegames.blockmap.world.RegionFolder;
 import de.piegames.blockmap.world.ServerMetadata;
 import de.piegames.blockmap.world.ServerMetadata.ServerLevel;
@@ -83,8 +84,10 @@ public class GuiControllerServer implements Initializable {
 					.findFirst()
 					.get().path;
 			folder.set(new Pair<String, RegionFolder>(
-					Integer.toHexString(Objects.hash(file.toString(),
-							worldBox.getValue())),
+					Integer.toHexString(Objects.hash(
+							file.toString(),
+							worldBox.getValue(),
+							VersionProvider.VERSION)),
 					new RegionFolder.RemoteRegionFolder(file.resolve(path))));
 		} catch (IOException e) {
 			folder.set(null);

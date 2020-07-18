@@ -14,15 +14,15 @@ import io.gsonfire.annotations.ExposeMethodParam;
 
 public class RenderSettings {
 
-	public int									minX	= Integer.MIN_VALUE;
-	public int									maxX	= Integer.MAX_VALUE;
-	public int									minY	= Integer.MIN_VALUE;
-	public int									maxY	= Integer.MAX_VALUE;
-	public int									minZ	= Integer.MIN_VALUE;
-	public int									maxZ	= Integer.MAX_VALUE;
+	public int minX = Integer.MIN_VALUE;
+	public int maxX = Integer.MAX_VALUE;
+	public int minY = Integer.MIN_VALUE;
+	public int maxY = Integer.MAX_VALUE;
+	public int minZ = Integer.MIN_VALUE;
+	public int maxZ = Integer.MAX_VALUE;
 
-	public Map<MinecraftVersion, BlockColorMap>	blockColors;
-	public BiomeColorMap						biomeColors;
+	public Map<MinecraftVersion, BlockColorMap> blockColors;
+	public BiomeColorMap biomeColors;
 	public RegionShader regionShader = new ReliefShader();
 
 	public RenderSettings() {

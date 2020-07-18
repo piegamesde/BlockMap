@@ -17,6 +17,7 @@ import org.controlsfx.dialog.ExceptionDialog;
 import de.piegames.blockmap.MinecraftDimension;
 import de.piegames.blockmap.color.BiomeColorMap;
 import de.piegames.blockmap.color.BlockColorMap.InternalColorMap;
+import de.piegames.blockmap.gui.VersionProvider;
 import de.piegames.blockmap.renderer.RegionRenderer;
 import de.piegames.blockmap.renderer.RegionShader;
 import de.piegames.blockmap.renderer.RenderSettings;
@@ -39,27 +40,27 @@ import javafx.util.converter.IntegerStringConverter;
 
 public class GuiControllerWorld implements Initializable {
 
-	private static Log											log				= LogFactory.getLog(GuiControllerWorld.class);
+	private static Log log = LogFactory.getLog(GuiControllerWorld.class);
 
 	@FXML
-	TextField													minHeight, maxHeight;
+	TextField minHeight, maxHeight;
 	@FXML
-	ChoiceBox<String>											shadingBox;
+	ChoiceBox<String> shadingBox;
 	@FXML
-	ChoiceBox<String>											colorBox;
+	ChoiceBox<String> colorBox;
 	@FXML
-	ChoiceBox<MinecraftDimension>								dimensionBox;
+	ChoiceBox<MinecraftDimension> dimensionBox;
 
 	/* The String is a hash code used for caching */
-	protected ReadOnlyObjectWrapper<Pair<String, RegionFolder>>	folder			= new ReadOnlyObjectWrapper<>();
-	protected Path												worldPath;
-	protected Path												lastBrowsedPath;
-	protected RenderSettings									settings;
+	protected ReadOnlyObjectWrapper<Pair<String, RegionFolder>> folder = new ReadOnlyObjectWrapper<>();
+	protected Path worldPath;
+	protected Path lastBrowsedPath;
+	protected RenderSettings settings;
 
-	private ChangeListener<Object>								reloadListener	= (observer, old, value) -> {
-																					if (old != value)
-																						reload();
-																				};
+	private ChangeListener<Object> reloadListener = (observer, old, value) -> {
+		if (old != value)
+			reload();
+	};
 
 	public ReadOnlyObjectProperty<Pair<String, RegionFolder>> folderProperty() {
 		return folder.getReadOnlyProperty();
@@ -135,7 +136,14 @@ public class GuiControllerWorld implements Initializable {
 					RegionShader.DEFAULT_SHADERS[shadingBox.getSelectionModel().getSelectedIndex()]);
 			RegionRenderer renderer = new RegionRenderer(settings);
 			folder.set(new Pair<>(
-					Integer.toHexString(Objects.hash(worldPath.toAbsolutePath().toString(), settings, dimensionBox.getValue())),
+					Integer.toHexString(Objects.hash(
+							worldPath.toAbsolutePath().toString(),
+							settings.minY,
+							settings.maxY,
+							colorBox.getSelectionModel().getSelectedItem(),
+							shadingBox.getSelectionModel().getSelectedItem(),
+							dimensionBox.getValue().ordinal(),
+							VersionProvider.VERSION)),
 					WorldRegionFolder.load(worldPath,
 							dimensionBox.getValue(), renderer, true)));
 		} catch (RuntimeException | IOException e) {

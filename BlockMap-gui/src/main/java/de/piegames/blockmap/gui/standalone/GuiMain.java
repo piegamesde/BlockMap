@@ -4,6 +4,8 @@ import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -74,8 +76,16 @@ public class GuiMain extends Application {
 			System.exit(-1);
 		}
 
+		var parameters = getParameters().getUnnamed();
+		if (parameters.contains("-v") || parameters.contains("--verbose")) {
+			Configurator.setRootLevel(Level.DEBUG);
+			checkLogger();
+			log.debug("Debug logging enabled.");
+		}
 		/* Load a world on start if specified on the command line */
-		getParameters().getUnnamed().stream()
+		parameters
+				.stream()
+				.filter(p -> !"-v".equals(p) && !"--verbose".equals(p))
 				.findFirst()
 				.ifPresent(world -> {
 					checkLogger();

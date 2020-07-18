@@ -8,13 +8,18 @@ import org.apache.commons.logging.LogFactory;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
+import java.time.Instant;
+import java.util.Arrays;
 
 public class SimpleImageCache implements IImageCache {
-    private static Log log = LogFactory.getLog(SimpleImageCache.class);
+    private static final Log log = LogFactory.getLog(SimpleImageCache.class);
     private final ProjectDirectories directories = ProjectDirectories.from("de", "piegames", "blockmap");
     private final Path cacheDir	= Paths.get(directories.cacheDir + "/images");
+
+    private static final long MAX_CACHE_TIME = 60000L;
 
     public SimpleImageCache() {
         try {
@@ -22,24 +27,32 @@ public class SimpleImageCache implements IImageCache {
         } catch (IOException exception) {
             log.warn("Could not create image cache directory!", exception);
         }
+
+        purge();
     }
 
     @Override
     public Image get(String url) {
         String fileName = getFileName(url);
 
-        BufferedImage bufferedImage = null;
-
         try {
-            bufferedImage = ImageIO.read(cacheDir.resolve(fileName).toFile());
-            log.info("Loaded image from cache: " + fileName);
+            File cachedFile = cacheDir.resolve(fileName).toFile();
+            if (Instant.now().toEpochMilli() - cachedFile.lastModified() <= MAX_CACHE_TIME) {
+                BufferedImage bufferedImage = ImageIO.read(cachedFile);
+                log.info("Loaded image from cache: " + fileName);
+
+                return SwingFXUtils.toFXImage(bufferedImage, null);
+            } else {
+                log.info("Image will be removed from cache: " + fileName);
+                cachedFile.delete();
+            }
         } catch (IOException exception) {
             log.info("Image could not be fetched from cache...");
-            log.error("Ex: ", exception);
-            return fresh(url);
         }
 
-        return SwingFXUtils.toFXImage(bufferedImage, null);
+        log.info("Fetching image from source instead: " + url);
+
+        return fresh(url);
     }
 
     /**
@@ -67,7 +80,24 @@ public class SimpleImageCache implements IImageCache {
 
     @Override
     public void flush() {
+        File directory = cacheDir.toFile();
+        File[] cachedFiles = directory.listFiles();
+        if (cachedFiles != null)
+            Arrays.stream(cachedFiles).forEach(File::delete);
 
+        log.info("Flushed cache...");
+    }
+
+    @Override
+    public void purge() {
+        File directory = cacheDir.toFile();
+        File[] cachedFiles = directory.listFiles();
+
+        if (cachedFiles != null)
+            Arrays.stream(cachedFiles).filter(x -> Instant.now().toEpochMilli() - x.lastModified() > MAX_CACHE_TIME)
+                    .forEach(File::delete);
+
+        log.info("Purged cache...");
     }
 
     private void writeToCache(Image image, String fileName) {

@@ -11,4 +11,6 @@ public interface IPlayerProfileCache {
     public Optional<PlayerProfile> fresh(String url) throws ApiResponseException;
 
     public void flush();
+
+    public void purge();
 }

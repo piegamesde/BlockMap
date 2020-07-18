@@ -11,4 +11,6 @@ public interface IImageCache {
     public Image fresh(String url);
 
     public void flush();
+
+    public void purge();
 }

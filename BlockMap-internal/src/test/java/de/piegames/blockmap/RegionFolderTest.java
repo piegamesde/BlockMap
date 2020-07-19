@@ -47,7 +47,7 @@ public class RegionFolderTest {
 
 		WorldRegionFolder localWorld = WorldRegionFolder.load(
 				Paths.get(URI.create(getClass().getResource("/BlockMapWorld/region").toString())),
-				renderer);
+				renderer, false);
 
 		{
 			File out1 = folder.newFolder();
@@ -112,7 +112,7 @@ public class RegionFolderTest {
 
 		WorldRegionFolder localWorld = WorldRegionFolder.load(
 				Paths.get(URI.create(getClass().getResource("/BlockMapWorld/region").toString())),
-				renderer);
+				renderer, false);
 
 		File out1 = folder.newFolder();
 		CachedRegionFolder cachedWorld = CachedRegionFolder.create(localWorld, true, out1.toPath());

@@ -232,7 +232,7 @@ public class CommandLineMain implements Callable<Integer> {
 			WorldRegionFolder world;
 			CachedRegionFolder cached;
 			try {
-				world = WorldRegionFolder.load(inputRegion, renderer);
+				world = WorldRegionFolder.load(inputRegion, renderer, dimension == MinecraftDimension.NETHER);
 				cached = CachedRegionFolder.create(world, !force, output);
 			} catch (IOException e) {
 				log.error("Could not load region folder", e);
@@ -340,7 +340,7 @@ public class CommandLineMain implements Callable<Integer> {
 				WorldRegionFolder world;
 				CachedRegionFolder cached;
 				try {
-					world = WorldRegionFolder.load(inputRegion, renderer);
+					world = WorldRegionFolder.load(inputRegion, renderer, folderSettings.dimension == MinecraftDimension.NETHER);
 					cached = CachedRegionFolder.create(world, !folderSettings.force, settings.outputDir.resolve(folderSettings.name));
 				} catch (IOException e) {
 					log.error("Could not load region folder", e);

@@ -31,6 +31,7 @@ import org.controlsfx.control.StatusBar;
 import org.controlsfx.control.textfield.AutoCompletionBinding;
 import org.controlsfx.control.textfield.TextFields;
 import org.controlsfx.dialog.ExceptionDialog;
+import org.joml.Vector2d;
 import org.joml.Vector2ic;
 
 import com.google.common.collect.Streams;
@@ -339,11 +340,36 @@ public class GuiController implements Initializable {
 
 		renderer.regionFolder.bind(regionFolderCached);
 		renderer.regionFolder.addListener((observable, previous, val) -> {
+			/* Reload pins */
 			if (val != null)
 				this.pins.loadWorld(val.listRegions(), val.getPins().map(pins -> Pin.convertStatic(pins, backgroundThread, renderer.viewport)).orElse(
 						Collections.emptySet()));
 			else
 				this.pins.loadWorld(Collections.emptyList(), Collections.emptyList());
+
+			/*
+			 * Change zoom factor for the nether. We're not using the normal zooming API because a transition
+			 * animation is not desired while switching worlds. Also normally, zooming is done around the mouse
+			 * cursor, but we need it around the world's origin. So we backup the translation beforehand and
+			 * then do the necessary calculations manually.
+			 */
+			boolean wasNether = previous != null && previous.isNether();
+			boolean isNether = val != null && val.isNether();
+			final double DELTA_ZOOM = 3; /* = ln2(8) */
+			if (isNether && !wasNether) {
+				var translation = renderer.viewport.translationProperty.get();
+				var oldScale = renderer.viewport.scaleProperty.get();
+				renderer.viewport.zoomProperty.set(renderer.viewport.zoomProperty.get() + DELTA_ZOOM);
+				var newScale = renderer.viewport.scaleProperty.get();
+				renderer.viewport.translationProperty.set(translation.mul(oldScale / newScale, new Vector2d()));
+			}
+			if (wasNether && !isNether) {
+				var translation = renderer.viewport.translationProperty.get();
+				var oldScale = renderer.viewport.scaleProperty.get();
+				renderer.viewport.zoomProperty.set(renderer.viewport.zoomProperty.get() - DELTA_ZOOM);
+				var newScale = renderer.viewport.scaleProperty.get();
+				renderer.viewport.translationProperty.set(translation.mul(oldScale / newScale, new Vector2d()));
+			}
 		});
 		renderer.getChunkMetadata().addListener((MapChangeListener<Vector2ic, Map<Vector2ic, ChunkMetadata>>) change -> {
 			if (change.getValueAdded() != null)

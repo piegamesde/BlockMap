@@ -128,6 +128,11 @@ public abstract class RegionFolder {
 	public abstract boolean needsCaching();
 
 	/**
+	 * Whether this region folder represents a Nether dimension or not.
+	 */
+	public abstract boolean isNether();
+
+	/**
 	 * This {@link RegionFolder} implementation will render region files using a {@link RegionRenderer}.
 	 * Calling {@link #render(Vector2ic)} repeatedly on the same location will render the same image
 	 * multiple times.
@@ -140,6 +145,7 @@ public abstract class RegionFolder {
 		protected final RegionRenderer renderer;
 		protected LevelMetadata pins;
 		protected final long timestamp;
+		protected final boolean isNether;
 
 		/**
 		 * @param file
@@ -154,10 +160,11 @@ public abstract class RegionFolder {
 		 * @throws NullPointerException
 		 *             if any of the arguments is {@code null}
 		 */
-		public WorldRegionFolder(Map<Vector2ic, Path> files, RegionRenderer renderer) {
+		public WorldRegionFolder(Map<Vector2ic, Path> files, RegionRenderer renderer, boolean isNether) {
 			this.regions = Objects.requireNonNull(files);
 			this.renderer = Objects.requireNonNull(renderer);
 			this.timestamp = System.currentTimeMillis();
+			this.isNether = isNether;
 		}
 
 		@Override
@@ -198,6 +205,11 @@ public abstract class RegionFolder {
 		}
 
 		@Override
+		public boolean isNether() {
+			return isNether;
+		}
+
+		@Override
 		public Optional<LevelMetadata> getPins() {
 			return Optional.ofNullable(pins);
 		}
@@ -220,7 +232,7 @@ public abstract class RegionFolder {
 		 * @see #load(Path, MinecraftDimension, RegionRenderer)
 		 */
 		public static WorldRegionFolder load(Path world, MinecraftDimension dimension, RegionRenderer renderer, boolean loadPins) throws IOException {
-			WorldRegionFolder folder = load(world.resolve(dimension.getRegionPath()), renderer);
+			WorldRegionFolder folder = load(world.resolve(dimension.getRegionPath()), renderer, dimension == MinecraftDimension.NETHER);
 			if (loadPins)
 				folder.setPins(LevelMetadata.loadFromWorld(world, dimension));
 			return folder;
@@ -238,7 +250,7 @@ public abstract class RegionFolder {
 		 *            {@code region} and is situated inside a Minecraft world, but this is not a hard
 		 *            requirement. It has to be a directory.
 		 */
-		public static WorldRegionFolder load(Path regionFolder, RegionRenderer renderer) throws IOException {
+		public static WorldRegionFolder load(Path regionFolder, RegionRenderer renderer, boolean isNether) throws IOException {
 			Map<Vector2ic, Path> files = new HashMap<>();
 			try (Stream<Path> stream = Files.list(regionFolder)) {
 				for (Path p : (Iterable<Path>) stream::iterator) {
@@ -247,7 +259,7 @@ public abstract class RegionFolder {
 						files.put(new Vector2i(Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2))), p);
 				}
 			}
-			return new WorldRegionFolder(files, renderer);
+			return new WorldRegionFolder(files, renderer, isNether);
 		}
 	}
 
@@ -268,6 +280,7 @@ public abstract class RegionFolder {
 		protected final Map<Vector2ic, RegionHelper> regions;
 		protected final Optional<LevelMetadata> pins;
 		protected final long timestamp;
+		protected final boolean isNether;
 
 		/**
 		 * Loads a json file that contains the information about all rendered files.
@@ -282,6 +295,7 @@ public abstract class RegionFolder {
 					.stream().flatMap(Collection::stream)
 					.collect(Collectors.toMap(r -> new Vector2i(r.x, r.z), Function.identity()));
 			timestamp = helper.timestamp;
+			isNether = helper.isNether;
 		}
 
 		@Override
@@ -316,6 +330,11 @@ public abstract class RegionFolder {
 		@Override
 		public long getTimestamp() {
 			return timestamp;
+		}
+
+		@Override
+		public boolean isNether() {
+			return isNether;
 		}
 
 		@Override
@@ -470,6 +489,11 @@ public abstract class RegionFolder {
 			return world.getTimestamp();
 		}
 
+		@Override
+		public boolean isNether() {
+			return world.isNether();
+		}
+
 		/**
 		 * Remove all information about generated structures that are not in the set
 		 */
@@ -508,7 +532,7 @@ public abstract class RegionFolder {
 			synchronized (regions) {
 				try (Writer writer = new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(basePath,
 						StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING), 8192, true))) {
-					GSON.toJson(new SavedRegionHelper(regions.values(), getPins().orElse(null), getTimestamp()), writer);
+					GSON.toJson(new SavedRegionHelper(regions.values(), getPins().orElse(null), getTimestamp(), isNether()), writer);
 					writer.flush();
 				}
 			}
@@ -534,11 +558,13 @@ public abstract class RegionFolder {
 		Collection<RegionHelper> regions;
 		LevelMetadata pins;
 		long timestamp;
+		boolean isNether;
 
-		public SavedRegionHelper(Collection<RegionHelper> regions, LevelMetadata pins, long timestamp) {
+		public SavedRegionHelper(Collection<RegionHelper> regions, LevelMetadata pins, long timestamp, boolean isNether) {
 			this.regions = regions;
 			this.pins = pins;
 			this.timestamp = timestamp;
+			this.isNether = isNether;
 		}
 
 		static class RegionHelper {

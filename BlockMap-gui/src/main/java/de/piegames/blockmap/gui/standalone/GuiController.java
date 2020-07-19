@@ -271,10 +271,10 @@ public class GuiController implements Initializable {
 			statusBar.textProperty().bind(renderer.getStatus());
 			
 			Label timestampLabel = new Label();
+			timestampLabel.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 			timestampLabel.textProperty().bind(Bindings.createStringBinding(() -> {
 				if (regionFolder.get() != null) {
-					// TODO convert to human readable string
-					return "Rendered at " + Instant.ofEpochMilli(regionFolder.get().getValue().getTimestamp()).toString();
+					return "Rendered " + DateConverter.toRelative(regionFolder.get().getValue().getTimestamp());
 				} else
 					return "";
 			}, regionFolder));

@@ -10,7 +10,6 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -53,11 +52,13 @@ import de.piegames.blockmap.world.RegionFolder;
 import de.piegames.nbt.CompoundTag;
 import de.piegames.nbt.stream.NBTInputStream;
 import impl.org.controlsfx.skin.AutoCompletePopup;
+import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -270,16 +271,23 @@ public class GuiController implements Initializable {
 			statusBar.setText(null);
 			statusBar.textProperty().bind(renderer.getStatus());
 			
-			Label timestampLabel = new Label();
-			timestampLabel.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-			timestampLabel.textProperty().bind(Bindings.createStringBinding(() -> {
-				if (regionFolder.get() != null) {
-					return "Rendered " + DateConverter.toRelative(regionFolder.get().getValue().getTimestamp());
-				} else
-					return "";
-			}, regionFolder));
-			statusBar.getRightItems().add(timestampLabel);
+			{
+				var timeCounter = new SimpleIntegerProperty(0);
+				var timeline = new Timeline(1,
+						new KeyFrame(Duration.seconds(60), e -> timeCounter.set(timeCounter.intValue() + 1)));
+				timeline.setCycleCount(Animation.INDEFINITE);
+				timeline.play();
 
+				Label timestampLabel = new Label();
+				timestampLabel.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+				timestampLabel.textProperty().bind(Bindings.createStringBinding(() -> {
+					if (regionFolder.get() != null) {
+						return "Rendered " + DateConverter.toRelative(regionFolder.get().getValue().getTimestamp());
+					} else
+						return "";
+				}, regionFolder, timeCounter));
+				statusBar.getRightItems().add(timestampLabel);
+			}
 			Label zoomLabel = new Label();
 			zoomLabel.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 			zoomLabel.textProperty().bind(Bindings.createStringBinding(() -> {

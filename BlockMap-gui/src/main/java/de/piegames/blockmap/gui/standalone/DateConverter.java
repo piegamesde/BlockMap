@@ -1,6 +1,8 @@
 package de.piegames.blockmap.gui.standalone;
 
+import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.util.Date;
 
 /**
  * A simple class to convert dates, for example to relative strings.
@@ -22,6 +24,7 @@ class DateConverter {
      * @return the relative time eg. "2 hours" or "just now"
      */
     public static String toRelative(long timestamp) {
+		var date = Date.from(Instant.ofEpochMilli(timestamp));
         long passedTime = Instant.now().toEpochMilli() - timestamp;
 
         if (passedTime < MINUTE_MILLI) {
@@ -36,8 +39,7 @@ class DateConverter {
             int count = (int) (passedTime / DAY_MILLI);
             return count + " " + selectLangUnitAmount(count, "day", "days") + " ago";
         } else {
-            int count = (int) (passedTime / MONTH_MILLI);
-            return count + " " + selectLangUnitAmount(count, "month", "months") + " ago";
+			return "in " + new SimpleDateFormat("MMMM YYYY").format(date);
         }
     }
 

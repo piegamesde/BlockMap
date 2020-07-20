@@ -84,34 +84,6 @@ public class Generator {
 					Class<?> MinecraftMain = Class.forName("net.minecraft.data.Main", true, loader);
 					Method main = MinecraftMain.getDeclaredMethod("main", String[].class);
 					main.invoke(null, new Object[] { new String[] { "--reports", "--output=" + output } });
-				} catch (Exception e) {
-					/**
-					 * Somehow, this code throws weird exceptions when run on Windows. Since it appears to be random,
-					 * let's try multiple times in the hope that at least one will succeed :shrug:
-					 */
-					log.error("Extracting Minecraft data failed, trying again");
-
-					try (URLClassLoader loader = new URLClassLoader(
-							new URL[] { OUTPUT_INTERNAL_CACHE.resolve("server-" + version.fileSuffix + ".jar").toUri().toURL() },
-							Generator.class.getClassLoader())) {
-						Class<?> MinecraftMain = Class.forName("net.minecraft.data.Main", true, loader);
-						Method main = MinecraftMain.getDeclaredMethod("main", String[].class);
-						main.invoke(null, new Object[] { new String[] { "--reports", "--output=" + output } });
-					} catch (Exception f) {
-						log.error("Extracting Minecraft data failed again, trying a last time");
-
-						try (URLClassLoader loader = new URLClassLoader(
-								new URL[] { OUTPUT_INTERNAL_CACHE.resolve("server-" + version.fileSuffix + ".jar").toUri().toURL() },
-								Generator.class.getClassLoader())) {
-							Class<?> MinecraftMain = Class.forName("net.minecraft.data.Main", true, loader);
-							Method main = MinecraftMain.getDeclaredMethod("main", String[].class);
-							main.invoke(null, new Object[] { new String[] { "--reports", "--output=" + output } });
-						} catch (Exception g) {
-							log.error("Why do such errors ever only happen on windows? -.-", g);
-							log.debug("(If you see this on Linux, make a bug report)");
-							throw g;
-						}
-					}
 				}
 			}
 

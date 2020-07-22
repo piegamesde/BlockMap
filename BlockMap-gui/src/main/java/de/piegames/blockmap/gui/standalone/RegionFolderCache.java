@@ -31,7 +31,7 @@ public class RegionFolderCache {
 	private static Log log = LogFactory.getLog(RegionFolderCache.class);
 
 	private final ProjectDirectories directories = ProjectDirectories.from("de", "piegames", "blockmap");
-	private final Path cacheDir = Paths.get(directories.cacheDir + "/regions");
+	private final Path cacheDir = Paths.get(directories.cacheDir).resolve("regions");
 	private final Path cacheIndex = cacheDir.resolve("cache.json");
 
 	private final Map<String, CachedRegionFolder>	inUse		= new HashMap<>();

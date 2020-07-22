@@ -494,10 +494,21 @@ public class LevelMetadata {
 					if (map.containsKey("colors"))
 						colors = ((ByteArrayTag) map.get("colors")).getValue();
 
-					int dimension = ((Number) map.get("dimension").getValue()).intValue();
-					if (filterDimension != null && dimension != filterDimension.index)
+					var dimension = map.get("dimension")
+							.getAsStringTag()
+							.map(tag -> MinecraftDimension.byName(tag.getValue()))
+							/* The dimension is an int in pre-1.16 */
+							.or(() -> map.get("dimension").getAsIntTag()
+									.map(IntTag::getValue)
+									.map(MinecraftDimension::byID))
+							/* Except when it's a byte */
+							.or(() -> map.get("dimension").getAsByteTag()
+									.map(ByteTag::getValue)
+									.map(MinecraftDimension::byID))
+							.get();
+					if (filterDimension != null && dimension != filterDimension)
 						continue;
-					maps.add(new MapPin(scale, center, MinecraftDimension.byID(dimension), banners, colors));
+					maps.add(new MapPin(scale, center, dimension, banners, colors));
 				} catch (RuntimeException | IOException e) {
 					log.warn("Could not access map " + p.getFileName(), e);
 				}

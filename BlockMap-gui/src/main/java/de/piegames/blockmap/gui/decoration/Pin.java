@@ -725,7 +725,7 @@ public class Pin {
 			return info;
 		}
 
-		private Image scaleUp(Image input) {
+		private static Image scaleUp(Image input) {
 			BufferedImage img = SwingFXUtils.fromFXImage(input, null);
 
 			AffineTransform at = new AffineTransform();

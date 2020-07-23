@@ -88,7 +88,8 @@ public class GuiControllerServer implements Initializable {
 							file.toString(),
 							worldBox.getValue(),
 							VersionProvider.VERSION)),
-					new RegionFolder.RemoteRegionFolder(file.resolve(path))));
+					new RegionFolder.RemoteRegionFolder(
+							fixupURI(file.resolve(path)))));
 		} catch (IOException e) {
 			folder.set(null);
 			log.warn("Could not load world " + val + " from remote file " + file);
@@ -151,5 +152,84 @@ public class GuiControllerServer implements Initializable {
 
 	public ServerMetadata getMetadata() {
 		return metadata;
+	}
+
+	/*
+	 * The Java URI API has a bug where resolving a relative path to an absolute one without path and
+	 * missing trailing '/' (as `https://example.com`) will return in an URI with that slash missing,
+	 * and thus with an invalid host name. (See the respective links for more examples)
+	 *
+	 * https://stackoverflow.com/questions/2534124/java-uri-resolve
+	 * https://bugs.openjdk.java.net/browse/JDK-4666701
+	 *
+	 * The easiest fix for this is to fix the `toString` method to include that missing slash.
+	 */
+
+	private URI fixupURI(URI uri) {
+		return URI.create(uriToStringFixed(uri));
+	}
+
+	private static String uriToStringFixed(URI uri) {
+		var scheme = uri.getScheme();
+		var schemeSpecificPart = uri.getSchemeSpecificPart();
+		var host = uri.getHost();
+		var userInfo = uri.getUserInfo();
+		var port = uri.getPort();
+		var authority = uri.getAuthority();
+		var path = uri.getPath();
+		var query = uri.getQuery();
+		var fragment = uri.getFragment();
+
+		StringBuilder sb = new StringBuilder();
+		if (scheme != null) {
+			sb.append(scheme);
+			sb.append(':');
+		}
+		if (uri.isOpaque()) {
+			sb.append(schemeSpecificPart);
+		} else {
+			if (host != null) {
+				sb.append("//");
+				if (userInfo != null) {
+					sb.append(userInfo);
+					sb.append('@');
+				}
+				boolean needBrackets = ((host.indexOf(':') >= 0)
+						&& !host.startsWith("[")
+						&& !host.endsWith("]"));
+				if (needBrackets)
+					sb.append('[');
+				sb.append(host);
+				if (needBrackets)
+					sb.append(']');
+				if (port != -1) {
+					sb.append(':');
+					sb.append(port);
+				}
+			} else if (authority != null) {
+				sb.append("//");
+				sb.append(authority);
+			}
+			if (path != null) {
+				// PATCH START
+				if (!path.startsWith("/")) {
+					if ((host != null && !host.endsWith("/"))
+							|| (authority != null && !authority.endsWith("/"))) {
+						sb.append("/");
+					}
+				}
+				// PATCH END
+				sb.append(path);
+			}
+			if (query != null) {
+				sb.append('?');
+				sb.append(query);
+			}
+		}
+		if (fragment != null) {
+			sb.append('#');
+			sb.append(fragment);
+		}
+		return sb.toString();
 	}
 }

@@ -475,6 +475,13 @@ public class GuiController implements Initializable {
 			loadRemote(new URI(input));
 			return;
 		} catch (URISyntaxException e) {
+			log.debug("'" + input + "' is not a valid URI");
+		} catch (IllegalArgumentException e) {
+			log.warn("Malformed input uri", e);
+			ExceptionDialog d = new ExceptionDialog(e);
+			d.setHeaderText("Malformed input");
+			d.showAndWait();
+			return;
 		}
 
 		/* Total failure */

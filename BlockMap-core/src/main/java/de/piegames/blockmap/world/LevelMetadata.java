@@ -452,7 +452,7 @@ public class LevelMetadata {
 						}
 					} catch (RuntimeException | IOException e) {
 						if (Files.size(p) == 0)
-							log.warn(p.getFileName() + " is empty?!");
+							log.warn("'" + worldPath.relativize(p) + "' is empty?!");
 						else
 							log.warn("Could not load village data from " + p.getFileName(), e);
 					}
@@ -469,7 +469,7 @@ public class LevelMetadata {
 				if (!p.getFileName().toString().endsWith(".dat")
 						|| !p.getFileName().toString().startsWith("map_"))
 					continue;
-				log.debug("Loading map metadata from" + p.toAbsolutePath());
+				log.debug("Loading map metadata from " + p.toAbsolutePath());
 				try (NBTInputStream in = new NBTInputStream(Files.newInputStream(p), NBTInputStream.GZIP_COMPRESSION)) {
 					CompoundMap map = (CompoundMap) ((CompoundMap) in.readTag().getValue()).get("data").getValue();
 					byte scale = ((ByteTag) map.get("scale")).getValue();

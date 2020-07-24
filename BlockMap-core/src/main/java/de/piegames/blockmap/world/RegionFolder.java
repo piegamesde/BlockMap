@@ -180,7 +180,7 @@ public abstract class RegionFolder {
 					return renderer.render(pos, file);
 				} catch (RuntimeException | IOException e) {
 					if (Files.size(path) == 0) {
-						log.warn(path.getFileName() + " is empty?!");
+						log.warn("'" + path + "' is empty?!");
 						return new Region(pos, new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB), new HashMap<>());
 					} else
 						throw e;

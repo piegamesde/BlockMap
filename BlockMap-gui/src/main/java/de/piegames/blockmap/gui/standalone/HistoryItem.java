@@ -30,6 +30,10 @@ public class HistoryItem {
 		return name;
 	}
 
+	public String getPath() {
+		return path;
+	}
+
 	/** For history items, the last time the item was loaded in BlockMap. Otherwise, the last time it was loaded in Minecraft */
 	public long lastAccessed() {
 		return timestamp;

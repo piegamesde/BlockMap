@@ -14,7 +14,7 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination.ModifierValue;
+import javafx.scene.input.KeyCombination;
 import javafx.stage.Stage;
 
 public class GuiMain extends Application {
@@ -63,8 +63,7 @@ public class GuiMain extends Application {
 			scene.getStylesheets().add("/de/piegames/blockmap/gui/standalone/style.css");
 			stage.setScene(scene);
 			stage.show();
-			scene.getAccelerators().put(new KeyCodeCombination(KeyCode.L, ModifierValue.UP, ModifierValue.DOWN, ModifierValue.UP,
-					ModifierValue.UP, ModifierValue.ANY), controller.worldInput::requestFocus);
+			scene.getAccelerators().put(new KeyCodeCombination(KeyCode.Q, KeyCombination.CONTROL_DOWN), () -> controller.exit());
 
 			GuiMainPreloader.splashScreen.hide();
 
@@ -87,11 +86,12 @@ public class GuiMain extends Application {
 				.stream()
 				.filter(p -> !"-v".equals(p) && !"--verbose".equals(p))
 				.findFirst()
-				.ifPresent(world -> {
+				.ifPresentOrElse(world -> {
 					checkLogger();
 					log.info("Loading path specified on command line");
-					controller.worldInput.setText(world);
-					controller.load();
+					controller.load(world);
+				}, () -> {
+					controller.showLoadDialog();
 				});
 	}
 

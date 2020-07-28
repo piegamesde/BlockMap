@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.collections.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.controlsfx.control.*?>
+<?import javafx.geometry.Insets?>
+<?import org.controlsfx.control.CheckListView?>
+<?import javafx.scene.input.KeyCodeCombination?>
+
+<VBox
+	maxHeight="0"
+	maxWidth="0"
+	minHeight="0"
+	minWidth="0"
+	xmlns="http://javafx.com/javafx/8"
+	xmlns:fx="http://javafx.com/fxml/1">
+	<TextField
+		editable="true"
+		onAction="#load"
+		promptText="Filter known worlds"
+		fx:id="input"
+		maxWidth="Infinity" />
+	<ListView
+		fx:id="worlds"
+		VBox.vgrow="ALWAYS"/>
+</VBox>

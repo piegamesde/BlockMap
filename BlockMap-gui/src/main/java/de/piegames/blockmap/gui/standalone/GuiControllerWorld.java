@@ -54,7 +54,6 @@ public class GuiControllerWorld implements Initializable {
 	/* The String is a hash code used for caching */
 	protected ReadOnlyObjectWrapper<Pair<String, RegionFolder>> folder = new ReadOnlyObjectWrapper<>();
 	protected Path worldPath;
-	protected Path lastBrowsedPath;
 	protected RenderSettings settings;
 
 	private ChangeListener<Object> reloadListener = (observer, old, value) -> {

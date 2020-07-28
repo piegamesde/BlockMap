@@ -1,8 +1,5 @@
 package de.piegames.blockmap.gui.standalone;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -11,12 +8,8 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -27,16 +20,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.controlsfx.control.CheckTreeView;
 import org.controlsfx.control.StatusBar;
-import org.controlsfx.control.textfield.AutoCompletionBinding;
-import org.controlsfx.control.textfield.TextFields;
 import org.controlsfx.dialog.ExceptionDialog;
 import org.joml.Vector2d;
 import org.joml.Vector2ic;
 
-import com.google.common.collect.Streams;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-import de.piegames.blockmap.DotMinecraft;
 import de.piegames.blockmap.gui.MapPane;
 import de.piegames.blockmap.gui.WorldRendererCanvas;
 import de.piegames.blockmap.gui.decoration.DragScrollDecoration;
@@ -49,9 +38,6 @@ import de.piegames.blockmap.gui.standalone.about.AboutDialog;
 import de.piegames.blockmap.world.ChunkMetadata;
 import de.piegames.blockmap.world.LevelMetadata;
 import de.piegames.blockmap.world.RegionFolder;
-import de.piegames.nbt.CompoundTag;
-import de.piegames.nbt.stream.NBTInputStream;
-import impl.org.controlsfx.skin.AutoCompletePopup;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -71,23 +57,14 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.CheckBoxTreeItem;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
-import javafx.stage.DirectoryChooser;
-import javafx.util.Callback;
 import javafx.util.Duration;
 import javafx.util.Pair;
-import javafx.util.StringConverter;
-import me.xdrop.fuzzywuzzy.FuzzySearch;
-import me.xdrop.fuzzywuzzy.model.BoundExtractedResult;
 
 public class GuiController implements Initializable {
 
@@ -104,15 +81,6 @@ public class GuiController implements Initializable {
 
 	@FXML
 	private BorderPane root;
-
-	/* Top */
-
-	@FXML
-	protected TextField worldInput;
-	/** Recently loaded worlds and servers */
-	private List<HistoryItem> recentWorlds = new LinkedList<>();
-	/** Whatever found in {@code .minecraft} for autocomplete purposes */
-	private List<HistoryItem> otherWorlds = new LinkedList<>();
 
 	/* Bottom */
 
@@ -150,6 +118,7 @@ public class GuiController implements Initializable {
 			.newSingleThreadScheduledExecutor(
 			new ThreadFactoryBuilder().setNameFormat("pin-background-thread-%d").build());
 	RegionFolderCache cache = new RegionFolderCache();
+	HistoryManager historyManager = new HistoryManager(backgroundThread);
 
 	public GuiController() {
 	}
@@ -173,97 +142,6 @@ public class GuiController implements Initializable {
 		}
 		pins = new PinDecoration(renderer.viewport);
 		pane.pinLayers.add(pins);
-
-		/* Load list of worlds in .minecraft/saves (in background) */
-		backgroundThread.execute(() -> {
-			Path saves = DotMinecraft.DOTMINECRAFT.resolve("saves");
-			if (Files.exists(saves) && Files.isDirectory(saves))
-				try {
-					List<HistoryItem> toAdd = Files.list(saves)
-							.filter(Files::exists)
-							.filter(Files::isDirectory)
-							.filter(p -> Files.exists(p.resolve("level.dat")))
-							.map(save -> {
-								String name = save.getFileName().toString();
-								long timestamp = 0;
-								try (NBTInputStream in = new NBTInputStream(Files.newInputStream(save.resolve("level.dat")), NBTInputStream.GZIP_COMPRESSION)) {
-									Optional<CompoundTag> data = in.readTag().getAsCompoundTag().flatMap(t -> t.getAsCompoundTag("Data"));
-									name = data.flatMap(t -> t.getStringValue("LevelName")).orElse(null);
-									timestamp = data.flatMap(t -> t.getLongValue("LastPlayed")).orElse(0L);
-								} catch (IOException e) {
-									log.warn("Could not read world name for " + save, e);
-								}
-
-								String imageURL = null;
-								if (Files.exists(save.resolve("icon.png")))
-									imageURL = save.resolve("icon.png").toUri().toString();
-								return new HistoryItem(false, name, save.toAbsolutePath().toString(), imageURL, timestamp);
-							})
-							.sorted(Comparator.comparingLong(HistoryItem::lastAccessed).reversed())
-							.collect(Collectors.toList());
-					Platform.runLater(() -> otherWorlds.addAll(toAdd));
-				} catch (IOException e) {
-					log.warn("Could not load worlds from saves folder", e);
-				}
-		});
-		{/* Input auto completion */
-			/* TODO tweak once history saving is implemented */
-			AutoCompletionBinding<HistoryItem> autoComplete = TextFields.bindAutoCompletion(worldInput, request -> {
-				String text = request.getUserText();
-				if (text.length() < 3)
-					return Streams.concat(recentWorlds.stream().limit(5), otherWorlds.stream()).collect(Collectors.toList());
-				return Streams.concat(
-						FuzzySearch.extractAll(text, recentWorlds, HistoryItem::getName, 20).stream()
-								.sorted()
-								.limit(5)
-								.map(BoundExtractedResult::getReferent)
-								.sorted(Comparator.comparingLong(HistoryItem::lastAccessed).reversed()),
-						FuzzySearch.extractAll(text, otherWorlds, HistoryItem::getName, 50)
-								.stream()
-								.map(BoundExtractedResult::getReferent)
-								.sorted(Comparator.comparingLong(HistoryItem::lastAccessed).reversed()))
-						.collect(Collectors.toList());
-			},
-					new StringConverter<HistoryItem>() {
-
-						@Override
-						public String toString(HistoryItem object) {
-							return object.path;
-						}
-
-						@Override
-						public HistoryItem fromString(String string) {
-							return null;
-						}
-					});
-			try {
-				/* Access a private field (the actual popup) to set a custom skin */
-				Field field = AutoCompletionBinding.class.getDeclaredField("autoCompletionPopup");
-				field.setAccessible(true);
-				@SuppressWarnings("unchecked")
-				AutoCompletePopup<HistoryItem> popup = (AutoCompletePopup<HistoryItem>) field.get(autoComplete);
-				popup.setSkin(new AutoCompletePopupSkin2<HistoryItem>(popup, new Callback<ListView<HistoryItem>, ListCell<HistoryItem>>() {
-
-					@Override
-					public ListCell<HistoryItem> call(ListView<HistoryItem> param) {
-						return new AutoCompleteItem();
-					}
-				}));
-			} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e1) {
-				e1.printStackTrace();
-			}
-
-			autoComplete.maxWidthProperty().bind(worldInput.widthProperty());
-			autoComplete.prefWidthProperty().bind(worldInput.widthProperty());
-
-			worldInput.focusedProperty().addListener((property, old, val) -> {
-				if (!old && val && worldInput.getText().isBlank())
-					new Timeline(new KeyFrame(Duration.seconds(1), e -> {
-						if (worldInput.isFocused())
-							autoComplete.setUserInput("");
-					})).play();
-			});
-		}
 
 		{ /* Status bar initialization */
 			statusBar.setSkin(new StatusBarSkin2(statusBar));
@@ -424,10 +302,8 @@ public class GuiController implements Initializable {
 		checkedPins.put(type, ret);
 	}
 
-	@FXML
-	public void load() {
-		String input = worldInput.getText();
-		if (input.isBlank()) {
+	public void load(String input) {
+		if (input == null || input.isBlank()) {
 			unload();
 			return;
 		}
@@ -446,14 +322,12 @@ public class GuiController implements Initializable {
 						Alert alert = new Alert(AlertType.ERROR, "Path to a world must either be a folder or a level.dat file", ButtonType.OK);
 						alert.setHeaderText("Could not load world at '" + input + "'");
 						alert.showAndWait();
-						worldInput.selectAll();
 						return;
 					}
 				} else if (!Files.exists(path.resolve("level.dat"))) {
 					Alert alert = new Alert(AlertType.ERROR, "A world folder must contain a level.dat", ButtonType.OK);
 					alert.setHeaderText("Could not load world at '" + input + "'");
 					alert.showAndWait();
-					worldInput.selectAll();
 					return;
 				}
 				/* Load the world */
@@ -463,7 +337,6 @@ public class GuiController implements Initializable {
 					Alert alert = new Alert(AlertType.ERROR, "Failed to load world – " + e.getMessage(), ButtonType.OK);
 					alert.setHeaderText("Could not load world at '" + input + "'");
 					alert.showAndWait();
-					worldInput.selectAll();
 				}
 				return;
 			}
@@ -488,46 +361,20 @@ public class GuiController implements Initializable {
 		Alert alert = new Alert(AlertType.ERROR, "Please specify the path to a world or the URL to a server", ButtonType.OK);
 		alert.setHeaderText("Could not load world at '" + input + "'");
 		alert.showAndWait();
-		worldInput.selectAll();
 	}
 
 	@FXML
-	public void showFolderDialog() {
-		DirectoryChooser dialog = new DirectoryChooser();
-		File f = (worldSettingsController.lastBrowsedPath == null) ? DotMinecraft.DOTMINECRAFT.resolve("saves").toFile()
-				: worldSettingsController.lastBrowsedPath.getParent().toFile();
-		if (!f.isDirectory())
-			f = DotMinecraft.DOTMINECRAFT.resolve("saves").toFile();
-		if (!f.isDirectory())
-			f = null;
-		dialog.setInitialDirectory(f);
-		f = dialog.showDialog(null);
-		if (f != null) {
-			worldSettingsController.lastBrowsedPath = f.toPath();
-			loadLocal(worldSettingsController.lastBrowsedPath);
-			worldInput.setText(f.toString());
+	public void showLoadDialog() {
+		try {
+			new OpenDialog(historyManager).showAndWait().ifPresent(this::load);
+		} catch (Exception e) {
+			log.error("Could not show 'open' dialog, please file a bug report", e);
+			ExceptionDialog d = new ExceptionDialog(e);
+			d.setTitle("Error");
+			d.setHeaderText("Could not show 'open' dialog, please file a bug report");
+			d.showAndWait();
+			return;
 		}
-	}
-
-	@FXML
-	public void showUrlDialog() {
-		TextInputDialog dialog = new TextInputDialog();
-		dialog.setTitle("Load remote world");
-		dialog.setHeaderText("Enter the URL to the remote world you want to load");
-		dialog.setGraphic(null);
-		dialog.setResult(serverSettingsController.lastBrowsedURL);
-		dialog.showAndWait().ifPresent(s -> {
-			try {
-				loadRemote(new URI(s));
-				serverSettingsController.lastBrowsedURL = s;
-				worldInput.setText(s);
-			} catch (URISyntaxException | IllegalArgumentException e) {
-				log.warn("Malformed input uri", e);
-				ExceptionDialog d = new ExceptionDialog(e);
-				d.setTitle("Malformed input");
-				d.showAndWait();
-			}
-		});
 	}
 
 	@FXML
@@ -555,7 +402,7 @@ public class GuiController implements Initializable {
 		loaded = WorldType.LOCAL;
 
 		{ /* Update history */
-			recentWorlds.removeIf(w -> w.path.equals(path.toAbsolutePath().toString()));
+			// recentWorlds.removeIf(w -> w.path.equals(path.toAbsolutePath().toString()));
 			String name = regionFolderCached.get()
 					.getPins()
 					.flatMap(LevelMetadata::getWorldName)
@@ -563,7 +410,8 @@ public class GuiController implements Initializable {
 			String imageURL = null;
 			if (Files.exists(path.resolve("icon.png")))
 				imageURL = path.resolve("icon.png").toUri().toString();
-			recentWorlds.add(0, new HistoryItem(false, name, path.toAbsolutePath().toString(), imageURL, System.currentTimeMillis()));
+			// recentWorlds.add(0, new HistoryItem(false, name, path.toAbsolutePath().toString(), imageURL,
+			// System.currentTimeMillis()));
 		}
 	}
 
@@ -579,10 +427,11 @@ public class GuiController implements Initializable {
 		loaded = WorldType.REMOTE;
 
 		if (serverSettingsController.getMetadata() != null) { /* Update history */
-			recentWorlds.removeIf(w -> w.path.equals(file.toString()));
+			// recentWorlds.removeIf(w -> w.path.equals(file.toString()));
 			String name = serverSettingsController.getMetadata().name.orElse("<unknown server>");
 			String imageURL = serverSettingsController.getMetadata().iconLocation.orElse(null);
-			recentWorlds.add(0, new HistoryItem(true, name, file.toString(), imageURL, System.currentTimeMillis()));
+			// recentWorlds.add(0, new HistoryItem(true, name, file.toString(), imageURL,
+			// System.currentTimeMillis()));
 		}
 	}
 

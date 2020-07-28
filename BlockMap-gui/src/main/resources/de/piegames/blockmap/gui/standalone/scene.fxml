@@ -25,7 +25,7 @@
 				<items>
 					<MenuItem
 						text="Load world..."
-						onAction="#showFolderDialog">
+						onAction="#showLoadDialog">
 						<accelerator>
 							<KeyCodeCombination
 								code="O"
@@ -33,19 +33,6 @@
 								control="DOWN"
 								meta="UP"
 								shift="UP"
-								shortcut="UP" />
-						</accelerator>
-					</MenuItem>
-					<MenuItem
-						text="Load from server..."
-						onAction="#showUrlDialog">
-						<accelerator>
-							<KeyCodeCombination
-								code="O"
-								alt="UP"
-								control="DOWN"
-								meta="UP"
-								shift="DOWN"
 								shortcut="UP" />
 						</accelerator>
 					</MenuItem>
@@ -102,22 +89,6 @@
 	<BorderPane
 		fx:id="root"
 		VBox.vgrow="ALWAYS">
-		<top>
-			<HBox id="top">
-				<children>
-					<TextField
-						editable="true"
-						onAction="#load"
-						promptText="Enter path to world or server URL"
-						fx:id="worldInput"
-						maxWidth="Infinity"
-						HBox.hgrow="ALWAYS"/>
-					<Button
-						text="Load"
-						onAction="#load" />
-				</children>
-			</HBox>
-		</top>
 		<left>
 			<VBox>
 				<children>

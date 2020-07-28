@@ -75,7 +75,6 @@ public class GuiControllerServer implements Initializable {
 	protected URI file;
 	protected ServerMetadata metadata;
 	protected List<ServerLevel> worlds;
-	protected String lastBrowsedURL;
 
 	private ChangeListener<String> listener = (o, old, val) -> {
 		try {

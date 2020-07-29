@@ -19,7 +19,7 @@ dependencies {
 	implementation 'com.github.piegamesde:gson-fire:9210521426'
 	implementation group: 'com.github.haifengl', name: 'smile-core', version: '1.5.2'
 	implementation group: 'com.codepoetics', name: 'protonpack', version: '1.15'
-    implementation 'com.github.saibotk:JMAW:0.1'
+    implementation 'com.github.saibotk:JMAW:0.3.1'
     
     // GUI standalone dependencies
 	implementation 'com.google.guava:guava:27.1-jre'

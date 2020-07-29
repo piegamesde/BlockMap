@@ -669,10 +669,12 @@ public class Pin {
 
 	private static class PlayerPin extends Pin implements Runnable {
 
+		private static final int SKIN_IMAGE_SCALE_MULTIPLIER = 16;
+
 		private final SimpleImageCache imageCache = new SimpleImageCache();
 		private final SimplePlayerProfileCache playerProfileCache = new SimplePlayerProfileCache();
 
-		protected LevelMetadata.PlayerPin		player;
+		protected LevelMetadata.PlayerPin	player;
 		protected StringProperty			playerName	= new SimpleStringProperty("loading…");
 		protected ScheduledExecutorService	backgroundThread;
 
@@ -723,11 +725,29 @@ public class Pin {
 			return info;
 		}
 
-		private static Image scaleUp(Image input) {
+		/**
+		 * This scales up an JavaFX Image by a given factor, using the {@link SwingFXUtils}, to allow scaling up using
+		 * the NEAREST NEIGHBOR method.
+		 *
+		 * Why?
+		 * This is needed right now, because there is no better way, to scale a JavaFX image pixel perfect. This is
+		 * partly related to this issue: https://bugs.openjdk.java.net/browse/JDK-8211861 and JavaFX images only scaling
+		 * the image properly, when setting the requested size via the constructor while also fetching the image using
+		 * the url parameter of the constructor.
+		 * This would make our cache interface ugly, as we would need to give it the sizes as parameters etc. Also
+		 * converting the {@link Image} to an {@link BufferedImage} is done internally by just copying the pixels,
+		 * which should be okay for now as this is also called asynchronously.
+		 *
+		 * @param input The JavaFX input {@link Image}.
+		 * @param scale The scale multiplier.
+		 *
+		 * @return The scaled up image.
+		 */
+		private static Image rescale(Image input, double scale) {
 			BufferedImage img = SwingFXUtils.fromFXImage(input, null);
 
 			AffineTransform at = new AffineTransform();
-			at.scale(16.0, 16.0);
+			at.scale(scale, scale);
 			AffineTransformOp scaleOp = new AffineTransformOp(at, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
 			BufferedImage after = scaleOp.filter(img, null);
 
@@ -738,13 +758,21 @@ public class Pin {
 			log.debug("Loading player skin from: " + url);
 
 			Image image = imageCache.get(url);
-			image = scaleUp(image);
-			image = new WritableImage(image.getPixelReader(), 8 * 16, 8 * 16, 8 * 16, 8 * 16);
+			image = rescale(image, SKIN_IMAGE_SCALE_MULTIPLIER);
+
+			// extract the head region of the scaled up image. This is 8 * SKIN_IMAGE_SCALE_MULTIPLIER due to the
+			// original texture being 64x64, where the head was positioned at x:8,y:8 and was 8 pixels wide and long.
+			image = new WritableImage(image.getPixelReader(),
+					8 * SKIN_IMAGE_SCALE_MULTIPLIER,
+					8 * SKIN_IMAGE_SCALE_MULTIPLIER,
+					8 * SKIN_IMAGE_SCALE_MULTIPLIER,
+					8 * SKIN_IMAGE_SCALE_MULTIPLIER);
 
 			ImageView graphic = new ImageView(image);
 			graphic.setSmooth(false);
 			graphic.setPreserveRatio(true);
-			graphic.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> button.getFont().getSize() * 2, button.fontProperty()));
+			graphic.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> button.getFont().getSize() * 2,
+					button.fontProperty()));
 
 			return graphic;
 		}

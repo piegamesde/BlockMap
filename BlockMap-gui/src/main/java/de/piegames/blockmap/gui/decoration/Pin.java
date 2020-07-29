@@ -22,8 +22,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import de.piegames.blockmap.gui.standalone.IImageCache;
-import de.piegames.blockmap.gui.standalone.IPlayerProfileCache;
 import de.piegames.blockmap.gui.standalone.SimpleImageCache;
 import de.piegames.blockmap.gui.standalone.SimplePlayerProfileCache;
 import javafx.embed.swing.SwingFXUtils;
@@ -671,8 +669,8 @@ public class Pin {
 
 	private static class PlayerPin extends Pin implements Runnable {
 
-		private final IImageCache imageCache = new SimpleImageCache();
-		private final IPlayerProfileCache playerProfileCache = new SimplePlayerProfileCache();
+		private final SimpleImageCache imageCache = new SimpleImageCache();
+		private final SimplePlayerProfileCache playerProfileCache = new SimplePlayerProfileCache();
 
 		protected LevelMetadata.PlayerPin		player;
 		protected StringProperty			playerName	= new SimpleStringProperty("loading…");

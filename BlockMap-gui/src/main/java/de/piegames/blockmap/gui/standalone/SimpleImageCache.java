@@ -8,43 +8,53 @@ import org.apache.commons.logging.LogFactory;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.time.Instant;
-import java.util.Arrays;
 
-public class SimpleImageCache implements IImageCache {
+/**
+ * A simple image cache implementation, which will save fetched images to disk and load them from disk when possible.
+ *
+ * @author saibotk
+ */
+public class SimpleImageCache extends FileCache {
     private static final Log log = LogFactory.getLog(SimpleImageCache.class);
-    private final ProjectDirectories directories = ProjectDirectories.from("de", "piegames", "blockmap");
-    private final Path cacheDir	= Paths.get(directories.cacheDir + "/images");
 
     private static final long MAX_CACHE_TIME = 60000L;
 
+    /**
+     * Constructs the cache instance.
+     */
     public SimpleImageCache() {
-        try {
-            Files.createDirectories(cacheDir);
-        } catch (IOException exception) {
-            log.warn("Could not create image cache directory!", exception);
-        }
-
-        purge();
+        super(Paths.get(ProjectDirectories.from("de", "piegames", "blockmap").cacheDir + "/images"));
     }
 
-    @Override
+    /**
+     * Gets an image from the cache if possible and will otherwise fetch the image using {@link #fetch(String)}.
+     * This will also evict a file from the cache, if it is not fresh enough (deletes the file). It will also save
+     * the file to the disk, if the file has been requested / fetched from the URL.
+     *
+     * @param url The URL of the Image to fetch.
+     *
+     * @return The requested image
+     */
     public Image get(String url) {
         String fileName = getFileName(url);
 
         try {
-            File cachedFile = cacheDir.resolve(fileName).toFile();
-            if (Instant.now().toEpochMilli() - cachedFile.lastModified() <= MAX_CACHE_TIME) {
-                BufferedImage bufferedImage = ImageIO.read(cachedFile);
-                log.info("Loaded image from cache: " + fileName);
+            Path cachedFile = cacheDir.resolve(fileName);
+            boolean exists = Files.exists(cachedFile);
 
-                return SwingFXUtils.toFXImage(bufferedImage, null);
-            } else {
-                log.info("Image will be removed from cache: " + fileName);
-                cachedFile.delete();
+            if (exists) {
+                if (isFresh(cachedFile)) {
+                    log.info("Loading image from cache: " + fileName);
+
+                    return new Image(Files.newInputStream(cachedFile));
+                } else {
+                    log.info("Image will be removed from cache: " + fileName);
+
+                    removeFile(cachedFile);
+                }
             }
         } catch (IOException exception) {
             log.info("Image could not be fetched from cache...");
@@ -52,66 +62,61 @@ public class SimpleImageCache implements IImageCache {
 
         log.info("Fetching image from source instead: " + url);
 
-        return fresh(url);
+        // retrieve the image from the URL
+        Image image = fetch(url);
+
+        // Save the image, if it is not an error
+        if(!image.isError())
+            writeToCache(image, fileName);
+
+        return image;
     }
 
     /**
      *
-     * @param url
+     * Fetches an Image from an URL and returns the image.
      *
-     * @return
+     * @param url The url that is used to fetch the object from.
+     *
+     * @return The requested image object.
      *
      * @throws NullPointerException if URL is null
      * @throws IllegalArgumentException if URL is invalid or unsupported
      */
-    @Override
-    public Image fresh(String url) {
+    public Image fetch(String url) {
         String fileName = getFileName(url);
 
         Image result = new Image(url, 0, 0, true, false);
-        log.info("Fetched new image: " + fileName);
 
-        if (!result.isError()) {
-            writeToCache(result, fileName);
-        }
+        log.info("Fetched image: " + fileName);
 
         return result;
     }
 
     @Override
-    public void flush() {
-        File directory = cacheDir.toFile();
-        File[] cachedFiles = directory.listFiles();
-        if (cachedFiles != null)
-            Arrays.stream(cachedFiles).forEach(File::delete);
-
-        log.info("Flushed cache...");
-    }
-
-    @Override
-    public void purge() {
-        File directory = cacheDir.toFile();
-        File[] cachedFiles = directory.listFiles();
-
-        if (cachedFiles != null)
-            Arrays.stream(cachedFiles).filter(x -> Instant.now().toEpochMilli() - x.lastModified() > MAX_CACHE_TIME)
-                    .forEach(File::delete);
-
-        log.info("Purged cache...");
-    }
-
-    private void writeToCache(Image image, String fileName) {
-        BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null);
-
+    protected boolean isFresh(Path path) {
         try {
-            ImageIO.write(bufferedImage, "png", cacheDir.resolve(fileName).toFile());
-            log.info("Wrote file to image cache: " + fileName);
-        } catch (IOException exception) {
-            log.error("Could not write to file for image cache: " + fileName);
+            return Instant.now().toEpochMilli() - Files.getLastModifiedTime(path).toMillis() <= MAX_CACHE_TIME;
+        } catch (IOException e) {
+            log.error("Could not access last modified date on file: " + path.getFileName(), e);
+
+            return false;
         }
     }
 
-    private String getFileName(String url) {
+    protected void writeToCache(Image image, String fileName) {
+        BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null);
+
+        try {
+            ImageIO.write(bufferedImage, "png", Files.newOutputStream(cacheDir.resolve(fileName)));
+
+            log.info("Wrote file to image cache: " + fileName);
+        } catch (IOException e) {
+            log.error("Could not write to file for image cache: " + fileName, e);
+        }
+    }
+
+    protected String getFileName(String url) {
         Path location = Paths.get(url);
 
         return location.getFileName().toString() + ".png";

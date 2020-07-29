@@ -35,6 +35,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.stage.DirectoryChooser;
@@ -85,17 +86,6 @@ public class OpenDialog extends Dialog<String> implements Initializable {
 				return new MinecraftListCell();
 			}
 		});
-		input.setOnKeyPressed(e -> {
-			if (e.getCode() == KeyCode.DOWN) {
-				worlds.requestFocus();
-				worlds.getSelectionModel().select(0);
-			}
-		});
-		worlds.setOnKeyPressed(e -> {
-			if (e.getCode() == KeyCode.UP && worlds.getSelectionModel().getSelectedIndex() == 0) {
-				input.requestFocus();
-			}
-		});
 
 		worlds.setItems(new ListBinding<ListItem>() {
 
@@ -134,8 +124,18 @@ public class OpenDialog extends Dialog<String> implements Initializable {
 			}
 		}
 		);
+
+		/* "Edit" an item => "enter" action */
 		worlds.setEditable(true);
 		worlds.setOnEditStart(e -> load());
+
+		/* Re-route events between the text field and the list for better UX */
+		input.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+			if (e.getCode() == KeyCode.UP || e.getCode() == KeyCode.DOWN) {
+				worlds.fireEvent(e);
+				e.consume();
+			}
+		});
 
 		Platform.runLater(() -> input.requestFocus());
 	}

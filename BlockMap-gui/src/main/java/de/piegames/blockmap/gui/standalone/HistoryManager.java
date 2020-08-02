@@ -2,20 +2,15 @@ package de.piegames.blockmap.gui.standalone;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
@@ -42,56 +37,32 @@ public class HistoryManager {
 
 	private final ProjectDirectories directories = ProjectDirectories.from("de", "piegames", "blockmap");
 	private final Path cacheDir = Paths.get(directories.cacheDir);
-	private final Path cacheIndex = cacheDir.resolve("recent.json");
+	private final Path recentFile = cacheDir.resolve("recent.json");
 	private final Path configDir = Paths.get(directories.configDir);
 	private final Path configFile = configDir.resolve("config.json");
 
 	/* TODO add saving and loading */
 	private Config config = new Config();
+	private ScheduledExecutorService backgroundThread;
 
 	/** Recently loaded worlds and servers */
 	public final ObservableList<HistoryItem> recentWorlds = FXCollections.observableArrayList();
 	/** Whatever found in {@code .minecraft} for autocomplete purposes */
 	public final ObservableList<HistoryItem> otherWorlds = FXCollections.observableArrayList();
 
-	@SuppressWarnings("serial")
 	public HistoryManager(ScheduledExecutorService backgroundThread) {
+		this.backgroundThread = Objects.requireNonNull(backgroundThread);
+
 		try {
 			Files.createDirectories(cacheDir);
-			Map<String, Long> cache;
-			try {
-				cache = GSON.fromJson(Files.newBufferedReader(cacheIndex), new TypeToken<Map<String, Long>>() {
+			if (Files.exists(recentFile)) {
+				@SuppressWarnings("serial")
+				List<HistoryItem> list = GSON.fromJson(Files.newBufferedReader(recentFile), new TypeToken<List<HistoryItem>>() {
 				}.getType());
-			} catch (NoSuchFileException e) {
-				cache = new HashMap<>();
-			}
-			int before = cache.size();
-			cache.values().removeIf(l -> Duration.between(Instant.ofEpochMilli(l), Instant.now()).toDays() > 14);
-			cache.keySet().removeIf(path -> Files.notExists(cacheDir.resolve(path)) || !Files.isDirectory(cacheDir.resolve(path)));
+				/* Evict outdated items */
+				list.removeIf(item -> Duration.between(Instant.ofEpochMilli(item.timestamp), Instant.now()).toDays() > 14);
 
-			for (Path path : Files.newDirectoryStream(cacheDir)) {
-				if (!cache.containsKey(path.getFileName().toString())) {
-					log.debug("Removing world " + path + " from cache");
-					Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
-						@Override
-						public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-							Files.delete(file);
-							return FileVisitResult.CONTINUE;
-						}
-
-						@Override
-						public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-							Files.delete(dir);
-							return FileVisitResult.CONTINUE;
-						}
-					});
-				}
-			}
-
-			log.info("Removed " + (before - cache.size()) + " worlds from cache");
-			try (Writer writer = Files.newBufferedWriter(cacheIndex)) {
-				GSON.toJson(cache, writer);
-				writer.flush();
+				recentWorlds.addAll(list);
 			}
 		} catch (IOException e) {
 			log.warn("Could not initialize cache", e);
@@ -130,6 +101,24 @@ public class HistoryManager {
 					} catch (IOException e) {
 						log.warn("Could not load worlds from saves folder", e);
 					}
+			}
+		});
+	}
+
+	/**
+	 * Callback when a world was loaded from the client. The given item will be added to {@link #recentWorlds}, which in turn will be saved to
+	 * cache.
+	 */
+	public void onWorldLoaded(HistoryItem item) {
+		/* Implementation note: deduplicating items (the same world loaded multiple times) is not required, as it will be done on loading. */
+		recentWorlds.add(item);
+
+		backgroundThread.execute(() -> {
+			try (Writer writer = Files.newBufferedWriter(recentFile)) {
+				GSON.toJson(recentWorlds, writer);
+				writer.flush();
+			} catch (RuntimeException | IOException e) {
+				log.warn("Could not write recent loaded history", e);
 			}
 		});
 	}

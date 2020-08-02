@@ -112,6 +112,9 @@ public class OpenDialog extends Dialog<String> implements Initializable {
 								return true;
 							return FuzzySearch.weightedRatio(text, item.getName()) > 70;
 						})
+						.sorted(
+								Comparator.comparingLong(HistoryItem::lastAccessed).reversed()
+						)
 						.map(ListHistoryItem::new)
 						.collect(Collectors.toList());
 

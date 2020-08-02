@@ -402,7 +402,6 @@ public class GuiController implements Initializable {
 		loaded = WorldType.LOCAL;
 
 		{ /* Update history */
-			// recentWorlds.removeIf(w -> w.path.equals(path.toAbsolutePath().toString()));
 			String name = regionFolderCached.get()
 					.getPins()
 					.flatMap(LevelMetadata::getWorldName)
@@ -410,8 +409,7 @@ public class GuiController implements Initializable {
 			String imageURL = null;
 			if (Files.exists(path.resolve("icon.png")))
 				imageURL = path.resolve("icon.png").toUri().toString();
-			// recentWorlds.add(0, new HistoryItem(false, name, path.toAbsolutePath().toString(), imageURL,
-			// System.currentTimeMillis()));
+			historyManager.onWorldLoaded(new HistoryItem(false, name, path.toAbsolutePath().toString(), imageURL, System.currentTimeMillis()));
 		}
 	}
 
@@ -427,11 +425,9 @@ public class GuiController implements Initializable {
 		loaded = WorldType.REMOTE;
 
 		if (serverSettingsController.getMetadata() != null) { /* Update history */
-			// recentWorlds.removeIf(w -> w.path.equals(file.toString()));
 			String name = serverSettingsController.getMetadata().name.orElse("<unknown server>");
 			String imageURL = serverSettingsController.getMetadata().iconLocation.orElse(null);
-			// recentWorlds.add(0, new HistoryItem(true, name, file.toString(), imageURL,
-			// System.currentTimeMillis()));
+			historyManager.onWorldLoaded(new HistoryItem(true, name, file.toString(), imageURL, System.currentTimeMillis()));
 		}
 	}
 

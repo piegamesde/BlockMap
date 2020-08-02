@@ -127,7 +127,7 @@ public class RegionRenderer {
 			if (dataVersion.isPresent()) {
 				int version = dataVersion.get();
 				if (version < MinecraftVersion.MC_1_13.minVersion) {
-					log.warn("Skipping chunk because it is too old");
+					log.warn("Skipping chunk because it is too old (before Minecraft 1.13)");
 					metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "This chunk was written from Minecraft <1.13, which is not supported", version));
 					continue;
 				} else if (version <= MinecraftVersion.MC_1_13.maxVersion) {
@@ -139,7 +139,9 @@ public class RegionRenderer {
 				} else if (version >= MinecraftVersion.MC_1_16.minVersion && version <= MinecraftVersion.MC_1_16.maxVersion) {
 					metadata.put(chunkPos, renderer16.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
 				} else {
+					log.warn("Could not render chunk with Minecraft format version " + version);
 					metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "Could not find a chunk rendering engine for this version", version));
+					continue;
 				}
 			} else {
 				log.warn("Skipping chunk because it is way too old (pre 1.9)");

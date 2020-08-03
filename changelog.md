@@ -1,6 +1,37 @@
 # Changelog
 
+## Version 2.2.0
+
+### Changes
+
+- New "open" dialog
+- Dragging the map is now done with the left mouse button, like in any other reasonable map viewer.
+- Show a timestamp of when the world was last rendered
+- The GUI now has command line options
+	- Optionally specify a path as command line argument, which will be loaded on startup
+		- This allows associating files and folders with BlockMap: Right click a Minecraft save folder -> Open with -> BlockMap \o/
+	- `-v` or `--verbose` to enable debug messages
+- Custom URI scheme handler
+	- If you have an URL pointing at a BlockMap server location (usually some `index.json`, prefix it with `blockmap:`
+	- The browser (or any other application with URL scheme handling support) will now prompt and ask to open said world in BlockMap
+	- More features, like linking a specific location may be added in the future
+- Switching into the Nether and back adapts the view to the fact that the Nether is smaller than other dimensions (#51)
+- Better caching of several things
+	- Recently opened worlds are now saved and displayed first when loading
+	- Player skins and UUID won't be fetched every time from Mojang servers
+- Server command line changes (`render-many`)
+	- Removed most command line options and moved them into the configuration file itself
+	- Added fine-grained control about which pins to include when rendering, and which not (for both file size and privacy/cheating reasons)
+
+### Bug fixes
+
+- BlockMap accidentially opened the region files with RW permission, even if it does not modify them.
+- Player pins are no longer blurry (#48, #49)
+- Maps from 1.16 worlds load properly now
+- URLs with missing trailing slash (as `https://blockmap.exmaple.com`) don't throw an exception anymore (#54)
+
 ## Version 2.1.0
+
 ### Changes
 
 - Minecraft 1.16 support
@@ -13,7 +44,7 @@
 
 ### Bug fixes
 
-- Fixed village pins showing up in the wrong dimension
+- Fixed village pins showing up in the wrong dimension (#47)
 - Fixed a few minor errors in the color maps
 
 ## Version 2.0.0

@@ -50,7 +50,7 @@ BlockMap hasn't been packaged for other distros yet (looking for maintainers).
 
 The GUI version should just run by (double)clicking it. Otherwise run it through:
 
-    java -jar BlockMap-gui-2.1.0.jar
+    java -jar BlockMap-gui-2.2.0.jar
 
 to start. If you installed BlockMap through a package manager, search for it in your launcher or menu.
 
@@ -68,9 +68,9 @@ to start. If you installed BlockMap through a package manager, search for it in 
 If you want to use BlockMap through the command line without,
 
     # For general usage help
-    java -jar BlockMap-cli-2.1.0.jar help
+    java -jar BlockMap-cli-2.2.0.jar help
     # For help about rendering worlds to a folder
-    java -jar BlockMap-cli-2.1.0.jar help render
+    java -jar BlockMap-cli-2.2.0.jar help render
 
 will get you started. On Linux even with colors!
 

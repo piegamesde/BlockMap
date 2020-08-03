@@ -1,25 +1,8 @@
 [
     {
-        "project": "Animal Sniffer Annotations",
-        "description": null,
-        "version": null,
-        "developers": [
-            
-        ],
-        "url": null,
-        "year": null,
-        "licenses": [
-            {
-                "license": "MIT license",
-                "license_url": "http://www.opensource.org/licenses/mit-license.php"
-            }
-        ],
-        "dependency": "org.codehaus.mojo:animal-sniffer-annotations:1.17"
-    },
-    {
         "project": "Apache Commons IO",
         "description": "The Apache Commons IO library contains utility classes, stream implementations, file filters,\nfile comparators, endian transformation classes, and much more.",
-        "version": "2.6",
+        "version": "2.7",
         "developers": [
             "Scott Sanders",
             "dIon Gillard",
@@ -36,7 +19,7 @@
             "Gary Gregory",
             "Kristian Rosenvold"
         ],
-        "url": "http://commons.apache.org/proper/commons-io/",
+        "url": "https://commons.apache.org/proper/commons-io/",
         "year": "2002",
         "licenses": [
             {
@@ -44,7 +27,7 @@
                 "license_url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         ],
-        "dependency": "commons-io:commons-io:2.6"
+        "dependency": "commons-io:commons-io:2.7"
     },
     {
         "project": "Apache Commons Logging",
@@ -90,7 +73,7 @@
                 "license_url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         ],
-        "dependency": "org.apache.logging.log4j:log4j-api:2.11.2"
+        "dependency": "org.apache.logging.log4j:log4j-api:2.13.3"
     },
     {
         "project": "Apache Log4j Commons Logging Bridge",
@@ -107,7 +90,7 @@
                 "license_url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         ],
-        "dependency": "org.apache.logging.log4j:log4j-jcl:2.11.2"
+        "dependency": "org.apache.logging.log4j:log4j-jcl:2.13.3"
     },
     {
         "project": "Apache Log4j Core",
@@ -124,7 +107,7 @@
                 "license_url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         ],
-        "dependency": "org.apache.logging.log4j:log4j-core:2.11.2"
+        "dependency": "org.apache.logging.log4j:log4j-core:2.13.3"
     },
     {
         "project": "Apache Log4j SLF4J Binding",
@@ -141,12 +124,12 @@
                 "license_url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         ],
-        "dependency": "org.apache.logging.log4j:log4j-slf4j-impl:2.11.1"
+        "dependency": "org.apache.logging.log4j:log4j-slf4j-impl:2.13.3"
     },
     {
         "project": "Checker Qual",
         "description": "Checker Qual is the set of annotations (qualifiers) and supporting classes\n        used by the Checker Framework to type check Java source code.  Please\n        see artifact:\n        org.checkerframework:checker",
-        "version": "2.5.2",
+        "version": "2.11.1",
         "developers": [
             "Michael Ernst",
             "Werner M. Dietl",
@@ -160,12 +143,12 @@
                 "license_url": "http://opensource.org/licenses/MIT"
             }
         ],
-        "dependency": "org.checkerframework:checker-qual:2.5.2"
+        "dependency": "org.checkerframework:checker-qual:2.11.1"
     },
     {
         "project": "ControlsFX",
         "description": "High quality UI controls and other tools to complement the core JavaFX distribution",
-        "version": "11.0.0",
+        "version": "11.0.2",
         "developers": [
             "Jonathan Giles"
         ],
@@ -177,29 +160,29 @@
                 "license_url": "http://www.opensource.org/licenses/bsd-license.php"
             }
         ],
-        "dependency": "org.controlsfx:controlsfx:11.0.0"
+        "dependency": "org.controlsfx:controlsfx:11.0.2"
     },
     {
         "project": "Converter: Gson",
-        "description": null,
-        "version": null,
+        "description": "A Retrofit Converter which uses Gson for serialization.",
+        "version": "2.9.0",
         "developers": [
-            
+            "Square, Inc."
         ],
-        "url": null,
+        "url": "https://github.com/square/retrofit",
         "year": null,
         "licenses": [
             {
-                "license": "Apache 2.0",
-                "license_url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+                "license": "The Apache Software License, Version 2.0",
+                "license_url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         ],
-        "dependency": "com.squareup.retrofit2:converter-gson:2.5.0"
+        "dependency": "com.squareup.retrofit2:converter-gson:2.9.0"
     },
     {
         "project": "Directories",
         "description": "directories",
-        "version": "11",
+        "version": "12",
         "developers": [
             "Simon Ochsenreither"
         ],
@@ -211,7 +194,7 @@
                 "license_url": "https://opensource.org/licenses/MPL-2.0"
             }
         ],
-        "dependency": "io.github.soc:directories:11"
+        "dependency": "io.github.soc:directories:12"
     },
     {
         "project": "Error-prone annotations",
@@ -228,7 +211,7 @@
                 "license_url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         ],
-        "dependency": "com.google.errorprone:error_prone_annotations:2.2.0"
+        "dependency": "com.google.errorprone:error_prone_annotations:2.3.4"
     },
     {
         "project": "FindBugs-jsr305",
@@ -250,7 +233,7 @@
     {
         "project": "Fuzzywuzzy",
         "description": "Fuzzy string searching implementation of the well-known fuzzywuzzy algorithm in Java",
-        "version": "1.2.0",
+        "version": "1.3.1",
         "developers": [
             "Panayiotis P"
         ],
@@ -258,11 +241,11 @@
         "year": null,
         "licenses": [
             {
-                "license": "GPL 3",
-                "license_url": "https://www.gnu.org/licenses/gpl-3.0.en.html"
+                "license": "GPL 2",
+                "license_url": "https://www.gnu.org/licenses/old-licenses/gpl-2.0.html"
             }
         ],
-        "dependency": "me.xdrop:fuzzywuzzy:1.2.0"
+        "dependency": "me.xdrop:fuzzywuzzy:1.3.1"
     },
     {
         "project": "Gson",
@@ -279,7 +262,7 @@
                 "license_url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         ],
-        "dependency": "com.google.code.gson:gson:2.8.5"
+        "dependency": "com.google.code.gson:gson:2.8.6"
     },
     {
         "project": "Gson on Fire!",
@@ -343,16 +326,16 @@
         "year": null,
         "licenses": [
             {
-                "license": "The Apache Software License, Version 2.0",
+                "license": "Apache License, Version 2.0",
                 "license_url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         ],
-        "dependency": "com.google.guava:guava:27.1-jre"
+        "dependency": "com.google.guava:guava:29.0-jre"
     },
     {
         "project": "J2ObjC Annotations",
         "description": "A set of annotations that provide additional information to the J2ObjC\n    translator to modify the result of translation.",
-        "version": "1.1",
+        "version": "1.3",
         "developers": [
             
         ],
@@ -364,12 +347,12 @@
                 "license_url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         ],
-        "dependency": "com.google.j2objc:j2objc-annotations:1.1"
+        "dependency": "com.google.j2objc:j2objc-annotations:1.3"
     },
     {
         "project": "JOML",
         "description": "Java OpenGL Math Library",
-        "version": "1.9.14",
+        "version": "1.9.25",
         "developers": [
             "Richard Greenlees",
             "Kai Burjack"
@@ -382,7 +365,7 @@
                 "license_url": "http://www.opensource.org/licenses/mit-license.php"
             }
         ],
-        "dependency": "org.joml:joml:1.9.14"
+        "dependency": "org.joml:joml:1.9.25"
     },
     {
         "project": "Java8 data type moudle(DateTime and Optional) for gson",
@@ -472,7 +455,7 @@
     {
         "project": "Javafx-media",
         "description": null,
-        "version": "11",
+        "version": "11.0.2",
         "developers": [
             
         ],
@@ -481,10 +464,10 @@
         "licenses": [
             {
                 "license": "GPLv2+CE",
-                "license_url": "http://openjdk.java.net/legal/gplv2+ce.html"
+                "license_url": "https://openjdk.java.net/legal/gplv2+ce.html"
             }
         ],
-        "dependency": "org.openjfx:javafx-media:11"
+        "dependency": "org.openjfx:javafx-media:11.0.2"
     },
     {
         "project": "Javafx-swing",
@@ -504,40 +487,23 @@
         "dependency": "org.openjfx:javafx-swing:13"
     },
     {
-        "project": "Javafx-web",
+        "project": "MinecraftLandGenerator",
         "description": null,
-        "version": "11",
+        "version": "3.1.2",
         "developers": [
             
         ],
         "url": null,
         "year": null,
         "licenses": [
-            {
-                "license": "GPLv2+CE",
-                "license_url": "http://openjdk.java.net/legal/gplv2+ce.html"
-            }
-        ],
-        "dependency": "org.openjfx:javafx-web:11"
-    },
-    {
-        "project": "Minecraft-Technik-Wiki/MinecraftLandGenerator",
-        "description": "Automatically generate loads of chunks",
-        "version": "3.1.1",
-        "developers": [
-            "Minecraft Technik Wiki"
-        ],
-        "url": "https://github.com/Minecraft-Technik-Wiki/MinecraftLandGenerator",
-        "year": "2018",
-        "licenses": [
             
         ],
-        "dependency": "com.github.Minecraft-Technik-Wiki:MinecraftLandGenerator:3.1.1"
+        "dependency": "com.github.Minecraft-Technik-Wiki:MinecraftLandGenerator:3.1.2"
     },
     {
         "project": "Nbt",
         "description": null,
-        "version": "fd6d00577b1ae1f2c90dc1328fcf2b46c700e67d",
+        "version": "3.0.1",
         "developers": [
             
         ],
@@ -546,7 +512,7 @@
         "licenses": [
             
         ],
-        "dependency": "com.github.piegamesde:nbt:fd6d00577b1ae1f2c90dc1328fcf2b46c700e67d"
+        "dependency": "com.github.piegamesde:nbt:3.0.1"
     },
     {
         "project": "OkHttp",
@@ -563,7 +529,7 @@
                 "license_url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         ],
-        "dependency": "com.squareup.okhttp3:okhttp:3.12.0"
+        "dependency": "com.squareup.okhttp3:okhttp:3.14.9"
     },
     {
         "project": "Okio",
@@ -580,12 +546,12 @@
                 "license_url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         ],
-        "dependency": "com.squareup.okio:okio:1.15.0"
+        "dependency": "com.squareup.okio:okio:1.17.2"
     },
     {
         "project": "Picocli - a mighty tiny Command Line Interface",
         "description": "Java command line parser with both an annotations API and a programmatic API. Usage help with ANSI styles and colors. Autocomplete. Nested subcommands. Easily included as source to avoid adding a dependency.",
-        "version": "4.0.4",
+        "version": "4.5.0",
         "developers": [
             "Remko Popma"
         ],
@@ -597,38 +563,41 @@
                 "license_url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         ],
-        "dependency": "info.picocli:picocli:4.0.4"
+        "dependency": "info.picocli:picocli:4.5.0"
     },
     {
         "project": "Protonpack",
-        "description": null,
-        "version": "1.15",
+        "description": "Stream Utilities for Java 8",
+        "version": "1.16",
         "developers": [
-            
+            "Dominic Fox"
         ],
-        "url": null,
-        "year": null,
-        "licenses": [
-            
-        ],
-        "dependency": "com.codepoetics:protonpack:1.15"
-    },
-    {
-        "project": "Retrofit",
-        "description": null,
-        "version": null,
-        "developers": [
-            
-        ],
-        "url": null,
+        "url": "https://github.com/poetix/protonpack",
         "year": null,
         "licenses": [
             {
-                "license": "Apache 2.0",
-                "license_url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+                "license": "MIT",
+                "license_url": "https://opensource.org/licenses/MIT"
             }
         ],
-        "dependency": "com.squareup.retrofit2:retrofit:2.5.0"
+        "dependency": "com.codepoetics:protonpack:1.16"
+    },
+    {
+        "project": "Retrofit",
+        "description": "A type-safe HTTP client for Android and Java.",
+        "version": "2.9.0",
+        "developers": [
+            "Square, Inc."
+        ],
+        "url": "https://github.com/square/retrofit",
+        "year": null,
+        "licenses": [
+            {
+                "license": "The Apache Software License, Version 2.0",
+                "license_url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+            }
+        ],
+        "dependency": "com.squareup.retrofit2:retrofit:2.9.0"
     },
     {
         "project": "SLF4J API Module",
@@ -650,7 +619,7 @@
     {
         "project": "Saibotk/JMAW",
         "description": "Java Mojang API Wrapper",
-        "version": "0.1",
+        "version": "0.3.1",
         "developers": [
             "saibotk"
         ],
@@ -662,12 +631,12 @@
                 "license_url": "https://api.github.com/licenses/mit"
             }
         ],
-        "dependency": "com.github.saibotk:JMAW:0.1"
+        "dependency": "com.github.saibotk:JMAW:0.3.1"
     },
     {
         "project": "Smile-core",
         "description": "smile-core",
-        "version": "1.5.2",
+        "version": "1.5.3",
         "developers": [
             "Haifeng Li"
         ],
@@ -679,12 +648,12 @@
                 "license_url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         ],
-        "dependency": "com.github.haifengl:smile-core:1.5.2"
+        "dependency": "com.github.haifengl:smile-core:1.5.3"
     },
     {
         "project": "Smile-data",
         "description": "smile-data",
-        "version": "1.5.2",
+        "version": "1.5.3",
         "developers": [
             "Haifeng Li"
         ],
@@ -696,12 +665,12 @@
                 "license_url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         ],
-        "dependency": "com.github.haifengl:smile-data:1.5.2"
+        "dependency": "com.github.haifengl:smile-data:1.5.3"
     },
     {
         "project": "Smile-graph",
         "description": "smile-graph",
-        "version": "1.5.2",
+        "version": "1.5.3",
         "developers": [
             "Haifeng Li"
         ],
@@ -713,12 +682,12 @@
                 "license_url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         ],
-        "dependency": "com.github.haifengl:smile-graph:1.5.2"
+        "dependency": "com.github.haifengl:smile-graph:1.5.3"
     },
     {
         "project": "Smile-math",
         "description": "smile-math",
-        "version": "1.5.2",
+        "version": "1.5.3",
         "developers": [
             "Haifeng Li"
         ],
@@ -730,7 +699,7 @@
                 "license_url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         ],
-        "dependency": "com.github.haifengl:smile-math:1.5.2"
+        "dependency": "com.github.haifengl:smile-math:1.5.3"
     }
 ]
 

@@ -83,10 +83,11 @@ If your world has been created before the Minecraft 1.13 release, please optimiz
 The new server mode is based around the following concept:
 
 - Declare a configuration file with all your worlds and how you want to render them. An example configuration can be found [here](server-settings.json).
-- Call `blockmap render-many` and pass the configuration file as argument. You can add dynamic server information like online plyers etc. via more command line options.
+- Call `blockmap render-many` and pass the configuration file as argument.
 - An output directory will be created with all the rendered files. You can view them in BlockMap.
 - Host that folder using the web server of your choice (e.g. [`miniserve`](https://github.com/svenstaro/miniserve)). Clients will now be able to view your worlds across the Internet.
-- Call this on a scheduled basis. Subsequent runs will update the folder without re-rendering everything.
+- Call this on a scheduled basis (e.g. Systemd timer, or from a server plugin). Subsequent runs will update the folder without re-rendering everything.
+- You can control which pins will be generated and included in the output and which not. Omitting any of these options will always default to *true*.
 
 ### Old server usage:
 
@@ -127,8 +128,9 @@ If you want to create a release jar and run it, use `./gradlew :BlockMap-gui:run
 	- Bump the Minecraft version (if applicable)
 	- Check the feature list and read through it
 - Update the `changelog.md`
-- Regenerate all resources
+- Regenerate all resources (see above)
 	- If something in the UI changed, regenerate the screenshots
+	- If some dependencies changed: Run `./gradlew licenseReport` and copy the generated JSON file to `./BlockMap-gui/src/main/resources/de/piegames/blockmap/gui/standalone/about/licenseReport.json`
 - Generate the release binaries (need to be called on each target platform)
 	- This will create two executable fat (=containing all needed dependencies) jars in `./BlockMap-{gui,cli}/build/libs/fat/`.
 - Release on GitHub
@@ -158,6 +160,6 @@ If you want to create a release jar and run it, use `./gradlew :BlockMap-gui:run
 
 ## Troubleshooting
 
-## Mod support:
+## Mod support
 
 Currently, no Minecraft mods are supported, but the rendering engine is built in an extensible way. Mod support will only be implemented on request.

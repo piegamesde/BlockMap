@@ -1,16 +1,46 @@
+# This is a documented JSON file. Yes, JSON cannot do comments. Deal with it, at least it's documented
+# (Pro tip: change your text editor to "YAML" for correct syntax highlighting)
 {
+    # Where the resulting files will be written to
 	"output dir": "./rendered-web",
+	# Optional. Specify information about the server to display to end users. All keys contained in it are optional as well.
 	"server": {
 		"server name": "Minecraaaaaaft",
 		"server description": "The best server in the world",
 		"server address": "127.0.0.1",
-		"max players": 5
+		# Link to the icon image of the server
+		"server icon": "127.0.0.1/srv/minecraft/server-icon.png",
+		# If the server has a limited number of slots. -1 = unlimited
+		"max players": 5,
+		# List of UUIDs of all currently online players
+		"online players": []
 	},
+	# Optional. Control which pins will be generated in the output. All keys contained in it are optional as well.
+	# Non-present settings default to include the respective pins.
+	"show pins": {
+		# One of `ALL`, `ONLINE_ONLY`, `NONE`. Defaults to `ALL`.
+		"players": "ALL",
+		"maps": true,
+		"slime chunks": true,
+		"force-loaded chunks": true,
+		"barrier": true,
+		"world spawn": true,
+		# List of all "points of interest" to include. Omit to default to *all*.
+		# POIs are specified using their full Minecraf ID (e.g. `minecraft:weaponsmith`)
+		"POIs": [],
+		# List of all structures to include. Omit to default to *all*.
+		# Structures are specified using their full Minecraft ID (e.g. `minecraft:mineshaft`)
+		"structures": []
+	},
+	# List of all worlds to be rendered. A world can be included multiple times, possible
+	# with different settings, to allow different views of it.
 	"worlds": [
 		{
 			"name": "Overworld",
 			"input dir": "WORLD_PATH",
+			# Optional. One of `OVERWORLD`, `NETHER`, `END`. Defaults to `OVERWORLD`.
 			"dimension": "OVERWORLD",
+			# Optional. Set this to true to always render all files regardless when they were last modified.
 			"force": false
 		},
 		{
@@ -18,6 +48,7 @@
 			"input dir": "WORLD_PATH",
 			"dimension": "OVERWORLD",
 			"force": false,
+			# Optional. Specify how the world should be rendered.
 			"render settings": {
 				"block colors": "OCEAN_GROUND",
 				"shader": "RELIEF"

@@ -64,7 +64,7 @@ public class RenderedRegion {
 
 	public boolean isVisible(AABBd frustum) {
 		int size = 512 << level;
-		return frustum.testAABB(new AABBd(position.x() * size, position.y() * size, 0, (position.x() + 1) * size, (position.y() + 1) * size, 0));
+		return frustum.intersectsAABB(new AABBd(position.x() * size, position.y() * size, 0, (position.x() + 1) * size, (position.y() + 1) * size, 0));
 	}
 
 	public void draw(GraphicsContext gc, AABBd frustum, double scale) {

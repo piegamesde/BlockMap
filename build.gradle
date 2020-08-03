@@ -13,10 +13,10 @@ buildscript {
 
 	dependencies {
 		classpath "com.jaredsburrows:gradle-license-plugin:0.8.42"
-		classpath "com.github.ben-manes:gradle-versions-plugin:0.21.0"
-		classpath 'com.github.jengelman.gradle.plugins:shadow:5.0.0'
-		classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.7.1"
-		classpath "org.javamodularity:moduleplugin:1.6.0"
+		classpath "com.github.ben-manes:gradle-versions-plugin:0.29.0"
+		classpath 'com.github.jengelman.gradle.plugins:shadow:6.0.0'
+		classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.0"
+		classpath "org.javamodularity:moduleplugin:1.7.0"
         classpath 'com.github.johni0702:gradle-reproducible-builds-plugin:master-SNAPSHOT'
 	}
 }

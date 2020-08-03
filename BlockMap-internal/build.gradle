@@ -1,6 +1,6 @@
 plugins {
     id 'com.jaredsburrows.license'
-    id 'org.openjfx.javafxplugin' version '0.0.8'
+    id 'org.openjfx.javafxplugin' version '0.0.9'
 	id "me.champeau.gradle.jmh" version "0.5.0"
 }
 
@@ -31,30 +31,24 @@ task generateScreenshots(type: JavaExec) {
 }
 
 dependencies {
-	testCompile 'junit:junit:4.12'
+	testCompile 'junit:junit:4.13'
 
 	implementation project(':BlockMap-core')
 	implementation project(':BlockMap-gui')
 	implementation project(':BlockMap-cli')
-	implementation 'org.apache.logging.log4j:log4j-core:2.11.2'
-	implementation 'commons-io:commons-io:2.6'
-	implementation 'com.google.guava:guava:27.1-jre'
-	implementation 'info.picocli:picocli:3.7.0'
-	implementation 'com.github.Minecraft-Technik-Wiki:MinecraftLandGenerator:3.1.1'
-	implementation 'org.controlsfx:controlsfx:11.0.0'
-	implementation group: 'com.codepoetics', name: 'protonpack', version: '1.15'
+	implementation 'org.apache.logging.log4j:log4j-core:2.13.3'
+	implementation 'commons-io:commons-io:2.7'
+	implementation 'com.google.guava:guava:29.0-jre'
+	implementation 'info.picocli:picocli:4.5.0'
+	implementation 'com.github.Minecraft-Technik-Wiki:MinecraftLandGenerator:3.1.2'
+	implementation 'org.controlsfx:controlsfx:11.0.2'
+	implementation group: 'com.codepoetics', name: 'protonpack', version: '1.16'
 
 	/* This is not an actual dependency, but some biome color data has been copied from there so it will show up in the credits list */
 	//implementation 'com.github.toolbox4minecraft:amidst:v4.3'
 	
-    jmh group: 'org.openjdk.jmh', name: 'jmh-core', version: '1.12'
-    jmh group: 'org.openjdk.jmh', name: 'jmh-generator-annprocess', version: '1.12'
-}
-
-configurations.all {
-	resolutionStrategy {
-		force 'com.github.piegamesde:nbt:d8b74bdb09babeb15244154ed88b45ce9eb4c2d3'
-	}
+    jmh group: 'org.openjdk.jmh', name: 'jmh-core', version: '1.23'
+    jmh group: 'org.openjdk.jmh', name: 'jmh-generator-annprocess', version: '1.23'
 }
 
 sourceSets {

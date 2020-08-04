@@ -145,7 +145,10 @@ public class OpenDialog extends Dialog<String> implements Initializable {
 
 	@FXML
 	public void load() {
-		setResult(convert(worlds.getSelectionModel().getSelectedItem()));
+		var item = worlds.getSelectionModel().getSelectedItem();
+		if (item == null)
+			item = new LoadTextItem(input.getText());
+		setResult(convert(item));
 		close();
 	}
 
@@ -157,7 +160,7 @@ public class OpenDialog extends Dialog<String> implements Initializable {
 		} else if (item instanceof BrowseHistoryItem) {
 			return browseFolder();
 		} else if (item instanceof LoadTextItem) {
-			return ((LoadTextItem) item).text;
+			return ((LoadTextItem) item).text.trim();
 		} else {
 			throw new InternalError("Unreachable code");
 		}

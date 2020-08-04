@@ -10,6 +10,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -19,18 +23,57 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.vdurmont.semver4j.Semver;
+import com.vdurmont.semver4j.Semver.SemverType;
 
 import de.piegames.blockmap.MinecraftVersion;
 import de.piegames.blockmap.generate.Downloader.VersionManifest.Version;
 
 public class Downloader {
 
-	private static Log			log				= LogFactory.getLog(Generator.class);
+	private static Log log = LogFactory.getLog(Downloader.class);
 	private static final String	DOWNLOAD_URL	= "https://launchermeta.mojang.com/mc/game/version_manifest.json";
 
 	public static VersionManifest downloadManifest() throws IOException {
 		try (BufferedReader in = new BufferedReader(new InputStreamReader(new URL(DOWNLOAD_URL).openStream()))) {
 			return new Gson().fromJson(in, VersionManifest.class);
+		}
+	}
+
+	public static void checkMinecraftVersions() throws IOException {
+		VersionManifest manifest = Downloader.downloadManifest();
+
+		List<Version> latestReleases = Arrays.stream(manifest.versions)
+				.filter(Version::isRelease)
+				.collect(Collectors.groupingBy(v -> new Semver(v.id, SemverType.LOOSE).getMinor()))
+				.values()
+				.stream()
+				.map(versions -> versions.stream().max(Comparator.comparing(v -> new Semver(v.id, SemverType.LOOSE))))
+				.map(Optional::get)
+				.collect(Collectors.toList());
+		log.debug("Latest known Minecraft versions: " + latestReleases.stream().map(v -> v.id).collect(Collectors.toList()));
+		for (MinecraftVersion version : MinecraftVersion.values()) {
+			log.info("Checking " + version);
+			Semver minecraftVersion = new Semver(version.versionName, SemverType.LOOSE);
+			Version latestMatching = latestReleases.stream()
+					.filter(v -> new Semver(v.id, SemverType.LOOSE).getMinor() == minecraftVersion.getMinor())
+					.findAny()
+					.get();
+			if (new Semver(latestMatching.id).isGreaterThan(minecraftVersion)) {
+				log.error("Outdated: newest available version is " + latestMatching.id);
+			} else {
+				log.info("Up to date (" + version.versionName + ")");
+			}
+			if (!latestMatching.url.equals(version.manifestURL)) {
+				log.error("Specified URL does not match, should be " + latestMatching.url);
+			}
+		}
+		Semver latestRelease = latestReleases.stream()
+				.map(v -> new Semver(v.id, SemverType.LOOSE))
+				.max(Comparator.naturalOrder())
+				.get();
+		if (latestRelease.isGreaterThan(new Semver(MinecraftVersion.LATEST.versionName, SemverType.LOOSE))) {
+			log.error("There is a new Minecraft release out there: " + latestRelease + ". Please update BlockMap!");
 		}
 	}
 

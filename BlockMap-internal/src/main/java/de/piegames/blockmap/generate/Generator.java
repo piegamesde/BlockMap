@@ -61,6 +61,12 @@ public class Generator {
 	private static final Path[]	OUTPUTS					= { OUTPUT_CORE, OUTPUT_INTERNAL_MAIN, OUTPUT_INTERNAL_TEST, OUTPUT_STANDALONE, OUTPUT_GUI };
 
 	@Command
+	public void checkMinecraftVersions() throws Exception {
+		log.info("Checking if all information in the `MinecraftVersion.java` are up to date");
+		Downloader.checkMinecraftVersions();
+	}
+
+	@Command
 	public void generateData() throws Exception {
 		var versions = Arrays.asList(MinecraftVersion.values());
 		Collections.reverse(versions); // Cause there is no better way to reverse arrays in Java -.-
@@ -150,7 +156,7 @@ public class Generator {
 
 		processResources();
 	}
-
+	
 	@Command
 	public void generateVersion(String version) throws Exception {
 		log.info("Generating VersionProvider for version " + version);

@@ -30,6 +30,12 @@ task generateScreenshots(type: JavaExec) {
 	args = ['generateTestWorld', 'generateScreenshots']
 }
 
+task checkMinecraftVersions(type: JavaExec) {
+	classpath = sourceSets.main.runtimeClasspath
+	main = "de.piegames.blockmap.generate.Generator"
+	args = ['checkMinecraftVersions']
+}
+
 dependencies {
 	testCompile 'junit:junit:4.13'
 
@@ -43,6 +49,7 @@ dependencies {
 	implementation 'com.github.Minecraft-Technik-Wiki:MinecraftLandGenerator:3.1.2'
 	implementation 'org.controlsfx:controlsfx:11.0.2'
 	implementation group: 'com.codepoetics', name: 'protonpack', version: '1.16'
+	implementation 'com.vdurmont:semver4j:3.1.0'
 
 	/* This is not an actual dependency, but some biome color data has been copied from there so it will show up in the credits list */
 	//implementation 'com.github.toolbox4minecraft:amidst:v4.3'

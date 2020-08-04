@@ -142,7 +142,7 @@ If you want to create a release jar and run it, use `./gradlew :BlockMap-gui:run
 - Copy the current block color instructions in `./BlockMap-internal/src/main/resources/` to match the new Minecraft version.
 - Copy the current `ChunkRenderer` in `de.piegames.blockmap.renderer` (in `BlockMap-core`) to match the new Minecraft version.
 - Commit as `Minecraft $VERSION: Update preparation`
-- Start off updating `de.piegames.blockmap.MinecraftVersion`
+- Run `./gradlew checkMinecraftVersions` and update `de.piegames.blockmap.MinecraftVersion` accordingly.
 - Update the Minecraft version of `ChunkRenderer_$VERSION` in the constructor
 - Update `de.piegames.blockmap.renderer.RegionRenderer` to use the new `ChunkRenderer`
 - Run `./gradlew regenerate` and make it work

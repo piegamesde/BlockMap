@@ -32,7 +32,6 @@ import de.piegames.blockmap.MinecraftVersion;
 import de.piegames.blockmap.color.BiomeColorMap;
 import de.piegames.blockmap.color.BlockColorMap;
 import de.piegames.blockmap.color.Color;
-import de.piegames.blockmap.generate.Downloader.VersionManifest;
 import de.piegames.blockmap.renderer.BlockState;
 import de.piegames.mlg.MinecraftLandGenerator;
 import de.piegames.mlg.Server;
@@ -63,33 +62,45 @@ public class Generator {
 
 	@Command
 	public void generateData() throws Exception {
-		/* Download stuff */
-		VersionManifest manifest = Downloader.downloadManifest();
-
 		var versions = Arrays.asList(MinecraftVersion.values());
 		Collections.reverse(versions); // Cause there is no better way to reverse arrays in Java -.-
 		for (MinecraftVersion version : versions) {
 
-			boolean needsUpdate = Downloader.downloadMinecraft(manifest, version);
+			Downloader.downloadMinecraft(version);
 
-			if (needsUpdate) {
-				/* Call the Minecraft data generator */
+			Path extractedDataDirectory = OUTPUT_INTERNAL_TEST.resolve("data-" + version.fileSuffix);
 
-				log.info("Extracting Minecraft data");
-				Path output = OUTPUT_INTERNAL_TEST.resolve("data-" + version.fileSuffix);
-				FileUtils.deleteDirectory(output.toFile());
-				try (URLClassLoader loader = new URLClassLoader(
-						new URL[] { OUTPUT_INTERNAL_CACHE.resolve("server-" + version.fileSuffix + ".jar").toUri().toURL() },
-						Generator.class.getClassLoader())) {
-					Class<?> MinecraftMain = Class.forName("net.minecraft.data.Main", true, loader);
-					Method main = MinecraftMain.getDeclaredMethod("main", String[].class);
-					main.invoke(null, new Object[] { new String[] { "--reports", "--output=" + output } });
+			{ /* Call the Minecraft data report tool */
+				Path serverFile = OUTPUT_INTERNAL_CACHE.resolve("server-" + version.fileSuffix + ".jar");
+				String serverHash = null, cachedServerHash = null;
+				try {
+					serverHash = Downloader.getHashSHA256(serverFile);
+					cachedServerHash = Files.readString(extractedDataDirectory.resolve("server-sha256"));
+				} catch (RuntimeException | IOException e) {
+				}
+				if (serverHash == null || cachedServerHash == null || !serverHash.equals(cachedServerHash)) {
+
+					log.info("Extracting Minecraft data for version " + version);
+
+					FileUtils.deleteDirectory(extractedDataDirectory.toFile());
+					try (URLClassLoader loader = new URLClassLoader(
+							new URL[] { serverFile.toUri().toURL() },
+							Generator.class.getClassLoader()
+					)) {
+						Class<?> MinecraftMain = Class.forName("net.minecraft.data.Main", true, loader);
+						Method main = MinecraftMain.getDeclaredMethod("main", String[].class);
+						main.invoke(null, new Object[] { new String[] { "--reports", "--output=" + extractedDataDirectory } });
+					}
+
+					Files.writeString(extractedDataDirectory.resolve("server-sha256"), serverHash);
+				} else {
+					log.info("Extracted Minecraft data for version " + version +  " is up to date");
 				}
 			}
 
-			log.info("Generating BlockState information");
+			log.info("Generating BlockState information for version " + version);
 
-			MinecraftBlocks blocks = new MinecraftBlocks(OUTPUT_INTERNAL_TEST.resolve("data-" + version.fileSuffix + "/reports/blocks.json"));
+			MinecraftBlocks blocks = new MinecraftBlocks(extractedDataDirectory.resolve("reports/blocks.json"));
 
 			BlockState states = blocks.generateStates();
 			try (BufferedWriter writer = Files.newBufferedWriter(OUTPUT_CORE.resolve("block-states-" + version.fileSuffix + ".json"))) {

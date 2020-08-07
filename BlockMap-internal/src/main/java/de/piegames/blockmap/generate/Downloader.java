@@ -52,6 +52,7 @@ public class Downloader {
 				.map(Optional::get)
 				.collect(Collectors.toList());
 		log.debug("Latest known Minecraft versions: " + latestReleases.stream().map(v -> v.id).collect(Collectors.toList()));
+
 		for (MinecraftVersion version : MinecraftVersion.values()) {
 			log.info("Checking " + version);
 			Semver minecraftVersion = new Semver(version.versionName, SemverType.LOOSE);
@@ -68,6 +69,7 @@ public class Downloader {
 				log.error("Specified URL does not match, should be " + latestMatching.url);
 			}
 		}
+
 		Semver latestRelease = latestReleases.stream()
 				.map(v -> new Semver(v.id, SemverType.LOOSE))
 				.max(Comparator.naturalOrder())

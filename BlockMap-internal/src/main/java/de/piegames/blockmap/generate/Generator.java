@@ -78,14 +78,23 @@ public class Generator {
 
 			{ /* Call the Minecraft data report tool */
 				Path serverFile = OUTPUT_INTERNAL_CACHE.resolve("server-" + version.fileSuffix + ".jar");
-				String serverHash = null, cachedServerHash = null;
+
+				/* The hash of the current existing server.jar file */
+				String serverHash;
 				try {
 					serverHash = Downloader.getHashSHA256(serverFile);
+				} finally {
+				}
+
+				/* The hash of the server.jar at the time the data was generated. */
+				String cachedServerHash = null;
+				try {
 					cachedServerHash = Files.readString(extractedDataDirectory.resolve("server-sha256"));
 				} catch (RuntimeException | IOException e) {
 				}
-				if (serverHash == null || cachedServerHash == null || !serverHash.equals(cachedServerHash)) {
 
+				/* If the cached hash does not exist or does not match the current one, re-generate the data. */
+				if (cachedServerHash == null || !serverHash.equals(cachedServerHash)) {
 					log.info("Extracting Minecraft data for version " + version);
 
 					FileUtils.deleteDirectory(extractedDataDirectory.toFile());
@@ -98,6 +107,7 @@ public class Generator {
 						main.invoke(null, new Object[] { new String[] { "--reports", "--output=" + extractedDataDirectory } });
 					}
 
+					/* Write the hash last. Thus the presence of this file implies the existence of the data. */
 					Files.writeString(extractedDataDirectory.resolve("server-sha256"), serverHash);
 				} else {
 					log.info("Extracted Minecraft data for version " + version +  " is up to date");

@@ -22,10 +22,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import de.piegames.blockmap.gui.standalone.SimpleImageCache;
-import de.piegames.blockmap.gui.standalone.SimplePlayerProfileCache;
-import javafx.embed.swing.SwingFXUtils;
-import javafx.scene.image.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.controlsfx.control.PopOver;
@@ -43,6 +39,8 @@ import com.codepoetics.protonpack.StreamUtils;
 
 import de.piegames.blockmap.MinecraftVersion;
 import de.piegames.blockmap.gui.DisplayViewport;
+import de.piegames.blockmap.gui.standalone.SimpleImageCache;
+import de.piegames.blockmap.gui.standalone.SimplePlayerProfileCache;
 import de.piegames.blockmap.world.ChunkMetadata;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataCulled;
 import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataFailed;
@@ -64,12 +62,16 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.CacheHint;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
@@ -600,9 +602,9 @@ public class Pin {
 			}
 		}
 
-		protected List<de.piegames.blockmap.world.LevelMetadata.MapPin> maps;
+		protected List<LevelMetadata.MapPin> maps;
 
-		public MapPin(Vector2d position, List<de.piegames.blockmap.world.LevelMetadata.MapPin> maps, DisplayViewport viewport) {
+		public MapPin(Vector2d position, List<LevelMetadata.MapPin> maps, DisplayViewport viewport) {
 			super(position, PinType.MAP_POSITION, viewport);
 			this.maps = Objects.requireNonNull(maps);
 		}
@@ -620,7 +622,7 @@ public class Pin {
 				content.add(new Label(Integer.toString(maps.size())), 1, rowCount++);
 			}
 
-			for (de.piegames.blockmap.world.LevelMetadata.MapPin map : maps) {
+			for (LevelMetadata.MapPin map : maps) {
 				BorderPane mapPane = new BorderPane();
 				mapPane.setLeft(new Label("Scale:"));
 				mapPane.setRight(new Label("1:" + (1 << map.getScale())));
@@ -633,7 +635,7 @@ public class Pin {
 							image.getPixelWriter().setColor(x, y, COLOR_IDS[0xFF & data[y << 7 | x]]);
 					mapPane.setBottom(new ImageView(image));
 				}
-				content.add(mapPane, 0, rowCount++, 1, 2);
+				content.add(mapPane, 0, rowCount++, 2, 1);
 			}
 			info.setContentNode(content);
 			return info;

@@ -634,6 +634,23 @@
         "dependency": "com.github.saibotk:JMAW:0.3.1"
     },
     {
+        "project": "Semver4j",
+        "description": "Semantic versioning for Java apps.",
+        "version": "3.1.0",
+        "developers": [
+            "Vincent DURMONT"
+        ],
+        "url": "https://github.com/vdurmont/semver4j",
+        "year": null,
+        "licenses": [
+            {
+                "license": "The MIT License",
+                "license_url": "http://www.opensource.org/licenses/mit-license.php"
+            }
+        ],
+        "dependency": "com.vdurmont:semver4j:3.1.0"
+    },
+    {
         "project": "Smile-core",
         "description": "smile-core",
         "version": "1.5.3",

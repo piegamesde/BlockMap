@@ -34,7 +34,7 @@
 	- If you won't hack on the code itself, the JRE should suffice (in the downloads section, choose JRE over JDK)
 	- Past experience has shown that Java updates are not as backwards-compatible as they could be. So while any newer Java version **should** work just fine, it has currently only been tested up to Java 14. If you encounter any problems that go away by downgrading Java, please open up an issue.
 
-## Get it / Installation:
+## Download / Installation:
 
 Download the latest version from the [Release page](https://github.com/piegamesde/BlockMap/releases).
 
@@ -50,7 +50,7 @@ BlockMap hasn't been packaged for other distros yet (looking for maintainers).
 
 The GUI version should just run by (double)clicking it. Otherwise run it through:
 
-    java -jar BlockMap-gui-2.2.0.jar
+    java -jar BlockMap-gui-2.2.1.jar
 
 to start. If you installed BlockMap through a package manager, search for it in your launcher or menu.
 
@@ -68,9 +68,9 @@ to start. If you installed BlockMap through a package manager, search for it in 
 If you want to use BlockMap through the command line without,
 
     # For general usage help
-    java -jar BlockMap-cli-2.2.0.jar help
+    java -jar BlockMap-cli-2.2.1.jar help
     # For help about rendering worlds to a folder
-    java -jar BlockMap-cli-2.2.0.jar help render
+    java -jar BlockMap-cli-2.2.1.jar help render
 
 will get you started. On Linux even with colors!
 
@@ -131,6 +131,7 @@ If you want to create a release jar and run it, use `./gradlew :BlockMap-gui:run
 - Regenerate all resources (see above)
 	- If something in the UI changed, regenerate the screenshots
 	- If some dependencies changed: Run `./gradlew licenseReport` and copy the generated JSON file to `./BlockMap-gui/src/main/resources/de/piegames/blockmap/gui/standalone/about/licenseReport.json`
+- Commit the changes as `Version bump: $VESRION`. Add a tag with the version. Don't forget to push the tag as well! (`git push --tags`)
 - Generate the release binaries (need to be called on each target platform)
 	- This will create two executable fat (=containing all needed dependencies) jars in `./BlockMap-{gui,cli}/build/libs/fat/`.
 - Release on GitHub

@@ -1,5 +1,17 @@
 # Changelog
 
+## Version 2.2.1
+
+### Changes
+
+- Minor changes to the resource generation—CI is now slightly faster and should fail less often
+- Updated screenshots in README
+
+### Bug fixes
+
+- Minor improvements in the open dialog
+- Fixed pins for multiple maps on the exact same place
+
 ## Version 2.2.0
 
 ### Changes

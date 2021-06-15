@@ -37,7 +37,7 @@ task checkMinecraftVersions(type: JavaExec) {
 }
 
 dependencies {
-	testCompile 'junit:junit:4.13'
+	testImplementation 'junit:junit:4.13'
 
 	implementation project(':BlockMap-core')
 	implementation project(':BlockMap-gui')

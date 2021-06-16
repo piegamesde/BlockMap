@@ -92,6 +92,8 @@ public class GuiControllerWorld implements Initializable {
 
 			@Override
 			public String toString(MinecraftDimension object) {
+				if (object == null)
+					return null;
 				return object.displayName;
 			}
 

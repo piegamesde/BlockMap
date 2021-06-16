@@ -290,6 +290,8 @@ public abstract class RegionFolder {
 		protected SavedRegionFolder(T file) throws IOException {
 			this.basePath = file;
 			SavedRegionHelper helper = load(file);
+			if (helper == null)
+				throw new IOException("The rendered.json.gz file in the output directory is corrupt, please delete it and try again.");
 			pins = Optional.ofNullable(helper.pins);
 			regions = Optional.ofNullable(helper.regions)
 					.stream().flatMap(Collection::stream)

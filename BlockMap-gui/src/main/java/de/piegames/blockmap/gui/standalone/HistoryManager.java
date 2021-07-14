@@ -29,10 +29,15 @@ import io.github.soc.directories.ProjectDirectories;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import net.dongliu.gson.GsonJava8TypeAdapterFactory;
 
 public class HistoryManager {
 
-	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+	private static final Gson GSON = new GsonBuilder()
+			.registerTypeAdapterFactory(new GsonJava8TypeAdapterFactory())
+			.disableHtmlEscaping()
+			.setPrettyPrinting()
+			.create();
 	private static Log log = LogFactory.getLog(HistoryManager.class);
 
 	private final ProjectDirectories directories = ProjectDirectories.from("de", "piegames", "blockmap");
@@ -64,7 +69,7 @@ public class HistoryManager {
 
 				recentWorlds.addAll(list);
 			}
-		} catch (IOException e) {
+		} catch (RuntimeException | IOException e) {
 			log.warn("Could not initialize cache", e);
 		}
 
@@ -86,7 +91,7 @@ public class HistoryManager {
 										Optional<CompoundTag> data = in.readTag().getAsCompoundTag().flatMap(t -> t.getAsCompoundTag("Data"));
 										name = data.flatMap(t -> t.getStringValue("LevelName")).orElse(null);
 										timestamp = data.flatMap(t -> t.getLongValue("LastPlayed")).orElse(0L);
-									} catch (IOException e) {
+									} catch (RuntimeException | IOException e) {
 										log.warn("Could not read world name for " + save, e);
 									}
 
@@ -98,7 +103,7 @@ public class HistoryManager {
 								.sorted(Comparator.comparingLong(HistoryItem::lastAccessed).reversed())
 								.collect(Collectors.toList());
 						Platform.runLater(() -> otherWorlds.addAll(toAdd));
-					} catch (IOException e) {
+					} catch (RuntimeException | IOException e) {
 						log.warn("Could not load worlds from saves folder", e);
 					}
 			}

@@ -139,25 +139,26 @@ If you want to create a release jar and run it, use `./gradlew :BlockMap-gui:run
 
 ## Update to newer Minecraft version
 
-- Update and start Minecraft. Create a new debug world. Copy it to `./BlockMap-internal/src/test/resources`. Delete the `playerdata`, `stats` and `advancements` folders in it.
-- Copy the current block color instructions in `./BlockMap-internal/src/main/resources/` to match the new Minecraft version.
-- Copy the current `ChunkRenderer` in `de.piegames.blockmap.renderer` (in `BlockMap-core`) to match the new Minecraft version.
-- Commit as `Minecraft $VERSION: Update preparation`
-- Run `./gradlew checkMinecraftVersions` and update `de.piegames.blockmap.MinecraftVersion` accordingly.
-- Update the Minecraft version of `ChunkRenderer_$VERSION` in the constructor
-- Update `de.piegames.blockmap.renderer.RegionRenderer` to use the new `ChunkRenderer`
-- Run `./gradlew regenerate` and make it work
-- Run all the tests and make them work
+0. Update to the currently latest minor version, according to the instructions below, before going on with the next major update.
+1. Update and start Minecraft. Create a new debug world. Copy it to `./BlockMap-internal/src/test/resources`. Delete the `playerdata`, `stats` and `advancements` folders in it.
+2. Copy the current block color instructions in `./BlockMap-internal/src/main/resources/` to match the new Minecraft version.
+3. Copy the current `ChunkRenderer` in `de.piegames.blockmap.renderer` (in `BlockMap-core`) to match the new Minecraft version.
+4. Commit as `Minecraft $VERSION: Update preparation`
+5. Run `./gradlew checkMinecraftVersions` and update `de.piegames.blockmap.MinecraftVersion` accordingly.
+6. Update the Minecraft version of `ChunkRenderer_$VERSION` in the constructor
+7. Update `de.piegames.blockmap.renderer.RegionRenderer` to use the new `ChunkRenderer`
+8. Run `./gradlew regenerate` and make it work
+9. Run all the tests and make them work
 	- If Minecraft changed something on the save format, the `ChunkRenderer` will fail
 	- If Minecraft added new blocks, the color map needs to be updated. The failing tests will tell which blocks are missing. Additional information can be retrieved from the default resource pack.
 	- If Minecraft added or changed biomes, manual checking and updating is required
-- Generate a Minecraft vanilla world and test the GUI
-- Implement any new features of the update (e.g. new data that can be shown as GUI pin)
+10. Generate a Minecraft vanilla world and test the GUI
+11. Implement any new features of the update (e.g. new data that can be shown as GUI pin)
 	- Don't forget `./BlockMap-internal/src/main/resources/biome-color-instructions.json`
-- Regenerate the screenshots
+12. Regenerate the screenshots
 	- Optimize the BlockMapWorld in Minecraft
 	- `./gradlew clear && ./gradlew regenerate && ./gradlew generateScreenshots`
-- Release it 🎉
+13. Release it 🎉
 
 ## Troubleshooting
 

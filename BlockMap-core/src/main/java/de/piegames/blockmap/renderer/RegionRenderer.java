@@ -33,7 +33,7 @@ public class RegionRenderer {
 	private static Log			log	= LogFactory.getLog(RegionRenderer.class);
 
 	public final RenderSettings	settings;
-	private final ChunkRenderer renderer13, renderer14, renderer15, renderer16;
+	private final ChunkRenderer renderer13, renderer14, renderer15, renderer16, renderer17;
 
 	public RegionRenderer(RenderSettings settings) {
 		this.settings = Objects.requireNonNull(settings);
@@ -41,11 +41,12 @@ public class RegionRenderer {
 		renderer14 = new ChunkRenderer_1_14(settings);
 		renderer15 = new ChunkRenderer_1_15(settings);
 		renderer16 = new ChunkRenderer_1_16(settings);
+		renderer17 = new ChunkRenderer_1_17(settings);
 	}
 
 	/**
 	 * Render a given {@link RegionFile} to a {@link BufferedImage}. The image will always have a width and height of 512 pixels.
-	 * 
+	 *
 	 * @param file
 	 *            The file to render. Should not be {@code null}
 	 * @param regionPos
@@ -67,7 +68,7 @@ public class RegionRenderer {
 
 	/**
 	 * Render a given {@link RegionFile} to an image, represented as color array.
-	 * 
+	 *
 	 * @param file
 	 *            The file to render. Should not be {@code null}
 	 * @param regionPos
@@ -138,6 +139,8 @@ public class RegionRenderer {
 					metadata.put(chunkPos, renderer15.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
 				} else if (version >= MinecraftVersion.MC_1_16.minVersion && version <= MinecraftVersion.MC_1_16.maxVersion) {
 					metadata.put(chunkPos, renderer16.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
+				} else if (version >= MinecraftVersion.MC_1_17.minVersion && version <= MinecraftVersion.MC_1_17.maxVersion) {
+					metadata.put(chunkPos, renderer17.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
 				} else {
 					log.warn("Could not render chunk with Minecraft format version " + version);
 					metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "Could not find a chunk rendering engine for this version", version));

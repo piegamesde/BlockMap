@@ -32,10 +32,10 @@ import io.gsonfire.annotations.PostSerialize;
  * this is not a requirement. If the block is a grass/foliage/water block, its color will be multiplied with the respective colors of the
  * biome the block is in. The grass/foliage/water properties are independent from each other, a block may as well be both (even if the
  * result may not look that well).
- * 
+ *
  * The translucency property has no correlation with the transparency of that block (which is encoded in its base color) nor with any
  * properties directly related to Minecraft internals. See {@link #isTranslucentBlock(Block)} for more details.
- * 
+ *
  * @author piegames
  */
 public class BlockColorMap {
@@ -345,8 +345,8 @@ public class BlockColorMap {
 		try {
 			return load(new InputStreamReader(BlockColorMap.class.getResourceAsStream("/block-colors-" + name + "-" + version.fileSuffix + ".json")));
 		} catch (NullPointerException e) {
-			throw new IllegalArgumentException("Did not find internal color map " + name + " for version " + version.versionName
-					+ " (resource file 'block-colors-" + name + "-" + version.fileSuffix + ".json')", e);
+			throw new IllegalArgumentException("Did not find internal color map " + name + " (resource file 'block-colors-" + name + "-" + version.fileSuffix + ".json')", e);
+
 		}
 	}
 }

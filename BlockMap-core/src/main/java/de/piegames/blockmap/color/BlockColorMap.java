@@ -345,7 +345,8 @@ public class BlockColorMap {
 		try {
 			return load(new InputStreamReader(BlockColorMap.class.getResourceAsStream("/block-colors-" + name + "-" + version.fileSuffix + ".json")));
 		} catch (NullPointerException e) {
-			throw new IllegalArgumentException("Did not find internal color map " + name, e);
+			throw new IllegalArgumentException("Did not find internal color map " + name + " for version " + version.versionName
+					+ " (resource file 'block-colors-" + name + "-" + version.fileSuffix + ".json')", e);
 		}
 	}
 }

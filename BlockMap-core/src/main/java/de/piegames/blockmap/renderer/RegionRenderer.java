@@ -41,7 +41,7 @@ public class RegionRenderer {
 		renderer14 = new ChunkRenderer_1_14(settings);
 		renderer15 = new ChunkRenderer_1_15(settings);
 		renderer16 = new ChunkRenderer_1_16(settings);
-                renderer17 = new ChunkRenderer_1_17(settings);
+		renderer17 = new ChunkRenderer_1_17(settings);
 	}
 
 	/**

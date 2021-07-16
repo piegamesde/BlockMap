@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.joml.Vector2ic;
-import org.joml.Vector3i;
 import org.joml.Vector3ic;
 
 import de.piegames.blockmap.MinecraftVersion;
@@ -58,16 +57,18 @@ class ChunkRenderer_1_17 extends ChunkRenderer {
 					.flatMap(tag -> tag.getValue().values().stream())
 					.map(Tag::getAsCompoundTag)
 					.forEach(structure -> {
-						String id = structure.flatMap(t -> t.getStringValue("id")).orElse("INVALID");
-						if (!id.equals("INVALID")) {
-							int[] bb = structure.flatMap(t -> t.getIntArrayValue("BB")).get();
-							Vector3i center = new Vector3i(bb[0], bb[1], bb[2]).add(bb[3], bb[4], bb[5]);
-							// JOML has no Vector3i#div function, why?
-							center.x /= 2;
-							center.y /= 2;
-							center.z /= 2;
-							structureCenters.put(id, center);
-						}
+						// TODO add back in
+						// String id = structure.flatMap(t -> t.getStringValue("id")).orElse("INVALID");
+						// if (!id.equals("INVALID")) {
+						// System.out.println(id + " " + structure);
+						// int[] bb = structure.flatMap(t -> t.getIntArrayValue("BB")).get();
+						// Vector3i center = new Vector3i(bb[0], bb[1], bb[2]).add(bb[3], bb[4], bb[5]);
+						// // JOML has no Vector3i#div function, why?
+						// center.x /= 2;
+						// center.y /= 2;
+						// center.z /= 2;
+						// structureCenters.put(id, center);
+						// }
 					});
 
 			/* 1024 integers. Each value is the biome ID for a 4x4x4 subvolume in the chunk. The sub-chunks are in ZXY-order */

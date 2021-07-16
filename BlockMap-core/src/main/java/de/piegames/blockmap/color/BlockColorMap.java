@@ -269,7 +269,7 @@ public class BlockColorMap {
 	protected boolean						discardTop;
 	protected Map<String, StateColors>		blockColors;
 	protected transient BlockColor			airColor;
-	protected final transient StateColors	missing	= new SingleStateColors(BlockColor.MISSING) {
+	protected static final transient StateColors	missing	= new SingleStateColors(BlockColor.MISSING) {
 														@Override
 														public boolean hasColor(BitSet state) {
 															return false;

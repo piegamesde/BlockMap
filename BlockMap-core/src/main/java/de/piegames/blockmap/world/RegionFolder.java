@@ -41,7 +41,6 @@ import org.joml.Vector3i;
 import org.joml.Vector3ic;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 
 import de.piegames.blockmap.MinecraftDimension;
 import de.piegames.blockmap.renderer.RegionRenderer;

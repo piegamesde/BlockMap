@@ -5,10 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.joml.Vector2ic;
+import org.joml.Vector3i;
 import org.joml.Vector3ic;
 
 import de.piegames.blockmap.MinecraftVersion;
@@ -48,7 +50,7 @@ class ChunkRenderer_1_17 extends ChunkRenderer {
 			if (ChunkMetadataRendered.STATUS_EMPTY.contains(generationStatus))
 				return new ChunkMetadataRendered(chunkPosWorld, generationStatus);
 
-			/* Load saved structures */
+			/* Load saved structures. See https://minecraft.fandom.com/de/wiki/Bauwerksdaten. */
 			Map<String, Vector3ic> structureCenters = new HashMap<>();
 
 			level.getAsCompoundTag("Structures")
@@ -56,19 +58,30 @@ class ChunkRenderer_1_17 extends ChunkRenderer {
 					.stream()
 					.flatMap(tag -> tag.getValue().values().stream())
 					.map(Tag::getAsCompoundTag)
-					.forEach(structure -> {
-						// TODO add back in
-						// String id = structure.flatMap(t -> t.getStringValue("id")).orElse("INVALID");
-						// if (!id.equals("INVALID")) {
-						// System.out.println(id + " " + structure);
-						// int[] bb = structure.flatMap(t -> t.getIntArrayValue("BB")).get();
-						// Vector3i center = new Vector3i(bb[0], bb[1], bb[2]).add(bb[3], bb[4], bb[5]);
-						// // JOML has no Vector3i#div function, why?
-						// center.x /= 2;
-						// center.y /= 2;
-						// center.z /= 2;
-						// structureCenters.put(id, center);
-						// }
+					.flatMap(structure -> structure.stream())
+					// TODO replace this with a flatMap once Java has tuples
+					// Also, rename that variable once Java has name shadowing
+					.forEach((CompoundTag structure2) -> {
+						String id = structure2.getStringValue("id").orElse("INVALID");
+						if (id.equals("INVALID"))
+							return;
+
+						Stream.of(structure2)
+								/* Each structure has a list of child elements */
+								.flatMap((CompoundTag structure) -> structure.getAsListTag("Children").stream())
+								.flatMap(children -> children.getAsCompoundTagList().stream())
+								.flatMap(children -> children.getValue().stream())
+								/* Each child has a GD, showing the distance to center. We are only interested in children with GD 0. */
+								.filter((CompoundTag child) -> child.getIntValue("GD").map(gd -> gd == 0).orElse(false))
+								.forEach(child -> {
+									int[] bb = child.getIntArrayValue("BB").get();
+									Vector3i center = new Vector3i(bb[0], bb[1], bb[2]).add(bb[3], bb[4], bb[5]);
+									// JOML has no Vector3i#div function, why?
+									center.x /= 2;
+									center.y /= 2;
+									center.z /= 2;
+									structureCenters.put(id, center);
+								});
 					});
 
 			/* 1024 integers. Each value is the biome ID for a 4x4x4 subvolume in the chunk. The sub-chunks are in ZXY-order */

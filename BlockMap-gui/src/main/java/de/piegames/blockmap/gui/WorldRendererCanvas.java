@@ -98,7 +98,7 @@ public class WorldRendererCanvas extends ResizableCanvas {
 			Vector2dc translation = viewport.getTranslation();
 			gc.translate(translation.x(), translation.y());
 
-			map.draw(gc, Math.max(0, -viewport.getZoomLevel()), viewport.getFrustum(), scale);
+			map.draw(gc, Math.min(Math.max(0, -viewport.getZoomLevel()), 5), viewport.getFrustum(), scale);
 			gc.restore();
 		}
 

@@ -224,6 +224,10 @@ public class GuiController implements Initializable {
 			renderer.repaint();
 		});
 
+		renderer.getProgress().addListener((e, previous, val) -> {
+			if (val.doubleValue() >= 1.0)
+				cache.saveAll();
+		});
 		renderer.regionFolder.bind(regionFolderCached);
 		renderer.regionFolder.addListener((observable, previous, val) -> {
 			/* Reload pins */

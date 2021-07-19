@@ -112,6 +112,16 @@ public class RegionFolderCache {
 		return input;
 	}
 
+	public synchronized void saveAll() {
+		inUse.values().forEach(t -> {
+			try {
+				t.save();
+			} catch (IOException e) {
+				log.warn("Could not save changes to cache", e);
+			}
+		});
+	}
+
 	/** Mark this cache id as not used anymore so it may be re-used again. */
 	public synchronized void releaseCache(String id) {
 		if (inUse.containsKey(id))

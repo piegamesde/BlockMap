@@ -106,6 +106,7 @@ public class Pin {
 
 		public static final PinType BEE_NEST = new PinType("Bee nest", ANY_PIN, false, false, "textures/structures/bee_hive.png");
 		public static final PinType NETHER_PORTAL = new PinType("Portal", ANY_PIN, true, false, "textures/structures/nether_portal.png");
+		public static final PinType	LODESTONE = new PinType("Lodestone", ANY_PIN, true, false, "textures/structures/missing.png");
 
 		public static final PinType VILLAGE = new PinType("Village", ANY_PIN, true, false, "textures/structures/village.png");
 
@@ -255,7 +256,9 @@ public class Pin {
 			poiMapping.put("minecraft:librarian", VILLAGE_LIBRARIAN);
 
 			poiMapping.put("minecraft:bee_nest", BEE_NEST);
+			poiMapping.put("minecraft:beehive", BEE_NEST); /* I hope this is just a re-name */
 			poiMapping.put("minecraft:nether_portal", NETHER_PORTAL);
+			poiMapping.put("minecraft:lodestone", LODESTONE);
 
 			POI_MAPPING = Collections.unmodifiableMap(poiMapping);
 		}

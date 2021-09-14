@@ -145,15 +145,14 @@ public class ColorMapTest {
 		settings.biomeColors = BiomeColorMap.loadDefault();
 		RegionRenderer renderer = new RegionRenderer(settings);
 		String pathPrefix = "/Debug-" + version.fileSuffix + "/region/r.";
-		assertNoMissing(renderer.render(new Vector2i(-1, -1), new RegionFile(Paths.get(getClass().getResource(pathPrefix + "-1.-1.mca").toURI()))).getImage());
-		assertNoMissing(renderer.render(new Vector2i(-1, 0), new RegionFile(Paths.get(getClass().getResource(pathPrefix + "-1.0.mca").toURI()))).getImage());
-		assertNoMissing(renderer.render(new Vector2i(-1, 1), new RegionFile(Paths.get(getClass().getResource(pathPrefix + "-1.1.mca").toURI()))).getImage());
-		assertNoMissing(renderer.render(new Vector2i(0, -1), new RegionFile(Paths.get(getClass().getResource(pathPrefix + "0.-1.mca").toURI()))).getImage());
-		assertNoMissing(renderer.render(new Vector2i(0, 0), new RegionFile(Paths.get(getClass().getResource(pathPrefix + "0.0.mca").toURI()))).getImage());
-		assertNoMissing(renderer.render(new Vector2i(0, 1), new RegionFile(Paths.get(getClass().getResource(pathPrefix + "0.1.mca").toURI()))).getImage());
-		assertNoMissing(renderer.render(new Vector2i(1, -1), new RegionFile(Paths.get(getClass().getResource(pathPrefix + "1.-1.mca").toURI()))).getImage());
-		assertNoMissing(renderer.render(new Vector2i(1, 0), new RegionFile(Paths.get(getClass().getResource(pathPrefix + "1.0.mca").toURI()))).getImage());
-		assertNoMissing(renderer.render(new Vector2i(1, 1), new RegionFile(Paths.get(getClass().getResource(pathPrefix + "1.1.mca").toURI()))).getImage());
+		for (int x = -2; x <= 2; x++) {
+			for (int y = -2; y <= 2; y++) {
+				var resource = getClass().getResource(pathPrefix + x + "." + y + ".mca");
+				if (resource != null) {
+					assertNoMissing(renderer.render(new Vector2i(x, y), new RegionFile(Paths.get(resource.toURI()))).getImage());
+				}
+			}
+		}
 
 		/* Filter out some false positives: Minecraft does not always store the waterlogged property for some reason (performance? bug?) */
 		missingBlocks.removeIf(block -> {

@@ -57,8 +57,8 @@
 			"stripped_${log_overworld}_wood,axis=*": "stripped_${log_overworld}_log.png",
 			"stripped_${log_nether}_hyphae,axis=*": "stripped_${log_nether}_stem.png",
 
-			"activator_rail,powered=false,shape=*,": "activator_rail.png",
-			"activator_rail,powered=true,shape=*,": "activator_rail_on.png",
+			"activator_rail,powered=false,shape=*,waterlogged=*": "activator_rail.png",
+			"activator_rail,powered=true,shape=*,waterlogged=*": "activator_rail_on.png",
 			"andesite": "andesite.png",
 			"anvil,facing=*": "anvil_top.png",
 			"attached_melon_stem,facing=*": ["transparent"],
@@ -195,8 +195,8 @@
 
 			"dead_bush": "dead_bush.png",
 
-			"detector_rail,powered=false,shape=*": "detector_rail.png",
-			"detector_rail,powered=true,shape=*": "detector_rail_on.png",
+			"detector_rail,powered=false,shape=*,waterlogged=*": "detector_rail.png",
+			"detector_rail,powered=true,shape=*,waterlogged=*": "detector_rail_on.png",
 			"${ore}_block": "${ore}_block.png",
 			"${ore}_ore": "${ore}_ore.png",
 			"diorite": "diorite.png",
@@ -379,8 +379,8 @@
 			"potted_bamboo": ["transparent"],
 			"potted_${flower}": ["transparent"],
 
-			"powered_rail,powered=false,shape=*,": "powered_rail.png",
-			"powered_rail,powered=true,shape=*,": "powered_rail_on.png",
+			"powered_rail,powered=false,shape=*,waterlogged=*": "powered_rail.png",
+			"powered_rail,powered=true,shape=*,waterlogged=*": "powered_rail_on.png",
 			"prismarine": "prismarine.png",
 			"prismarine_bricks": "prismarine_bricks.png",
 
@@ -401,7 +401,7 @@
 			"quartz_slab,type=*,waterlogged=*": "quartz_block_top.png",
 			"quartz_stairs,facing=*,half=*,shape=*,waterlogged=*": "quartz_block_top.png",
 
-			"rail,shape=*": "rail.png",
+			"rail,shape=*,waterlogged=*": "rail.png",
 
 			"red_mushroom": "red_mushroom.png",
 			"red_mushroom_block,up=true,north=*,south=*,west=*,east=*,down=*": "red_mushroom_block.png",
@@ -635,13 +635,13 @@
         "colormap": {
             "air": ["fixed", "0x00000000", "translucent=true"],
             "cave_air": ["fixed", "0x00000000", "translucent=true"],
-            "activator_rail,powered=false,shape=*,": "activator_rail.png",
-            "activator_rail,powered=true,shape=*,": "activator_rail_on.png",
-            "detector_rail,powered=false,shape=*": "detector_rail.png",
-            "detector_rail,powered=true,shape=*": "detector_rail_on.png",
-            "powered_rail,powered=false,shape=*,": "powered_rail.png",
-            "powered_rail,powered=true,shape=*,": "powered_rail_on.png",
-            "rail,shape=*": "rail.png"
+            "activator_rail,powered=false,shape=*,waterlogged=*": "activator_rail.png",
+            "activator_rail,powered=true,shape=*,waterlogged=*": "activator_rail_on.png",
+            "detector_rail,powered=false,shape=*,waterlogged=*": "detector_rail.png",
+            "detector_rail,powered=true,shape=*,waterlogged=*": "detector_rail_on.png",
+            "powered_rail,powered=false,shape=*,waterlogged=*": "powered_rail.png",
+            "powered_rail,powered=true,shape=*,waterlogged=*": "powered_rail_on.png",
+            "rail,shape=*,waterlogged=*": "rail.png"
         }
     }
 }

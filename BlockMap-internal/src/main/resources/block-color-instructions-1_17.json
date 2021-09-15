@@ -677,6 +677,8 @@
             "tall_grass,half=*": ["transparent", "translucent=true"],
             "${flower}": ["transparent", "translucent=true"],
             "${tallflower},half=*": ["transparent", "translucent=true"],
+            "azalea": ["transparent", "translucent=true"],
+            "flowering_azalea": ["transparent", "translucent=true"],
             "brown_mushroom": ["transparent", "translucent=true"],
             "brown_mushroom_block,north=*,south=*,east=*,west=*,up=*,down=*": ["transparent", "translucent=true"],
             "red_mushroom": ["transparent", "translucent=true"],
@@ -685,7 +687,18 @@
             "dead_bush": ["transparent", "translucent=true"],
 			"sweet_berry_bush,age=*": ["transparent", "translucent=true"],
 			"bamboo,leaves=*,age=*,stage=*": ["transparent", "translucent=true"],
-			"bamboo_sapling": ["transparent", "translucent=true"]
+			"bamboo_sapling": ["transparent", "translucent=true"],
+			"azalea_leaves,distance=*,persistent=*": ["transparent", "translucent=true"],
+			"flowering_azalea_leaves,distance=*,persistent=*": ["transparent", "translucent=true"],
+			"big_dripleaf,facing=*,tilt=*,waterlogged=*": ["transparent", "translucent=true"],
+			"big_dripleaf_stem,facing=*,waterlogged=*": ["transparent", "translucent=true"],
+			"small_dripleaf,facing=*,half=*,waterlogged=*": ["transparent", "translucent=true"],
+			"cave_vines,age=*,berries=*": ["transparent", "translucent=true"],
+			"cave_vines_plant,berries=*": ["transparent", "translucent=true"],
+			"glow_lichen,east=*,north=*,south=*,west=*,up=*,down=*,waterlogged=*": ["transparent", "translucent=true"],
+			"hanging_roots,waterlogged=*": ["transparent", "translucent=true"],
+			"spore_blossom": ["transparent", "translucent=true"],
+			"tuff": ["transparent", "translucent=true"]
         }
     },
     "water": {

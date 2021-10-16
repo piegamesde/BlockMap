@@ -29,10 +29,10 @@
 ## Requirements:
 
 - Minecraft 1.13+ worlds. Chunks from before the release (even from 1.13 snapshots) will be ignored. Please optimize your worlds in Minecraft before rendering them (or use other map viewer, like [TMCMR](https://github.com/TOGoS/TMCMR)).
-- Java 12+
+- Java 17+
 	- While BlockMap should run on any Java, using the [OpenJDK](https://adoptopenjdk.net/) is recommended.
 	- If you won't hack on the code itself, the JRE should suffice (in the downloads section, choose JRE over JDK)
-	- Past experience has shown that Java updates are not as backwards-compatible as they could be. So while any newer Java version **should** work just fine, it has currently only been tested up to Java 14. If you encounter any problems that go away by downgrading Java, please open up an issue.
+	- Past experience has shown that Java updates are not as backwards-compatible as they could be. So while any newer Java version **should** work just fine, it has currently only been tested up to Java 17. If you encounter any problems that go away by downgrading Java, please open up an issue.
 
 ## Download / Installation:
 

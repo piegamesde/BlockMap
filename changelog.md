@@ -1,5 +1,22 @@
 # Changelog
 
+## Version 2.3.0
+
+### Changes
+
+- Minecraft 1.17 support
+- GUI rendering engine improvements
+	- The way downscaled images are handled got changed. The resulting code is a lot simpler,
+		which results in less bugs and memory consumption.
+	- The difference is especially noticable in worlds with empty region files/chunks. This
+		occurs when using the `/locate` command, or when interacting with cartographers in game.
+- Added pin for Lodestones
+
+### Bug fixes
+
+- Some random `NullPointerException`s
+- Java >=16 support
+
 ## Version 2.2.1
 
 ### Changes

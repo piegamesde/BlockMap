@@ -15,7 +15,7 @@
 - Pins on the map show points of interest like players, generated structures and villages
 - Different color maps and shaders that highlight exactly what you are looking for (including an underground caves and an ocean ground view)
 - A command line interface to render your worlds from scripts
-- The core rendering code as library to use in your own projects (releasing soon™)
+- The core rendering code as library to use in your own projects
 - Works with 1.17 worlds (with limited support down to 1.13)
 
 ## Gallery
@@ -95,6 +95,33 @@ The new server mode is based around the following concept:
 
 The bash script [server.sh](server.sh) is an example of how this could be used in a server environment. Simply set the paths at the top of the file and call this script regularly on the server. It has a few different render settings pre-configured, but they are easy to adapt to your needs.
 
+## Use it (Library):
+
+If you have trouble getting the library as dependency into your build system, please open up an issue. We generally recommend using [JitPack](https://jitpack.io/).
+
+The main action happens in the `RegionRenderer` class. It takes some `RenderSettings` (color map, height bounds, etc.) and renders whole `RegionFile`s at once. The result will be a `Region` object, which contains not only the pixel data but also extensive metadata about the structure of the world. The `RegionFolder` class helps you manage rendering whole worlds, especially with regards to keeping a rendered world up to date and other caching problems. Example usage:
+
+```java
+MinecraftDimension dimension = MinecraftDimension.OVERWOLRD;
+RenderSettings settings = new RenderSettings();
+RegionRenderer renderer = new RegionRenderer(settings);
+Path input; // <-- must point to a Minecraft world folder
+Path inputRegion = input.resolve(dimension.getRegionPath());
+Path output; // <-- must point to an empty folder
+
+/* Actual rendering 
+ *
+ * We could simply start loading `RegionFile`s per hand and feeding them into the `renderer`, but the `RegionFolder`s will help us
+ * with most of the dirty work. A `CachedRegionFolder` will be used to actually (and automatically) save the images on disk.
+ */
+WorldRegionFolder world = WorldRegionFolder.load(inputRegion, renderer, dimension == MinecraftDimension.NETHER);
+CachedRegionFolder cached = CachedRegionFolder.create(world, false, output);
+for (Vector2ic pos : world.listRegions()) {
+	cached.render(pos);
+}
+```
+
+For more detailed examples (including all the possible settings and a "merge everything into a huge PNG" mode), look at the CLI code (`CommandLineMain.java`).
 
 ## Build it:
 

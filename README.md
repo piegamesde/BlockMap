@@ -1,4 +1,4 @@
-# BlockMap – A Minecraft 1.16 world viewer
+# BlockMap – A Minecraft 1.17 world viewer
 
 [![Build Status](https://github.com/Minecraft-Technik-Wiki/BlockMap/workflows/Build/badge.svg)](https://github.com/Minecraft-Technik-Wiki/BlockMap/actions)
 
@@ -16,7 +16,7 @@
 - Different color maps and shaders that highlight exactly what you are looking for (including an underground caves and an ocean ground view)
 - A command line interface to render your worlds from scripts
 - The core rendering code as library to use in your own projects (releasing soon™)
-- Works with 1.16 worlds (with limited support down to 1.13)
+- Works with 1.17 worlds (with limited support down to 1.13)
 
 ## Gallery
 
@@ -157,8 +157,9 @@ If you want to create a release jar and run it, use `./gradlew :BlockMap-gui:run
 	- Don't forget `./BlockMap-internal/src/main/resources/biome-color-instructions.json`
 12. Regenerate the screenshots
 	- Optimize the BlockMapWorld in Minecraft
-	- `./gradlew clear && ./gradlew regenerate && ./gradlew generateScreenshots`
-13. Release it 🎉
+	- `./gradlew clean && ./gradlew regenerate && ./gradlew generateScreenshots`
+13. Update version references in `README.md` (and elsewhere)
+14. Release it 🎉
 
 ## Troubleshooting
 

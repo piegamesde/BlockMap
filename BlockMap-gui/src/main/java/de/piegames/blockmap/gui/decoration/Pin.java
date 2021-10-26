@@ -106,7 +106,7 @@ public class Pin {
 
 		public static final PinType BEE_NEST = new PinType("Bee nest", ANY_PIN, false, false, "textures/structures/bee_hive.png");
 		public static final PinType NETHER_PORTAL = new PinType("Portal", ANY_PIN, true, false, "textures/structures/nether_portal.png");
-		public static final PinType	LODESTONE = new PinType("Lodestone", ANY_PIN, true, false, "textures/structures/missing.png");
+		public static final PinType	LODESTONE = new PinType("Lodestone", ANY_PIN, true, false, "textures/pins/lodestone.png");
 
 		public static final PinType VILLAGE = new PinType("Village", ANY_PIN, true, false, "textures/structures/village.png");
 

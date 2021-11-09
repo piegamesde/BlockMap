@@ -20,7 +20,7 @@ dependencies {
 	implementation group: 'com.github.haifengl', name: 'smile-core', version: '1.5.3'
 	implementation group: 'com.codepoetics', name: 'protonpack', version: '1.16' // TODO upgrade to v2.x
     implementation 'com.github.saibotk:JMAW:0.3.1'
-    
+
     // GUI standalone dependencies
 	implementation 'com.google.guava:guava:29.0-jre'
 	implementation 'net.dongliu:gson-java8-datatype:1.1.0'
@@ -42,10 +42,11 @@ run {
 
 // Hide tasks
 knows.group = null
+def niceOsName = OS_NAME.contains("mac os x") ? "macOS" : OS_NAME
 
 jar {
 	archiveVersion = ""
-	archiveClassifier = "${OS_NAME}"
+	archiveClassifier = "${niceOsName}"
 	manifest {
         attributes 'Implementation-Title': 'BlockMap',
         	'Main-Class': 'de.piegames.blockmap.gui.standalone.GuiMainLauncher'
@@ -54,7 +55,7 @@ jar {
 
 shadowJar {
 	destinationDir = file("build/libs/fat")
-	archiveClassifier = "${OS_NAME}"
+	archiveClassifier = "${niceOsName}"
 }
 
 task versionlessJar(type: Jar) {

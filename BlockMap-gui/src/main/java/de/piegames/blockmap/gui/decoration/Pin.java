@@ -1034,7 +1034,7 @@ public class Pin {
 		/* All banner pins of the maps */
 		pins.addAll(pin.getMaps().map(List::stream).orElse(Stream.empty())
 				.flatMap(map -> map.getBanners().map(List::stream).orElse(Stream.empty()))
-				.map(banner -> new Pin(new Vector2d(banner.getPosition().x(), banner.getPosition().y()), PinType.MAP_BANNER, viewport))
+				.map(banner -> new Pin(new Vector2d(banner.getPosition().x(), banner.getPosition().z()), PinType.MAP_BANNER, viewport))
 				.collect(Collectors.toList()));
 
 		pin.getWorldSpawn().map(spawn -> new WorldSpawnPin(spawn.getSpawnpoint(), viewport)).ifPresent(pins::add);

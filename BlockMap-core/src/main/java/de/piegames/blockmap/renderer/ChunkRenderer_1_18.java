@@ -32,12 +32,12 @@ import de.piegames.nbt.regionfile.Chunk;
  *
  * @author piegames
  */
-class ChunkRenderer_1_17 extends ChunkRenderer {
+class ChunkRenderer_1_18 extends ChunkRenderer {
 
-	private static Log log = LogFactory.getLog(ChunkRenderer_1_17.class);
+	private static Log log = LogFactory.getLog(ChunkRenderer_1_18.class);
 
-	public ChunkRenderer_1_17(RenderSettings settings) {
-		super(MinecraftVersion.MC_1_17, settings);
+	public ChunkRenderer_1_18(RenderSettings settings) {
+		super(MinecraftVersion.MC_1_18, settings);
 	}
 
 	@Override

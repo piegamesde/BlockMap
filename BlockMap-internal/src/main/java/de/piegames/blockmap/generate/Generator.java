@@ -102,9 +102,24 @@ public class Generator {
 							new URL[] { serverFile.toUri().toURL() },
 							Generator.class.getClassLoader()
 					)) {
-						Class<?> MinecraftMain = Class.forName("net.minecraft.data.Main", true, loader);
+						Class<?> MinecraftMain;
+						/* For Minecraft 1.18 and up, how things work changed */
+						if (version.ordinal() >= MinecraftVersion.MC_1_18.ordinal()) {
+							System.setProperty("bundlerMainClass", "net.minecraft.data.Main");
+							MinecraftMain = Class.forName("net.minecraft.bundler.Main", true, loader);
+						} else {
+							MinecraftMain = Class.forName("net.minecraft.data.Main", true, loader);
+						}
 						Method main = MinecraftMain.getDeclaredMethod("main", String[].class);
 						main.invoke(null, new Object[] { new String[] { "--reports", "--output=" + extractedDataDirectory } });
+						
+						/* The main method may fork, thus wait for the forked thread to exit */
+						/* Also, who the fuck defined this API? */
+						Thread[] threads = new Thread[100];
+						Thread.currentThread().getThreadGroup().enumerate(threads);
+						for (Thread thread : threads)
+							if (thread != null && thread.getName().equals("ServerMain"))
+								thread.join();
 					}
 
 					/* Write the hash last. Thus the presence of this file implies the existence of the data. */

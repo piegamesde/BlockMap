@@ -17,9 +17,10 @@ public enum MinecraftVersion {
 	MC_1_14("1_14", 1901, 1976, "1.14.4", "https://launchermeta.mojang.com/v1/packages/d73c3f908365863ebe6b01cf454990182f2652f4/1.14.4.json"),
 	MC_1_15("1_15", 2200, 2230, "1.15.2", "https://launchermeta.mojang.com/v1/packages/52396828d64eae5bdd01a5ac787234a5f4c85e59/1.15.2.json"),
 	MC_1_16("1_16", 2566, 2586, "1.16.5", "https://launchermeta.mojang.com/v1/packages/934dfe455cf13141a1ab8a64c57114becba83c6d/1.16.5.json"),
-	MC_1_17("1_17", 2724, Integer.MAX_VALUE, "1.17.1", "https://launchermeta.mojang.com/v1/packages/1c11f595196065f7311b5f4ffe74a4fde433ff27/1.17.1.json");
+	MC_1_17("1_17", 2724, 2730, "1.17.1", "https://launchermeta.mojang.com/v1/packages/1c11f595196065f7311b5f4ffe74a4fde433ff27/1.17.1.json"),
+	MC_1_18("1_18", 2860, Integer.MAX_VALUE, "1.18.0", "https://launchermeta.mojang.com/v1/packages/cdd1c0f485c0ea5a5aae60d4e62d316b2141f227/1.18.json");
 
-	public static final MinecraftVersion LATEST = MC_1_17;
+	public static final MinecraftVersion LATEST = MC_1_18;
 
 	public final int minVersion, maxVersion;
 	public final String fileSuffix, versionName, manifestURL;

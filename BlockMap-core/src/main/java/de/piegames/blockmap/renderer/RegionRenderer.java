@@ -123,8 +123,6 @@ public class RegionRenderer {
 				continue;
 			}
 			try {
-				CompoundTag level = root.getAsCompoundTag("Level").get();
-
 				/* Check data version */
 				Optional<Integer> dataVersion = root.getAsIntTag("DataVersion").map(Tag::getValue);
 				if (dataVersion.isPresent()) {
@@ -134,17 +132,22 @@ public class RegionRenderer {
 						metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "This chunk was written from Minecraft <1.13, which is not supported", version));
 						continue;
 					} else if (version <= MinecraftVersion.MC_1_13.maxVersion) {
+						CompoundTag level = root.getAsCompoundTag("Level").get();
 						metadata.put(chunkPos, renderer13.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
 					} else if (version >= MinecraftVersion.MC_1_14.minVersion && version <= MinecraftVersion.MC_1_14.maxVersion) {
+						CompoundTag level = root.getAsCompoundTag("Level").get();
 						metadata.put(chunkPos, renderer14.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
 					} else if (version >= MinecraftVersion.MC_1_15.minVersion && version <= MinecraftVersion.MC_1_15.maxVersion) {
+						CompoundTag level = root.getAsCompoundTag("Level").get();
 						metadata.put(chunkPos, renderer15.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
 					} else if (version >= MinecraftVersion.MC_1_16.minVersion && version <= MinecraftVersion.MC_1_16.maxVersion) {
+						CompoundTag level = root.getAsCompoundTag("Level").get();
 						metadata.put(chunkPos, renderer16.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
 					} else if (version >= MinecraftVersion.MC_1_17.minVersion && version <= MinecraftVersion.MC_1_17.maxVersion) {
+						CompoundTag level = root.getAsCompoundTag("Level").get();
 						metadata.put(chunkPos, renderer17.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
 					} else if (version >= MinecraftVersion.MC_1_18.minVersion && version <= MinecraftVersion.MC_1_18.maxVersion) {
-						metadata.put(chunkPos, renderer18.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
+						metadata.put(chunkPos, renderer18.renderChunk(chunkPosRegion, chunkPos, root, map, height, regionBiomes));
 					} else {
 						log.warn("Could not render chunk with Minecraft format version " + version);
 						metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "Could not find a chunk rendering engine for this version", version));

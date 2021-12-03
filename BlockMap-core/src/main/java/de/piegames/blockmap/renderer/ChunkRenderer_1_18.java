@@ -53,8 +53,8 @@ class ChunkRenderer_1_18 extends ChunkRenderer {
 			/* Load saved structures. See https://minecraft.fandom.com/de/wiki/Bauwerksdaten. */
 			Map<String, Vector3ic> structureCenters = new HashMap<>();
 
-			level.getAsCompoundTag("Structures")
-					.flatMap(t -> t.getAsCompoundTag("Starts"))
+			level.getAsCompoundTag("structures")
+					.flatMap(t -> t.getAsCompoundTag("starts"))
 					.stream()
 					.flatMap(tag -> tag.getValue().values().stream())
 					.map(Tag::getAsCompoundTag)
@@ -85,10 +85,10 @@ class ChunkRenderer_1_18 extends ChunkRenderer {
 					});
 
 			/* 1024 integers. Each value is the biome ID for a 4x4x4 subvolume in the chunk. The sub-chunks are in ZXY-order */
-			int[] biomes = level.getIntArrayValue("Biomes")
-					/* For some curious reason, Minecraft sometimes saves the biomes as empty array. 'cause, why not? */
-					.filter(b -> b.length > 0)
-					.orElse(new int[1024]);
+// 			int[] biomes = level.getIntArrayValue("Biomes")
+// 					/* For some curious reason, Minecraft sometimes saves the biomes as empty array. 'cause, why not? */
+// 					.filter(b -> b.length > 0)
+// 					.orElse(new int[1024]);
 
 			/*
 			 * The height of the lowest section that has already been loaded. Section are loaded lazily from top to bottom and this value gets decreased
@@ -96,10 +96,10 @@ class ChunkRenderer_1_18 extends ChunkRenderer {
 			 */
 			int lowestLoadedSection = 16;
 			/* Null entries indicate a section full of air */
-			BlockColor[][] loadedSections = new BlockColor[16][];
+			BlockColor[][] loadedSections = new BlockColor[24][];
 
 			/* Get the list of all sections and map them to their y coordinate using streams */
-			Map<Byte, CompoundMap> sections = level.getAsListTag("Sections")
+			Map<Byte, CompoundMap> sections = level.getAsListTag("sections")
 					.flatMap(ListTag::getAsCompoundTagList)
 					.map(ListTag::getValue)
 					.stream().flatMap(Collection::stream)
@@ -179,13 +179,12 @@ class ChunkRenderer_1_18 extends ChunkRenderer {
 					/* If we discard all solid block until we hit a translucent one, we'll get a nice cave view effect */
 					boolean discardTop = blockColors.isCaveView();
 					ColorColumn color = new ColorColumn();
-					height: for (byte s = 15; s >= 0; s--) {
+					height: for (byte s = 19; s >= -4; s--) {
 						if ((s << 4) > settings.maxY)
 							continue;
 						if (s < lowestLoadedSection) {
-							// log.debug("Loading section " + s);
 							try {
-								loadedSections[s] = renderSection(sections.get(s), blockColors);
+								loadedSections[s + 4] = renderSection(sections.get(s), blockColors);
 							} catch (Exception e) {
 								log.warn("Failed to render chunk (" + chunkPosRegion.x() + ", " + chunkPosRegion.y() + ") section " + s
 										+ ". This is very likely because your chunk is corrupt. If possible, please verify it "
@@ -194,7 +193,7 @@ class ChunkRenderer_1_18 extends ChunkRenderer {
 							}
 							lowestLoadedSection = s;
 						}
-						if (loadedSections[s] == null) {
+						if (loadedSections[s + 4] == null) {
 							/* Sector is full of air. It is assumed that the air color is not biome dependent */
 							color.putColor(blockColors.getAirColor(), 16, 0);
 							discardTop = false;
@@ -210,7 +209,7 @@ class ChunkRenderer_1_18 extends ChunkRenderer {
 							/* xzy index relative to the current section */
 							int xzy = xz | y << 8;
 
-							BlockColor colorData = loadedSections[s][xzy];
+							BlockColor colorData = loadedSections[s + 4][xzy];
 							if (discardTop && colorData.isTranslucent)
 								discardTop = false;
 							if (!discardTop && !colorData.isTranslucent && !heightSet) {
@@ -220,12 +219,12 @@ class ChunkRenderer_1_18 extends ChunkRenderer {
 
 							int biomeXYZ = (h >> 2) << 4 | biomeXZ;
 							if (!discardTop)
-								color.putColor(colorData, 1, biomes[biomeXYZ]);
+								color.putColor(colorData, 1, /*biomes[biomeXYZ]*/ 0);
 							if (color.needStop)
 								break height;
 						}
 					}
-					regionBiomes[regionXZ] = biomes[(height[regionXZ] >> 2) << 4 | biomeXZ];
+					regionBiomes[regionXZ] = 0; //biomes[(height[regionXZ] >> 2) << 4 | biomeXZ];
 					map[regionXZ] = color.getFinal();
 				}
 			return new ChunkMetadataRendered(chunkPosWorld, generationStatus, structureCenters);
@@ -240,13 +239,16 @@ class ChunkRenderer_1_18 extends ChunkRenderer {
 	 * a length of 16³=4096 items and the blocks are mapped to them in XZY order.
 	 */
 	private BlockColor[] renderSection(CompoundMap section, BlockColorMap blockColors) {
-		/* Sometimes sections only contain "Y" and "SkyLight", but no "Palette"?! */
-		if (section == null || !section.containsKey("Palette"))
+		if (section == null)
+			return null;
+
+		CompoundTag blockStates = section.get("block_states").getAsCompoundTag().get();
+		// TODO check if missing data means that the whole section should be filled with one block
+		if (!blockStates.getValue().containsKey("data"))
 			return null;
 
 		/* Parse palette */
-		List<BlockColor> palette = section.get("Palette")
-				.getAsListTag()
+		List<BlockColor> palette = blockStates.getAsListTag("palette")
 				.flatMap(ListTag::getAsCompoundTagList)
 				.map(Tag::getValue)
 				.stream().flatMap(Collection::stream)
@@ -255,7 +257,7 @@ class ChunkRenderer_1_18 extends ChunkRenderer {
 						() -> parseBlockState(map.getAsCompoundTag("Properties").get(), version.getBlockStates())))
 				.collect(Collectors.toList());
 
-		long[] blocks = section.get("BlockStates").getAsLongArrayTag().get().getValue();
+		long[] blocks = blockStates.getLongArrayValue("data").get();
 
 		BlockColor[] ret = new BlockColor[4096];
 

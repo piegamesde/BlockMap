@@ -87,7 +87,7 @@
 					GridPane.rowIndex="4"
 					GridPane.columnIndex="0" />
 				<TextField
-					text="0"
+					text="-64"
 					fx:id="minHeight"
 					GridPane.rowIndex="4"
 					GridPane.columnIndex="1" />
@@ -97,7 +97,7 @@
 					GridPane.rowIndex="5"
 					GridPane.columnIndex="0" />
 				<TextField
-					text="255"
+					text="319"
 					fx:id="maxHeight"
 					GridPane.rowIndex="5"
 					GridPane.columnIndex="1" />

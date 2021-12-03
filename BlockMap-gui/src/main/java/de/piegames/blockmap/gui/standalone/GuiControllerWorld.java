@@ -67,14 +67,14 @@ public class GuiControllerWorld implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		minHeight.setTextFormatter(new TextFormatter<>(new IntegerStringConverter(), 0));
-		maxHeight.setTextFormatter(new TextFormatter<>(new IntegerStringConverter(), 255));
+		minHeight.setTextFormatter(new TextFormatter<>(new IntegerStringConverter(), -64));
+		maxHeight.setTextFormatter(new TextFormatter<>(new IntegerStringConverter(), 319));
 
 		EventHandler<ActionEvent> onHeightChange = e -> {
 			if (minHeight.getText().isEmpty())
-				minHeight.setText("0");
+				minHeight.setText("-64");
 			if (maxHeight.getText().isEmpty())
-				maxHeight.setText("255");
+				maxHeight.setText("319");
 			if (new IntegerStringConverter().fromString(minHeight.getText()) > new IntegerStringConverter().fromString(maxHeight.getText())) {
 				String tmp = minHeight.getText();
 				minHeight.setText(maxHeight.getText());

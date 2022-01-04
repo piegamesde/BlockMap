@@ -691,6 +691,34 @@ public class Pin {
 		}
 	}
 
+	private static class BannerPin extends Pin {
+
+		protected LevelMetadata.MapPin.BannerPin banner;
+
+		public BannerPin(LevelMetadata.MapPin.BannerPin banner, DisplayViewport viewport) {
+			super(new Vector2d(banner.getPosition().x(), banner.getPosition().z()), PinType.MAP_BANNER, viewport);
+			this.banner = Objects.requireNonNull(banner);
+		}
+
+		@Override
+		protected PopOver initInfo() {
+			PopOver info = super.initInfo();
+			GridPane content = new GridPane();
+			content.getStyleClass().add("grid");
+
+			content.add(new Label("Text (raw): "), 0, 0);
+			Label name = new Label(banner.getName().orElse("{}"));
+			content.add(name, 1, 0);
+
+			content.add(new Label("Color: "), 0, 1);
+			Label color = new Label(banner.getColor().orElse("none"));
+			content.add(color, 1, 1);
+
+			info.setContentNode(content);
+			return info;
+		}
+	}
+
 	private static class PlayerPin extends Pin implements Runnable {
 
 		private static final int SKIN_IMAGE_SCALE_MULTIPLIER = 16;
@@ -1053,7 +1081,7 @@ public class Pin {
 		/* All banner pins of the maps */
 		pins.addAll(pin.getMaps().map(List::stream).orElse(Stream.empty())
 				.flatMap(map -> map.getBanners().map(List::stream).orElse(Stream.empty()))
-				.map(banner -> new Pin(new Vector2d(banner.getPosition().x(), banner.getPosition().z()), PinType.MAP_BANNER, viewport))
+				.map(banner -> new BannerPin(banner, viewport))
 				.collect(Collectors.toList()));
 
 		pin.getWorldSpawn().map(spawn -> new WorldSpawnPin(spawn.getSpawnpoint(), viewport)).ifPresent(pins::add);

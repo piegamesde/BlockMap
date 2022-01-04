@@ -541,7 +541,9 @@ public class Pin {
 		static final Color[] COLOR_IDS;
 
 		static {
-			/* Source: https://minecraft-de.gamepedia.com/Kartendaten#Liste_der_Farbwerte */
+			/* Sources: https://minecraft-de.gamepedia.com/Kartendaten#Liste_der_Farbwerte,
+			 * https://minecraft.fandom.com/wiki/Map_item_format#Base_colors
+			 */
 			Color[] rawColors = new Color[] {
 					Color.TRANSPARENT,
 					Color.rgb(125, 176, 55), /* grass */
@@ -594,7 +596,17 @@ public class Pin {
 					Color.rgb(76, 50, 35), /* brown hardened clay */
 					Color.rgb(76, 82, 42), /* green hardened clay */
 					Color.rgb(142, 60, 46), /* red hardened clay */
-					Color.rgb(37, 22, 16),/* black hardened clay */
+					Color.rgb(37, 22, 16), /* black hardened clay */
+					Color.rgb(189, 48, 49), /* Crimson nylium */
+					Color.rgb(148, 63, 97), /* Crimson stem */
+					Color.rgb(92, 25, 29), /* Crimson hyphae */
+					Color.rgb(22, 126, 134), /* Warped nylium */
+					Color.rgb(58, 142, 140), /* Warped stem */
+					Color.rgb(86, 44, 62), /* Warped hyphae */
+					Color.rgb(20, 180, 133), /* Wapred wart block */
+					Color.rgb(100, 100, 100), /* Deepslate */
+					Color.rgb(216, 175, 147), /* Raw iron */
+					Color.rgb(127, 167, 150), /* Glow lichen */
 			};
 			COLOR_IDS = new Color[rawColors.length * 4];
 			for (int i = 0; i < rawColors.length; i++) {
@@ -634,8 +646,15 @@ public class Pin {
 					byte[] data = map.getColors().get();
 					WritableImage image = new WritableImage(128, 128);
 					for (int x = 0; x < 128; x++)
-						for (int y = 0; y < 128; y++)
-							image.getPixelWriter().setColor(x, y, COLOR_IDS[0xFF & data[y << 7 | x]]);
+						for (int y = 0; y < 128; y++) {
+							var colorId = 0xFF & data[y << 7 | x];
+							if (colorId > COLOR_IDS.length) {
+								image.getPixelWriter().setColor(x, y, Color.rgb(255, 255, 0));
+								log.warn("Map colors are out of bounds, this is likely a bug.");
+							} else {
+								image.getPixelWriter().setColor(x, y, COLOR_IDS[colorId]);
+							}
+						}
 					mapPane.setBottom(new ImageView(image));
 				}
 				content.add(mapPane, 0, rowCount++, 2, 1);

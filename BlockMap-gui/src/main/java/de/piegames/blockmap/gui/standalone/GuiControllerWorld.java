@@ -51,17 +51,16 @@ public class GuiControllerWorld implements Initializable {
 	@FXML
 	ChoiceBox<MinecraftDimension> dimensionBox;
 
-	/* The String is a hash code used for caching */
-	protected ReadOnlyObjectWrapper<Pair<String, RegionFolder>> folder = new ReadOnlyObjectWrapper<>();
+	protected ReadOnlyObjectWrapper<CacheEntry>	folder			= new ReadOnlyObjectWrapper<>();
 	protected Path worldPath;
 	protected RenderSettings settings;
 
 	private ChangeListener<Object> reloadListener = (observer, old, value) -> {
 		if (old != value)
-			reload();
+																		reload(false);
 	};
 
-	public ReadOnlyObjectProperty<Pair<String, RegionFolder>> folderProperty() {
+	public ReadOnlyObjectProperty<CacheEntry> folderProperty() {
 		return folder.getReadOnlyProperty();
 	}
 
@@ -80,7 +79,7 @@ public class GuiControllerWorld implements Initializable {
 				minHeight.setText(maxHeight.getText());
 				maxHeight.setText(tmp);
 			}
-			reload();
+			reload(false);
 		};
 		minHeight.setOnAction(onHeightChange);
 		maxHeight.setOnAction(onHeightChange);
@@ -116,10 +115,10 @@ public class GuiControllerWorld implements Initializable {
 		dimensionBox.setValue(available.get(0));
 		dimensionBox.valueProperty().addListener(reloadListener);
 		this.worldPath = worldPath;
-		reload();
+		reload(false);
 	}
 
-	public void reload() {
+	public void reload(boolean force) {
 		if (worldPath == null) {
 			folder.set(null);
 			return;
@@ -136,7 +135,7 @@ public class GuiControllerWorld implements Initializable {
 					BiomeColorMap.loadDefault(),
 					RegionShader.DEFAULT_SHADERS[shadingBox.getSelectionModel().getSelectedIndex()]);
 			RegionRenderer renderer = new RegionRenderer(settings);
-			folder.set(new Pair<>(
+			folder.set(new CacheEntry(
 					Integer.toHexString(Objects.hash(
 							worldPath.toAbsolutePath().toString(),
 							settings.minY,
@@ -146,7 +145,8 @@ public class GuiControllerWorld implements Initializable {
 							dimensionBox.getValue().ordinal(),
 							VersionProvider.VERSION)),
 					WorldRegionFolder.load(worldPath,
-							dimensionBox.getValue(), renderer, true)));
+							dimensionBox.getValue(), renderer, true),
+					force));
 		} catch (RuntimeException | IOException e) {
 			folder.set(null);
 			log.warn("Could not load world " + worldPath, e);

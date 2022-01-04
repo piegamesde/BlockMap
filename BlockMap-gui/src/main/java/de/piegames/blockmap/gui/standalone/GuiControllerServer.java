@@ -71,7 +71,7 @@ public class GuiControllerServer implements Initializable {
 	ChoiceBox<String> worldBox;
 
 	/* The String is a hash code used for caching */
-	protected ReadOnlyObjectWrapper<Pair<String, RegionFolder>> folder = new ReadOnlyObjectWrapper<>();
+	protected ReadOnlyObjectWrapper<CacheEntry>	folder		= new ReadOnlyObjectWrapper<>();
 	protected URI file;
 	protected ServerMetadata metadata;
 	protected List<ServerLevel> worlds;
@@ -82,13 +82,14 @@ public class GuiControllerServer implements Initializable {
 					.filter(p -> p.name.equals(val))
 					.findFirst()
 					.get().path;
-			folder.set(new Pair<String, RegionFolder>(
+																	folder.set(new CacheEntry(
 					Integer.toHexString(Objects.hash(
 							file.toString(),
 							worldBox.getValue(),
 							VersionProvider.VERSION)),
 					new RegionFolder.RemoteRegionFolder(
-							fixupURI(file.resolve(path)))));
+																					fixupURI(file.resolve(path))),
+																			false));
 		} catch (IOException e) {
 			folder.set(null);
 			log.warn("Could not load world " + val + " from remote file " + file);
@@ -98,7 +99,7 @@ public class GuiControllerServer implements Initializable {
 		}
 	};
 
-	public ReadOnlyObjectProperty<Pair<String, RegionFolder>> folderProperty() {
+	public ReadOnlyObjectProperty<CacheEntry> folderProperty() {
 		return folder.getReadOnlyProperty();
 	}
 
@@ -112,10 +113,10 @@ public class GuiControllerServer implements Initializable {
 			file = URI.create(file.getSchemeSpecificPart());
 		}
 		this.file = file;
-		reload();
+		reload(false);
 	}
 
-	public void reload() {
+	public void reload(boolean force) {
 		try (Reader reader = new InputStreamReader(file.toURL().openStream())) {
 			metadata = GSON.fromJson(reader, ServerMetadata.class);
 			worlds = metadata.levels;

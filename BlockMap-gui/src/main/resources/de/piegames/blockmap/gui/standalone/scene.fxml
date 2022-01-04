@@ -50,6 +50,19 @@
 						</accelerator>
 					</MenuItem>
 					<MenuItem
+						text="Force reload"
+						onAction="#forceReloadWorld">
+						<accelerator>
+							<KeyCodeCombination
+								code="R"
+								alt="UP"
+								control="DOWN"
+								meta="UP"
+								shift="DOWN"
+								shortcut="UP" />
+						</accelerator>
+					</MenuItem>
+					<MenuItem
 						text="Unload"
 						onAction="#unload">
 						<accelerator>

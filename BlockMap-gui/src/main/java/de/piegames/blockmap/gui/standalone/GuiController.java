@@ -76,7 +76,7 @@ public class GuiController implements Initializable {
 
 	public WorldRendererCanvas renderer;
 	protected WorldType loaded = WorldType.NONE;
-	protected ObjectProperty<Pair<String, RegionFolder>> regionFolder = new SimpleObjectProperty<>();
+	protected ObjectProperty<CacheEntry>	regionFolder		= new SimpleObjectProperty<>();
 	protected ObjectProperty<RegionFolder> regionFolderCached = new SimpleObjectProperty<>();
 
 	@FXML
@@ -160,7 +160,7 @@ public class GuiController implements Initializable {
 				timestampLabel.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 				timestampLabel.textProperty().bind(Bindings.createStringBinding(() -> {
 					if (regionFolder.get() != null) {
-						return "Rendered " + DateConverter.toRelative(regionFolder.get().getValue().getTimestamp());
+						return "Rendered " + DateConverter.toRelative(regionFolder.get().folder.getTimestamp());
 					} else
 						return "";
 				}, regionFolder, timeCounter));
@@ -214,11 +214,11 @@ public class GuiController implements Initializable {
 		}
 
 		/* Cache wrapper */
-		regionFolder.addListener((ChangeListener<? super Pair<String, RegionFolder>>) (e, old, val) -> {
+		regionFolder.addListener((ChangeListener<? super CacheEntry>) (e, old, val) -> {
 			if (old != null)
-				cache.releaseCache(old.getKey());
+				cache.releaseCache(old.hash);
 			if (val != null)
-				regionFolderCached.set(cache.cache(val.getValue(), val.getKey()));
+				regionFolderCached.set(cache.cache(val));
 			else
 				regionFolderCached.set(null);
 			renderer.repaint();
@@ -385,10 +385,23 @@ public class GuiController implements Initializable {
 	public void reloadWorld() {
 		switch (loaded) {
 		case LOCAL:
-			worldSettingsController.reload();
+			worldSettingsController.reload(false);
 			break;
 		case REMOTE:
-			serverSettingsController.reload();
+			serverSettingsController.reload(false);
+			break;
+		default:
+		}
+	}
+
+	@FXML
+	public void forceReloadWorld() {
+		switch (loaded) {
+		case LOCAL:
+			worldSettingsController.reload(true);
+			break;
+		case REMOTE:
+			serverSettingsController.reload(true);
 			break;
 		default:
 		}

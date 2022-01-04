@@ -251,8 +251,8 @@ public class ColorCompiler {
 
 	public static List<Color> compileHeightMap(Path heightMapFile) throws IOException {
 		BufferedImage image = ImageIO.read(Files.newInputStream(heightMapFile));
-		List<Color> ret = new ArrayList<>(256);
-		for (int x = 0; x < 256; x++)
+		List<Color> ret = new ArrayList<>(image.getWidth());
+		for (int x = 0; x < image.getWidth(); x++)
 			ret.add(Color.fromRGB(image.getRGB(x, 0)));
 		return ret;
 	}

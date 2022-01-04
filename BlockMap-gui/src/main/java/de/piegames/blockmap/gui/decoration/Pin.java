@@ -100,12 +100,12 @@ public class Pin {
 		public static final PinType PLAYER_POSITION = new PinType("Player position", PLAYER, true, false, "textures/pins/player.png");
 		public static final PinType PLAYER_SPAWN = new PinType("Player spawnpoint", PLAYER, true, false, "textures/pins/spawn_player.png");
 
-		public static final PinType MAP = new PinType("Map", ANY_PIN, true, false, "textures/pins/map.png");
-		public static final PinType MAP_POSITION = new PinType("Map position", MAP, true, false, "textures/pins/map.png");
+		public static final PinType MAP = new PinType("Map", ANY_PIN, false, true, "textures/pins/map.png");
+		public static final PinType MAP_POSITION = new PinType("Map position", MAP, false, false, "textures/pins/map.png");
 		public static final PinType MAP_BANNER = new PinType("Map banner", MAP, true, false, "textures/pins/banner.png");
 
 		public static final PinType BEE_NEST = new PinType("Bee nest", ANY_PIN, false, false, "textures/structures/bee_hive.png");
-		public static final PinType NETHER_PORTAL = new PinType("Portal", ANY_PIN, true, false, "textures/structures/nether_portal.png");
+		public static final PinType NETHER_PORTAL = new PinType("Portal", ANY_PIN, false, false, "textures/structures/nether_portal.png");
 		public static final PinType	LODESTONE = new PinType("Lodestone", ANY_PIN, true, false, "textures/pins/lodestone.png");
 
 		public static final PinType VILLAGE = new PinType("Village", ANY_PIN, true, false, "textures/structures/village.png");
@@ -138,7 +138,7 @@ public class Pin {
 		public static final PinType WORLD_SPAWN = new PinType("Spawnpoint", ANY_PIN, true, false, "textures/pins/spawn_map.png");
 
 		public static final PinType STRUCTURE_OVERWORLD = new PinType("Structures", ANY_PIN, false, true, "textures/pins/structures.png");
-		public static final PinType STRUCTURE_TREASURE = new PinType("Treasure", STRUCTURE_OVERWORLD, true, false, "textures/structures/buried_treasure.png");
+		public static final PinType STRUCTURE_TREASURE = new PinType("Treasure", STRUCTURE_OVERWORLD, false, false, "textures/structures/buried_treasure.png");
 		public static final PinType STRUCTURE_PYRAMID = new PinType("Pyramid", STRUCTURE_OVERWORLD, true, false, "textures/structures/desert_pyramid.png");
 		public static final PinType STRUCTURE_IGLOO = new PinType("Igloo", STRUCTURE_OVERWORLD, true, false, "textures/structures/igloo.png");
 		public static final PinType STRUCTURE_JUNGLE_TEMPLE = new PinType("Jungle temple", STRUCTURE_OVERWORLD, true, false, "textures/structures/jungle_pyramid.png");
@@ -153,7 +153,7 @@ public class Pin {
 
 		public static final PinType STRUCTURE_NETHER = new PinType("Nether Structures", ANY_PIN, false, true, "textures/pins/structures.png");
 		public static final PinType STRUCTURE_FORTRESS = new PinType("Nether Fortress", STRUCTURE_NETHER, true, false, "textures/structures/fortress.png");
-		public static final PinType STRUCTURE_RUINED_PORTAL = new PinType("Ruined portal", STRUCTURE_NETHER, true, false, "textures/structures/ruined_portal.png");
+		public static final PinType STRUCTURE_RUINED_PORTAL = new PinType("Ruined portal", STRUCTURE_NETHER, false, false, "textures/structures/ruined_portal.png");
 		public static final PinType STRUCTURE_NETHER_FOSSIL = new PinType("Nether fossil", STRUCTURE_NETHER, false, false, "textures/structures/fossil.png");
 		public static final PinType STRUCTURE_BASTION_REMNANT = new PinType("Bastion remnant", STRUCTURE_NETHER, true, false, "textures/structures/bastion_remnant.png");
 
@@ -729,7 +729,7 @@ public class Pin {
 			player.getGamemode()
 					.ifPresent(gameMode -> {
 						content.add(new Label("Game mode:"), 0, 2);
-						content.add(new Label(new String[] { "survival", "creative", "spectator" }[gameMode]), 1, 2);
+						content.add(new Label(new String[] { "survival", "creative", "spectator", "hardcore" }[gameMode]), 1, 2);
 					});
 
 			player.getSpawnpoint().ifPresent(spawn -> {

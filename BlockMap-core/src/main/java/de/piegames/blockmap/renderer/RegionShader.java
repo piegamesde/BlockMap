@@ -45,13 +45,13 @@ public interface RegionShader {
 	 * @param biomeColors
 	 *            Use this to retrieve the color of a biome from its ID.
 	 */
-	public void shade(Color[] map, int[] height, int[] biome, BiomeColorMap biomeColors);
+	public void shade(Color[] map, int[] height, String[] biome, BiomeColorMap biomeColors);
 
 	/** A simple shader that does nothing. */
 	public class FlatShader implements RegionShader {
 
 		@Override
-		public void shade(Color[] map, int[] height, int[] biome, BiomeColorMap biomeColors) {
+		public void shade(Color[] map, int[] height, String[] biome, BiomeColorMap biomeColors) {
 		}
 
 		@Override
@@ -64,7 +64,7 @@ public interface RegionShader {
 	public class ReliefShader implements RegionShader {
 
 		@Override
-		public void shade(Color[] map, int[] height, int[] biome, BiomeColorMap biomeColors) {
+		public void shade(Color[] map, int[] height, String[] biome, BiomeColorMap biomeColors) {
 			for (int z = 0; z < 512; z++)
 				for (int x = 0; x < 512; x++) {
 					if (map[z << 9 | x] == null)
@@ -149,10 +149,10 @@ public interface RegionShader {
 	public static class BiomeShader implements RegionShader {
 
 		@Override
-		public void shade(Color[] map, int[] height, int[] biome, BiomeColorMap biomeColors) {
+		public void shade(Color[] map, int[] height, String[] biome, BiomeColorMap biomeColors) {
 			for (int i = 0; i < 512 * 512; i++)
-				if (biome[i] != -1)
-					map[i] = biomeColors.getBiomeColor(biome[i] & 0xFF).biomeColor;
+				if (biome[i] != null)
+					map[i] = biomeColors.getBiomeColor(biome[i]).biomeColor;
 		}
 
 		@Override
@@ -172,10 +172,9 @@ public interface RegionShader {
 		}
 
 		@Override
-		public void shade(Color[] map, int[] height, int[] biome, BiomeColorMap biomeColors) {
+		public void shade(Color[] map, int[] height, String[] biome, BiomeColorMap biomeColors) {
 			for (int i = 0; i < 512 * 512; i++)
-				if (biome[i] != -1)
-					map[i] = colors[height[i] + 64];
+				map[i] = colors[height[i] + 64];
 		}
 
 		@Override

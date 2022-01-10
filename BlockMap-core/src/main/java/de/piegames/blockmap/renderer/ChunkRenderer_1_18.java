@@ -1,5 +1,6 @@
 package de.piegames.blockmap.renderer;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +25,7 @@ import de.piegames.blockmap.world.ChunkMetadata.ChunkMetadataRendered;
 import de.piegames.nbt.CompoundMap;
 import de.piegames.nbt.CompoundTag;
 import de.piegames.nbt.ListTag;
+import de.piegames.nbt.StringTag;
 import de.piegames.nbt.Tag;
 import de.piegames.nbt.regionfile.Chunk;
 
@@ -41,7 +43,7 @@ class ChunkRenderer_1_18 extends ChunkRenderer {
 	}
 
 	@Override
-	ChunkMetadata renderChunk(Vector2ic chunkPosRegion, Vector2ic chunkPosWorld, CompoundTag level, Color[] map, int[] height, int[] regionBiomes) {
+	ChunkMetadata renderChunk(Vector2ic chunkPosRegion, Vector2ic chunkPosWorld, CompoundTag level, Color[] map, int[] height, String[] regionBiomes) {
 		blockColors = settings.blockColors.get(version);
 
 		try {
@@ -84,19 +86,18 @@ class ChunkRenderer_1_18 extends ChunkRenderer {
 								});
 					});
 
-			/* 1024 integers. Each value is the biome ID for a 4x4x4 subvolume in the chunk. The sub-chunks are in ZXY-order */
-// 			int[] biomes = level.getIntArrayValue("Biomes")
-// 					/* For some curious reason, Minecraft sometimes saves the biomes as empty array. 'cause, why not? */
-// 					.filter(b -> b.length > 0)
-// 					.orElse(new int[1024]);
-
 			/*
 			 * The height of the lowest section that has already been loaded. Section are loaded lazily from top to bottom and this value gets decreased
 			 * each time a new one has been loaded
 			 */
-			int lowestLoadedSection = 16;
-			/* Null entries indicate a section full of air */
+			int lowestLoadedSection = 20;
+			/* Lazily load from top to bottom */
 			BlockColor[][] loadedSections = new BlockColor[24][];
+			/*
+			 * Every section is divided into 4x4x4 4x4x4 subvolumes, each of them has a biome. But for now, we simply extract the top 4x4 layer of a
+			 * chunk (16 items) and ignore the rest
+			 */
+			String[] loadedTopBiomes = null;
 
 			/* Get the list of all sections and map them to their y coordinate using streams */
 			Map<Byte, CompoundMap> sections = level.getAsListTag("sections")
@@ -113,26 +114,28 @@ class ChunkRenderer_1_18 extends ChunkRenderer {
 			class ColorColumn {
 				Color		color			= Color.TRANSPARENT;
 				BlockColor	lastColor		= BlockColor.TRANSPARENT;
-				int			lastBiome		= -1;
+				String		lastBiome		= null;
 				int			lastColorTimes	= 0;
 				boolean		needStop		= false;
 
 				ColorColumn() {
 				}
 
-				void putColor(BlockColor currentColor, int times, int biome) {
+				void putColor(BlockColor currentColor, int times, String biome) {
 					// if (currentColor.equals(lastColor))
 					if (currentColor == lastColor && biome == lastBiome)
 						lastColorTimes += times;
 					else {
 						Color color = lastColor.color;
-						BiomeColor biomeColor = settings.biomeColors.getBiomeColor(lastBiome);
-						if (lastColor.isGrass)
-							color = Color.multiplyRGB(color, biomeColor.grassColor);
-						if (lastColor.isFoliage)
-							color = Color.multiplyRGB(color, biomeColor.foliageColor);
-						if (lastColor.isWater)
-							color = Color.multiplyRGB(color, biomeColor.waterColor);
+						if (lastColor.isGrass || lastColor.isFoliage || lastColor.isWater) {
+							BiomeColor biomeColor = settings.biomeColors.getBiomeColor(lastBiome);
+							if (lastColor.isGrass)
+								color = Color.multiplyRGB(color, biomeColor.grassColor);
+							if (lastColor.isFoliage)
+								color = Color.multiplyRGB(color, biomeColor.foliageColor);
+							if (lastColor.isWater)
+								color = Color.multiplyRGB(color, biomeColor.waterColor);
+						}
 						this.color = Color.alphaUnder(this.color, color, lastColorTimes);
 						lastColorTimes = times;
 						lastColor = currentColor;
@@ -148,7 +151,7 @@ class ChunkRenderer_1_18 extends ChunkRenderer {
 					 * latest results. Putting a different color (transparent here) will trigger it to apply the last remaining color. If the last color is
 					 * already transparent, this will do nothing which doesn't matter since it wouldn't make any effect anyway.
 					 */
-					putColor(BlockColor.TRANSPARENT, 1, 0);
+					putColor(BlockColor.TRANSPARENT, 1, null);
 					return color;
 				}
 			}
@@ -184,7 +187,64 @@ class ChunkRenderer_1_18 extends ChunkRenderer {
 							continue;
 						if (s < lowestLoadedSection) {
 							try {
-								loadedSections[s + 4] = renderSection(sections.get(s), blockColors);
+								var section = sections.get(s);
+								loadedSections[s + 4] = renderSection(section, blockColors);
+								/* Read the biome for the top layer */
+								if (loadedTopBiomes == null) {
+									loadedTopBiomes = new String[16];
+									CompoundTag biomes = section.get("biomes").getAsCompoundTag().get();
+
+									/* Parse palette */
+									List<String> palette = biomes.getAsListTag("palette")
+											.flatMap(ListTag::getAsStringTagList)
+											.get()
+											.getValue()
+											.stream()
+											.map(StringTag::getValue)
+											.collect(Collectors.toList());
+
+									/* Omitting the data means that everything is the same block */
+									if (!biomes.getValue().containsKey("data")) {
+										if (palette.size() > 1)
+											log.warn("Palette has more than one element, but no index data?!");
+										var biome = palette.get(0);
+										for (int i = 0; i < 16; i++)
+											loadedTopBiomes[i] = biome;
+									} else {
+										var dataArray = biomes.getLongArrayValue("data").get();
+										int paletteSize = palette.size();
+
+										/* This is just a rather weird integer log2 */
+										int bitsPerIndex = Integer.SIZE - Integer.numberOfLeadingZeros(paletteSize - 1);
+										int shortsPerLong = Math.floorDiv(64, bitsPerIndex);
+										int mask = (1 << bitsPerIndex) - 1;
+
+										/*
+										 * Special case low palette sizes because they are common and we only need the first 16 entries, which makes things
+										 * easier The cutoff is a paletteSize of 16, because after that the first 16 entries won't fit into the first long
+										 */
+										if (paletteSize <= 16) {
+											var data = dataArray[0];
+											for (int i = 0; i < 16; i++) {
+												loadedTopBiomes[i] = palette.get((int) (data & mask));
+												data >>= bitsPerIndex;
+											}
+										} else {
+											/* Generic implementation */
+
+											/* 4×4×4 resolution within a chunk section (16×16×16). The usual ordering (XZY IIRC) */
+											int index = 0;
+											for (long l : dataArray) {
+												/* We only care about the top layer, i.e. 16 instead of 64 entries */
+												for (int i = 0; i < shortsPerLong && index < 16; i++) {
+													loadedTopBiomes[index++] = palette.get((int) (l & mask));
+													l >>= bitsPerIndex;
+												}
+											}
+										}
+									}
+
+								}
 							} catch (Exception e) {
 								log.warn("Failed to render chunk (" + chunkPosRegion.x() + ", " + chunkPosRegion.y() + ") section " + s
 										+ ". This is very likely because your chunk is corrupt. If possible, please verify it "
@@ -192,12 +252,6 @@ class ChunkRenderer_1_18 extends ChunkRenderer {
 								return new ChunkMetadataFailed(chunkPosWorld, e);
 							}
 							lowestLoadedSection = s;
-						}
-						if (loadedSections[s + 4] == null) {
-							/* Sector is full of air. It is assumed that the air color is not biome dependent */
-							color.putColor(blockColors.getAirColor(), 16, 0);
-							discardTop = false;
-							continue;
 						}
 						for (int y = 15; y >= 0; y--) {
 							int h = s << 4 | y;
@@ -217,14 +271,15 @@ class ChunkRenderer_1_18 extends ChunkRenderer {
 								heightSet = true;
 							}
 
-							int biomeXYZ = (h >> 2) << 4 | biomeXZ;
+							// /* This is in section-local coordinates */
+							// int biomeXYZ = (h >> 2) << 4 | biomeXZ;
 							if (!discardTop)
-								color.putColor(colorData, 1, /*biomes[biomeXYZ]*/ 0);
+								color.putColor(colorData, 1, loadedTopBiomes[biomeXZ]);
 							if (color.needStop)
 								break height;
 						}
 					}
-					regionBiomes[regionXZ] = 0; //biomes[(height[regionXZ] >> 2) << 4 | biomeXZ];
+					regionBiomes[regionXZ] = loadedTopBiomes[biomeXZ];
 					map[regionXZ] = color.getFinal();
 				}
 			return new ChunkMetadataRendered(chunkPosWorld, generationStatus, structureCenters);
@@ -239,13 +294,7 @@ class ChunkRenderer_1_18 extends ChunkRenderer {
 	 * a length of 16³=4096 items and the blocks are mapped to them in XZY order.
 	 */
 	private BlockColor[] renderSection(CompoundMap section, BlockColorMap blockColors) {
-		if (section == null)
-			return null;
-
 		CompoundTag blockStates = section.get("block_states").getAsCompoundTag().get();
-		// TODO check if missing data means that the whole section should be filled with one block
-		if (!blockStates.getValue().containsKey("data"))
-			return null;
 
 		/* Parse palette */
 		List<BlockColor> palette = blockStates.getAsListTag("palette")
@@ -257,9 +306,19 @@ class ChunkRenderer_1_18 extends ChunkRenderer {
 						() -> parseBlockState(map.getAsCompoundTag("Properties").get(), version.getBlockStates())))
 				.collect(Collectors.toList());
 
-		long[] blocks = blockStates.getLongArrayValue("data").get();
-
 		BlockColor[] ret = new BlockColor[4096];
+
+		/* Omitting the data means that everything is the same block */
+		if (!blockStates.getValue().containsKey("data")) {
+			if (palette.size() > 1)
+				log.warn("Palette has more than one element, but no index data?!");
+			var state = palette.get(0);
+			for (int i = 0; i < 4096; i++)
+				ret[i] = state;
+			return ret;
+		}
+
+		long[] blocks = blockStates.getLongArrayValue("data").get();
 
 		long[] blocksParsed = Chunk.extractFromLong1_16(blocks, palette.size());
 		for (int i = 0; i < 4096; i++) {

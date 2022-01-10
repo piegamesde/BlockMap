@@ -24,7 +24,7 @@ abstract class ChunkRenderer {
 		this.settings = settings;
 	}
 
-	abstract ChunkMetadata renderChunk(Vector2ic chunkPosRegion, Vector2ic chunkPosWorld, CompoundTag level, Color[] map, int[] height, int[] regionBiomes);
+	abstract ChunkMetadata renderChunk(Vector2ic chunkPosRegion, Vector2ic chunkPosWorld, CompoundTag level, Color[] map, int[] height, String[] regionBiomes);
 
 	protected static BitSet parseBlockState(CompoundTag properties, BlockState state) {
 		BitSet ret = new BitSet(state.getSize());

@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
+import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
@@ -23,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 
 import de.piegames.blockmap.MinecraftBlocks;
@@ -151,12 +153,38 @@ public class ColorCompiler {
 		return new Color(a / pixels, r / a, g / a, b / a);
 	}
 
-	public static BiomeColorMap compileBiomeColors(Path minecraftJar, Path colorInstructions) throws IOException {
+	// From the Minecraft generated data
+	public static class BiomeInfo {
+		public static class BiomeInfoEffects {
+			Long water_color, foliage_color, grass_color;
+		}
+
+		float				temperature, downfall;
+		BiomeInfoEffects	effects;
+	}
+
+	// Our json file
+	public static class BiomeInstructions {
+		public static class BiomeColor {
+			int r, g, b;
+		}
+
+		public String		waterColor;
+		public Double		rainfall, temperature;
+		public BiomeColor	biomeColor;
+
+		/* For compat with older versions (previously, biomes had a numeric ID) */
+		public String		legacyId;
+		/* This biome has been removed in 1.18 */
+		public boolean		legacy;
+	}
+
+	public static BiomeColorMap compileBiomeColors(Path minecraftJar, Path colorInstructions, Path biomeDataDirectory) throws IOException {
 		log.info("Compiling " + colorInstructions.toAbsolutePath() + " to color map");
 		log.debug("Minecraft jar: " + minecraftJar.toAbsolutePath());
 		FileSystem jarFile = FileSystems.newFileSystem(minecraftJar, (ClassLoader) null);
 
-		Map<Integer, BiomeColor> colorMap = new HashMap<>();
+		Map<String, BiomeColor> colorMap = new HashMap<>();
 
 		int[] grassColors;
 		int[] foliageColors;
@@ -175,41 +203,54 @@ public class ColorCompiler {
 			bufferedimage.getRGB(0, 0, w, h, foliageColors, 0, w);
 		}
 
-		try (JsonReader reader = new JsonReader(Files.newBufferedReader(colorInstructions))) {
-			reader.beginObject();
-			while (reader.hasNext()) {
-				int id = Integer.parseInt(reader.nextName());
-				reader.beginObject();
-				reader.skipValue();// waterColor
-				// TODO use default int again
-				int waterColor = (int) (Long.decode(reader.nextString()) & 0xFFFFFFFF);
-				reader.skipValue(); // rainfall
-				double rainfall = reader.nextDouble();
-				reader.skipValue();// temperature
-				double temperature = reader.nextDouble();
-				reader.skipValue();// biomeColor
-				int biomeColor = 0xFF000000;
-				{
-					reader.beginObject();
-					reader.skipValue(); // r;
-					biomeColor |= (reader.nextInt() & 0xFF) << 16;
-					reader.skipValue(); // g
-					biomeColor |= (reader.nextInt() & 0xFF) << 8;
-					reader.skipValue(); // b
-					biomeColor |= (reader.nextInt() & 0xFF);
-					reader.endObject();
-				}
-				reader.endObject();
+		Map<String, BiomeInstructions> instructions = BiomeColorMap.GSON.fromJson(
+			Files.newBufferedReader(colorInstructions),
+			new TypeToken<Map<String, BiomeInstructions>>() {
+			}.getType()
+		);
+		
+		for (var e : instructions.entrySet()) {
+			String biomeId = e.getKey();
+			String biomeName = biomeId.substring("minecraft:".length());
+			BiomeInstructions inst = e.getValue();
 
-				BiomeColor color = new BiomeColor(
-						Color.fromRGB(waterColor),
-						Color.fromRGB(grassColor(temperature, rainfall, grassColors)),
-						Color.fromRGB(foliageColor(temperature, rainfall, foliageColors)),
-						Color.fromRGB(biomeColor));
-				colorMap.put(id, color);
+			int waterColor, grassColor, foliageColor, biomeColor;
+			
+			if (inst.legacy) {
+				log.debug("Biome " + biomeName + " is historic");
+				waterColor = (int) (Long.decode(inst.waterColor) & 0xFFFFFFFF);
+				grassColor = grassColor(inst.temperature.doubleValue(), inst.rainfall.doubleValue(), grassColors);
+				foliageColor = foliageColor(inst.temperature.doubleValue(), inst.rainfall.doubleValue(), foliageColors);
+			} else {
+				BiomeInfo biome = BiomeColorMap.GSON.fromJson(Files.newBufferedReader(biomeDataDirectory.resolve(biomeName + ".json")), BiomeInfo.class);
+
+				waterColor = (int) (biome.effects.water_color.longValue() & 0xFFFFFFFF) | 0xFF000000;
+				if (biome.effects.grass_color != null) {
+					grassColor = (int) (biome.effects.grass_color & 0xFFFFFFFF) | 0xFF000000;
+				} else {
+					log.debug("Using generic grass color for " + biomeName);
+					grassColor = grassColor(biome.temperature, biome.downfall, grassColors);
+				}
+				if (biome.effects.foliage_color != null) {
+					foliageColor = (int) (biome.effects.foliage_color & 0xFFFFFFFF) | 0xFF000000;
+				} else {
+					log.debug("Using generic foliage color for " + biomeName);
+					foliageColor = foliageColor(biome.temperature, biome.downfall, foliageColors);
+				}
 			}
-			reader.endObject();
+
+			biomeColor = 0xFF000000;
+			biomeColor |= (inst.biomeColor.r & 0xFF) << 16;
+			biomeColor |= (inst.biomeColor.g & 0xFF) << 8;
+			biomeColor |= (inst.biomeColor.b & 0xFF);
+
+			BiomeColor color = new BiomeColor(Color.fromRGB(waterColor), Color.fromRGB(grassColor), Color.fromRGB(foliageColor), Color.fromRGB(biomeColor));
+			if (!inst.legacy)
+				colorMap.put(biomeId, color);
+			if (inst.legacyId != null)
+				colorMap.put(inst.legacyId, color);
 		}
+
 		return new BiomeColorMap(colorMap);
 	}
 

@@ -1,476 +1,451 @@
 {
-	"0": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.5",
-		"temperature": "0.5",
-		"biomeColor":  { "r":0, "g":0, "b":112 } 
+	"minecraft:ocean": {
+		"biomeColor": { "r":0, "g":0, "b":112 },
+		"legacyId": "0"
 	},
-	"1": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.4",
-		"temperature": "0.8",
-		"biomeColor": { "r":141, "g":179, "b":96 }
+	"minecraft:plains": {
+		"biomeColor": { "r":141, "g":179, "b":96 },
+		"legacyId": "1"
 	},
-	"2": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.0",
-		"temperature": "2.0",
-		"biomeColor":  { "r":250, "g":148, "b":24 }
+	"minecraft:desert": {
+		"biomeColor": { "r":250, "g":148, "b":24 },
+		"legacyId": "2"
 	},
-	"3": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.3",
-		"temperature": "0.2",
-		"biomeColor": { "r":96, "g":96, "b":96 }
+	"minecraft:windswept_hills": {
+		"biomeColor": { "r":96, "g":96, "b":96 },
+		"legacyId": "3"
 	},
-	"4": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.8",
-		"temperature": "0.7",
-		"biomeColor": { "r":5, "g":102, "b":33 }
+	"minecraft:forest": {
+		"biomeColor": { "r":5, "g":102, "b":33 },
+		"legacyId": "4"
 	},
-	"5": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.8",
-		"temperature": "0.25",
-		"biomeColor": { "r":11, "g":102, "b":89 }
+	"minecraft:taiga": {
+		"biomeColor": { "r":11, "g":102, "b":89 },
+		"legacyId": "5"
 	},
-	"6": {
-		"waterColor": "0xFF617B64",
-		"rainfall": "0.9",
-		"temperature": "0.8",
-		"biomeColor": { "r":7, "g":249, "b":178 }
+	"minecraft:swamp": {
+		"biomeColor": { "r":7, "g":249, "b":178 },
+		"legacyId": "6"
 	},
-	"7": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.5",
-		"temperature": "0.5",
-		"biomeColor": { "r":0, "g":0, "b":255 }
+	"minecraft:river": {
+		"biomeColor": { "r":0, "g":0, "b":255 },
+		"legacyId": "7"
 	},
-	"8": {
+	"minecraft:nether_wastes": {
 		"waterColor": "0xFFFF00FF",
 		"rainfall": "0.0",
 		"temperature": "2.0",
-		"biomeColor": { "r":191, "g":59, "b":59 }
+		"biomeColor": { "r":191, "g":59, "b":59 },
+		"legacyId": "8"
 	},
-	"9": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.5",
-		"temperature": "0.5",
-		"biomeColor": { "r":128, "g":128, "b":255 }
+	"minecraft:the_end": {
+		"biomeColor": { "r":128, "g":128, "b":255 },
+		"legacyId": "9"
 	},
-	"10": {
-		"waterColor": "0xFF3938C9",
-		"rainfall": "0.5",
-		"temperature": "0.0",
-		"biomeColor": { "r":112, "g":112, "b":214 }
+	"minecraft:frozen_ocean": {
+		"biomeColor": { "r":112, "g":112, "b":214 },
+		"legacyId": "10"
 	},
-	"11": {
-		"waterColor": "0xFF3938C9",
-		"rainfall": "0.5",
-		"temperature": "0.0",
-		"biomeColor": { "r":160, "g":160, "b":255 }
+	"minecraft:frozen_river": {
+		"biomeColor": { "r":160, "g":160, "b":255 },
+		"legacyId": "11"
 	},
-	"12": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.5",
-		"temperature": "0.0",
-		"biomeColor":  { "r":255, "g":255, "b":255 }
+	"minecraft:snowy_plains": {
+		"biomeColor": { "r":255, "g":255, "b":255 },
+		"legacyId": "12"
 	},
-	"13": {
+	"minecraft:snowy_mountains": {
 		"waterColor": "0xFF3F76E4",
 		"rainfall": "0.5",
 		"temperature": "0.0",
-		"biomeColor": { "r":160, "g":160, "b":160 }
+		"biomeColor": { "r":160, "g":160, "b":160 },
+		"legacyId": "13",
+		"legacy": true
 	},
-	"14": {
+	"minecraft:mushroom_fields": {
+		"biomeColor": { "r":255, "g":0, "b":255 },
+		"legacyId": "14"
+	},
+	"minecraft:mushroom_field_shore": {
 		"waterColor": "0xFF3F76E4",
 		"rainfall": "1.0",
 		"temperature": "0.9",
-		"biomeColor": { "r":255, "g":0, "b":255 }
+		"biomeColor": { "r":160, "g":0, "b":255 },
+		"legacyId": "15",
+		"legacy": true
 	},
-	"15": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "1.0",
-		"temperature": "0.9",
-		"biomeColor": { "r":160, "g":0, "b":255 }
+	"minecraft:beach": {
+		"biomeColor": { "r":250, "g":222, "b":85 },
+		"legacyId": "16"
 	},
-	"16": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.4",
-		"temperature": "0.8",
-		"biomeColor": { "r":250, "g":222, "b":85 }
-	},
-	"17": {
+	"minecraft:desert_hills": {
 		"waterColor": "0xFF3F76E4",
 		"rainfall": "0.0",
 		"temperature": "2.0",
-		"biomeColor": { "r":210, "g":95, "b":18 }
+		"biomeColor": { "r":210, "g":95, "b":18 },
+		"legacyId": "17",
+		"legacy": true
 	},
-	"18": {
+	"minecraft:wooded_hills": {
 		"waterColor": "0xFF3F76E4",
 		"rainfall": "0.8",
 		"temperature": "0.7",
-		"biomeColor": { "r":34, "g":85, "b":28 }
+		"biomeColor": { "r":34, "g":85, "b":28 },
+		"legacyId": "18",
+		"legacy": true
 	},
-	"19": {
+	"minecraft:taiga_hills": {
 		"waterColor": "0xFF3F76E4",
 		"rainfall": "0.8",
 		"temperature": "0.25",
-		"biomeColor": { "r":22, "g":57, "b":51 }
+		"biomeColor": { "r":22, "g":57, "b":51 },
+		"legacyId": "19",
+		"legacy": true
 	},
-	"20": {
+	"minecraft:mountain_edge": {
 		"waterColor": "0xFF3F76E4",
 		"rainfall": "0.3",
 		"temperature": "0.2",
-		"biomeColor": { "r":114, "g":120, "b":154 }
+		"biomeColor": { "r":114, "g":120, "b":154 },
+		"legacyId": "20",
+		"legacy": true
 	},
-	"21": {
+	"minecraft:jungle": {
+		"biomeColor": { "r":83, "g":123, "b":9 },
+		"legacyId": "21"
+	},
+	"minecraft:jungle_hills": {
 		"waterColor": "0xFF3F76E4",
 		"rainfall": "0.9",
 		"temperature": "0.95",
-		"biomeColor": { "r":83, "g":123, "b":9 }
+		"biomeColor": { "r":44, "g":66, "b":5 },
+		"legacyId": "22",
+		"legacy": true
 	},
-	"22": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.9",
-		"temperature": "0.95",
-		"biomeColor": { "r":44, "g":66, "b":5 }
+	"minecraft:sparse_jungle": {
+		"biomeColor": { "r":98, "g":139, "b":23 },
+		"legacyId": "23"
 	},
-	"23": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.8",
-		"temperature": "0.95",
-		"biomeColor": { "r":98, "g":139, "b":23 }
+	"minecraft:deep_ocean": {
+		"biomeColor": { "r":0, "g":0, "b":48 },
+		"legacyId": "24"
 	},
-	"24": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.5",
-		"temperature": "0.5",
-		"biomeColor": { "r":0, "g":0, "b":48 }
+	"minecraft:stony_shore": {
+		"biomeColor": { "r":162, "g":162, "b":132 },
+		"legacyId": "25"
 	},
-	"25": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.3",
-		"temperature": "0.2",
-		"biomeColor": { "r":162, "g":162, "b":132 }
+	"minecraft:snowy_beach": {
+		"biomeColor": { "r":250, "g":240, "b":192 },
+		"legacyId": "26"
 	},
-	"26": {
-		"waterColor": "0xFF3D57D6",
-		"rainfall": "0.3",
-		"temperature": "0.05",
-		"biomeColor": { "r":250, "g":240, "b":192 }
+	"minecraft:birch_forest": {
+		"biomeColor": { "r":48, "g":116, "b":68 },
+		"legacyId": "27"
 	},
-	"27": {
+	"minecraft:birch_forest_hills": {
 		"waterColor": "0xFF3F76E4",
 		"rainfall": "0.6",
 		"temperature": "0.6",
-		"biomeColor": { "r":48, "g":116, "b":68 }
+		"biomeColor": { "r":31, "g":95, "b":50 },
+		"legacyId": "28",
+		"legacy": true
 	},
-	"28": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.6",
-		"temperature": "0.6",
-		"biomeColor": { "r":31, "g":95, "b":50 }
+	"minecraft:dark_forest": {
+		"biomeColor": { "r":64, "g":81, "b":26 },
+		"legacyId": "29"
 	},
-	"29": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.8",
-		"temperature": "0.7",
-		"biomeColor": { "r":64, "g":81, "b":26 }
+	"minecraft:snowy_taiga": {
+		"biomeColor": { "r":49, "g":85, "b":74 },
+		"legacyId": "30"
 	},
-	"30": {
+	"minecraft:snowy_taiga_hills": {
 		"waterColor": "0xFF3D57D6",
 		"rainfall": "0.4",
 		"temperature": "-0.5",
-		"biomeColor": { "r":49, "g":85, "b":74 }
+		"biomeColor": { "r":36, "g":63, "b":54 },
+		"legacyId": "31",
+		"legacy": true
 	},
-	"31": {
-		"waterColor": "0xFF3D57D6",
-		"rainfall": "0.4",
-		"temperature": "-0.5",
-		"biomeColor": { "r":36, "g":63, "b":54 }
+	"minecraft:old_growth_pine_taiga": {
+		"biomeColor": { "r":89, "g":102, "b":81 },
+		"legacyId": "32"
 	},
-	"32": {
+	"minecraft:giant_tree_taiga_hills": {
 		"waterColor": "0xFF3F76E4",
 		"rainfall": "0.8",
 		"temperature": "0.3",
-		"biomeColor": { "r":89, "g":102, "b":81 }
+		"biomeColor": { "r":69, "g":79, "b":62 },
+		"legacyId": "33",
+		"legacy": true
 	},
-	"33": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.8",
-		"temperature": "0.3",
-		"biomeColor": { "r":69, "g":79, "b":62 }
+	"minecraft:windswept_forest": {
+		"biomeColor": { "r":80, "g":112, "b":80 },
+		"legacyId": "34"
 	},
-	"34": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.3",
-		"temperature": "0.2",
-		"biomeColor": { "r":80, "g":112, "b":80 }
+	"minecraft:savanna": {
+		"biomeColor": { "r":189, "g":178, "b":95 },
+		"legacyId": "35"
 	},
-	"35": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.0",
-		"temperature": "1.2",
-		"biomeColor": { "r":189, "g":178, "b":95 }
+	"minecraft:savanna_plateau": {
+		"biomeColor": { "r":167, "g":157, "b":100 },
+		"legacyId": "36"
 	},
-	"36": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.0",
-		"temperature": "1.0",
-		"biomeColor": { "r":167, "g":157, "b":100 }
+	"minecraft:badlands": {
+		"biomeColor": { "r":217, "g":69, "b":21 },
+		"legacyId": "37"
 	},
-	"37": {
+	"minecraft:wooded_badlands": {
+		"biomeColor": { "r":176, "g":151, "b":101 },
+		"legacyId": "38"
+	},
+	"minecraft:badlands_plateau": {
 		"waterColor": "0xFF3F76E4",
 		"rainfall": "0.0",
 		"temperature": "2.0",
-		"biomeColor": { "r":217, "g":69, "b":21 }
+		"biomeColor": { "r":202, "g":140, "b":101 },
+		"legacyId": "39",
+		"legacy": true
 	},
-	"38": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.0",
-		"temperature": "2.0",
-		"biomeColor": { "r":176, "g":151, "b":101 }
+	"minecraft:small_end_islands": {
+		"biomeColor": { "r":128, "g":128, "b":255 },
+		"legacyId": "40"
 	},
-	"39": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.0",
-		"temperature": "2.0",
-		"biomeColor": { "r":202, "g":140, "b":101 }
+	"minecraft:end_midlands": {
+		"biomeColor": { "r":128, "g":128, "b":255 },
+		"legacyId": "41"
 	},
-	"40": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.5",
-		"temperature": "0.5",
-        "biomeColor": { "r":128, "g":128, "b":255 }
+	"minecraft:end_highlands": {
+		"biomeColor": { "r":128, "g":128, "b":255 },
+		"legacyId": "42"
 	},
-	"41": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.5",
-		"temperature": "0.5",
-        "biomeColor": { "r":128, "g":128, "b":255 }
+	"minecraft:end_barrens": {
+		"biomeColor": { "r":128, "g":128, "b":255 },
+		"legacyId": "43"
 	},
-	"42": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.5",
-		"temperature": "0.5",
-        "biomeColor": { "r":128, "g":128, "b":255 }
+	"minecraft:warm_ocean": {
+		"biomeColor": { "r":0, "g":0, "b":172 },
+		"legacyId": "44"
 	},
-	"43": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.5",
-		"temperature": "0.5",
-        "biomeColor": { "r":128, "g":128, "b":255 }
+	"minecraft:lukewarm_ocean": {
+		"biomeColor": { "r":0, "g":0, "b":144 },
+		"legacyId": "45"
 	},
-	"44": {
+	"minecraft:cold_ocean": {
+		"biomeColor": { "r":32, "g":32, "b":112 },
+		"legacyId": "46"
+	},
+	"minecraft:deep_warm_ocean": {
 		"waterColor": "0xFF43D5EE",
 		"rainfall": "0.5",
 		"temperature": "0.5",
-        "biomeColor": { "r":0, "g":0, "b":172 }
+		"biomeColor": { "r":0, "g":0, "b":80 },
+		"legacyId": "47",
+		"legacy": true
 	},
-	"45": {
-		"waterColor": "0xFF45ADF2",
-		"rainfall": "0.5",
-		"temperature": "0.5",
-        "biomeColor": { "r":0, "g":0, "b":144 }
+	"minecraft:deep_lukewarm_ocean": {
+		"biomeColor": { "r":0, "g":0, "b":64 },
+		"legacyId": "48"
 	},
-	"46": {
-		"waterColor": "0xFF3D57D6",
-		"rainfall": "0.5",
-		"temperature": "0.5",
-        "biomeColor": { "r":32, "g":32, "b":112 }
+	"minecraft:deep_cold_ocean": {
+		"biomeColor": { "r":32, "g":32, "b":56 },
+		"legacyid": "49"
 	},
-	"47": {
-		"waterColor": "0xFF43D5EE",
-		"rainfall": "0.5",
-		"temperature": "0.5",
-        "biomeColor": { "r":0, "g":0, "b":80 }
+	"minecraft:deep_frozen_ocean": {
+		"biomeColor": { "r":64, "g":64, "b":144 },
+		"legacyId": "50"
 	},
-	"48": {
-		"waterColor": "0xFF45ADF2",
-		"rainfall": "0.5",
-		"temperature": "0.5",
-        "biomeColor": { "r":0, "g":0, "b":64 }
+	"minecraft:the_void": {
+		"biomeColor": { "r":0, "g":0, "b":0 },
+		"legacyId": "127"
 	},
-	"49": {
-		"waterColor": "0xFF3D57D6",
-		"rainfall": "0.5",
-		"temperature": "0.5",
-        "biomeColor": { "r":32, "g":32, "b":56 }
+	"minecraft:sunflower_plains": {
+		"biomeColor": { "r":181, "g":219, "b":136 },
+		"legacyId": "129"
 	},
-	"50": {
-		"waterColor": "0xFF3938C9",
-		"rainfall": "0.5",
-		"temperature": "0.5",
-        "biomeColor": { "r":64, "g":64, "b":144 }
-	},
-	"127": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.5",
-		"temperature": "0.5",
-		"biomeColor": { "r":0, "g":0, "b":0 }
-	},
-	"129": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.4",
-		"temperature": "0.8",
-		"biomeColor": { "r":181, "g":219, "b":136 }
-	},
-	"130": {
+	"minecraft:desert_lakes": {
 		"waterColor": "0xFF3F76E4",
 		"rainfall": "0.0",
 		"temperature": "2.0",
-		"biomeColor": { "r":255, "g":188, "b":64 }
+		"biomeColor": { "r":255, "g":188, "b":64 },
+		"legacyId": "130",
+		"legacy": true
 	},
-	"131": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.3",
-		"temperature": "0.2",
-		"biomeColor": { "r":136, "g":136, "b":136 }
+	"minecraft:windswept_gravelly_hills": {
+		"biomeColor": { "r":136, "g":136, "b":136 },
+		"legacyId": "131"
 	},
-	"132": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.8",
-		"temperature": "0.7",
-		"biomeColor": { "r":45, "g":142, "b":73 }
+	"minecraft:flower_forest": {
+		"biomeColor": { "r":45, "g":142, "b":73 },
+		"legacyId": "132"
 	},
-	"133": {
+	"minecraft:taiga_mountains": {
 		"waterColor": "0xFF3F76E4",
 		"rainfall": "0.8",
 		"temperature": "0.25",
-		"biomeColor": { "r":51, "g":142, "b":129 }
+		"biomeColor": { "r":51, "g":142, "b":129 },
+		"legacyId": "133",
+		"legacy": true
 	},
-	"134": {
+	"minecraft:swamp_hills": {
 		"waterColor": "0xFF617B64",
 		"rainfall": "0.9",
 		"temperature": "0.8",
-		"biomeColor": { "r":47, "g":255, "b":218 }
+		"biomeColor": { "r":47, "g":255, "b":218 },
+		"legacyId": "134",
+		"legacy": true
 	},
-	"140": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.5",
-		"temperature": "0.0",
-		"biomeColor": { "r":180, "g":220, "b":220 }
+	"minecraft:ice_spikes": {
+		"biomeColor": { "r":180, "g":220, "b":220 },
+		"legacyId": "140"
 	},
-	"149": {
+	"minecraft:modified_jungle": {
 		"waterColor": "0xFF3F76E4",
 		"rainfall": "0.9",
 		"temperature": "0.95",
-		"biomeColor": { "r":123, "g":163, "b":49 }
+		"biomeColor": { "r":123, "g":163, "b":49 },
+		"legacyId": "149",
+		"legacy": true
 	},
-	"151": {
+	"minecraft:modified_jungle_edge": {
 		"waterColor": "0xFF3F76E4",
 		"rainfall": "0.8",
 		"temperature": "0.95",
-		"biomeColor": { "r":138, "g":179, "b":63 }
+		"biomeColor": { "r":138, "g":179, "b":63 },
+		"legacyId": "151",
+		"legacy": true
 	},
-	"155": {
+	"minecraft:old_growth_birch_forest": {
+		"biomeColor": { "r":88, "g":156, "b":108 },
+		"legacyId": "155"
+	},
+	"minecraft:tall_birch_hills": {
 		"waterColor": "0xFF3F76E4",
 		"rainfall": "0.6",
 		"temperature": "0.6",
-		"biomeColor": { "r":88, "g":156, "b":108 }
+		"biomeColor": { "r":71, "g":135, "b":90 },
+		"legacyId": "156",
+		"legacy": true
 	},
-	"156": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.6",
-		"temperature": "0.6",
-		"biomeColor": { "r":71, "g":135, "b":90 }
-	},
-	"157": {
+	"minecraft:dark_forest_hills": {
 		"waterColor": "0xFF3F76E4",
 		"rainfall": "0.8",
 		"temperature": "0.7",
-		"biomeColor": { "r":104, "g":121, "b":66 }
+		"biomeColor": { "r":104, "g":121, "b":66 },
+		"legacyId": "157",
+		"legacy": true
 	},
-	"158": {
+	"minecraft:snowy_taiga_mountains": {
 		"waterColor": "0xFF3D57D6",
 		"rainfall": "0.4",
 		"temperature": "-0.5",
-		"biomeColor": { "r":89, "g":125, "b":114 }
+		"biomeColor": { "r":89, "g":125, "b":114 },
+		"legacyId": "158",
+		"legacy": true
 	},
-	"160": {
+	"minecraft:old_growth_spruce_taiga": {
+		"biomeColor": { "r":129, "g":142, "b":121 },
+		"legacyId": "160"
+	},
+	"minecraft:giant_spruce_taiga_hills": {
 		"waterColor": "0xFF3F76E4",
 		"rainfall": "0.8",
 		"temperature": "0.25",
-		"biomeColor": { "r":129, "g":142, "b":121 }
+		"biomeColor": { "r":109, "g":119, "b":102 },
+		"legacyId": "161",
+		"legacy": true
 	},
-	"161": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.8",
-		"temperature": "0.25",
-		"biomeColor": { "r":109, "g":119, "b":102 } 
-	},
-	"162": {
+	"minecraft:modified_gravelly_mountains": {
 		"waterColor": "0xFF3F76E4",
 		"rainfall": "0.3",
 		"temperature": "0.2",
-		"biomeColor": { "r":120, "g":152, "b":120 }
+		"biomeColor": { "r":120, "g":152, "b":120 },
+		"legacyId": "162",
+		"legacy": true
 	},
-	"163": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.0",
-		"temperature": "1.1",
-		"biomeColor": { "r":229, "g":218, "b":135 }
+	"minecraft:windswept_savanna": {
+		"biomeColor": { "r":229, "g":218, "b":135 },
+		"legacyId": "163"
 	},
-	"164": {
+	"minecraft:shattered_savanna_plateau": {
 		"waterColor": "0xFF3F76E4",
 		"rainfall": "0.0",
 		"temperature": "1.0",
-		"biomeColor": { "r":207, "g":197, "b":140 }
+		"biomeColor": { "r":207, "g":197, "b":140 },
+		"legacyId": "164",
+		"legacy": true
 	},
-	"165": {
+	"minecraft:eroded_badlands": {
+		"biomeColor": { "r":255, "g":109, "b":61 },
+		"legacyId": "165"
+	},
+	"minecraft:modified_wooded_badlands_plateau": {
 		"waterColor": "0xFF3F76E4",
 		"rainfall": "0.0",
 		"temperature": "2.0",
-		"biomeColor": { "r":255, "g":109, "b":61 }
+		"biomeColor": { "r":216, "g":191, "b":141 },
+		"legacyId": "166",
+		"legacy": true
 	},
-	"166": {
+	"minecraft:modified_badlands_plateau": {
 		"waterColor": "0xFF3F76E4",
 		"rainfall": "0.0",
 		"temperature": "2.0",
-		"biomeColor": { "r":216, "g":191, "b":141 }
+		"biomeColor": { "r":242, "g":180, "b":141 },
+		"legacyId": "167",
+		"legacy": true
 	},
-	"167": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.0",
-		"temperature": "2.0",
-		"biomeColor": { "r":242, "g":180, "b":141 }
+	"minecraft:bamboo_jungle": {
+		"biomeColor": { "r":118, "g":142, "b":20 },
+		"legacyId": "168"
 	},
-	"168": {
+	"minecraft:bamboo_jungle_hills": {
 		"waterColor": "0xFF3F76E4",
 		"rainfall": "0.9",
 		"temperature": "0.95",
-		"biomeColor": { "r":118, "g":142, "b":20 }
+		"biomeColor": { "r":59, "g":71, "b":10 },
+		"legacyId": "169",
+		"legacy": true
 	},
-	"169": {
-		"waterColor": "0xFF3F76E4",
-		"rainfall": "0.9",
-		"temperature": "0.95",
-		"biomeColor": { "r":59, "g":71, "b":10 }
+	"minecraft:soul_sand_valley": {
+		"biomeColor": { "r":94, "g":56, "b":48 },
+		"legacyId": "170"
 	},
-	"170": {
-		"waterColor": "0xFFFF00FF",
-		"rainfall": "0.0",
-		"temperature": "2.0",
-		"biomeColor": { "r":94, "g":56, "b":48 }
+	"minecraft:crimson_forest": {
+		"biomeColor": { "r":221, "g":8, "b":8 },
+		"legacyId": "171"
 	},
-	"171": {
-		"waterColor": "0xFFFF00FF",
-		"rainfall": "0.0",
-		"temperature": "2.0",
-		"biomeColor": { "r":221, "g":8, "b":8 }
+	"minecraft:warped_forest": {
+		"biomeColor": { "r":73, "g":144, "b":123 },
+		"legacyId": "172"
 	},
-	"172": {
-		"waterColor": "0xFFFF00FF",
-		"rainfall": "0.0",
-		"temperature": "2.0",
-		"biomeColor": { "r":73, "g":144, "b":123 }
+	"minecraft:basalt_deltas": {
+		"biomeColor": { "r":64, "g":54, "b":54 },
+		"legacyId": "173"
 	},
-	"173": {
-		"waterColor": "0xFFFF00FF",
-		"rainfall": "0.0",
-		"temperature": "2.0",
-		"biomeColor": { "r":64, "g":54, "b":54 }
+	"minecraft:dripstone_caves": {
+		"biomeColor": { "r":193, "g":165, "b":143 },
+		"legacyId": "174"
+	},
+	"minecraft:lush_caves": {
+		"biomeColor": { "r":223, "g":150, "b":52 },
+		"legacyId": "175"
+	},
+	"minecraft:meadow": {
+		"biomeColor": { "r":140, "g":164, "b":112 }
+	},
+	"minecraft:grove": {
+		"biomeColor": { "r":223, "g":236, "b":229 }
+	},
+	"minecraft:snowy_slopes": {
+		"biomeColor": { "r":218, "g":241, "b":241 }
+	},
+	"minecraft:frozen_peaks": {
+		"biomeColor": { "r":234, "g":251, "b":251 }
+	},
+	"minecraft:jagged_peaks": {
+		"biomeColor": { "r":227, "g":236, "b":237 }
+	},
+	"minecraft:stony_peaks": {
+		"biomeColor": { "r":209, "g":209, "b":209 }
 	}
 }

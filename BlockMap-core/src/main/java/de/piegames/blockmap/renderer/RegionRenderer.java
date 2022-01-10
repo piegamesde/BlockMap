@@ -84,9 +84,8 @@ public class RegionRenderer {
 		Color[] map = new Color[512 * 512];
 		/* If nothing is set otherwise, the height map is set to the minimum height. */
 		int[] height = new int[512 * 512];
-		int[] regionBiomes = new int[512 * 512];
+		String[] regionBiomes = new String[512 * 512];
 		Arrays.fill(height, settings.minY);
-		Arrays.fill(regionBiomes, -1);
 
 		for (int chunkIndex : file.listChunks()) {
 			Chunk chunk = null;

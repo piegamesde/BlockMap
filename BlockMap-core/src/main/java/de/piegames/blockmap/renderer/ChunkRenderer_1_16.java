@@ -40,7 +40,7 @@ class ChunkRenderer_1_16 extends ChunkRenderer {
 	}
 
 	@Override
-	ChunkMetadata renderChunk(Vector2ic chunkPosRegion, Vector2ic chunkPosWorld, CompoundTag level, Color[] map, int[] height, int[] regionBiomes) {
+	ChunkMetadata renderChunk(Vector2ic chunkPosRegion, Vector2ic chunkPosWorld, CompoundTag level, Color[] map, int[] height, String[] regionBiomes) {
 		blockColors = settings.blockColors.get(version);
 
 		try {
@@ -71,10 +71,17 @@ class ChunkRenderer_1_16 extends ChunkRenderer {
 					});
 
 			/* 1024 integers. Each value is the biome ID for a 4x4x4 subvolume in the chunk. The sub-chunks are in ZXY-order */
-			int[] biomes = level.getIntArrayValue("Biomes")
+			String[] biomes = level.getIntArrayValue("Biomes")
 					/* For some curious reason, Minecraft sometimes saves the biomes as empty array. 'cause, why not? */
 					.filter(b -> b.length > 0)
-					.orElse(new int[1024]);
+					.map(ints -> {
+						var strings = new String[1024];
+						for (int i = 0; i < 1024; i++) {
+							strings[i] = Integer.toString(ints[i]);
+						}
+						return strings;
+					})
+					.orElse(new String[1024]);
 
 			/*
 			 * The height of the lowest section that has already been loaded. Section are loaded lazily from top to bottom and this value gets decreased
@@ -99,14 +106,14 @@ class ChunkRenderer_1_16 extends ChunkRenderer {
 			class ColorColumn {
 				Color		color			= Color.TRANSPARENT;
 				BlockColor	lastColor		= BlockColor.TRANSPARENT;
-				int			lastBiome		= -1;
+				String		lastBiome		= null;
 				int			lastColorTimes	= 0;
 				boolean		needStop		= false;
 
 				ColorColumn() {
 				}
 
-				void putColor(BlockColor currentColor, int times, int biome) {
+				void putColor(BlockColor currentColor, int times, String biome) {
 					// if (currentColor.equals(lastColor))
 					if (currentColor == lastColor && biome == lastBiome)
 						lastColorTimes += times;
@@ -134,7 +141,7 @@ class ChunkRenderer_1_16 extends ChunkRenderer {
 					 * latest results. Putting a different color (transparent here) will trigger it to apply the last remaining color. If the last color is
 					 * already transparent, this will do nothing which doesn't matter since it wouldn't make any effect anyway.
 					 */
-					putColor(BlockColor.TRANSPARENT, 1, 0);
+					putColor(BlockColor.TRANSPARENT, 1, null);
 					return color;
 				}
 			}
@@ -182,7 +189,7 @@ class ChunkRenderer_1_16 extends ChunkRenderer {
 						}
 						if (loadedSections[s] == null) {
 							/* Sector is full of air. It is assumed that the air color is not biome dependent */
-							color.putColor(blockColors.getAirColor(), 16, 0);
+							color.putColor(blockColors.getAirColor(), 16, null);
 							discardTop = false;
 							continue;
 						}

@@ -150,9 +150,28 @@ public interface RegionShader {
 
 		@Override
 		public void shade(Color[] map, int[] height, String[] biome, BiomeColorMap biomeColors) {
-			for (int i = 0; i < 512 * 512; i++)
-				if (biome[i] != null)
-					map[i] = biomeColors.getBiomeColor(biome[i]).biomeColor;
+			for (int z = 0; z < 512; z++)
+				for (int x = 0; x < 512; x++) {
+					int index = z << 9 | x;
+					if (map[index] == null || biome[index] == null)
+						continue;
+
+					int westHeight = height[z << 9 | Math.max(x - 1, 0)];
+					int eastHeight = height[z << 9 | Math.min(x + 1, 511)];
+					int northHeight = height[Math.max(z - 1, 0) << 9 | x];
+					int southHeight = height[Math.min(z + 1, 511) << 9 | x];
+					int northWestHeight = height[Math.max(z - 1, 0) << 9 | Math.max(x - 1, 0)];
+					int northEastHeight = height[Math.max(z - 1, 0) << 9 | Math.min(x + 1, 511)];
+					int southWestHeight = height[Math.min(z + 1, 511) << 9 | Math.max(x - 1, 0)];
+					int southEastHeight = height[Math.min(z + 1, 511) << 9 | Math.min(x + 1, 511)];
+					double gX = (northWestHeight * 1 + 2 * westHeight + southWestHeight * 1 - eastHeight * 1 - 2 * northEastHeight - southEastHeight * 1);
+					double gY = (northWestHeight * 1 + 2 * northHeight + northEastHeight * 1 - southWestHeight * 1 - 2 * southHeight - southEastHeight * 1);
+
+					double factor = -Math.tanh((gX + gY) / 10);
+					factor *= 0.3;
+
+					map[index] = Color.shade(biomeColors.getBiomeColor(biome[index]).biomeColor, (float) factor);
+				}
 		}
 
 		@Override
@@ -173,8 +192,28 @@ public interface RegionShader {
 
 		@Override
 		public void shade(Color[] map, int[] height, String[] biome, BiomeColorMap biomeColors) {
-			for (int i = 0; i < 512 * 512; i++)
-				map[i] = colors[height[i] + 64];
+			for (int z = 0; z < 512; z++)
+				for (int x = 0; x < 512; x++) {
+					int index = z << 9 | x;
+					if (map[index] == null)
+						continue;
+
+					int westHeight = height[z << 9 | Math.max(x - 1, 0)];
+					int eastHeight = height[z << 9 | Math.min(x + 1, 511)];
+					int northHeight = height[Math.max(z - 1, 0) << 9 | x];
+					int southHeight = height[Math.min(z + 1, 511) << 9 | x];
+					int northWestHeight = height[Math.max(z - 1, 0) << 9 | Math.max(x - 1, 0)];
+					int northEastHeight = height[Math.max(z - 1, 0) << 9 | Math.min(x + 1, 511)];
+					int southWestHeight = height[Math.min(z + 1, 511) << 9 | Math.max(x - 1, 0)];
+					int southEastHeight = height[Math.min(z + 1, 511) << 9 | Math.min(x + 1, 511)];
+					double gX = (northWestHeight * 1 + 2 * westHeight + southWestHeight * 1 - eastHeight * 1 - 2 * northEastHeight - southEastHeight * 1);
+					double gY = (northWestHeight * 1 + 2 * northHeight + northEastHeight * 1 - southWestHeight * 1 - 2 * southHeight - southEastHeight * 1);
+
+					double factor = -Math.tanh((gX + gY) / 10);
+					factor *= 0.3;
+
+					map[index] = Color.shade(colors[height[index] + 64], (float) factor);
+				}
 		}
 
 		@Override

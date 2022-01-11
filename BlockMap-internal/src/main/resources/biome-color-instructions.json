@@ -63,7 +63,7 @@
 		"legacy": true
 	},
 	"minecraft:mushroom_fields": {
-		"biomeColor": { "r":255, "g":0, "b":255 },
+		"biomeColor": { "r":157, "g":29, "b":196 },
 		"legacyId": "14"
 	},
 	"minecraft:mushroom_field_shore": {

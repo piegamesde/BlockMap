@@ -2,6 +2,7 @@ package de.piegames.blockmap.generate;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.awt.Color;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
@@ -44,22 +45,28 @@ public class Screenshots {
 		{ /* Color maps */
 			log.info("Generating color map screenshots");
 			settings.maxY = 50;
-			BufferedImage img1 = generateScreenshot(renderer, settings, new Vector2i(-1, 1), BlockColorMap.InternalColorMap.CAVES);
+			BufferedImage img1 = generateScreenshot(renderer, settings, new Vector2i(5, 2), BlockColorMap.InternalColorMap.CAVES);
 			settings.maxY = 255;
-			BufferedImage img2 = generateScreenshot(renderer, settings, new Vector2i(0, 1), BlockColorMap.InternalColorMap.NO_FOLIAGE);
-			BufferedImage img3 = generateScreenshot(renderer, settings, new Vector2i(-1, 2), BlockColorMap.InternalColorMap.OCEAN_GROUND);
-			BufferedImage img4 = generateScreenshot(renderer, settings, new Vector2i(0, 2), BlockColorMap.InternalColorMap.DEFAULT);
+			BufferedImage img2 = generateScreenshot(renderer, settings, new Vector2i(6, 2), BlockColorMap.InternalColorMap.NO_FOLIAGE);
+			BufferedImage img3 = generateScreenshot(renderer, settings, new Vector2i(5, 3), BlockColorMap.InternalColorMap.DEFAULT);
+			BufferedImage img4 = generateScreenshot(renderer, settings, new Vector2i(6, 3), BlockColorMap.InternalColorMap.OCEAN_GROUND);
 			BufferedImage img = new BufferedImage(1024, 1024, BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g = img.createGraphics();
+			/* Background */
+			g.setColor(new Color(0.2f, 0.2f, 0.6f, 1.0f));
+			g.fillRect(0, 0, 1024, 1024);
+			/* Insert the images */
 			g.drawImage(img1, 0, 0, null);
 			g.drawImage(img2, 512, 0, null);
 			g.drawImage(img3, 0, 512, null);
 			g.drawImage(img4, 512, 512, null);
+			/* Add text on top */
+			g.setColor(Color.WHITE);
 			g.setFont(g.getFont().deriveFont(0, 32.0f));
 			g.drawString("Caves", 0 + 32, 512 - 32);
 			g.drawString("No foliage", 1024 - 32 - g.getFontMetrics().stringWidth("No foliage"), 512 - 32);
-			g.drawString("Ocean ground", 0 + 32, 1024 - 32);
-			g.drawString("Default", 1024 - 32 - g.getFontMetrics().stringWidth("Default"), 1024 - 32);
+			g.drawString("Default", 0 + 32, 1024 - 32);
+			g.drawString("Ocean ground", 1024 - 32 - g.getFontMetrics().stringWidth("Default"), 1024 - 32);
 			g.dispose();
 			try (OutputStream out = Files.newOutputStream(Generator.OUTPUT_SCREENSHOTS.resolve("screenshot-1.png"))) {
 				ImageIO.write(img, "png", out);
@@ -67,25 +74,32 @@ public class Screenshots {
 		}
 		{ /* Shaders */
 			log.info("Generating shader screenshots");
-			BufferedImage img1 = generateScreenshot(renderer, settings, new Vector2i(-1, 1), BlockColorMap.InternalColorMap.DEFAULT);
+			BufferedImage img1 = generateScreenshot(renderer, settings, new Vector2i(5, 2), BlockColorMap.InternalColorMap.DEFAULT);
 			settings.regionShader = RegionShader.DefaultShader.RELIEF.getShader();
 			settings.regionShader = RegionShader.DefaultShader.FLAT.getShader();
-			BufferedImage img2 = generateScreenshot(renderer, settings, new Vector2i(0, 1), BlockColorMap.InternalColorMap.DEFAULT);
-			settings.regionShader = RegionShader.DefaultShader.HEIGHTMAP.getShader();
-			BufferedImage img3 = generateScreenshot(renderer, settings, new Vector2i(-1, 2), BlockColorMap.InternalColorMap.OCEAN_GROUND);
+			BufferedImage img2 = generateScreenshot(renderer, settings, new Vector2i(6, 2), BlockColorMap.InternalColorMap.DEFAULT);
 			settings.regionShader = RegionShader.DefaultShader.BIOMES.getShader();
-			BufferedImage img4 = generateScreenshot(renderer, settings, new Vector2i(0, 2), BlockColorMap.InternalColorMap.DEFAULT);
+			BufferedImage img3 = generateScreenshot(renderer, settings, new Vector2i(5, 3), BlockColorMap.InternalColorMap.DEFAULT);
+			settings.regionShader = RegionShader.DefaultShader.HEIGHTMAP.getShader();
+			BufferedImage img4 = generateScreenshot(renderer, settings, new Vector2i(6, 3), BlockColorMap.InternalColorMap.OCEAN_GROUND);
 			BufferedImage img = new BufferedImage(1024, 1024, BufferedImage.TYPE_INT_ARGB);
+
 			Graphics2D g = img.createGraphics();
+			/* Background */
+			g.setColor(new Color(0.2f, 0.2f, 0.6f, 1.0f));
+			g.fillRect(0, 0, 1024, 1024);
+			/* Insert the images */
 			g.drawImage(img1, 0, 0, null);
 			g.drawImage(img2, 512, 0, null);
 			g.drawImage(img3, 0, 512, null);
 			g.drawImage(img4, 512, 512, null);
+			/* Add text on top */
+			g.setColor(Color.WHITE);
 			g.setFont(g.getFont().deriveFont(0, 32.0f));
 			g.drawString("Relief", 0 + 32, 512 - 32);
 			g.drawString("Flat", 1024 - 32 - g.getFontMetrics().stringWidth("Flat"), 512 - 32);
-			g.drawString("Heightmap", 0 + 32, 1024 - 32);
-			g.drawString("Biomes", 1024 - 32 - g.getFontMetrics().stringWidth("Biomes"), 1024 - 32);
+			g.drawString("Biomes", 0 + 32, 1024 - 32);
+			g.drawString("Heightmap", 1024 - 32 - g.getFontMetrics().stringWidth("Biomes"), 1024 - 32);
 			g.dispose();
 			try (OutputStream out = Files.newOutputStream(Generator.OUTPUT_SCREENSHOTS.resolve("screenshot-2.png"))) {
 				ImageIO.write(img, "png", out);
@@ -94,7 +108,7 @@ public class Screenshots {
 	}
 
 	public static void generateScreenshots() throws Exception {
-		Thread th = new Thread(() -> GuiMain.main());
+		Thread th = new Thread(() -> GuiMain.main(Generator.OUTPUT_INTERNAL_CACHE.resolve("BlockMapWorld").toString()));
 		th.start();
 		while (GuiMain.instance == null)
 			Thread.yield();
@@ -109,7 +123,8 @@ public class Screenshots {
 						GuiMain.instance.stage.show();
 						GuiMain.instance.controller.loadLocal(Generator.OUTPUT_INTERNAL_CACHE.resolve("BlockMapWorld"));
 						GuiMain.instance.controller.pinBox.requestFocus();
-						GuiMain.instance.controller.renderer.viewport.translationProperty.set(new Vector2d(512, -512));
+						/* Some random but fancy looking coordinates */
+						GuiMain.instance.controller.renderer.viewport.translationProperty.set(new Vector2d(1024 + 512, 512));
 						log.debug("Initialized GUI");
 						return true;
 					},
@@ -136,7 +151,9 @@ public class Screenshots {
 						GuiMain.instance.controller.pinView.getCheckModel().check(GuiMain.instance.controller.checkedPins.get(PinType.STRUCTURE_MINESHAFT));
 						GuiMain.instance.controller.pinView.getCheckModel().check(GuiMain.instance.controller.checkedPins.get(PinType.STRUCTURE_OCEAN_RUIN));
 						GuiMain.instance.controller.pinView.getCheckModel().check(GuiMain.instance.controller.checkedPins.get(PinType.STRUCTURE_SHIPWRECK));
-						GuiMain.instance.controller.renderer.viewport.translationProperty.set(new Vector2d(1024, -1200));
+						//GuiMain.instance.controller.renderer.viewport.translationProperty.set(new Vector2d(1024, -1200));
+						/* Some random but fancy looking coordinates */
+						GuiMain.instance.controller.renderer.viewport.translationProperty.set(new Vector2d(1024 + 512, 512));
 						GuiMain.instance.controller.renderer.viewport.zoomProperty.set(-1);
 						GuiMain.instance.controller.renderer.repaint();
 						return true;
@@ -180,7 +197,7 @@ public class Screenshots {
 			List<BufferedImage> screenshots = new ArrayList<>();
 			tasks.add(() -> {
 				GuiMain.instance.controller.renderer.viewport.zoomProperty.set(0);
-				GuiMain.instance.controller.renderer.viewport.translationProperty.set(new Vector2d(512, -512));
+				GuiMain.instance.controller.renderer.viewport.translationProperty.set(new Vector2d(-512, 512));
 				GuiMain.instance.controller.renderer.viewport.mousePosProperty.set(new Vector2d(640, 360));
 				GuiMain.instance.controller.renderer.viewport.zoomProperty.set(7);
 				GuiMain.instance.controller.renderer.repaint();
@@ -202,7 +219,7 @@ public class Screenshots {
 				GuiMain.instance.controller.renderer.repaint();
 				return true;
 			});
-			for (double i = 6.6; i >= -5; i -= 0.5) {
+			for (double i = 5.6; i >= -5; i -= 0.5) {
 				final double zoom = i;
 				tasks.add(() -> {
 					GuiMain.instance.controller.renderer.viewport.mousePosProperty.set(new Vector2d(640, 360));
@@ -256,9 +273,11 @@ public class Screenshots {
 
 	private static BufferedImage generateScreenshot(RegionRenderer renderer, RenderSettings settings, Vector2i toRender, BlockColorMap.InternalColorMap colors)
 			throws IOException {
-		RegionFile file = new RegionFile(Paths.get(URI.create(Generator.class.getResource("/BlockMapWorld/region/r." + toRender.x + "." + toRender.y
-				+ ".mca")
-				.toString())));
+		String fileName = "r." + toRender.x + "." + toRender.y + ".mca";
+		/* Uncomment if you checked in the respective region files as resources*/
+		// RegionFile file = new RegionFile(Paths.get(URI.create(Generator.class.getResource("/BlockMapWorld/region/" + fileName).toString())));
+		/* Load them from the automatically generated world */
+		RegionFile file = new RegionFile(Generator.OUTPUT_INTERNAL_CACHE.resolve("BlockMapWorld/region/" + fileName));
 		settings.blockColors = colors.getColorMap();
 		return renderer.render(toRender, file).getImage();
 	}

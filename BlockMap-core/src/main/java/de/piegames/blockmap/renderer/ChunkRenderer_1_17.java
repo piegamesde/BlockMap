@@ -1,5 +1,6 @@
 package de.piegames.blockmap.renderer;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -43,6 +44,9 @@ class ChunkRenderer_1_17 extends ChunkRenderer {
 	@Override
 	ChunkMetadata renderChunk(Vector2ic chunkPosRegion, Vector2ic chunkPosWorld, CompoundTag level, Color[] map, int[] height, String[] regionBiomes) {
 		blockColors = settings.blockColors.get(version);
+		if (settings.minY < 0) {
+			Arrays.fill(height, 0);
+		}
 
 		try {
 			/* Check chunk status */

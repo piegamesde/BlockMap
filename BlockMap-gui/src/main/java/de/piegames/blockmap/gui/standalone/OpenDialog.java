@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -244,7 +245,8 @@ public class OpenDialog extends Dialog<String> implements Initializable {
 					graphic.setImage(null);
 				} else {
 					graphic.setImage(
-							item.iconURL.map(url -> new Image(url, 20, 20, true, false, true))
+							Optional.ofNullable(item.iconURL)
+									.map(url -> new Image(url, 20, 20, true, false, true))
 									.orElse(new Image(getClass().getResourceAsStream("/unknown_server.png")))
 					);
 					name.setText(item.name);

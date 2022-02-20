@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 2.4.1
+
+### Bug fixes
+
+- Fixed broken "open world" dialog #75
+- Fixed an exception while rendering old chunks introduced by the negative y coordinates in 1.18
+
 ## Version 2.4.0
 
 ### Changes

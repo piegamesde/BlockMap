@@ -72,7 +72,7 @@ public abstract class ChunkMetadata {
 		public ChunkMetadataRendered(Vector2ic position, String generationStatus, Map<String, Vector3ic> structures) {
 			super(position);
 			this.generationStatus = Objects.requireNonNull(generationStatus);
-			this.structures = Collections.unmodifiableMap(structures);
+			this.structures = structures;
 		}
 
 		@Override

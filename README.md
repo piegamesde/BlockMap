@@ -1,4 +1,4 @@
-# BlockMap – A Minecraft 1.17 world viewer
+# BlockMap – A Minecraft 1.18 world viewer
 
 [![Build Status](https://github.com/Minecraft-Technik-Wiki/BlockMap/workflows/Build/badge.svg)](https://github.com/Minecraft-Technik-Wiki/BlockMap/actions)
 
@@ -7,16 +7,16 @@
 ## Features:
 
 - Beautiful, realistic renders
-- Really fast (>700 chunks/s on my system)
+- Reasonably fast
 - Works with huge worlds
-- Works on servers
+- Works on servers (requires admins and a web server, but no Minecraft server plugins)
 - Rendering scale: 1 pixel : 1 block
 - An interactive GUI viewer made with JavaFX
 - Pins on the map show points of interest like players, generated structures and villages
 - Different color maps and shaders that highlight exactly what you are looking for (including an underground caves and an ocean ground view)
 - A command line interface to render your worlds from scripts
 - The core rendering code as library to use in your own projects
-- Works with 1.17 worlds (with limited support down to 1.13)
+- Works with 1.18 worlds (with limited support down to 1.13)
 
 ## Gallery
 
@@ -50,7 +50,7 @@ BlockMap hasn't been packaged for other distros yet (looking for maintainers).
 
 The GUI version should just run by (double)clicking it. Otherwise run it through:
 
-    java -jar BlockMap-gui-2.3.0.jar
+    java -jar BlockMap-gui-2.4.1.jar
 
 to start. If you installed BlockMap through a package manager, search for it in your launcher or menu.
 
@@ -68,9 +68,9 @@ to start. If you installed BlockMap through a package manager, search for it in 
 If you want to use BlockMap through the command line without,
 
     # For general usage help
-    java -jar BlockMap-cli-2.3.0.jar help
+    java -jar BlockMap-cli-2.4.1.jar help
     # For help about rendering worlds to a folder
-    java -jar BlockMap-cli-2.3.0.jar help render
+    java -jar BlockMap-cli-2.4.1.jar help render
 
 will get you started. On Linux even with colors!
 
@@ -175,7 +175,7 @@ If you want to create a release jar and run it, use `./gradlew :BlockMap-gui:run
 6. Update the Minecraft version of `ChunkRenderer_$VERSION` in the constructor
 7. Update `de.piegames.blockmap.renderer.RegionRenderer` to use the new `ChunkRenderer`
 8. Run `./gradlew regenerate` and make it work
-9. Run all the tests and make them work
+9. Run all the tests (`./gradlew test`) and make them work
 	- If Minecraft changed something on the save format, the `ChunkRenderer` will fail
 	- If Minecraft added new blocks, the color map needs to be updated. The failing tests will tell which blocks are missing. Additional information can be retrieved from the default resource pack.
 	- If Minecraft added or changed biomes, manual checking and updating is required
@@ -193,3 +193,8 @@ If you want to create a release jar and run it, use `./gradlew :BlockMap-gui:run
 ## Mod support
 
 Currently, no Minecraft mods are supported, but the rendering engine is built in an extensible way. Mod support will only be implemented on request.
+
+## TODO
+
+- Portalruinen Nether
+- Map pins buggy

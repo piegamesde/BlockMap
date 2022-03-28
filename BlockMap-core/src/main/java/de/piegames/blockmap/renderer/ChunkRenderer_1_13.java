@@ -40,7 +40,7 @@ public class ChunkRenderer_1_13 extends ChunkRenderer {
 	}
 
 	@Override
-	ChunkMetadata renderChunk(Vector2ic chunkPosRegion, Vector2ic chunkPosWorld, CompoundTag level, Color[] map, int[] height, int[] regionBiomes) {
+	ChunkMetadata renderChunk(Vector2ic chunkPosRegion, Vector2ic chunkPosWorld, CompoundTag level, Color[] map, int[] height, String[] regionBiomes) {
 		blockColors = settings.blockColors.get(version);
 
 		try {
@@ -73,7 +73,15 @@ public class ChunkRenderer_1_13 extends ChunkRenderer {
 				}
 			}
 
-			int[] biomes = level.getIntArrayValue("Biomes").orElse(new int[256]);
+			String[] biomes = level.getIntArrayValue("Biomes")
+					.map(ints -> {
+						var strings = new String[256];
+						for (int i = 0; i < 256; i++) {
+							strings[i] = Integer.toString(ints[i]);
+						}
+						return strings;
+					})
+					.orElse(new String[256]);
 
 			/*
 			 * The height of the lowest section that has already been loaded. Section are loaded lazily from top to bottom and this value gets decreased

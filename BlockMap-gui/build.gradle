@@ -7,7 +7,7 @@ plugins {
 }
 
 javafx {
-    version = "16"
+    version = "17"
     modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.swing' ]
     //configuration = 'compileOnly'
 }
@@ -15,19 +15,19 @@ javafx {
 dependencies {
     implementation project(':BlockMap-core')
 	// GUI dependencies
-	implementation 'org.controlsfx:controlsfx:11.0.2'
+	implementation 'org.controlsfx:controlsfx:11.1.1'
 	implementation 'com.github.piegamesde:gson-fire:9210521426'
-	implementation group: 'com.github.haifengl', name: 'smile-core', version: '1.5.3'
+	implementation group: 'com.github.haifengl', name: 'smile-core', version: '1.5.3' // TODO upgrade to v2.x
 	implementation group: 'com.codepoetics', name: 'protonpack', version: '1.16' // TODO upgrade to v2.x
     implementation 'com.github.saibotk:JMAW:0.3.1'
     
     // GUI standalone dependencies
-	implementation 'com.google.guava:guava:29.0-jre'
+	implementation 'com.google.guava:guava:31.0.1-jre'
 	implementation 'net.dongliu:gson-java8-datatype:1.1.0'
 	implementation 'io.github.soc:directories:12'
-    implementation 'me.xdrop:fuzzywuzzy:1.3.1'
-	implementation 'org.apache.logging.log4j:log4j-core:2.13.3'
-	implementation 'org.apache.logging.log4j:log4j-jcl:2.13.3'
+    implementation 'me.xdrop:fuzzywuzzy:1.3.3'
+	implementation 'org.apache.logging.log4j:log4j-core:2.17.1'
+	implementation 'org.apache.logging.log4j:log4j-jcl:2.17.1'
 }
 
 application {

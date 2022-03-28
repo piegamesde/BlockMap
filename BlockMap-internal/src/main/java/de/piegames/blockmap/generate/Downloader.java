@@ -60,7 +60,7 @@ public class Downloader {
 					.filter(v -> new Semver(v.id, SemverType.LOOSE).getMinor() == minecraftVersion.getMinor())
 					.findAny()
 					.get();
-			if (new Semver(latestMatching.id).isGreaterThan(minecraftVersion)) {
+			if (new Semver(latestMatching.id, SemverType.LOOSE).isGreaterThan(minecraftVersion)) {
 				log.error("Outdated: newest available version is " + latestMatching.id);
 			} else {
 				log.info("Up to date (" + version.versionName + ")");

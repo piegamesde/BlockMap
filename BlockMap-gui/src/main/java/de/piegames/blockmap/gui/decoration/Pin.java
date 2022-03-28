@@ -100,12 +100,12 @@ public class Pin {
 		public static final PinType PLAYER_POSITION = new PinType("Player position", PLAYER, true, false, "textures/pins/player.png");
 		public static final PinType PLAYER_SPAWN = new PinType("Player spawnpoint", PLAYER, true, false, "textures/pins/spawn_player.png");
 
-		public static final PinType MAP = new PinType("Map", ANY_PIN, true, false, "textures/pins/map.png");
-		public static final PinType MAP_POSITION = new PinType("Map position", MAP, true, false, "textures/pins/map.png");
+		public static final PinType MAP = new PinType("Map", ANY_PIN, false, true, "textures/pins/map.png");
+		public static final PinType MAP_POSITION = new PinType("Map position", MAP, false, false, "textures/pins/map.png");
 		public static final PinType MAP_BANNER = new PinType("Map banner", MAP, true, false, "textures/pins/banner.png");
 
 		public static final PinType BEE_NEST = new PinType("Bee nest", ANY_PIN, false, false, "textures/structures/bee_hive.png");
-		public static final PinType NETHER_PORTAL = new PinType("Portal", ANY_PIN, true, false, "textures/structures/nether_portal.png");
+		public static final PinType NETHER_PORTAL = new PinType("Portal", ANY_PIN, false, false, "textures/structures/nether_portal.png");
 		public static final PinType	LODESTONE = new PinType("Lodestone", ANY_PIN, true, false, "textures/pins/lodestone.png");
 
 		public static final PinType VILLAGE = new PinType("Village", ANY_PIN, true, false, "textures/structures/village.png");
@@ -138,7 +138,7 @@ public class Pin {
 		public static final PinType WORLD_SPAWN = new PinType("Spawnpoint", ANY_PIN, true, false, "textures/pins/spawn_map.png");
 
 		public static final PinType STRUCTURE_OVERWORLD = new PinType("Structures", ANY_PIN, false, true, "textures/pins/structures.png");
-		public static final PinType STRUCTURE_TREASURE = new PinType("Treasure", STRUCTURE_OVERWORLD, true, false, "textures/structures/buried_treasure.png");
+		public static final PinType STRUCTURE_TREASURE = new PinType("Treasure", STRUCTURE_OVERWORLD, false, false, "textures/structures/buried_treasure.png");
 		public static final PinType STRUCTURE_PYRAMID = new PinType("Pyramid", STRUCTURE_OVERWORLD, true, false, "textures/structures/desert_pyramid.png");
 		public static final PinType STRUCTURE_IGLOO = new PinType("Igloo", STRUCTURE_OVERWORLD, true, false, "textures/structures/igloo.png");
 		public static final PinType STRUCTURE_JUNGLE_TEMPLE = new PinType("Jungle temple", STRUCTURE_OVERWORLD, true, false, "textures/structures/jungle_pyramid.png");
@@ -153,7 +153,7 @@ public class Pin {
 
 		public static final PinType STRUCTURE_NETHER = new PinType("Nether Structures", ANY_PIN, false, true, "textures/pins/structures.png");
 		public static final PinType STRUCTURE_FORTRESS = new PinType("Nether Fortress", STRUCTURE_NETHER, true, false, "textures/structures/fortress.png");
-		public static final PinType STRUCTURE_RUINED_PORTAL = new PinType("Ruined portal", STRUCTURE_NETHER, true, false, "textures/structures/ruined_portal.png");
+		public static final PinType STRUCTURE_RUINED_PORTAL = new PinType("Ruined portal", STRUCTURE_NETHER, false, false, "textures/structures/ruined_portal.png");
 		public static final PinType STRUCTURE_NETHER_FOSSIL = new PinType("Nether fossil", STRUCTURE_NETHER, false, false, "textures/structures/fossil.png");
 		public static final PinType STRUCTURE_BASTION_REMNANT = new PinType("Bastion remnant", STRUCTURE_NETHER, true, false, "textures/structures/bastion_remnant.png");
 
@@ -541,7 +541,9 @@ public class Pin {
 		static final Color[] COLOR_IDS;
 
 		static {
-			/* Source: https://minecraft-de.gamepedia.com/Kartendaten#Liste_der_Farbwerte */
+			/* Sources: https://minecraft-de.gamepedia.com/Kartendaten#Liste_der_Farbwerte,
+			 * https://minecraft.fandom.com/wiki/Map_item_format#Base_colors
+			 */
 			Color[] rawColors = new Color[] {
 					Color.TRANSPARENT,
 					Color.rgb(125, 176, 55), /* grass */
@@ -594,7 +596,17 @@ public class Pin {
 					Color.rgb(76, 50, 35), /* brown hardened clay */
 					Color.rgb(76, 82, 42), /* green hardened clay */
 					Color.rgb(142, 60, 46), /* red hardened clay */
-					Color.rgb(37, 22, 16),/* black hardened clay */
+					Color.rgb(37, 22, 16), /* black hardened clay */
+					Color.rgb(189, 48, 49), /* Crimson nylium */
+					Color.rgb(148, 63, 97), /* Crimson stem */
+					Color.rgb(92, 25, 29), /* Crimson hyphae */
+					Color.rgb(22, 126, 134), /* Warped nylium */
+					Color.rgb(58, 142, 140), /* Warped stem */
+					Color.rgb(86, 44, 62), /* Warped hyphae */
+					Color.rgb(20, 180, 133), /* Wapred wart block */
+					Color.rgb(100, 100, 100), /* Deepslate */
+					Color.rgb(216, 175, 147), /* Raw iron */
+					Color.rgb(127, 167, 150), /* Glow lichen */
 			};
 			COLOR_IDS = new Color[rawColors.length * 4];
 			for (int i = 0; i < rawColors.length; i++) {
@@ -634,8 +646,15 @@ public class Pin {
 					byte[] data = map.getColors().get();
 					WritableImage image = new WritableImage(128, 128);
 					for (int x = 0; x < 128; x++)
-						for (int y = 0; y < 128; y++)
-							image.getPixelWriter().setColor(x, y, COLOR_IDS[0xFF & data[y << 7 | x]]);
+						for (int y = 0; y < 128; y++) {
+							var colorId = 0xFF & data[y << 7 | x];
+							if (colorId > COLOR_IDS.length) {
+								image.getPixelWriter().setColor(x, y, Color.rgb(255, 255, 0));
+								log.warn("Map colors are out of bounds, this is likely a bug.");
+							} else {
+								image.getPixelWriter().setColor(x, y, COLOR_IDS[colorId]);
+							}
+						}
 					mapPane.setBottom(new ImageView(image));
 				}
 				content.add(mapPane, 0, rowCount++, 2, 1);
@@ -669,6 +688,34 @@ public class Pin {
 			stack.setMouseTransparent(true);
 			stack.setViewOrder(1);
 			return stack;
+		}
+	}
+
+	private static class BannerPin extends Pin {
+
+		protected LevelMetadata.MapPin.BannerPin banner;
+
+		public BannerPin(LevelMetadata.MapPin.BannerPin banner, DisplayViewport viewport) {
+			super(new Vector2d(banner.getPosition().x(), banner.getPosition().z()), PinType.MAP_BANNER, viewport);
+			this.banner = Objects.requireNonNull(banner);
+		}
+
+		@Override
+		protected PopOver initInfo() {
+			PopOver info = super.initInfo();
+			GridPane content = new GridPane();
+			content.getStyleClass().add("grid");
+
+			content.add(new Label("Text (raw): "), 0, 0);
+			Label name = new Label(banner.getName().orElse("{}"));
+			content.add(name, 1, 0);
+
+			content.add(new Label("Color: "), 0, 1);
+			Label color = new Label(banner.getColor().orElse("none"));
+			content.add(color, 1, 1);
+
+			info.setContentNode(content);
+			return info;
 		}
 	}
 
@@ -710,7 +757,7 @@ public class Pin {
 			player.getGamemode()
 					.ifPresent(gameMode -> {
 						content.add(new Label("Game mode:"), 0, 2);
-						content.add(new Label(new String[] { "survival", "creative", "spectator" }[gameMode]), 1, 2);
+						content.add(new Label(new String[] { "survival", "creative", "spectator", "hardcore" }[gameMode]), 1, 2);
 					});
 
 			player.getSpawnpoint().ifPresent(spawn -> {
@@ -1034,7 +1081,7 @@ public class Pin {
 		/* All banner pins of the maps */
 		pins.addAll(pin.getMaps().map(List::stream).orElse(Stream.empty())
 				.flatMap(map -> map.getBanners().map(List::stream).orElse(Stream.empty()))
-				.map(banner -> new Pin(new Vector2d(banner.getPosition().x(), banner.getPosition().z()), PinType.MAP_BANNER, viewport))
+				.map(banner -> new BannerPin(banner, viewport))
 				.collect(Collectors.toList()));
 
 		pin.getWorldSpawn().map(spawn -> new WorldSpawnPin(spawn.getSpawnpoint(), viewport)).ifPresent(pins::add);

@@ -8,7 +8,8 @@ import org.junit.runners.Suite;
 		ColorMapTest.class,
 		RegionRendererTest.class,
 		RegionFolderTest.class,
-		CommandLineTest.class
+		CommandLineTest.class,
+		BiomesTest.class,
 })
 public class AllTests {
 }

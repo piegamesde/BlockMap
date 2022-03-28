@@ -33,7 +33,7 @@ public class RegionRenderer {
 	private static Log			log	= LogFactory.getLog(RegionRenderer.class);
 
 	public final RenderSettings	settings;
-	private final ChunkRenderer renderer13, renderer14, renderer15, renderer16, renderer17;
+	private final ChunkRenderer renderer13, renderer14, renderer15, renderer16, renderer17, renderer18;
 
 	public RegionRenderer(RenderSettings settings) {
 		this.settings = Objects.requireNonNull(settings);
@@ -42,6 +42,7 @@ public class RegionRenderer {
 		renderer15 = new ChunkRenderer_1_15(settings);
 		renderer16 = new ChunkRenderer_1_16(settings);
 		renderer17 = new ChunkRenderer_1_17(settings);
+		renderer18 = new ChunkRenderer_1_18(settings);
 	}
 
 	/**
@@ -83,9 +84,8 @@ public class RegionRenderer {
 		Color[] map = new Color[512 * 512];
 		/* If nothing is set otherwise, the height map is set to the minimum height. */
 		int[] height = new int[512 * 512];
-		int[] regionBiomes = new int[512 * 512];
+		String[] regionBiomes = new String[512 * 512];
 		Arrays.fill(height, settings.minY);
-		Arrays.fill(regionBiomes, -1);
 
 		for (int chunkIndex : file.listChunks()) {
 			Chunk chunk = null;
@@ -94,7 +94,7 @@ public class RegionRenderer {
 			} catch (ClosedByInterruptException e) {
 				log.info("Got interrupted while rendering, stopping");
 				break;
-			} catch (IOException e) {
+			} catch (IOException | RuntimeException e) {
 				int x = chunkIndex & 0xF, z = chunkIndex >> 4;
 				log.warn("Failed to load chunk (" + x + ", " + z + ")", e);
 				Vector2ic chunkPos = new Vector2i(((regionPos.x() << 5) | x), ((regionPos.y() << 5) | z));
@@ -116,39 +116,50 @@ public class RegionRenderer {
 			try (NBTInputStream nbtIn = new NBTInputStream(new ByteArrayInputStream(chunk.getData().array(), 5, chunk.getRealLength()), chunk
 					.getCompression(), true);) {
 				root = new CompoundTag("chunk", ((CompoundTag) nbtIn.readTag()).getValue());
-			} catch (IOException e) {
+			} catch (IOException | RuntimeException e) {
 				log.warn("Failed to load chunk " + chunkPosRegion, e);
 				metadata.put(chunkPos, new ChunkMetadataFailed(chunkPos, e));
 				continue;
 			}
-			CompoundTag level = root.getAsCompoundTag("Level").get();
-
-			/* Check data version */
-			Optional<Integer> dataVersion = root.getAsIntTag("DataVersion").map(Tag::getValue);
-			if (dataVersion.isPresent()) {
-				int version = dataVersion.get();
-				if (version < MinecraftVersion.MC_1_13.minVersion) {
-					log.warn("Skipping chunk because it is too old (before Minecraft 1.13)");
-					metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "This chunk was written from Minecraft <1.13, which is not supported", version));
-					continue;
-				} else if (version <= MinecraftVersion.MC_1_13.maxVersion) {
-					metadata.put(chunkPos, renderer13.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
-				} else if (version >= MinecraftVersion.MC_1_14.minVersion && version <= MinecraftVersion.MC_1_14.maxVersion) {
-					metadata.put(chunkPos, renderer14.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
-				} else if (version >= MinecraftVersion.MC_1_15.minVersion && version <= MinecraftVersion.MC_1_15.maxVersion) {
-					metadata.put(chunkPos, renderer15.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
-				} else if (version >= MinecraftVersion.MC_1_16.minVersion && version <= MinecraftVersion.MC_1_16.maxVersion) {
-					metadata.put(chunkPos, renderer16.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
-				} else if (version >= MinecraftVersion.MC_1_17.minVersion && version <= MinecraftVersion.MC_1_17.maxVersion) {
-					metadata.put(chunkPos, renderer17.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
+			try {
+				/* Check data version */
+				Optional<Integer> dataVersion = root.getAsIntTag("DataVersion").map(Tag::getValue);
+				if (dataVersion.isPresent()) {
+					int version = dataVersion.get();
+					if (version < MinecraftVersion.MC_1_13.minVersion) {
+						log.warn("Skipping chunk because it is too old (before Minecraft 1.13)");
+						metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "This chunk was written from Minecraft <1.13, which is not supported", version));
+						continue;
+					} else if (version <= MinecraftVersion.MC_1_13.maxVersion) {
+						CompoundTag level = root.getAsCompoundTag("Level").get();
+						metadata.put(chunkPos, renderer13.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
+					} else if (version >= MinecraftVersion.MC_1_14.minVersion && version <= MinecraftVersion.MC_1_14.maxVersion) {
+						CompoundTag level = root.getAsCompoundTag("Level").get();
+						metadata.put(chunkPos, renderer14.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
+					} else if (version >= MinecraftVersion.MC_1_15.minVersion && version <= MinecraftVersion.MC_1_15.maxVersion) {
+						CompoundTag level = root.getAsCompoundTag("Level").get();
+						metadata.put(chunkPos, renderer15.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
+					} else if (version >= MinecraftVersion.MC_1_16.minVersion && version <= MinecraftVersion.MC_1_16.maxVersion) {
+						CompoundTag level = root.getAsCompoundTag("Level").get();
+						metadata.put(chunkPos, renderer16.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
+					} else if (version >= MinecraftVersion.MC_1_17.minVersion && version <= MinecraftVersion.MC_1_17.maxVersion) {
+						CompoundTag level = root.getAsCompoundTag("Level").get();
+						metadata.put(chunkPos, renderer17.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
+					} else if (version >= MinecraftVersion.MC_1_18.minVersion && version <= MinecraftVersion.MC_1_18.maxVersion) {
+						metadata.put(chunkPos, renderer18.renderChunk(chunkPosRegion, chunkPos, root, map, height, regionBiomes));
+					} else {
+						log.warn("Could not render chunk with Minecraft format version " + version);
+						metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "Could not find a chunk rendering engine for this version", version));
+						continue;
+					}
 				} else {
-					log.warn("Could not render chunk with Minecraft format version " + version);
-					metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "Could not find a chunk rendering engine for this version", version));
+					log.warn("Skipping chunk because it is way too old (pre 1.9)");
+					metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "This chunk was written from Minecraft <1.9, which is not supported", 0));
 					continue;
 				}
-			} else {
-				log.warn("Skipping chunk because it is way too old (pre 1.9)");
-				metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "This chunk was written from Minecraft <1.9, which is not supported", 0));
+			} catch (RuntimeException e) {
+				log.warn("Failed to render chunk " + chunkPosRegion, e);
+				metadata.put(chunkPos, new ChunkMetadataFailed(chunkPos, e));
 				continue;
 			}
 		}

@@ -1,12 +1,11 @@
 package de.piegames.blockmap.gui.standalone;
 
 import java.util.Objects;
-import java.util.Optional;
 
 public class HistoryItem {
 	protected boolean			server;
 	protected long				timestamp;
-	protected Optional<String>	iconURL;
+	protected String			iconURL;
 	protected String			name;
 	protected String			path;
 
@@ -17,7 +16,7 @@ public class HistoryItem {
 		this.server = server;
 		this.name = Objects.requireNonNull(name);
 		this.path = Objects.requireNonNull(path);
-		this.iconURL = Optional.ofNullable(iconURL);
+		this.iconURL = iconURL;
 		this.timestamp = timestamp;
 	}
 

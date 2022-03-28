@@ -47,17 +47,24 @@ public class WorldRendererCanvas extends ResizableCanvas {
 		progress.addListener(e -> repaint());
 
 		this.regionFolder.addListener((obs, prev, val) -> {
+			if (map != null) {
+				/* Cancel existing tasks */
+				for (Runnable task : executor.getQueue())
+					executor.remove(task);
+				/* Free up the old map */
+				map.cancel();
+			}
 			if (val == null || val.listRegions().isEmpty()) {
 				map = null;
-				status.set("No regions loaded");
+				executor.execute(() -> Platform.runLater(() -> status.set("No regions loaded")));
 				chunkMetadata.unbind();
 				chunkMetadata.clear();
 			} else {
+				executor.execute(() -> Platform.runLater(() -> status.set("Rendering")));
 				map = new RenderedMap(val, executor, viewport.mouseWorldProperty);
 				map.getCurrentlyRendering().addListener((InvalidationListener) e -> repaint());
 				progress.bind(map.getProgress());
 				chunkMetadata.bind(map.getChunkMetadata());
-				status.set("Rendering");
 				executor.execute(() -> Platform.runLater(() -> status.set("Done")));
 			}
 			repaint();

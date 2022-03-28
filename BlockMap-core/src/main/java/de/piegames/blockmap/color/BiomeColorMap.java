@@ -59,18 +59,18 @@ public class BiomeColorMap {
 		}
 	}
 
-	protected Map<Integer, BiomeColor> biomeColors;
+	protected Map<String, BiomeColor> biomeColors;
 
 	@SuppressWarnings("unused")
 	private BiomeColorMap() {
 		// For deserialization purposes
 	}
 
-	public BiomeColor getBiomeColor(int biome) {
+	public BiomeColor getBiomeColor(String biome) {
 		return biomeColors.getOrDefault(biome, MISSING);
 	}
 
-	public BiomeColorMap(Map<Integer, BiomeColor> biomeColors) {
+	public BiomeColorMap(Map<String, BiomeColor> biomeColors) {
 		this.biomeColors = Objects.requireNonNull(biomeColors);
 	}
 

@@ -9,14 +9,17 @@ buildscript {
         maven {
         	url 'https://jitpack.io'
         }
+        // required by (at least) com.jaredsburrows.license:
+        // https://github.com/jaredsburrows/gradle-license-plugin/issues/148
+        google()
 	}
 
 	dependencies {
-		classpath "com.jaredsburrows:gradle-license-plugin:0.8.42"
-		classpath "com.github.ben-manes:gradle-versions-plugin:0.29.0"
-		classpath 'com.github.jengelman.gradle.plugins:shadow:6.0.0'
-		classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.0"
-		classpath "org.javamodularity:moduleplugin:1.7.0"
+		classpath "com.jaredsburrows:gradle-license-plugin:0.8.90"
+		classpath "com.github.ben-manes:gradle-versions-plugin:0.41.0"
+		classpath 'com.github.jengelman.gradle.plugins:shadow:6.1.0'
+		classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.3"
+		classpath "org.javamodularity:moduleplugin:1.8.10"
         classpath 'com.github.johni0702:gradle-reproducible-builds-plugin:a524ada411315aa9b2a58eedcaaa834015e56721'
 	}
 }
@@ -24,7 +27,7 @@ buildscript {
 apply plugin: "com.github.ben-manes.versions"
 
 allprojects {
-	version = '2.3.0'
+	version = '2.4.1'
 
 	repositories {
 		jcenter()

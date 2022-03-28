@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -42,6 +43,7 @@ public class RenderedMap implements Runnable {
 	protected ReadOnlySetWrapper<Vector2ic>									rendering		= new ReadOnlySetWrapper<>(FXCollections.observableSet());
 	/** Where the mouse currently points to, in world coordinates */
 	protected ReadOnlyObjectProperty<Vector2dc>								mouseWorldProperty;
+	private final AtomicBoolean cancelRendering = new AtomicBoolean(false);
 
 	public RenderedMap(RegionFolder regionFolder, ExecutorService executor, ReadOnlyObjectProperty<Vector2dc> mouseWorldProperty) {
 		this.regionFolder = Objects.requireNonNull(regionFolder);
@@ -76,10 +78,18 @@ public class RenderedMap implements Runnable {
 				.filter(r -> r.isVisible(frustum))
 				.forEach(r -> r.drawForeground(gc, frustum, scale));
 	}
+	
+	/* Cancel existing rendering tasks and already free up some memory */
+	public void cancel() {
+		cancelRendering.set(true);
+		regions.clear();
+	}
 
 	/* Render the next region file on a worker thread */
 	@Override
 	public void run() {
+		if (cancelRendering.get())
+			return;
 		RenderedRegion region = nextRegion();
 		Platform.runLater(() -> rendering.getValue().add(region.position));
 		try {

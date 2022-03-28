@@ -1,5 +1,27 @@
 # Changelog
 
+## Version 2.4.1
+
+### Bug fixes
+
+- Fixed broken "open world" dialog #75
+- Fixed an exception while rendering old chunks introduced by the negative y coordinates in 1.18
+
+## Version 2.4.0
+
+### Changes
+
+- Added support for 1.18 worlds
+- Added a force-reload action that bypasses the cache. Shortcut `Ctrl+Shift+R`
+- Newer fancier heightmap and biome view
+- Changed the default settings for some of the pins (maps and treasures are now hidden by default)
+- Added name and color information to banner pins (not pretty yet, but better than nothing)
+
+### Bug fixes
+
+- Fixed banner pin positions (#40, #70, thanks @Reispfannenfresser)
+- Fixed that changing the world would not cancel the old render tasks (a114616e9de4c54bc6a0f1167088868f16b1d788)
+
 ## Version 2.3.0
 
 ### Changes

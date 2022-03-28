@@ -81,7 +81,10 @@ public class RegionFolderCache {
 	}
 
 	/** Wrap a given {@link RegionFolder} in a {@link RegionFolderCache} if needed and mark this cache id as used. */
-	public synchronized RegionFolder cache(RegionFolder input, String id) {
+	public synchronized RegionFolder cache(CacheEntry entry) {
+		var id = entry.hash;
+		var input = entry.folder;
+		var force = entry.force;
 		if (input == null || !input.needsCaching()) {
 			if (input != null)
 				log.debug("No caching needed for the world (id: " + id + ")");
@@ -99,7 +102,7 @@ public class RegionFolderCache {
 			}.getType());
 
 			cache.put(id, Instant.now().toEpochMilli());
-			input = CachedRegionFolder.create(input, true, cacheDir.resolve(id));
+			input = CachedRegionFolder.create(input, !force, cacheDir.resolve(id));
 
 			try (Writer writer = Files.newBufferedWriter(cacheIndex)) {
 				GSON.toJson(cache, writer);

@@ -188,9 +188,11 @@ class ChunkRenderer_1_18 extends ChunkRenderer {
 						if (s < lowestLoadedSection) {
 							try {
 								var section = sections.get(s);
-								loadedSections[s + 4] = renderSection(section, blockColors);
+								if (section != null) {
+									loadedSections[s + 4] = renderSection(section, blockColors);
+								}
 								/* Read the biome for the top layer */
-								if (loadedTopBiomes == null) {
+								if (loadedTopBiomes == null && section != null) {
 									loadedTopBiomes = new String[16];
 									CompoundTag biomes = section.get("biomes").getAsCompoundTag().get();
 
@@ -253,6 +255,11 @@ class ChunkRenderer_1_18 extends ChunkRenderer {
 							}
 							lowestLoadedSection = s;
 						}
+						var section = loadedSections[s + 4];
+						if (section == null) {
+							discardTop = false;
+							continue;
+						}
 						for (int y = 15; y >= 0; y--) {
 							int h = s << 4 | y;
 							if (h < settings.minY)
@@ -263,7 +270,7 @@ class ChunkRenderer_1_18 extends ChunkRenderer {
 							/* xzy index relative to the current section */
 							int xzy = xz | y << 8;
 
-							BlockColor colorData = loadedSections[s + 4][xzy];
+							BlockColor colorData = section[xzy];
 							if (discardTop && colorData.isTranslucent)
 								discardTop = false;
 							if (!discardTop && !colorData.isTranslucent && !heightSet) {

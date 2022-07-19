@@ -1,4 +1,4 @@
-# BlockMap – A Minecraft 1.18 world viewer
+# BlockMap – A Minecraft 1.19 world viewer
 
 [![Build Status](https://github.com/Minecraft-Technik-Wiki/BlockMap/workflows/Build/badge.svg)](https://github.com/Minecraft-Technik-Wiki/BlockMap/actions)
 
@@ -16,7 +16,7 @@
 - Different color maps and shaders that highlight exactly what you are looking for (including an underground caves and an ocean ground view)
 - A command line interface to render your worlds from scripts
 - The core rendering code as library to use in your own projects
-- Works with 1.18 worlds (with limited support down to 1.13)
+- Works with 1.19 worlds (with limited support down to 1.13)
 
 ## Gallery
 
@@ -50,7 +50,7 @@ BlockMap hasn't been packaged for other distros yet (looking for maintainers).
 
 The GUI version should just run by (double)clicking it. Otherwise run it through:
 
-    java -jar BlockMap-gui-2.4.1.jar
+    java -jar BlockMap-gui-2.5.0.jar
 
 to start. If you installed BlockMap through a package manager, search for it in your launcher or menu.
 
@@ -68,9 +68,9 @@ to start. If you installed BlockMap through a package manager, search for it in 
 If you want to use BlockMap through the command line without,
 
     # For general usage help
-    java -jar BlockMap-cli-2.4.1.jar help
+    java -jar BlockMap-cli-2.5.0.jar help
     # For help about rendering worlds to a folder
-    java -jar BlockMap-cli-2.4.1.jar help render
+    java -jar BlockMap-cli-2.5.0.jar help render
 
 will get you started. On Linux even with colors!
 

@@ -55,7 +55,7 @@ public class BiomesTest {
 	@Test
 	public void testBiomeInstructions() throws IOException {
 		var biomeDataDirectory = Paths.get(URI.create(getClass().getResource(
-				"/data-" + MinecraftVersion.LATEST.fileSuffix + "/reports/worldgen/minecraft/worldgen/biome")
+				"/data-" + MinecraftVersion.LATEST.fileSuffix + "/reports/minecraft/worldgen/biome")
 				.toString()));
 		var instructionsPath = Paths.get(URI.create(Generator.class.getResource("/biome-color-instructions.json").toString()));
 

@@ -450,5 +450,8 @@
 	},
 	"minecraft:mangrove_swamp": {
 		"biomeColor": { "r":58, "g":122, "b":106 }
+	},
+	"minecraft:deep_dark": {
+		"biomeColor": { "r":0, "g": 0, "b":0 }
 	}
 }

@@ -447,5 +447,8 @@
 	},
 	"minecraft:stony_peaks": {
 		"biomeColor": { "r":209, "g":209, "b":209 }
+	},
+	"minecraft:mangrove_swamp": {
+		"biomeColor": { "r":58, "g":122, "b":106 }
 	}
 }

@@ -162,7 +162,7 @@ public class Generator {
 			Path minecraftJarfile = OUTPUT_INTERNAL_CACHE.resolve("client-" + MinecraftVersion.LATEST.fileSuffix + ".jar");
 			BiomeColorMap map = ColorCompiler.compileBiomeColors(minecraftJarfile,
 					Paths.get(URI.create(Generator.class.getResource("/biome-color-instructions.json").toString())),
-					OUTPUT_INTERNAL_TEST.resolve("data-" + MinecraftVersion.LATEST.fileSuffix).resolve("reports/worldgen/minecraft/worldgen/biome"));
+					OUTPUT_INTERNAL_TEST.resolve("data-" + MinecraftVersion.LATEST.fileSuffix).resolve("reports/minecraft/worldgen/biome"));
 			try (BufferedWriter writer = Files.newBufferedWriter(OUTPUT_CORE.resolve("biome-colors.json"))) {
 				BlockColorMap.GSON.toJson(map, writer);
 				writer.flush();

@@ -222,6 +222,7 @@ public class ColorCompiler {
 				grassColor = grassColor(inst.temperature.doubleValue(), inst.rainfall.doubleValue(), grassColors);
 				foliageColor = foliageColor(inst.temperature.doubleValue(), inst.rainfall.doubleValue(), foliageColors);
 			} else {
+				log.debug("Loading file " + biomeDataDirectory.resolve(biomeName + ".json").toAbsolutePath());
 				BiomeInfo biome = BiomeColorMap.GSON.fromJson(Files.newBufferedReader(biomeDataDirectory.resolve(biomeName + ".json")), BiomeInfo.class);
 
 				waterColor = (int) (biome.effects.water_color.longValue() & 0xFFFFFFFF) | 0xFF000000;

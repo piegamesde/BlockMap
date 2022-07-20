@@ -33,7 +33,7 @@ public class RegionRenderer {
 	private static Log			log	= LogFactory.getLog(RegionRenderer.class);
 
 	public final RenderSettings	settings;
-	private final ChunkRenderer renderer13, renderer14, renderer15, renderer16, renderer17, renderer18;
+	private final ChunkRenderer renderer13, renderer14, renderer15, renderer16, renderer17, renderer18, renderer19;
 
 	public RegionRenderer(RenderSettings settings) {
 		this.settings = Objects.requireNonNull(settings);
@@ -43,6 +43,7 @@ public class RegionRenderer {
 		renderer16 = new ChunkRenderer_1_16(settings);
 		renderer17 = new ChunkRenderer_1_17(settings);
 		renderer18 = new ChunkRenderer_1_18(settings);
+		renderer19 = new ChunkRenderer_1_19(settings);
 	}
 
 	/**
@@ -147,6 +148,8 @@ public class RegionRenderer {
 						metadata.put(chunkPos, renderer17.renderChunk(chunkPosRegion, chunkPos, level, map, height, regionBiomes));
 					} else if (version >= MinecraftVersion.MC_1_18.minVersion && version <= MinecraftVersion.MC_1_18.maxVersion) {
 						metadata.put(chunkPos, renderer18.renderChunk(chunkPosRegion, chunkPos, root, map, height, regionBiomes));
+					} else if (version >= MinecraftVersion.MC_1_19.minVersion && version <= MinecraftVersion.MC_1_19.maxVersion) {
+						metadata.put(chunkPos, renderer19.renderChunk(chunkPosRegion, chunkPos, root, map, height, regionBiomes));
 					} else {
 						log.warn("Could not render chunk with Minecraft format version " + version);
 						metadata.put(chunkPos, new ChunkMetadataVersion(chunkPos, "Could not find a chunk rendering engine for this version", version));

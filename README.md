@@ -1,4 +1,4 @@
-# BlockMap – A Minecraft 1.18 world viewer
+# BlockMap – A Minecraft 1.19 world viewer
 
 [![Build Status](https://github.com/Minecraft-Technik-Wiki/BlockMap/workflows/Build/badge.svg)](https://github.com/Minecraft-Technik-Wiki/BlockMap/actions)
 
@@ -16,7 +16,7 @@
 - Different color maps and shaders that highlight exactly what you are looking for (including an underground caves and an ocean ground view)
 - A command line interface to render your worlds from scripts
 - The core rendering code as library to use in your own projects
-- Works with 1.18 worlds (with limited support down to 1.13)
+- Works with 1.19 worlds (with limited support down to 1.13)
 
 ## Gallery
 

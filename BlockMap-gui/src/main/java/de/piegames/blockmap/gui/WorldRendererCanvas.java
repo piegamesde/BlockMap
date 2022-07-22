@@ -113,6 +113,10 @@ public class WorldRendererCanvas extends ResizableCanvas {
 		// gc.strokeRect(0, 0, getWidth() - 0, getHeight() - 0);
 	}
 
+	public RenderedMap getMap() {
+		return map;
+	}
+
 	public ReadOnlyMapProperty<Vector2ic, Map<Vector2ic, ChunkMetadata>> getChunkMetadata() {
 		return chunkMetadata.getReadOnlyProperty();
 	}

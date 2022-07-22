@@ -1,5 +1,6 @@
 package de.piegames.blockmap.gui.standalone;
 
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -12,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -21,12 +23,14 @@ import org.apache.commons.logging.LogFactory;
 import org.controlsfx.control.CheckTreeView;
 import org.controlsfx.control.StatusBar;
 import org.controlsfx.dialog.ExceptionDialog;
+import org.controlsfx.dialog.ProgressDialog;
 import org.joml.Vector2d;
 import org.joml.Vector2ic;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import de.piegames.blockmap.gui.MapPane;
+import de.piegames.blockmap.gui.ScreenshotHandler;
 import de.piegames.blockmap.gui.WorldRendererCanvas;
 import de.piegames.blockmap.gui.decoration.DragScrollDecoration;
 import de.piegames.blockmap.gui.decoration.GridDecoration;
@@ -49,6 +53,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
@@ -57,12 +62,17 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.CheckBoxTreeItem;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.util.Duration;
 import javafx.util.Pair;
 
@@ -110,6 +120,11 @@ public class GuiController implements Initializable {
 	@FXML
 	public CheckTreeView<PinType> pinView;
 	public Map<PinType, TreeItem<PinType>> checkedPins = new HashMap<>();
+
+	/* Menu Bar */
+	@FXML
+	protected MenuItem screenshotButton;
+
 
 	protected MapPane pane;
 	public PinDecoration pins;
@@ -265,6 +280,14 @@ public class GuiController implements Initializable {
 			if (change.getValueAdded() != null)
 				GuiController.this.pins.loadRegion(change.getKey(), Pin.convertDynamic(change.getValueAdded(), renderer.viewport));
 		});
+
+		regionFolder.addListener((e, old, val) -> {
+			if (val == null) {
+				screenshotButton.setDisable(true);
+			} else {
+				screenshotButton.setDisable(false);
+			}
+		});
 	}
 
 	/**
@@ -365,6 +388,32 @@ public class GuiController implements Initializable {
 		Alert alert = new Alert(AlertType.ERROR, "Please specify the path to a world or the URL to a server", ButtonType.OK);
 		alert.setHeaderText("Could not load world at '" + input + "'");
 		alert.showAndWait();
+	}
+
+	@FXML
+	public void screenshot() {
+		WritableImage image = ScreenshotHandler.takeScreenshot(renderer.getMap(), renderer.viewport.getFrustum());
+		FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle("Save Screenshot");
+		fileChooser.getExtensionFilters().add(new ExtensionFilter("PNG Files", "*.png"));
+		File file = fileChooser.showSaveDialog(null);
+		if (file != null) {
+
+			Task<Void> task = ScreenshotHandler.saveImageTask(image, file);
+			task.setOnFailed(value -> {
+				log.error("Unable to save screenshot.", task.getException());
+				ExceptionDialog d = new ExceptionDialog(task.getException());
+				d.setTitle("Error");
+				d.setHeaderText("Unable to save screenshot.");
+				d.showAndWait();
+			});
+
+			ProgressDialog progress = new ProgressDialog(task);
+			progress.setTitle("Saving");
+			progress.setHeaderText("Saving screenshot");
+			progress.initModality(Modality.APPLICATION_MODAL);
+			ForkJoinPool.commonPool().execute(task::run);
+		}
 	}
 
 	@FXML

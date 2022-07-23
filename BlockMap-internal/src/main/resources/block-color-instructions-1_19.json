@@ -727,7 +727,11 @@
 			"spore_blossom": ["transparent", "translucent=true"],
 			"tuff": ["transparent", "translucent=true"],
 			"frogspawn": ["transparent", "translucent=true"],
-			"sculk_vein,down=*,east=*,north=*,south=*,up=*,west=*,waterlogged=*": ["transparent", "translucent=true"]
+			"sculk_vein,down=*,east=*,north=*,south=*,up=*,west=*,waterlogged=*": ["transparent", "translucent=true"],
+			"mangrove_roots,waterlogged=*": ["transparent", "translucent=true"],
+			"muddy_mangrove_roots,axis=y": ["transparent", "translucent=true"],
+			"muddy_mangrove_roots,axis=x": ["transparent", "translucent=true"],
+			"muddy_mangrove_roots,axis=z": ["transparent", "translucent=true"]
         }
     },
     "water": {

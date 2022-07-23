@@ -150,6 +150,7 @@ public class Pin {
 		public static final PinType STRUCTURE_STRONGHOLD = new PinType("Stronghold", STRUCTURE_OVERWORLD, true, false, "textures/structures/stronghold.png");
 		public static final PinType STRUCTURE_WITCH_HUT = new PinType("Witch hut", STRUCTURE_OVERWORLD, true, false, "textures/structures/swamp_hut.png");
 		public static final PinType STRUCTURE_OUTPOST = new PinType("Pillager outpost", STRUCTURE_OVERWORLD, true, false, "textures/structures/outpost.png");
+		public static final PinType STRUCTURE_ANCIENT_CITY = new PinType("Ancient city", STRUCTURE_OVERWORLD, true, false, "textures/structures/ancient_city.png");
 
 		public static final PinType STRUCTURE_NETHER = new PinType("Nether Structures", ANY_PIN, false, true, "textures/pins/structures.png");
 		public static final PinType STRUCTURE_FORTRESS = new PinType("Nether Fortress", STRUCTURE_NETHER, true, false, "textures/structures/fortress.png");
@@ -231,6 +232,8 @@ public class Pin {
 			structureTypes.put("minecraft:ruined_portal", STRUCTURE_RUINED_PORTAL);
 			structureTypes.put("minecraft:nether_fossil", STRUCTURE_NETHER_FOSSIL);
 			structureTypes.put("minecraft:bastion_remnant", STRUCTURE_BASTION_REMNANT);
+			/* Minecraft 1.19+ */
+			structureTypes.put("minecraft:ancient_city", STRUCTURE_ANCIENT_CITY);
 			STRUCTURE_TYPES = Collections.unmodifiableMap(structureTypes);
 
 			Map<String, PinType> poiMapping = new HashMap<>();

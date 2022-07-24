@@ -1,5 +1,15 @@
 # Changelog
 
+## Version 2.5.1
+
+### Changes
+
+- Added ancient city pin
+
+### Bug fixes
+
+- Fixed mangrove roots did not show up in foliage
+
 ## Version 2.5.0
 
 ### Changes

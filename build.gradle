@@ -27,7 +27,7 @@ buildscript {
 apply plugin: "com.github.ben-manes.versions"
 
 allprojects {
-	version = '2.5.0'
+	version = '2.5.1'
 
 	repositories {
 		jcenter()

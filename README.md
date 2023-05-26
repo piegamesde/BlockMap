@@ -56,7 +56,7 @@ to start. If you installed BlockMap through a package manager, search for it in 
 
 ### GUI controls:
 
-- Mouse wheel to zoom in and out
+- Mouse wheel to zoom in and out, or use two-fingers to spread on trackpad.
 - Drag with the left mouse button to pan the view
   - ~~If you drag to the edge, the mouse will wrap around so you can drag indefinitely. Blender users will appreciate this~~
     - Currently broken, sorry
@@ -80,7 +80,11 @@ If your world has been created before the Minecraft 1.13 release, please optimiz
 
 *This feature is not stabilized yet. Backwards-incompatible changes may occur even on minor releases. Any feedback welcome.*
 
-The new server mode is based around the following concept:
+The new server mode for rendering a single world is:
+
+    java -jar BlockMap-cli-2.4.1.jar render <path-to-level.dat> -o <output-dir> --create-tile-html
+
+The new server mode for rendering multiple worlds is based around the following concept:
 
 - Declare a configuration file with all your worlds and how you want to render them. An example configuration can be found [here](server-settings.json).
 - Call `blockmap render-many` and pass the configuration file as argument.
